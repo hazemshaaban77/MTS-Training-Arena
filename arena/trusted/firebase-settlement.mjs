@@ -9,7 +9,7 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  const paths=[
   prefix+"/trainerAllowlist/"+user.uid,
   service+"/roomOwners/"+roomId,
-  service+"/closedRounds/"+roomId+"/"+roundId,
+  prefix+"/rooms/"+roomId+"/public",
   service+"/roundKeys/"+roomId+"/"+roundId,
   prefix+"/participants/"+roomId,
   prefix+"/answers/"+roomId+"/"+roundId
