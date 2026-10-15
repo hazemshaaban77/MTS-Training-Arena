@@ -43,3 +43,16 @@ Static GitHub Pages cannot run trusted grading. An appropriate server-side worke
 6. End-to-end validation on a disposable test room before connecting the live UI.
 
 **Status:** this is a testable offline trusted-domain implementation, not a live scoring endpoint, and it does not alter existing Firebase rules.
+
+## Firebase scoreboard security proposal — not active
+
+The separate `security/scoring-rules.proposal.json` copies existing merged legacy and Arena rules unchanged and adds:
+
+- `arenaV1/scoreboards/{roomId}`: room-registered participants and allowlisted trainers can read only a room with an existing public state.
+- All client writes to the scoreboard path are denied, including trainer clients. Only an authenticated service using Firebase Admin SDK / privileged execution is allowed to publish a verified projection.
+- No global scoreboard listing is allowed; participants cannot see another room's scores.
+- `scoring-rules.emulator.test.mjs` checks readers, denial of score tampering, and preservation of the existing legacy rules.
+
+CI runs the proposal in a separate Firebase emulator config so the currently published Firebase rules are **not modified**.
+
+**Deployment gate:** inspect the emulator job results, implement a real server that has credentials isolated from GitHub Pages, atomic settled-ledger writes, and server-owned answer keys, then do a reviewed rules release. Never publish this proposal to Firebase just to make points appear: the live pilot does not yet produce secure scores.
