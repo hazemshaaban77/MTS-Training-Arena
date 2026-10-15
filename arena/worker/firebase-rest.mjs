@@ -11,9 +11,9 @@ function pemBytes(pem){
  const binary=atob(pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g,""));
  return Uint8Array.from(binary,c=>c.charCodeAt(0));
 }
-async function serviceAccessToken(env){
- const now=Math.floor(Date.now()/1000);
- if(env._cachedToken&&env._cachedToken.expires>now+120)return env._cachedToken.token;
+let cachedToken=null;
+let pendingToken=null;
+async function requestServiceToken(env,now){
  const key=await crypto.subtle.importKey("pkcs8",pemBytes(env.GOOGLE_PRIVATE_KEY),"RSASSA-PKCS1-v1_5",false,["sign"]);
  const h=base64json({alg:"RS256",typ:"JWT"});
  const p=base64json({iss:env.GOOGLE_CLIENT_EMAIL,scope:"https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email",aud:"https://oauth2.googleapis.com/token",iat:now,exp:now+3600});
@@ -23,8 +23,18 @@ async function serviceAccessToken(env){
  if(!response.ok)throw Error("Firebase service authentication failed");
  const token=await response.json();
  if(!token.access_token)throw Error("Missing service OAuth token");
- env._cachedToken={token:token.access_token,expires:now+(token.expires_in||3600)};
- return token.access_token;
+ return {token:token.access_token,expires:now+(token.expires_in||3600),email:env.GOOGLE_CLIENT_EMAIL};
+}
+async function serviceAccessToken(env){
+ const now=Math.floor(Date.now()/1000);
+ if(cachedToken?.email===env.GOOGLE_CLIENT_EMAIL&&cachedToken.expires>now+120)return cachedToken.token;
+ // Worker environment bindings should be treated as read-only. Share one token
+ // request across concurrent invocations in the same isolate.
+ if(!pendingToken){
+  pendingToken=requestServiceToken(env,now).then(value=>(cachedToken=value,value)).finally(()=>{pendingToken=null;});
+ }
+ const result=await pendingToken;
+ return result.token;
 }
 export function firebaseRestDb(env){
  const root=new URL(env.FIREBASE_DATABASE_URL);
