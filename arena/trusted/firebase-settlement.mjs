@@ -18,7 +18,7 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  if(snaps[0].val()!==true||snaps[1].val()!==user.uid)throw Error("Forbidden");
  const historic=await db.ref(service+'/closedRounds/'+roomId+'/'+roundId).get();
  const state=historic.val()||snaps[2].val(),key=snaps[3].val();
- if(!state||state.round!==roundId||state.status!=="between")throw Error("Trusted closed round snapshot missing");
+ if(!state||state.round!==roundId||state.status!=="between")throw Error("Round is not closed (trusted snapshot missing)");
  if(!Number.isFinite(state.deadline)||state.deadline>now)throw Error("Round deadline not reached");
  if(!key||key.roundId!==roundId||key.question!==state.question||JSON.stringify(key.options)!==JSON.stringify(state.options))throw Error("Trusted answer key mismatch");
  const participants=snaps[4].val()||{};
