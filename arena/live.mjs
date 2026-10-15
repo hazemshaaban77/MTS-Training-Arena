@@ -49,7 +49,7 @@ async function loadTrainerRooms(){
   document.getElementById("resumeSelected").onclick=()=>{if(validRoom(select.value))resumeTrainerRoom(select.value);};
 }
 
-let app,auth,db,offset=0,room="",me="",trainer=false,publicState=null,stop=[],answers={},activityList=[],current=0,participantTimer=null;
+let app,auth,db,offset=0,room="",me="",trainer=false,publicState=null,stop=[],answers={},activityList=[],current=0,participantTimer=null,admissionRound=null;
 function show(s){box.innerHTML=s;}
 function note(s){const x=document.getElementById("notice");if(x)x.textContent=s;}
 function cleanup(){if(participantTimer!==null){clearInterval(participantTimer);participantTimer=null;}for(const fn of stop)fn();stop=[];publicState=null;answers={};countedRound="";}
@@ -190,7 +190,7 @@ function participantHome(){
   cleanup();
   const path="arenaV1/participants/"+room+"/"+me;
   db.ref(path).once("value").then(s=>{
-    if(s.exists())return watchRoom();
+    if(s.exists()){admissionRound=s.child("joinedRound").val();return watchRoom();}
     show('<h2>Join Training Arena</h2><form class="fields" id="registration"><div class="field"><label>Your name</label><input id="name" minlength="2" maxlength="60" required></div><div class="field"><label>Employee ID</label><input id="employeeId" required minlength="2" maxlength="20" placeholder="Use test IDs until approved"></div><button class="btn">Join Pilot</button></form><p class="note">Employee ID is a unique claimed identifier, not proof of employment. Use test IDs only in this stage.</p><p id="notice" class="note"></p>');
     document.getElementById("registration").onsubmit=async e=>{
       e.preventDefault();
@@ -210,6 +210,7 @@ function participantHome(){
         if(!result.committed)throw Error("Employee ID already claimed");
         try{await db.ref(path).set({name,employeeId:emp,joinedRound:admittedRound});}
         catch(err){note("Registration incomplete; ask trainer. Claim remains reserved for safety: "+err.message);return;}
+        admissionRound=admittedRound;
         watchRoom();
       }catch(err){note(err.message);}
     };
@@ -231,6 +232,7 @@ function watchRoom(){
     if(changed){
       const choiceArea=document.getElementById("choices");choiceArea.innerHTML="";
       if(next.status==="question"){
+        if(admissionRound===next.round){note("You joined during this question. You can play from the next round.");return;}
         (next.options||[]).forEach((answer,i)=>{
           const button=document.createElement("button");button.className="btn secondary";button.textContent=answer;
           button.onclick=async()=>{
