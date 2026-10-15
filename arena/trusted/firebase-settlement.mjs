@@ -17,11 +17,12 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  const snaps=await Promise.all(paths.map(path=>db.ref(path).get()));
  if(snaps[0].val()!==true||snaps[1].val()!==user.uid)throw Error("Forbidden");
  const historic=await db.ref(service+'/closedRounds/'+roomId+'/'+roundId).get();
- const state=historic.val()||snaps[2].val(),key=snaps[3].val();
+ const state=historic.val(),key=snaps[3].val();
  if(!state||state.round!==roundId||state.status!=="between")throw Error("Round is not closed (trusted snapshot missing)");
  if(!Number.isFinite(state.deadline)||state.deadline>now)throw Error("Round deadline not reached");
  if(!key||key.roundId!==roundId||key.question!==state.question||JSON.stringify(key.options)!==JSON.stringify(state.options))throw Error("Trusted answer key mismatch");
- const participants=snaps[4].val()||{};
+ if(!state?.roster||typeof state.roster!=="object")throw Error("Trusted participant roster missing");
+ const participants=state.roster;
  const settlement=prepareClosedRound({roomId,roundId,publicRound:state,privateRound:key,participants,answers:snaps[5].val()||{}});
  const ledgerRef=db.ref(service+"/ledgers/"+roomId);
  const tx=await ledgerRef.transaction(previous=>{
@@ -30,7 +31,7 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  },undefined,false);
  const ledger=tx.snapshot.val()||{};
  if(!Object.hasOwn(ledger,roundId))throw Error("Ledger transaction failed");
- const currentParticipants=(await db.ref(prefix+"/participants/"+roomId).get()).val()||{};
+ const currentParticipants=participants;
  const board=prepareLeaderboard({participants:currentParticipants,ledger});
  const published=await db.ref(prefix+"/scoreboards/"+roomId).transaction(previous=>{
   if(previous&&previous.settledRounds>=board.settledRounds)return;
