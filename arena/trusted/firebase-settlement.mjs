@@ -8,7 +8,7 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  const prefix="arenaV1",service="arenaTrusted";
  const paths=[
   prefix+"/trainerAllowlist/"+user.uid,
-  prefix+"/rooms/"+roomId+"/private/createdBy",
+  service+"/roomOwners/"+roomId,
   prefix+"/rooms/"+roomId+"/public",
   service+"/roundKeys/"+roomId+"/"+roundId,
   prefix+"/participants/"+roomId,
