@@ -64,7 +64,19 @@ function sessionCard(s){return '<div class="item"><div><strong>'+esc(s.name)+'</
 function wireCards(){document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{selected=b.dataset.open;editing=null;view="studio";render()});document.querySelectorAll("[data-preview]").forEach(b=>b.onclick=()=>{selected=b.dataset.preview;view="stage";render()});document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{if(!confirm("Delete local draft?"))return;data.sessions=data.sessions.filter(s=>s.id!==b.dataset.delete);save();render()})}
 function sessions(){layout('<h1 class="title">'+t("sessions")+'</h1><button class="btn" id="new">＋ '+t("create")+'</button><div class="actions" style="margin:12px 0"><button class="btn secondary" id="exportBackup">↓ Export sessions</button><button class="btn secondary" id="importBackup">↑ Import sessions</button><input id="backupFile" type="file" accept=".json,application/json" hidden></div><div class="items" style="margin-top:18px">'+(data.sessions.length?data.sessions.map(sessionCard).join(""):'<div class="empty">'+t("noSession")+'</div>')+'</div>');document.getElementById("new").onclick=create;wireCards();wireBackup();}
 function library(){layout('<h1 class="title">'+t("library")+'</h1><p class="muted">All 11 activity types can be authored and saved as local drafts. Live multi-device scoring is a separate gated service.</p><div class="grid">'+TYPES.map((name,i)=>'<div class="panel"><b>'+(i+1)+". "+name+'</b><p class="note">'+(canEdit(name)?"Local editor available":"Planned for the complete game engine")+'</p></div>').join("")+'</div>');}
-function reports(){layout('<h1 class="title">'+t("reports")+'</h1><div class="panel empty"><h3>Reports & Analytics</h3><p>'+t("notReady")+'</p><p class="note">No participant data is collected in this prototype.</p></div>')}
+function reports(){
+ const counts=TYPES.map(type=>({type,count:data.sessions.reduce((n,s)=>n+s.activities.filter(a=>a.type===type).length,0)}));
+ const total=counts.reduce((n,x)=>n+x.count,0);
+ layout('<h1 class="title">'+t("reports")+'</h1><p class="note">Local authoring summary only. No trainee data, attendance or live results are stored here.</p><div class="grid"><div class="panel stat"><span>Saved sessions</span><b>'+data.sessions.length+'</b></div><div class="panel stat"><span>Authored activities</span><b>'+total+'</b></div></div><div class="panel"><h3>Activity breakdown</h3><div class="items">'+counts.map(x=>'<div class="item"><span>'+esc(x.type)+'</span><strong>'+x.count+'</strong></div>').join("")+'</div></div><button class="btn secondary" id="csvExport">↓ Export authoring summary (CSV)</button>');
+ document.getElementById("csvExport").onclick=()=>{
+  const safe=v=>{let z=String(v??"");if(/^[=+@\-\t\r]/.test(z))z="'"+z;return '"'+z.replace(/"/g,'""')+'"';};
+  const rows=[["Session","Activity type","Title","Timer (seconds)"]];
+  for(const sess of data.sessions)for(const a of sess.activities)rows.push([sess.name,a.type,a.question,a.timer]);
+  const csv="\uFEFF"+rows.map(row=>row.map(safe).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="mts-arena-authoring-summary.csv";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ };
+}
 function canEdit(type){return TYPES.includes(type)}
 function lines(value){return value.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);}
 function extraInput(type,a){
