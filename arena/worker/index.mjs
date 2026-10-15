@@ -17,12 +17,13 @@ export default {
  async fetch(req,env){
   const allowed=env.ARENA_ALLOWED_ORIGIN;
   const origin=req.headers.get("Origin");
+  const path=new URL(req.url).pathname;
+  if(req.method==="GET"&&path==="/health")return new Response(JSON.stringify({service:"mts-training-arena-api",ready:false,mode:"safe-preview"}),{status:200,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
   if(!allowed||origin!==allowed)return response(403,{error:"Origin blocked"},allowed||"null");
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{
    "Access-Control-Allow-Origin":allowed,"Access-Control-Allow-Methods":"POST, OPTIONS",
    "Access-Control-Allow-Headers":"Authorization, Content-Type","Vary":"Origin"
   }});
-  const path=new URL(req.url).pathname;
   if(req.method!=="POST"||!routes.has(path))return response(404,{error:"Not found"},allowed);
   if(env.ARENA_ENABLE_TRUSTED_V1!=="true")return response(503,{error:"Trusted scoring not enabled"},allowed);
   const header=req.headers.get("Authorization")||"";
