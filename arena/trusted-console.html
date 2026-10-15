@@ -14,7 +14,7 @@
 <hr>
 <div class="field"><label for="title">Room title</label><input id="title" value="ACI Training" maxlength="120"></div>
 <button id="create" class="btn green" disabled>Create trusted room</button>
-<div class="field"><label for="room">Active room ID</label><input id="room" readonly></div>
+<div class="field"><label for="room">Active room ID</label><input id="room" readonly></div><div class="field"><label for="joinLink">One trainee link for the entire session</label><input id="joinLink" readonly placeholder="Create a room to see the joining link"></div><div class="actions"><button id="copyJoin" class="btn secondary" disabled>Copy trainee link</button><a id="projectorLink" class="btn secondary" href="./projector.html" target="_blank" rel="noopener">Projector preview</a></div><p id="phaseStatus" class="note" role="status">Session has not started.</p>
 <div class="field"><label for="kind">Question type</label><select id="kind"><option>Quiz</option><option>Dropdown</option><option>Live Poll</option></select></div>
 <div class="field"><label for="question">Question</label><input id="question" value="What does ACID represent?"></div>
 <div class="field"><label for="options">Answer choices (one per line)</label><textarea id="options" rows="3">Advanced Cargo Information Declaration
