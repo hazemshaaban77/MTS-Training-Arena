@@ -63,8 +63,9 @@ export async function closeTrustedRound({db,uid,roomId,now=Date.now()}){
  },undefined,false);
  check(tx.committed,"Round is not active or deadline has not elapsed");
  const closed=tx.snapshot.val();
+ const rosterSnapshot=(await db.ref(root+"/participants/"+roomId).get()).val()||{};
  const closedRef=db.ref(internal+"/closedRounds/"+roomId+"/"+closed.round);
- const saved=await closedRef.transaction(value=>value===null?{...closed,closedAt:now}:undefined,undefined,false);
+ const saved=await closedRef.transaction(value=>value===null?{...closed,closedAt:now,roster:rosterSnapshot}:undefined,undefined,false);
  check(saved.committed||saved.snapshot.val()?.round===closed.round,"Failed to retain closed round");
  return {roomId,roundId:closed.round,status:"between"};
 }
