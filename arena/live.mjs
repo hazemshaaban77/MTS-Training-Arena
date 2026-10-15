@@ -221,7 +221,7 @@ function watchRoom(){
   const updateCountdown=()=>{const target=document.getElementById("roundCountdown");if(!target)return;const active=publicState?.status==="question"&&Number.isFinite(publicState.deadline);const remaining=active?Math.max(0,Math.ceil((publicState.deadline-(Date.now()+offset))/1000)):null;target.textContent=remaining===null?"--":remaining+"s";target.parentElement.classList.toggle("urgent",remaining!==null&&remaining<=10);if(remaining===0)document.querySelectorAll("#choices button").forEach(button=>button.disabled=true);};
   participantTimer=setInterval(updateCountdown,250);
   listen("arenaV1/rooms/"+room+"/public",s=>{
-    const next=s.val();if(!next)return note("Room removed or unavailable");
+    const next=s.val();if(!next){document.querySelectorAll("#choices button").forEach(b=>b.disabled=true);return note("Room removed or unavailable");}
     const changed=!publicState||publicState.round!==next.round||publicState.status!==next.status;
     publicState=next;
     updateCountdown();
@@ -234,14 +234,14 @@ function watchRoom(){
         (next.options||[]).forEach((answer,i)=>{
           const button=document.createElement("button");button.className="btn secondary";button.textContent=answer;
           button.onclick=async()=>{
-            if(button.disabled||next.status!=="question"||Date.now()+offset>=next.deadline){note("This round has already closed.");updateCountdown();return;}
+            if(button.disabled||publicState?.status!=="question"||publicState?.round!==next.round||Date.now()+offset>=next.deadline){note("This round has already closed.");updateCountdown();return;}
             choiceArea.querySelectorAll("button").forEach(b=>b.disabled=true);
             try{
               await db.ref("arenaV1/answers/"+room+"/"+next.round+"/"+me).set({choice:i});
               note("Answer submitted; you cannot submit a second response.");
             }catch(error){
               note("Answer not accepted: "+error.message);
-              choiceArea.querySelectorAll("button").forEach(b=>b.disabled=false);
+              if(publicState?.status==="question"&&publicState?.round===next.round&&Date.now()+offset<next.deadline)choiceArea.querySelectorAll("button").forEach(b=>b.disabled=false);
             }
           };
           choiceArea.appendChild(button);
@@ -250,6 +250,7 @@ function watchRoom(){
           db.ref("arenaV1/answers/"+room+"/"+next.round+"/"+me).once("value"),
           db.ref("arenaV1/participants/"+room+"/"+me+"/joinedRound").once("value")
         ]).then(([prior,joined])=>{
+          if(publicState?.round!==next.round||publicState?.status!=="question")return;
           if(prior.exists()||joined.val()===next.round){
             choiceArea.querySelectorAll("button").forEach(b=>b.disabled=true);
             note(prior.exists()?"Your answer is already recorded.":"You joined during this round. Wait for the next question.");
