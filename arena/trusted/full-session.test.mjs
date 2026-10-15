@@ -110,3 +110,32 @@ test("two rounds retain previous players and add newly joined players",async()=>
  assert.equal(Object.keys(ledger.r1.members).length,2);
  assert.equal(Object.keys(ledger.r2.members).length,3);
 });
+
+test("80 simulated participants across 10 rounds; persistent totals and replay guard",async()=>{
+ const db=testDatabase();
+ await createTrustedRoom({db,uid:"trainer",title:"80 x 10 rehearsal",roomId});
+ const roster={};
+ for(let i=1;i<=80;i++)roster["trainee_"+i]={name:"Trainee "+i};
+ db.put("arenaV1/participants/"+roomId,roster);
+ const auth=async()=>({uid:"trainer"});
+ for(let round=1;round<=10;round++){
+  const start=round*10000;
+  const opened=await openTrustedRound({db,uid:"trainer",roomId,now:start,activity:{
+   kind:"Quiz",question:"Round "+round,options:["Yes","No"],correctIndex:0,durationSeconds:5
+  }});
+  assert.equal(opened.roundId,"r"+round);
+  const answers={};
+  for(let i=1;i<=80;i++)answers["trainee_"+i]={choice:(i+round)%2===0?0:1};
+  db.put("arenaV1/answers/"+roomId+"/r"+round,answers);
+  await closeTrustedRound({db,uid:"trainer",roomId,now:start+5001});
+  const params={db,verifyIdToken:auth,idToken:"synthetic",roomId,roundId:"r"+round,now:start+5002};
+  const first=await settleRound(params);assert.equal(first.created,true);
+  const retry=await settleRound(params);assert.equal(retry.created,false);
+  assert.equal(db.read("arenaV1/scoreboards/"+roomId).settledRounds,round);
+ }
+ const board=db.read("arenaV1/scoreboards/"+roomId);
+ assert.equal(board.players.length,80);
+ assert.equal(board.players.filter(p=>p.score===500).length,80);
+ assert.equal(board.players.every(p=>p.rank===1),true);
+ assert.equal(Object.keys(db.read("arenaTrusted/ledgers/"+roomId)).length,10);
+});
