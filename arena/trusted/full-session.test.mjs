@@ -58,3 +58,31 @@ test("different user cannot manage or score an existing room",async()=>{
  db.put("arenaV1/trainerAllowlist/imposter",true);
  await assert.rejects(openTrustedRound({db,uid:"imposter",roomId,activity:{kind:"Quiz"}}),/Not authorized/);
 });
+
+test("80 participants: grade mixed answers, preserve ties, and publish totals",async()=>{
+ const db=testDatabase();
+ await createTrustedRoom({db,uid:"trainer",title:"80 attendee rehearsal",roomId});
+ await openTrustedRound({db,uid:"trainer",roomId,now:2000,activity:{
+  kind:"Quiz",question:"Which choice?",options:["Correct","Wrong"],correctIndex:0,durationSeconds:10
+ }});
+ const roster={};const answers={};
+ for(let i=1;i<=80;i++){
+  const uid="trainee_"+i;
+  roster[uid]={name:"Trainee "+String(i).padStart(2,"0")};
+  answers[uid]={choice:i%2===0?0:1};
+ }
+ db.put("arenaV1/participants/"+roomId,roster);
+ db.put("arenaV1/answers/"+roomId+"/r1",answers);
+ await closeTrustedRound({db,uid:"trainer",roomId,now:12001});
+ const params={db,verifyIdToken:async()=>({uid:"trainer"}),idToken:"fake-for-test",roomId,roundId:"r1",now:12002};
+ const result=await settleRound(params);
+ assert.equal(result.created,true);
+ const scores=db.read("arenaV1/scoreboards/"+roomId).players;
+ assert.equal(scores.length,80);
+ assert.equal(scores.filter(p=>p.score===100).length,40);
+ assert.equal(scores.filter(p=>p.score===0).length,40);
+ assert.equal(scores.filter(p=>p.rank===1).length,40);
+ assert.equal(scores.find(p=>p.score===0).rank,41);
+ const again=await settleRound(params);
+ assert.equal(again.created,false);
+});
