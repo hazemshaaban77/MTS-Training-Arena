@@ -28,8 +28,14 @@ test("legacy Firebase trees and existing arena rules remain exactly unchanged",(
     if(key==="arenaV1")continue;
     assert.deepEqual(rules.rules[key],value);
   }
-  for(const [key,value] of Object.entries(original.rules.arenaV1))
-    assert.deepEqual(rules.rules.arenaV1[key],value);
+  for(const [key,value] of Object.entries(original.rules.arenaV1)){
+    if(key!=="rooms"){assert.deepEqual(rules.rules.arenaV1[key],value);continue;}
+    const expected=structuredClone(value);
+    for(const segment of ["public","private"]){
+      expected["$roomId"][segment][".write"]+=" && !root.child('arenaTrusted/roomOwners').child($roomId).exists()";
+    }
+    assert.deepEqual(rules.rules.arenaV1.rooms,expected);
+  }
   assert.deepEqual(Object.keys(rules.rules.arenaV1).sort(),[...Object.keys(original.rules.arenaV1),"scoreboards"].sort());
 });
 test("trainer and registered room member can view published results",async()=>{
