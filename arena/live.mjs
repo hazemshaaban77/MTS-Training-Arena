@@ -7,7 +7,47 @@ const queryRoom=qs.get("room")||"";
 const LAST_ROOM_KEY="mts-arena-pilot-last-room-v1";
 const validRoom=v=>/^[0-9a-f]{24}$/.test(v||"");
 function rememberedRoom(){try{return JSON.parse(localStorage.getItem(LAST_ROOM_KEY)||"null")}catch{return null}}
-function rememberRoom(value,uid){try{localStorage.setItem(LAST_ROOM_KEY,JSON.stringify({room:value,uid}))}catch{}}
+const ROOM_INDEX_KEY="mts-arena-trainer-rooms-v1";
+function rememberedRooms(uid){
+  try {
+    const saved=rememberedRoom();
+    const index=JSON.parse(localStorage.getItem(ROOM_INDEX_KEY)||"{}");
+    return [...new Set([...(Array.isArray(index[uid])?index[uid]:[]),...(saved?.uid===uid?[saved.room]:[]),queryRoom].filter(validRoom))].slice(0,100);
+  } catch {return validRoom(queryRoom)?[queryRoom]:[]}
+}
+function rememberRoom(value,uid){
+  try {
+    localStorage.setItem(LAST_ROOM_KEY,JSON.stringify({room:value,uid}));
+    const index=JSON.parse(localStorage.getItem(ROOM_INDEX_KEY)||"{}");
+    index[uid]=[value,...(Array.isArray(index[uid])?index[uid]:[]).filter(r=>r!==value)].slice(0,100);
+    localStorage.setItem(ROOM_INDEX_KEY,JSON.stringify(index));
+  }catch{}
+}
+async function loadTrainerRooms(){
+  const area=document.getElementById("resumeArea");
+  if(!area)return;
+  area.innerHTML='<h3>My Pilot Rooms</h3><p class="note">Loading saved rooms…</p>';
+  const entries=await Promise.all(rememberedRooms(me).map(async key=>{
+    try{
+      const base="arenaV1/rooms/"+key;
+      const [priv,pub]=await Promise.all([db.ref(base+"/private").once("value"),db.ref(base+"/public").once("value")]);
+      const state=pub.val();
+      return priv.child("createdBy").val()===me&&state?{id:key,title:state.title||"Untitled",status:state.status,round:state.round}:null;
+    }catch{return null}
+  }));
+  if(!document.getElementById("resumeArea"))return;
+  const items=entries.filter(Boolean);
+  if(!items.length){area.innerHTML='<h3>My Pilot Rooms</h3><p class="note">No saved accessible rooms. Create one or open an existing room link.</p>';return;}
+  area.innerHTML='<h3>My Pilot Rooms</h3><div class="field"><label for="roomSelect">Select a room by name</label><select id="roomSelect"></select></div><button class="btn secondary" id="resumeSelected">Open Selected Room</button><p class="note">Rooms saved on this browser only. A secure cross-device room index is planned.</p>';
+  const select=document.getElementById("roomSelect");
+  for(const [label,subset] of [["Open sessions",items.filter(r=>r.status!=="completed")],["Completed sessions",items.filter(r=>r.status==="completed")]]){
+    if(!subset.length)continue;
+    const group=document.createElement("optgroup");group.label=label;
+    for(const item of subset){const option=document.createElement("option");option.value=item.id;option.textContent=item.title+" — "+item.status+" ("+item.round+")";group.appendChild(option);}
+    select.appendChild(group);
+  }
+  document.getElementById("resumeSelected").onclick=()=>{if(validRoom(select.value))resumeTrainerRoom(select.value);};
+}
 
 let app,auth,db,offset=0,room="",me="",trainer=false,publicState=null,stop=[],answers={},activityList=[],current=0;
 function show(s){box.innerHTML=s;}
@@ -69,19 +109,7 @@ function trainerHome(){
   cleanup();
   const draft=sampleActivities();activityList=draft.activities;current=0;
   show('<h2>Trainer Pilot Console</h2><p class="note">Pilot deliberately does not compute, store or reveal scores. Trainer controls one question at a time. Answer keys are not published to the public room.</p><div class="fields"><div class="field"><label>Room title</label><input id="title" maxlength="120" value="'+esc(draft.title)+'"></div><button class="btn green" id="create">Create Pilot Room</button></div><div id="resumeArea"></div><p id="notice" class="note"></p>');
-  const saved=rememberedRoom();
-  if(saved?.uid===me&&validRoom(saved.room)){
-    const area=document.getElementById("resumeArea");
-    area.innerHTML='<p class="note">Your last pilot room: <code>'+esc(saved.room)+'</code></p><button class="btn secondary" id="resume">Resume Last Room</button>';
-    document.getElementById("resume").onclick=()=>resumeTrainerRoom(saved.room);
-  }
-  if(validRoom(queryRoom)){
-    const area=document.getElementById("resumeArea");
-    if(!saved||saved.room!==queryRoom){
-      area.insertAdjacentHTML("beforeend",'<p class="note">Room link detected: <code>'+esc(queryRoom)+'</code></p><button class="btn secondary" id="resumeLink">Open This Room as Trainer</button>');
-      document.getElementById("resumeLink").onclick=()=>resumeTrainerRoom(queryRoom);
-    }
-  }
+  loadTrainerRooms().catch(e=>note(e.message));
   document.getElementById("create").onclick=async()=>{
     try{
       room=id(); const title=document.getElementById("title").value.trim()||"MTS Arena Pilot";
