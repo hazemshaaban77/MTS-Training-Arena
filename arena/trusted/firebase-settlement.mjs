@@ -9,7 +9,7 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  const paths=[
   prefix+"/trainerAllowlist/"+user.uid,
   service+"/roomOwners/"+roomId,
-  prefix+"/rooms/"+roomId+"/public",
+  service+"/closedRounds/"+roomId+"/"+roundId,
   service+"/roundKeys/"+roomId+"/"+roundId,
   prefix+"/participants/"+roomId,
   prefix+"/answers/"+roomId+"/"+roundId
@@ -17,7 +17,7 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  const snaps=await Promise.all(paths.map(path=>db.ref(path).get()));
  if(snaps[0].val()!==true||snaps[1].val()!==user.uid)throw Error("Forbidden");
  const state=snaps[2].val(),key=snaps[3].val();
- if(!state||state.round!==roundId||!["between","completed"].includes(state.status))throw Error("Round is not closed");
+ if(!state||state.round!==roundId||state.status!=="between")throw Error("Trusted closed round snapshot missing");
  if(!Number.isFinite(state.deadline)||state.deadline>now)throw Error("Round deadline not reached");
  if(!key||key.roundId!==roundId||key.question!==state.question||JSON.stringify(key.options)!==JSON.stringify(state.options))throw Error("Trusted answer key mismatch");
  const participants=snaps[4].val()||{};
