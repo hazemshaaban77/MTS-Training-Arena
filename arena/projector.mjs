@@ -3,7 +3,7 @@ const target=document.getElementById("projector");
 const params=new URLSearchParams(location.search);
 const escapeHtml=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const roomFromLink=params.get("room")||"";
-let firebaseApp,auth,db,offset=0,ref=null,timer=null,current=null,roomId="";
+let firebaseApp,auth,db,offset=0,ref=null,scoreRef=null,timer=null,current=null,roomId="",scoreboard=null;
 function notice(text){const e=document.getElementById("message");if(e)e.textContent=text;}
 function mount(){
   if(typeof FB_CONFIG==="undefined"||!FB_CONFIG?.projectId||!FB_CONFIG?.databaseURL){target.textContent="Firebase is not configured for this pilot.";return;}
@@ -25,10 +25,10 @@ function mount(){
     }catch(error){notice(error.message);}
   };
 }
-function stop(){if(ref)ref.off();ref=null;if(timer)clearInterval(timer);timer=null;}
+function stop(){if(ref)ref.off();ref=null;if(scoreRef)scoreRef.off();scoreRef=null;if(timer)clearInterval(timer);timer=null;scoreboard=null;}
 function start(){
   stop();
-  target.innerHTML='<div class="stage" style="min-height:calc(100vh - 30px);max-width:1500px;margin:auto"><div class="logos"><img src="../mts.png" alt="MTS" style="max-width:110px;max-height:56px;object-fit:contain"><img src="../training.png" alt="Training Team" style="max-width:110px;max-height:56px;object-fit:contain"></div><div><p style="color:#63e0af">MTS TRAINING ARENA · PROJECTOR PILOT</p><h2 id="title">Awaiting room…</h2><h1 id="question" style="font-size:clamp(22px,4vw,56px)">Ready</h1><p id="phase" class="pill">LOBBY</p></div><div id="choices" class="answers"></div><div><strong id="clock" style="font-size:32px"></strong><p class="note" style="color:#b9cfe1">Presentation only · answer keys, participant identities and scores are never displayed.</p><p id="message" style="color:#e2afaf"></p></div></div>';
+  target.innerHTML='<div class="stage" style="min-height:calc(100vh - 30px);max-width:1500px;margin:auto"><div class="logos"><img src="../mts.png" alt="MTS" style="max-width:110px;max-height:56px;object-fit:contain"><img src="../training.png" alt="Training Team" style="max-width:110px;max-height:56px;object-fit:contain"></div><div><p style="color:#63e0af">MTS TRAINING ARENA · PROJECTOR PILOT</p><h2 id="title">Awaiting room…</h2><h1 id="question" style="font-size:clamp(22px,4vw,56px)">Ready</h1><p id="phase" class="pill">LOBBY</p></div><div id="choices" class="answers"></div><section id="standings" aria-live="polite" style="display:none;margin:20px auto;max-width:700px"></section><div><strong id="clock" style="font-size:32px"></strong><p class="note" style="color:#b9cfe1">Answer keys are never displayed. Verified standings appear only after a round is settled.</p><p id="message" style="color:#e2afaf"></p></div></div>';
   ref=db.ref("arenaV1/rooms/"+roomId+"/public");
   ref.on("value",snapshot=>{
     current=snapshot.val();
@@ -46,8 +46,30 @@ function start(){
       }
     }
     updateClock();
+    renderStandings();
   },error=>notice(error.message));
+  scoreRef=db.ref("arenaV1/scoreboards/"+roomId);
+  scoreRef.on("value",snapshot=>{scoreboard=snapshot.val();renderStandings();},error=>notice(error.message));
   timer=setInterval(updateClock,250);
+}
+function renderStandings(){
+ const section=document.getElementById("standings");if(!section)return;
+ section.replaceChildren();
+ const roundNumber=Number(String(current?.round||"").slice(1));
+ if(!current||current.status!=="between"||!Number.isInteger(roundNumber)||!scoreboard||scoreboard.settledRounds<roundNumber||!Array.isArray(scoreboard.players)){
+  section.style.display="none";return;
+ }
+ section.style.display="block";
+ const heading=document.createElement("h2");heading.textContent="LEADERBOARD · TOP 5";section.appendChild(heading);
+ const list=document.createElement("ol");list.style.cssText="list-style:none;padding:0;display:grid;gap:8px";
+ for(const player of scoreboard.players.slice(0,5)){
+  const item=document.createElement("li");
+  item.style.cssText="display:flex;justify-content:space-between;gap:16px;padding:14px 20px;background:#122846;border-radius:12px;font-weight:bold;font-size:clamp(16px,2vw,26px)";
+  const label=document.createElement("span");label.textContent="#"+player.rank+" · "+player.name;
+  const points=document.createElement("span");points.textContent=String(player.score)+" pts";
+  item.append(label,points);list.appendChild(item);
+ }
+ section.appendChild(list);
 }
 function updateClock(){
   const clock=document.getElementById("clock");if(!clock||!current)return;
