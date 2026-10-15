@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MTS Arena — Trusted Console Preview</title>
+<link rel="stylesheet" href="./style.css">
+</head><body><main class="main" style="max-width:900px">
+<div class="top"><div><div class="eyebrow">MTS TRAINING ARENA</div><h1 class="title">Trusted Trainer Console</h1></div><a class="btn secondary" href="./live.html">Back to Live Pilot</a></div>
+<p class="note">BACKEND PREVIEW — Requires an independently deployed trusted service. No scoring is active on the public pilot. Use fictional trainees only.</p>
+<div class="panel"><div class="fields">
+<div class="field"><label for="api">Trusted API HTTPS URL</label><input id="api" type="url" placeholder="https://your-backend.example" autocomplete="off"></div>
+<div class="field"><label for="email">Trainer email</label><input id="email" type="email" autocomplete="username"></div>
+<div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div>
+<button class="btn" id="signin">Sign in to Firebase</button>
+<p id="authStatus" class="note">Not signed in. Service address is not stored.</p>
+<hr>
+<div class="field"><label for="title">Room title</label><input id="title" value="ACI Training" maxlength="120"></div>
+<button id="create" class="btn green" disabled>Create trusted room</button>
+<div class="field"><label for="room">Active room ID</label><input id="room" readonly></div>
+<div class="field"><label for="kind">Question type</label><select id="kind"><option>Quiz</option><option>Dropdown</option><option>Live Poll</option></select></div>
+<div class="field"><label for="question">Question</label><input id="question" value="What does ACID represent?"></div>
+<div class="field"><label for="options">Answer choices (one per line)</label><textarea id="options" rows="3">Advanced Cargo Information Declaration
+Another document
+A shipping company</textarea></div>
+<div class="field"><label for="correct">Correct choice (1-based; ignored for polls)</label><input id="correct" type="number" min="1" value="1"></div>
+<div class="field"><label for="seconds">Question timer (seconds)</label><input id="seconds" type="number" min="5" max="3600" value="30"></div>
+<div class="actions"><button id="open" class="btn" disabled>Open Question</button><button id="close" class="btn secondary" disabled>Close After Deadline</button><button id="settle" class="btn green" disabled>Settle Closed Round</button></div>
+<div class="field"><label for="round">Current round</label><input id="round" readonly></div>
+<div id="output" class="note" role="status" aria-live="polite">Connect a trusted backend to enable this console.</div>
+</div></div></main>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script type="module" src="./trusted-console.mjs"></script></body></html>
