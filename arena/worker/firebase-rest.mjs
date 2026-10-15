@@ -33,8 +33,8 @@ export function firebaseRestDb(env){
  async function request(path,method="GET",data,etag){
   if(!/^[a-zA-Z0-9_\/-]*$/.test(path)||path.includes(".."))throw Error("Invalid database path");
   const accessToken=await serviceAccessToken(env);
-  const url=base+"/"+path+".json?access_token="+encodeURIComponent(accessToken);
-  const headers={"Cache-Control":"no-store"};
+  const url=base+"/"+path+".json";
+  const headers={"Cache-Control":"no-store","Authorization":"Bearer "+accessToken};
   if(method==="GET")headers["X-Firebase-ETag"]="true";
   if(method!=="GET")headers["Content-Type"]="application/json";
   if(etag!==undefined)headers["if-match"]=etag;
