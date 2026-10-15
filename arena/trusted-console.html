@@ -4,13 +4,15 @@
 <link rel="stylesheet" href="./style.css">
 </head><body><main class="main" style="max-width:900px">
 <div class="top"><div><div class="eyebrow">MTS TRAINING ARENA</div><h1 class="title">Trusted Trainer Console</h1></div><a class="btn secondary" href="./live.html">Back to Live Pilot</a></div>
-<p class="note">BACKEND PREVIEW — Requires an independently deployed trusted service. No scoring is active on the public pilot. Use fictional trainees only.</p>
+<section id="serviceBanner" role="status" aria-live="polite" style="padding:18px 20px;margin:16px 0;border:1px solid #adc3db;background:#e4eef8;border-radius:16px;color:#183452"><strong id="serviceTitle">Checking secure backend…</strong><p id="serviceDescription" style="margin:7px 0 0">Live scoring is protected until Firebase configuration and security checks are completed.</p></section>
+<div class="actions" style="margin:16px 0"><a class="btn green" href="./index.html">Open Arena Studio</a><a class="btn secondary" href="./games.html">Try 11 activity demos</a><a class="btn secondary" href="./simulator.html">Open simulator</a></div>
+<p class="note">Secure trainer controls are a staged preview. The demos above work independently of Firebase and never write live scores.</p>
 <div class="panel"><div class="fields">
 <div class="field"><label for="api">Trusted API HTTPS URL</label><input id="api" type="url" placeholder="https://your-backend.example" autocomplete="off"></div>
 <div class="field"><label for="email">Trainer email</label><input id="email" type="email" autocomplete="username"></div>
 <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div>
 <button class="btn" id="signin">Sign in to Firebase</button>
-<p id="authStatus" class="note">Not signed in. Service address is not stored.</p>
+<p id="authStatus" class="note">Checking backend readiness; no sign-in attempt will be made while scoring is disabled.</p>
 <hr>
 <div class="field"><label for="title">Room title</label><input id="title" value="ACI Training" maxlength="120"></div>
 <button id="create" class="btn green" disabled>Create trusted room</button>
