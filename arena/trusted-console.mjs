@@ -52,6 +52,21 @@ async function task(fn){
 }
 
 const LIVE_TYPES=new Set(["Quiz","Dropdown","Live Poll"]);
+let currentDraft=null,preparedActivities=[],preparedIndex=-1;
+function activatePrepared(index){
+ if(!Number.isInteger(index)||index<0||index>=preparedActivities.length)return;
+ const a=preparedActivities[index];preparedIndex=index;
+ el("draftActivity").value=String(a.index);
+ el("kind").value=a.type;el("question").value=a.question;el("options").value=a.options.join("\\n").replace(/\\n/g,"\n");
+ el("correct").value=String(a.type==="Live Poll"?1:a.correct+1);el("seconds").value=String(a.timer||30);
+ el("draftProgress").textContent="Prepared activity "+(index+1)+" of "+preparedActivities.length+" — "+a.type;
+}
+function nextPrepared(){
+ if(!preparedActivities.length)return;
+ const next=preparedIndex+1;
+ if(next<preparedActivities.length){activatePrepared(next);setStatus("Next activity is ready for review; press Open Question to launch.");}
+ else el("draftProgress").textContent="All prepared supported activities are complete.";
+}
 function loadStudioDrafts(){
  let sessions=[];
  try{const state=JSON.parse(localStorage.getItem("mts-arena-preview-v1")||"{}");if(Array.isArray(state.sessions))sessions=state.sessions;}catch{}
@@ -60,22 +75,22 @@ function loadStudioDrafts(){
  const reset=()=>activityPicker.replaceChildren(new Option("Manual entry",""));
  sessions.forEach((s,i)=>{if(s&&typeof s.name==="string"&&Array.isArray(s.activities))picker.add(new Option(s.name,String(i)));});
  picker.onchange=()=>{
-  reset();
-  const session=picker.value===""?null:sessions[Number(picker.value)];
-  if(!session)return;
-  el("title").value=session.name.slice(0,120);
-  session.activities.forEach((a,i)=>{if(a&&LIVE_TYPES.has(a.type)&&Array.isArray(a.options)&&a.options.length>=2&&typeof a.question==="string")activityPicker.add(new Option((i+1)+". "+a.type+" — "+a.question.slice(0,60),String(i)));});
+  reset();preparedActivities=[];preparedIndex=-1;
+  currentDraft=picker.value===""?null:sessions[Number(picker.value)];
+  if(!currentDraft){el("draftProgress").textContent="Choose a saved session to prepare activities.";return;}
+  el("title").value=currentDraft.name.slice(0,120);
+  currentDraft.activities.forEach((a,i)=>{
+   if(a&&LIVE_TYPES.has(a.type)&&Array.isArray(a.options)&&a.options.length>=2&&typeof a.question==="string"&&a.question.trim()&&a.options.every(v=>typeof v==="string")&&Number.isInteger(a.timer)&&a.timer>=5&&a.timer<=300&&(a.type==="Live Poll"||Number.isInteger(a.correct)&&a.correct>=0&&a.correct<a.options.length)){
+    preparedActivities.push({...a,index:i});
+    activityPicker.add(new Option((i+1)+". "+a.type+" — "+a.question.slice(0,60),String(i)));
+   }
+  });
+  if(preparedActivities.length)activatePrepared(0);
+  else el("draftProgress").textContent="No compatible scored-live activities in this session.";
  };
  activityPicker.onchange=()=>{
-  const s=picker.value===""?null:sessions[Number(picker.value)];
-  const a=s?.activities?.[Number(activityPicker.value)];
-  if(!a||activityPicker.value===""||!LIVE_TYPES.has(a.type))return;
-  el("kind").value=a.type;
-  el("question").value=a.question;
-  el("options").value=a.options.join("\n");
-  el("correct").value=String(a.type==="Live Poll"?1:a.correct+1);
-  el("seconds").value=String(a.timer||30);
-  setStatus("Studio activity loaded. Secure server authorization is required before opening.");
+  const i=preparedActivities.findIndex(a=>String(a.index)===activityPicker.value);
+  if(i>=0){activatePrepared(i);setStatus("Studio activity loaded for manual review.");}
  };
  const requested=new URLSearchParams(location.search).get("session");
  if(requested){const index=sessions.findIndex(s=>s?.id===requested);if(index>=0){picker.value=String(index);picker.onchange();}}
@@ -130,7 +145,7 @@ try{
  });
  el("settle").onclick=()=>task(async()=>{
   if(!roomId||!roundId)throw Error("Open and close a round first");
-  const result=await api("/v1/settle",{roomId,roundId});phase="settled";render();return result;
+  const result=await api("/v1/settle",{roomId,roundId});phase="settled";render();nextPrepared();return result;
  });
  render();
 }catch(error){setStatus("Setup error: "+error.message);serviceBanner(false,"Firebase client configuration is unavailable. Offline demos remain accessible.");el("signin").disabled=true;}
