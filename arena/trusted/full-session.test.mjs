@@ -86,3 +86,27 @@ test("80 participants: grade mixed answers, preserve ties, and publish totals",a
  const again=await settleRound(params);
  assert.equal(again.created,false);
 });
+
+test("two rounds retain previous players and add newly joined players",async()=>{
+ const db=testDatabase();
+ await createTrustedRoom({db,uid:"trainer",title:"Multi-round",roomId});
+ const game={kind:"Quiz",question:"Answer?",options:["Yes","No"],correctIndex:0,durationSeconds:5};
+ await openTrustedRound({db,uid:"trainer",roomId,activity:game,now:1000});
+ db.put("arenaV1/participants/"+roomId,{p1:{name:"First"},p2:{name:"Second"}});
+ db.put("arenaV1/answers/"+roomId+"/r1",{p1:{choice:0},p2:{choice:1}});
+ await closeTrustedRound({db,uid:"trainer",roomId,now:6001});
+ const params={db,verifyIdToken:async()=>({uid:"trainer"}),idToken:"test",roomId,roundId:"r1",now:6002};
+ await settleRound(params);
+ await openTrustedRound({db,uid:"trainer",roomId,activity:game,now:7000});
+ db.put("arenaV1/participants/"+roomId,{p1:{name:"First"},p2:{name:"Second"},p3:{name:"Late Joiner"}});
+ db.put("arenaV1/answers/"+roomId+"/r2",{p2:{choice:0},p3:{choice:0}});
+ await closeTrustedRound({db,uid:"trainer",roomId,now:12001});
+ await settleRound({...params,roundId:"r2",now:12002});
+ const board=db.read("arenaV1/scoreboards/"+roomId);
+ assert.equal(board.settledRounds,2);
+ assert.deepEqual(Object.fromEntries(board.players.map(p=>[p.uid,p.score])),{p1:100,p2:100,p3:100});
+ assert.equal(board.players.length,3);
+ const ledger=db.read("arenaTrusted/ledgers/"+roomId);
+ assert.equal(Object.keys(ledger.r1.members).length,2);
+ assert.equal(Object.keys(ledger.r2.members).length,3);
+});
