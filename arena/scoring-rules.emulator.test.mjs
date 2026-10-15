@@ -29,6 +29,11 @@ test("legacy Firebase trees and existing arena rules remain exactly unchanged",(
     assert.deepEqual(rules.rules[key],value);
   }
   for(const [key,value] of Object.entries(original.rules.arenaV1)){
+    if(key==="participants"){
+      const expected=structuredClone(value);
+      expected["$roomId"]["$uid"][".write"]=expected["$roomId"]["$uid"][".write"].replace("root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true ||","(root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true && !root.child('arenaTrusted/roomOwners').child($roomId).exists()) ||");
+      assert.deepEqual(rules.rules.arenaV1.participants,expected);continue;
+    }
     if(key!=="rooms"){assert.deepEqual(rules.rules.arenaV1[key],value);continue;}
     const expected=structuredClone(value);
     for(const segment of ["public","private"]){
@@ -68,6 +73,7 @@ test("server-owned room cannot be edited by any trainer client and trusted keys 
  });
  const other="arenaV1/rooms/"+serverRoom+"/public";
  await assertFails(db("trusted-trainer").ref(other+"/status").set("between"));
+ await assertFails(db("trusted-trainer").ref("arenaV1/participants/"+serverRoom+"/fake").set({name:"Fake",employeeId:"FAKE01",joinedRound:"r0"}));
  await assertFails(db("trusted-trainer").ref("arenaV1/rooms/"+serverRoom+"/private/createdBy").set("forged"));
  await assertFails(db("trusted-trainer").ref("arenaTrusted/roundKeys/"+serverRoom+"/r1").get());
  await assertFails(db("member1").ref("arenaTrusted/roomOwners/"+serverRoom).get());
