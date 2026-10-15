@@ -44,9 +44,10 @@ jobs:
           node --check arena/trusted/server.mjs
           node --check arena/trusted/room-lifecycle.mjs
           node --check arena/trusted/room-lifecycle.test.mjs
+          node --check arena/trusted/full-session.test.mjs
           node --check arena/security.test.mjs
       - name: Unit tests for local round engine
-        run: node --test arena/engine.test.mjs arena/security.test.mjs arena/trusted/scoring.test.mjs arena/trusted/leaderboard.test.mjs arena/trusted/round-settlement.test.mjs arena/trusted/firebase-settlement.test.mjs arena/trusted/room-lifecycle.test.mjs arena/activity-contract.test.mjs arena/team-engine.test.mjs arena/queue-engine.test.mjs
+        run: node --test arena/engine.test.mjs arena/security.test.mjs arena/trusted/scoring.test.mjs arena/trusted/leaderboard.test.mjs arena/trusted/round-settlement.test.mjs arena/trusted/firebase-settlement.test.mjs arena/trusted/room-lifecycle.test.mjs arena/trusted/full-session.test.mjs arena/activity-contract.test.mjs arena/team-engine.test.mjs arena/queue-engine.test.mjs
 
   firebase-rules-emulator:
     runs-on: ubuntu-latest
