@@ -62,6 +62,8 @@ function init(){
   show('<h2>Connect to Firebase Pilot</h2><p class="note">This is a separate Arena namespace and requires its security rules and a manually authorized trainer UID. Never enter employee data before security review.</p><div class="actions"><button class="btn" id="train">Trainer</button><button class="btn secondary" id="join">Trainee</button></div><p id="notice" class="note"></p>');
   document.getElementById("train").onclick=trainerSignIn;
   document.getElementById("join").onclick=participantSignIn;
+  // One room QR deep-links directly to participant entry; never auto-create identity or submit answers.
+  if(validRoom(queryRoom))participantSignIn();
 }
 function trainerSignIn(){
   cleanup();
@@ -92,6 +94,7 @@ function participantSignIn(){
       participantHome();
     }catch(error){note(error.message);}
   };
+  if(validRoom(queryRoom))document.getElementById("roomForm").requestSubmit();
 }
 function sampleActivities(){
   try{
