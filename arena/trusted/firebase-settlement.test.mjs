@@ -8,7 +8,7 @@ const round={title:"Demo",round:"r1",status:"between",question:"Which?",options:
 function fakeStore(){
  const data={
   [base+"/trainerAllowlist/trainer"]:true,
-  [base+"/rooms/"+roomId+"/private/createdBy"]:"trainer",
+  [secret+"/roomOwners/"+roomId]:"trainer",
   [base+"/rooms/"+roomId+"/public"]:{...round},
   [secret+"/roundKeys/"+roomId+"/r1"]:{roundId:"r1",kind:"Quiz",correctIndex:0,question:"Which?",options:["A","B"],pointsPerCorrect:100},
   [base+"/participants/"+roomId]:{p1:{name:"Ahmed"},p2:{name:"Mona"}},
