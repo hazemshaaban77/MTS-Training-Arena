@@ -57,7 +57,7 @@ function activatePrepared(index){
  if(!Number.isInteger(index)||index<0||index>=preparedActivities.length)return;
  const a=preparedActivities[index];preparedIndex=index;
  el("draftActivity").value=String(a.index);
- el("kind").value=a.type;el("question").value=a.question;el("options").value=a.options.join("\\n").replace(/\\n/g,"\n");
+ el("kind").value=a.type;el("question").value=a.question;el("options").value=a.options.join("\n");
  el("correct").value=String(a.type==="Live Poll"?1:a.correct+1);el("seconds").value=String(a.timer||30);
  el("draftProgress").textContent="Prepared activity "+(index+1)+" of "+preparedActivities.length+" — "+a.type;
 }
