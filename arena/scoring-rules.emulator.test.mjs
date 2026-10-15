@@ -51,3 +51,19 @@ test("every client is blocked from creating, editing or deleting authoritative s
 test("even a permitted reader cannot list scoreboards globally",async()=>{
   await assertFails(db("trusted-trainer").ref("arenaV1/scoreboards").get());
 });
+
+test("server-owned room cannot be edited by any trainer client and trusted keys are hidden",async()=>{
+ const serverRoom="cccccccccccccccccccccccc";
+ await env.withSecurityRulesDisabled(async context=>{
+  const admin=context.database();
+  await admin.ref("arenaTrusted/roomOwners/"+serverRoom).set("trusted-trainer");
+  await admin.ref("arenaTrusted/roundKeys/"+serverRoom+"/r1").set({correctIndex:0});
+  await admin.ref("arenaV1/rooms/"+serverRoom+"/public").set({title:"Protected",status:"question",round:"r1",question:"Which?",options:["A","B"],deadline:90000,joinOpen:true});
+ });
+ const other="arenaV1/rooms/"+serverRoom+"/public";
+ await assertFails(db("trusted-trainer").ref(other+"/status").set("between"));
+ await assertFails(db("trusted-trainer").ref("arenaV1/rooms/"+serverRoom+"/private/createdBy").set("forged"));
+ await assertFails(db("trusted-trainer").ref("arenaTrusted/roundKeys/"+serverRoom+"/r1").get());
+ await assertFails(db("member1").ref("arenaTrusted/roomOwners/"+serverRoom).get());
+ await assertFails(db("trusted-trainer").ref("arenaTrusted/roundKeys/"+serverRoom+"/r1").set({correctIndex:1}));
+});
