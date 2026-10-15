@@ -97,7 +97,7 @@
         "$roomId": {
           "$uid": {
             ".read": "auth != null && (auth.uid === $uid || root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true)",
-            ".write": "auth != null && (root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true || (auth.uid === $uid && !data.exists() && root.child('arenaV1/rooms').child($roomId).child('public/joinOpen').val() === true && root.child('arenaV1/claims').child($roomId).child(newData.child('employeeId').val()).val() === auth.uid && newData.child('joinedRound').val() === root.child('arenaV1/rooms').child($roomId).child('public/round').val()))",
+            ".write": "auth != null && ((root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true && !root.child('arenaTrusted/roomOwners').child($roomId).exists()) || (auth.uid === $uid && !data.exists() && root.child('arenaV1/rooms').child($roomId).child('public/joinOpen').val() === true && root.child('arenaV1/claims').child($roomId).child(newData.child('employeeId').val()).val() === auth.uid && newData.child('joinedRound').val() === root.child('arenaV1/rooms').child($roomId).child('public/round').val()))",
             ".validate": "newData.hasChildren(['name', 'employeeId', 'joinedRound'])",
             "name": {
               ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 60"
