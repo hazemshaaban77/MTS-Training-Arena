@@ -1,5 +1,14 @@
 # Cloudflare Workers Free — MTS Training Arena (staging source only)
 
+## Cloudflare account setup status — 2026-10-15
+
+A Worker named `mts-training-arena-api` has been uploaded via the Cloudflare API and automatically deployed to 100% of its Worker versions on the **Free account**. The Workers.dev account subdomain is `hazem-mts-arena` and the script's Workers.dev route is enabled.
+
+Expected endpoint: `https://mts-training-arena-api.hazem-mts-arena.workers.dev`
+
+The Cloudflare API confirms `ARENA_ENABLE_TRUSTED_V1=false`. **This is deliberately fail-closed:** no trainer request can reach Firebase scoring until the security, billing-free feasibility, identity verification, and load testing gates are satisfied. The deployment is not an operational scored Arena. No private service-account secrets have been installed. The endpoint was not independently accessible from the assistant's network at setup time, so public reachability is not yet confirmed.
+
+
 **Decision:** GitHub Pages for static client; Firebase RTDB Spark for real-time room/answer state; Cloudflare Workers Free for occasional trainer-only trusted operations.
 
 Cloudflare Workers Free currently has **100,000 requests/day, 10 ms CPU/request, and 50 external subrequests per request**. These are limits, not guaranteed sufficient performance. Spark Realtime Database has a **hard 100 simultaneous connection limit across the Firebase database**, including trainers, projectors, all participants and any other apps sharing the same RTDB. For stable load testing, aim **60–80 trainees** at first with headroom; **100 active trainees is not guaranteed** on Spark.
