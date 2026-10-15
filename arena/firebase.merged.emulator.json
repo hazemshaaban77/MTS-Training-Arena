@@ -1,0 +1,14 @@
+{
+  "database": {
+    "rules": "security/merged-rules.candidate.json"
+  },
+  "emulators": {
+    "database": {
+      "host": "127.0.0.1",
+      "port": 9000
+    },
+    "ui": {
+      "enabled": false
+    }
+  }
+}

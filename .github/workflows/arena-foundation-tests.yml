@@ -1,0 +1,74 @@
+name: Arena foundation tests
+on:
+  push:
+    branches: ["feature/mts-training-arena-foundation"]
+  pull_request:
+    paths:
+      - "arena/**"
+      - ".github/workflows/arena-foundation-tests.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: |
+          node --check arena/app.js
+          node --check arena/engine.mjs
+          node --check arena/simulator.mjs
+          node --check arena/live.mjs
+          node --check arena/projector.mjs
+          node --check arena/activity-contract.mjs
+          node --check arena/activity-contract.test.mjs
+          node --check arena/activity-lab.mjs
+          node --check arena/team-engine.mjs
+          node --check arena/team-engine.test.mjs
+          node --check arena/queue-engine.mjs
+          node --check arena/queue-engine.test.mjs
+          node --check arena/security.emulator.test.mjs
+          node --check arena/trusted/scoring.mjs
+          node --check arena/trusted/scoring.test.mjs
+          node --check arena/security.test.mjs
+      - name: Unit tests for local round engine
+        run: node --test arena/engine.test.mjs arena/security.test.mjs arena/trusted/scoring.test.mjs arena/activity-contract.test.mjs arena/team-engine.test.mjs arena/queue-engine.test.mjs
+
+  firebase-rules-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install test-only Firebase dependencies
+        run: npm install --prefix arena --no-audit --no-fund
+      - name: Execute realtime database security policy tests in emulator
+        run: npm --prefix arena run test:rules
+
+
+  merged-rules-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install isolated Firebase test dependencies
+        run: npm install --prefix arena --no-audit --no-fund
+      - name: Test merged legacy and Arena rules
+        run: cd arena && npx firebase emulators:exec --only database --project demo-mts-arena --config firebase.merged.emulator.json "node --test merged-rules.emulator.test.mjs"

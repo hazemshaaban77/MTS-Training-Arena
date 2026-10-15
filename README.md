@@ -1,7 +1,5 @@
 # MTS Training Arena
 
-Independent GitHub Pages pilot for MTS Training Arena, separate from the legacy MTS-Quiz site.
+Independent public static Firebase pilot, separate from MTS-Quiz. Experimental only; no official scoring, real employee data or production deployment until reviewed.
 
-**Status:** Experimental, not production-ready. Use only fake participant identities; no authoritative scoring. Run Firebase security review before real trainings.
-
-Open `/arena/live.html` for Firebase pilot, `/arena/index.html` for local Studio, `/arena/games.html` for the 11 activity demos.
+Use `/arena/live.html` for test pilot, `/arena/index.html` for local trainer studio, `/arena/games.html` for standalone games lab.
