@@ -15,6 +15,42 @@ const id=()=>globalThis.crypto?.randomUUID?.()||"id-"+Date.now()+"-"+Math.random
 const session=()=>data.sessions.find(s=>s.id===selected);
 const activity=()=>session()?.activities.find(a=>a.id===editing);
 function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+const BACKUP_VERSION=1;
+function downloadBackup(){
+ const payload={format:"mts-training-arena-backup",version:BACKUP_VERSION,exportedAt:new Date().toISOString(),sessions:data.sessions};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mts-training-arena-"+new Date().toISOString().slice(0,10)+".json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ toast(lang==="ar"?"تم تنزيل النسخة الاحتياطية":"Backup downloaded");
+}
+function validBackup(x){
+ if(!x||x.format!=="mts-training-arena-backup"||x.version!==BACKUP_VERSION||!Array.isArray(x.sessions)||x.sessions.length>500)throw Error("Invalid or unsupported Arena backup");
+ const ids=new Set();
+ for(const sess of x.sessions){
+  if(!sess||typeof sess.id!=="string"||sess.id.length>128||ids.has(sess.id)||typeof sess.name!=="string"||sess.name.length>120||!Array.isArray(sess.activities)||sess.activities.length>200)throw Error("Invalid session");
+  ids.add(sess.id);
+  const activities=new Set();
+  for(const a of sess.activities){
+   if(!a||typeof a.id!=="string"||a.id.length>128||activities.has(a.id)||!TYPES.includes(a.type)||typeof a.question!=="string"||a.question.length>1000||!Number.isInteger(a.timer)||a.timer<5||a.timer>300)throw Error("Invalid activity");
+   activities.add(a.id);
+  }
+ }
+ return x.sessions;
+}
+async function importBackup(file){
+ if(!file||file.size>2000000)throw Error("Backup file must be under 2 MB");
+ const text=await file.text();const sessions=validBackup(JSON.parse(text));
+ if(!confirm("Replace ALL current browser drafts with "+sessions.length+" imported session(s)? Export a backup first if you need the existing drafts."))return;
+ const previous=data;data={sessions};
+ try{save();selected=null;editing=null;view="sessions";render();toast("Imported "+sessions.length+" sessions");}
+ catch(error){data=previous;throw error;}
+}
+function wireBackup(){
+ const exportBtn=document.getElementById("exportBackup"),importBtn=document.getElementById("importBackup"),chooser=document.getElementById("backupFile");
+ if(exportBtn)exportBtn.onclick=downloadBackup;
+ if(importBtn&&chooser)importBtn.onclick=()=>chooser.click();
+ if(chooser)chooser.onchange=async()=>{try{await importBackup(chooser.files?.[0]);}catch(error){alert("Import failed: "+error.message);}finally{chooser.value="";}};
+}
 function toast(msg){document.querySelector(".toast")?.remove();const n=document.createElement("div");n.className="toast";n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),2300)}
 function navButton(route,label,icon){return '<button data-route="'+route+'" class="'+(view===route?"active":"")+'">'+icon+"  "+label+"</button>";}
 function layout(content){el.innerHTML='<div class="shell" dir="'+(lang==="ar"?"rtl":"ltr")+'"><aside class="nav"><div class="brand"><div class="mark">M</div><div>MTS Training Arena<div class="sub">TRAINING TEAM</div></div></div>'+navButton("dashboard",t("home"),"▦")+navButton("sessions",t("sessions"),"▤")+navButton("library",t("library"),"◈")+navButton("reports",t("reports"),"▥")+'<div style="flex:1"></div><button id="logout">⇦ '+t("logout")+'</button></aside><main class="main"><div class="top"><span class="eyebrow">MTS TRAINING ARENA / FOUNDATION</span><span class="langs"><button data-lang="en">EN</button><button data-lang="ar">عربي</button></span></div>'+content+'<p class="note">'+t("mode")+'</p></main></div>';wireNav();}
@@ -22,10 +58,10 @@ function wireNav(){document.querySelectorAll("[data-route]").forEach(b=>b.onclic
 function render(){document.title="MTS Training Arena — Preview";if(view==="login")return login();if(view==="dashboard")return dashboard();if(view==="sessions")return sessions();if(view==="studio")return studio();if(view==="stage")return stage();if(view==="library")return library();if(view==="reports")return reports();}
 function login(){el.innerHTML='<div class="login" dir="'+(lang==="ar"?"rtl":"ltr")+'"><div class="panel"><div class="mark">M</div><p class="eyebrow">MTS × Training Team</p><h1>'+t("title")+'</h1><p class="muted">'+t("notAuth")+'</p><div class="fields"><div class="field"><label>'+t("email")+'</label><input type="email" disabled placeholder="trainer@organization"></div><div class="field"><label>'+t("password")+'</label><input type="password" disabled placeholder="••••••••"></div><button class="btn" id="enter">'+t("start")+'</button></div><p class="note">'+t("mode")+'</p><div class="langs"><button data-lang="en">EN</button><button data-lang="ar">عربي</button></div></div></div>';document.getElementById("enter").onclick=()=>{view="dashboard";render()};document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{lang=b.dataset.lang;render()})}
 function create(){const s={id:id(),name:lang==="ar"?"سيشن جديدة":"Untitled Session",description:"",createdAt:new Date().toISOString(),activities:[]};data.sessions.unshift(s);selected=s.id;editing=null;save();view="studio";render();}
-function dashboard(){const n=data.sessions.length,a=data.sessions.reduce((sum,s)=>sum+s.activities.length,0);layout('<h1 class="title">'+t("hello")+'</h1><p class="muted">'+t("tag")+'</p><div class="panel" style="background:linear-gradient(125deg,#eaf8ff,#ecfff5)"><h2>'+t("create")+'</h2><p class="muted">Create from scratch · Build · Preview</p><button class="btn green" id="new">＋ '+t("create")+'</button><a class="btn secondary" href="./games.html" style="display:inline-block;margin:8px">▶ 11 Activity Demos</a></div><div class="grid" style="margin-top:16px"><div class="panel stat"><span>'+t("upcoming")+'</span><b>'+n+'</b></div><div class="panel stat"><span>'+t("activities")+'</span><b>'+a+'</b></div></div><h3 class="section">'+t("recent")+'</h3><div class="items">'+(n?data.sessions.slice(0,5).map(s=>sessionCard(s)).join(""):'<div class="empty">'+t("noSession")+'</div>')+'</div>');document.getElementById("new").onclick=create;wireCards();}
+function dashboard(){const n=data.sessions.length,a=data.sessions.reduce((sum,s)=>sum+s.activities.length,0);layout('<h1 class="title">'+t("hello")+'</h1><p class="muted">'+t("tag")+'</p><div class="panel" style="background:linear-gradient(125deg,#eaf8ff,#ecfff5)"><h2>'+t("create")+'</h2><p class="muted">Create from scratch · Build · Preview</p><button class="btn green" id="new">＋ '+t("create")+'</button><a class="btn secondary" href="./games.html" style="display:inline-block;margin:8px">▶ 11 Activity Demos</a><div class="actions" style="margin-top:14px"><button class="btn secondary" id="exportBackup">↓ Export sessions</button><button class="btn secondary" id="importBackup">↑ Import sessions</button><input id="backupFile" type="file" accept=".json,application/json" hidden></div></div><div class="grid" style="margin-top:16px"><div class="panel stat"><span>'+t("upcoming")+'</span><b>'+n+'</b></div><div class="panel stat"><span>'+t("activities")+'</span><b>'+a+'</b></div></div><h3 class="section">'+t("recent")+'</h3><div class="items">'+(n?data.sessions.slice(0,5).map(s=>sessionCard(s)).join(""):'<div class="empty">'+t("noSession")+'</div>')+'</div>');document.getElementById("new").onclick=create;wireCards();wireBackup();}
 function sessionCard(s){return '<div class="item"><div><strong>'+esc(s.name)+'</strong><div class="note">'+s.activities.length+" "+t("activities")+' · <span class="pill draft">'+t("draft")+'</span></div></div><div class="actions"><button class="btn secondary small" data-open="'+esc(s.id)+'">'+t("edit")+'</button><button class="btn secondary small" data-preview="'+esc(s.id)+'">'+t("preview")+'</button><button class="btn danger small" data-delete="'+esc(s.id)+'">'+t("delete")+'</button></div></div>'}
 function wireCards(){document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{selected=b.dataset.open;editing=null;view="studio";render()});document.querySelectorAll("[data-preview]").forEach(b=>b.onclick=()=>{selected=b.dataset.preview;view="stage";render()});document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{if(!confirm("Delete local draft?"))return;data.sessions=data.sessions.filter(s=>s.id!==b.dataset.delete);save();render()})}
-function sessions(){layout('<h1 class="title">'+t("sessions")+'</h1><button class="btn" id="new">＋ '+t("create")+'</button><div class="items" style="margin-top:18px">'+(data.sessions.length?data.sessions.map(sessionCard).join(""):'<div class="empty">'+t("noSession")+'</div>')+'</div>');document.getElementById("new").onclick=create;wireCards();}
+function sessions(){layout('<h1 class="title">'+t("sessions")+'</h1><button class="btn" id="new">＋ '+t("create")+'</button><div class="actions" style="margin:12px 0"><button class="btn secondary" id="exportBackup">↓ Export sessions</button><button class="btn secondary" id="importBackup">↑ Import sessions</button><input id="backupFile" type="file" accept=".json,application/json" hidden></div><div class="items" style="margin-top:18px">'+(data.sessions.length?data.sessions.map(sessionCard).join(""):'<div class="empty">'+t("noSession")+'</div>')+'</div>');document.getElementById("new").onclick=create;wireCards();wireBackup();}
 function library(){layout('<h1 class="title">'+t("library")+'</h1><p class="muted">11 activity types planned. Quiz, Live Poll and Dropdown have foundation authoring tools.</p><div class="grid">'+TYPES.map((name,i)=>'<div class="panel"><b>'+(i+1)+". "+name+'</b><p class="note">'+(canEdit(name)?"Foundation editor available":"Planned for the complete game engine")+'</p></div>').join("")+'</div>');}
 function reports(){layout('<h1 class="title">'+t("reports")+'</h1><div class="panel empty"><h3>Reports & Analytics</h3><p>'+t("notReady")+'</p><p class="note">No participant data is collected in this prototype.</p></div>')}
 function canEdit(type){return ["Quiz","Live Poll","Dropdown"].includes(type)}
