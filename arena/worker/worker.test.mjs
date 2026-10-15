@@ -27,3 +27,12 @@ test("no privileged endpoint exists outside the allowlist",async()=>{
  const result=await handler.fetch(request("POST",origin,"/admin"),env);
  assert.equal(result.status,404);
 });
+
+test("public health endpoint reveals no secrets and says not ready",async()=>{
+ const response=await handler.fetch(new Request("https://worker.example/health"),env);
+ assert.equal(response.status,200);
+ const body=await response.json();
+ assert.equal(body.ready,false);
+ assert.equal(body.mode,"safe-preview");
+ assert.equal(JSON.stringify(body).includes("firebase"),false);
+});
