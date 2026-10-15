@@ -1,12 +1,12 @@
 const el=id=>document.getElementById(id);
-const TRUSTED_ENDPOINT=typeof window.ARENA_TRUSTED_API_ORIGIN==="string"?window.ARENA_TRUSTED_API_ORIGIN:"";
-let auth=null,roomId="",roundId="",signedIn=false,busy=false;
+const TRUSTED_ENDPOINT="https://mts-training-arena-api.hazem-mts-arena.workers.dev";
+let auth=null,roomId="",roundId="",signedIn=false,busy=false,serviceReady=false;
 const buttons=["create","open","close","settle"];
 const setStatus=message=>{el("output").textContent=message;};
 function render(){
- buttons.forEach(id=>el(id).disabled=!signedIn||busy||!validService());
+ buttons.forEach(id=>el(id).disabled=!signedIn||busy||!validService()||!serviceReady);
  el("room").value=roomId;el("round").value=roundId;
- el("authStatus").textContent=signedIn?"Signed in as "+auth.currentUser.email:"Not signed in";
+ if(signedIn)el("authStatus").textContent="Signed in as "+auth.currentUser.email;
 }
 function validService(){
  try{const u=new URL(TRUSTED_ENDPOINT);return u.protocol==="https:"&&u.origin===TRUSTED_ENDPOINT&&!u.username&&!u.password;}catch{return false;}
@@ -33,7 +33,15 @@ try{
  auth=app.auth();
  el("api").value=TRUSTED_ENDPOINT||"Not configured — backend not deployed";
  el("api").readOnly=true;
- el("signin").disabled=!validService();
+ el("signin").disabled=true;
+ fetch(TRUSTED_ENDPOINT+"/health",{cache:"no-store"}).then(async response=>{
+  if(!response.ok)throw Error("Service health check failed");
+  const status=await response.json();
+  serviceReady=status.ready===true;
+  el("signin").disabled=!serviceReady;
+  el("authStatus").textContent=serviceReady?"Backend ready":"Backend connected in safe preview mode; scoring is not enabled";
+  render();
+ }).catch(error=>{el("authStatus").textContent="Cannot reach backend: "+error.message;});
  el("signin").onclick=()=>task(async()=>{
   const email=el("email").value.trim(),password=el("password").value;
   if(!email||!password)throw Error("Enter trainer credentials");
