@@ -49,10 +49,10 @@ async function loadTrainerRooms(){
   document.getElementById("resumeSelected").onclick=()=>{if(validRoom(select.value))resumeTrainerRoom(select.value);};
 }
 
-let app,auth,db,offset=0,room="",me="",trainer=false,publicState=null,stop=[],answers={},activityList=[],current=0;
+let app,auth,db,offset=0,room="",me="",trainer=false,publicState=null,stop=[],answers={},activityList=[],current=0,participantTimer=null;
 function show(s){box.innerHTML=s;}
 function note(s){const x=document.getElementById("notice");if(x)x.textContent=s;}
-function cleanup(){for(const fn of stop)fn();stop=[];publicState=null;answers={};countedRound="";}
+function cleanup(){if(participantTimer!==null){clearInterval(participantTimer);participantTimer=null;}for(const fn of stop)fn();stop=[];publicState=null;answers={};countedRound="";}
 function listen(path,cb){const ref=db.ref(path);ref.on("value",cb,err=>note("Firebase: "+err.message));stop.push(()=>ref.off("value",cb));}
 function init(){
   if(typeof FB_CONFIG==="undefined"||!FB_CONFIG?.projectId||!FB_CONFIG?.databaseURL) {show("<p>Firebase config missing or lacks a Realtime Database URL. This pilot cannot run until it is configured.</p>");return;}
@@ -217,11 +217,14 @@ function participantHome(){
 }
 function watchRoom(){
   cleanup();
-  show('<h2>MTS Training Arena</h2><h3 id="roomtitle"></h3><p id="phase"></p><div class="panel" style="background:#ecf6fc"><h2 id="question"></h2><div id="choices" class="grid"></div></div><p id="notice" class="note">Connected. Waiting for trainer.</p>');
+  show('<h2>MTS Training Arena</h2><h3 id="roomtitle"></h3><p id="phase"></p><div class="arena-timer" role="timer" aria-live="off"><span>TIME LEFT</span><strong id="roundCountdown">--</strong></div><div class="panel" style="background:#ecf6fc"><h2 id="question"></h2><div id="choices" class="grid"></div></div><p id="notice" class="note">Connected. Waiting for trainer.</p>');
+  const updateCountdown=()=>{const target=document.getElementById("roundCountdown");if(!target)return;const active=publicState?.status==="question"&&Number.isFinite(publicState.deadline);const remaining=active?Math.max(0,Math.ceil((publicState.deadline-(Date.now()+offset))/1000)):null;target.textContent=remaining===null?"--":remaining+"s";target.parentElement.classList.toggle("urgent",remaining!==null&&remaining<=10);if(remaining===0)document.querySelectorAll("#choices button").forEach(button=>button.disabled=true);};
+  participantTimer=setInterval(updateCountdown,250);
   listen("arenaV1/rooms/"+room+"/public",s=>{
     const next=s.val();if(!next)return note("Room removed or unavailable");
     const changed=!publicState||publicState.round!==next.round||publicState.status!==next.status;
     publicState=next;
+    updateCountdown();
     document.getElementById("roomtitle").textContent=next.title;
     document.getElementById("phase").textContent=next.status+" — round "+next.round;
     document.getElementById("question").textContent=next.question;
@@ -231,7 +234,7 @@ function watchRoom(){
         (next.options||[]).forEach((answer,i)=>{
           const button=document.createElement("button");button.className="btn secondary";button.textContent=answer;
           button.onclick=async()=>{
-            if(button.disabled)return;
+            if(button.disabled||next.status!=="question"||Date.now()+offset>=next.deadline){note("This round has already closed.");updateCountdown();return;}
             choiceArea.querySelectorAll("button").forEach(b=>b.disabled=true);
             try{
               await db.ref("arenaV1/answers/"+room+"/"+next.round+"/"+me).set({choice:i});
