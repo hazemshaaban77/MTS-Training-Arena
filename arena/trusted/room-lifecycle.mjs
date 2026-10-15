@@ -32,6 +32,10 @@ export async function openTrustedRound({db,uid,roomId,activity,now=Date.now()}){
  const publicRef=db.ref(root+"/rooms/"+roomId+"/public");
  const before=(await publicRef.get()).val();
  check(before&&["lobby","between"].includes(before.status),"Close the previous round first");
+ if(before.status==="between"){
+  const archive=(await db.ref(internal+"/closedRounds/"+roomId+"/"+before.round).get()).val();
+  check(archive?.round===before.round&&archive.status==="between","Previous round not archived yet");
+ }
  const nextIndex=Number(before.round.slice(1))+1,roundId="r"+nextIndex;
  check(R.test(roundId),"Invalid round ID");
  const key={roundId,kind:activity.kind,question:activity.question,options:activity.options,correctIndex:activity.kind==="Live Poll"?null:activity.correctIndex,pointsPerCorrect:activity.kind==="Live Poll"?0:100};
@@ -52,13 +56,15 @@ export async function closeTrustedRound({db,uid,roomId,now=Date.now()}){
  const ref=db.ref(root+"/rooms/"+roomId+"/public");
  const previous=(await ref.get()).val();
  check(previous?.status==="question"&&previous.deadline<=now,"Round is not active or deadline has not elapsed");
- const closedRef=db.ref(internal+"/closedRounds/"+roomId+"/"+previous.round);
- const saved=await closedRef.transaction(current=>current===null?{...previous,status:"between",closedAt:now}:undefined,undefined,false);
- check(saved.committed||saved.snapshot.val()?.round===previous.round,"Failed to retain closed round");
+ // Move the actual round first. Never create a closed snapshot for an active round.
  const tx=await ref.transaction(value=>{
-  if(!value||value.status!=="question"||value.deadline>now)return;
+  if(!value||value.status!=="question"||value.round!==previous.round||value.deadline>now)return;
   return {...value,status:"between"};
  },undefined,false);
  check(tx.committed,"Round is not active or deadline has not elapsed");
- return {roomId,roundId:tx.snapshot.val().round,status:"between"};
+ const closed=tx.snapshot.val();
+ const closedRef=db.ref(internal+"/closedRounds/"+roomId+"/"+closed.round);
+ const saved=await closedRef.transaction(value=>value===null?{...closed,closedAt:now}:undefined,undefined,false);
+ check(saved.committed||saved.snapshot.val()?.round===closed.round,"Failed to retain closed round");
+ return {roomId,roundId:closed.round,status:"between"};
 }
