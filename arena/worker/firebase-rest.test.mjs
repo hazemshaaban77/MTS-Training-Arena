@@ -5,14 +5,12 @@ import {firebaseRestDb} from "./firebase-rest.mjs";
 
 test("OAuth token is reused; Firebase CAS retries once on ETag conflict",async()=>{
  const originalFetch=globalThis.fetch;
- const originalCrypto=globalThis.crypto;
  const keys=await webcrypto.subtle.generateKey({name:"RSASSA-PKCS1-v1_5",modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:"SHA-256"},true,["sign","verify"]);
  const pkcs8=new Uint8Array(await webcrypto.subtle.exportKey("pkcs8",keys.privateKey));
  const base64=Buffer.from(pkcs8).toString("base64").match(/.{1,64}/g).join("\n");
  const env=Object.freeze({GOOGLE_CLIENT_EMAIL:"unit-test@example.iam.gserviceaccount.com",GOOGLE_PRIVATE_KEY:"-----BEGIN PRIVATE KEY-----\n"+base64+"\n-----END PRIVATE KEY-----",FIREBASE_DATABASE_URL:"https://test-default-rtdb.example.com"});
  const calls=[];let etag=0;
  try{
-  globalThis.crypto=webcrypto;
   globalThis.fetch=async(url,opts)=>{
    calls.push({url:String(url),method:opts.method,headers:opts.headers});
    if(String(url).includes("oauth2.googleapis.com"))return new Response(JSON.stringify({access_token:"synthetic-oauth",expires_in:3600}),{status:200});
@@ -32,5 +30,5 @@ test("OAuth token is reused; Firebase CAS retries once on ETag conflict",async()
   await db.ref("arenaV1/test").get();
   assert.equal(calls.filter(c=>c.url.includes("oauth2.googleapis.com")).length,1);
   await assert.rejects(db.ref("../other").get(),/Invalid database path/);
- } finally {globalThis.fetch=originalFetch;globalThis.crypto=originalCrypto;}
+ } finally {globalThis.fetch=originalFetch;}
 });
