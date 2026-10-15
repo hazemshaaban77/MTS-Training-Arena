@@ -14,7 +14,7 @@ function pemBytes(pem){
 let cachedToken=null;
 let pendingToken=null;
 async function requestServiceToken(env,now){
- const key=await crypto.subtle.importKey("pkcs8",pemBytes(env.GOOGLE_PRIVATE_KEY),"RSASSA-PKCS1-v1_5",false,["sign"]);
+ const key=await crypto.subtle.importKey("pkcs8",pemBytes(env.GOOGLE_PRIVATE_KEY),{name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},false,["sign"]);
  const h=base64json({alg:"RS256",typ:"JWT"});
  const p=base64json({iss:env.GOOGLE_CLIENT_EMAIL,scope:"https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email",aud:"https://oauth2.googleapis.com/token",iat:now,exp:now+3600});
  const input=h+"."+p;
