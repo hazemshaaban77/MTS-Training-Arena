@@ -33,6 +33,10 @@ test("trusted room creation freezes owner, round key and opens a question",async
  await assert.rejects(closeTrustedRound({db,uid:"trainer",roomId:id,now:150}),/deadline/);
  const closed=await closeTrustedRound({db,uid:"trainer",roomId:id,now:30100});
  assert.equal(closed.status,"between");
+ await assert.rejects(openTrustedRound({db,uid:"trainer",roomId:id,activity,now:30101}),/Settle and publish/);
+ state["arenaTrusted/ledgers/"+id+"/r1"]={roundId:"r1"};
+ await assert.rejects(openTrustedRound({db,uid:"trainer",roomId:id,activity,now:30101}),/Settle and publish/);
+ state["arenaV1/scoreboards/"+id]={settledRounds:1};
  const next=await openTrustedRound({db,uid:"trainer",roomId:id,activity,now:30101});
  assert.equal(next.roundId,"r2");
 });
