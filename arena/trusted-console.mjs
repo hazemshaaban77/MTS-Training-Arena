@@ -1,4 +1,5 @@
 const el=id=>document.getElementById(id);
+const TRUSTED_ENDPOINT=typeof window.ARENA_TRUSTED_API_ORIGIN==="string"?window.ARENA_TRUSTED_API_ORIGIN:"";
 let auth=null,roomId="",roundId="",signedIn=false,busy=false;
 const buttons=["create","open","close","settle"];
 const setStatus=message=>{el("output").textContent=message;};
@@ -8,12 +9,12 @@ function render(){
  el("authStatus").textContent=signedIn?"Signed in as "+auth.currentUser.email:"Not signed in";
 }
 function validService(){
- try{const u=new URL(el("api").value);return u.protocol==="https:"&&!u.username&&!u.password&&!u.pathname.replace(/\//g,"")&&!u.search&&!u.hash;}catch{return false;}
+ try{const u=new URL(TRUSTED_ENDPOINT);return u.protocol==="https:"&&u.origin===TRUSTED_ENDPOINT&&!u.username&&!u.password;}catch{return false;}
 }
 async function api(path,payload){
  if(!signedIn||!validService())throw Error("Sign in and provide the HTTPS backend origin");
  const token=await auth.currentUser.getIdToken();
- const response=await fetch(el("api").value.replace(/\/$/,"")+path,{
+ const response=await fetch(TRUSTED_ENDPOINT+path,{
   method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify(payload)
  });
  let result;try{result=await response.json();}catch{throw Error("Backend returned invalid JSON");}
@@ -30,6 +31,9 @@ try{
  if(typeof FB_CONFIG==="undefined")throw Error("Firebase configuration unavailable");
  const app=firebase.initializeApp(FB_CONFIG,"mts-arena-trusted-console");
  auth=app.auth();
+ el("api").value=TRUSTED_ENDPOINT||"Not configured — backend not deployed";
+ el("api").readOnly=true;
+ el("signin").disabled=!validService();
  el("signin").onclick=()=>task(async()=>{
   const email=el("email").value.trim(),password=el("password").value;
   if(!email||!password)throw Error("Enter trainer credentials");
@@ -37,7 +41,7 @@ try{
   const credential=await auth.signInWithEmailAndPassword(email,password);
   signedIn=!!credential.user;return {signedIn:true,email:credential.user.email};
  });
- el("api").oninput=render;
+
  el("create").onclick=()=>task(async()=>{
   const result=await api("/v1/rooms/create",{title:el("title").value.trim()});
   roomId=result.roomId;roundId="";return result;
