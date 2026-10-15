@@ -18,7 +18,7 @@ export default {
   const allowed=env.ARENA_ALLOWED_ORIGIN;
   const origin=req.headers.get("Origin");
   const path=new URL(req.url).pathname;
-  if(req.method==="GET"&&path==="/health")return new Response(JSON.stringify({service:"mts-training-arena-api",ready:false,mode:"safe-preview"}),{status:200,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
+  if(req.method==="GET"&&path==="/health"){const ready=env.ARENA_ENABLE_TRUSTED_V1==="true"&&Boolean(env.GOOGLE_CLIENT_EMAIL)&&Boolean(env.GOOGLE_PRIVATE_KEY)&&Boolean(env.FIREBASE_PROJECT_ID)&&Boolean(env.FIREBASE_DATABASE_URL);return new Response(JSON.stringify({service:"mts-training-arena-api",ready,mode:ready?"trusted-enabled":"safe-preview"}),{status:200,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});}
   if(!allowed||origin!==allowed)return response(403,{error:"Origin blocked"},allowed||"null");
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{
    "Access-Control-Allow-Origin":allowed,"Access-Control-Allow-Methods":"POST, OPTIONS",
