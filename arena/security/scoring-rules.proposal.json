@@ -135,19 +135,7 @@
       "scoreboards": {
         "$roomId": {
           ".read": "auth != null && root.child('arenaV1/rooms').child($roomId).child('public').exists() && (root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true || root.child('arenaV1/participants').child($roomId).child(auth.uid).exists())",
-          ".write": false,
-          "players": {
-            ".validate": "newData.isObject()"
-          },
-          "teams": {
-            ".validate": "newData.isObject()"
-          },
-          "settledRounds": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
-          },
-          "$other": {
-            ".validate": false
-          }
+          ".write": false
         }
       }
     }
