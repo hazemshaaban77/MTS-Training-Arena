@@ -10,3 +10,36 @@ html[dir="rtl"] .field label,html[dir="rtl"] .panel,html[dir="rtl"] .note{text-a
 html[dir="rtl"] .field input{direction:auto;text-align:start}
 html[dir="rtl"] .eyebrow{letter-spacing:1px}
 @media(max-width:680px){.arena-logo{width:54px;height:48px}.arena-tools{justify-content:space-between;width:100%}.arena-identity{gap:8px}}
+
+/* Arena Studio — high-energy dark interface, scoped away from secure pilot pages */
+.shell{background:radial-gradient(ellipse 64% 58% at 78% 4%,#132f55 0%,transparent 72%),linear-gradient(145deg,#071121,#0b1830 65%,#07111f);color:#e8f4ff}
+.shell .nav{background:linear-gradient(180deg,#08152b,#0b2443);border-inline-end:1px solid #285073}
+.shell .nav button.active{background:linear-gradient(105deg,#155895,#0d806c);box-shadow:0 8px 26px #0bc7cc20}
+.shell .nav button:hover{transform:translateX(2px);transition:transform .2s ease}
+.shell .panel{background:linear-gradient(155deg,#11253f,#0d1c33);border:1px solid #294663;box-shadow:0 16px 40px #0003}
+.shell .muted,.shell .note{color:#aec4d9}
+.shell .eyebrow{color:#56bde1}
+.shell .item{background:#10263e;border-color:#2d4e68;color:#e8f4ff;transition:transform .2s ease,border-color .2s ease}
+.shell .item:hover{transform:translateY(-2px);border-color:#1dc5b5}
+.shell .activity{border-color:#294963;background:#102b44}
+.shell .activity.selected{border-color:#48dfcc;background:#12464c}
+.shell .activity>button:not(.btn),.shell .activity .actions button{background:#204b65;color:#f5fcff;border:1px solid #3a6680;border-radius:8px;padding:6px 9px}
+.shell .field input,.shell .field select,.shell .field textarea{background:#0a1a30;color:#ecfaff;border-color:#375674}
+.shell .field input:focus,.shell .field textarea:focus,.shell .field select:focus{outline:2px solid #26cdb9;outline-offset:2px}
+.shell .btn{background:linear-gradient(115deg,#1683c8,#146bb2);box-shadow:0 7px 24px #008bde1f;transition:transform .2s ease,filter .2s ease}
+.shell .btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.13)}
+.shell .btn.green{background:linear-gradient(110deg,#008b85,#24b987)}
+.shell .btn.secondary{background:#224562;color:#edfaff}
+.shell .btn.danger{background:#823348}
+.shell .stat b{font-size:36px;color:#6cf0cd}
+.shell .empty{background:#132b43;color:#bcd2e6}
+.shell .pill.draft{background:#63471d;color:#ffe4a3}
+.shell .top .langs button{background:#1b3a58;color:#e9f8ff;border-color:#335978}
+.shell .stage{border:1px solid #2679a4;box-shadow:0 12px 42px #001a2d}
+.shell .panel[style*="linear-gradient(125deg"]{background:linear-gradient(120deg,#0f5270,#115a51)!important;border-color:#2dbaa8}
+@media(prefers-reduced-motion:no-preference){
+ .shell .panel{animation:arena-enter .35s ease both}
+ .shell .mark{animation:arena-glow 3.5s ease-in-out infinite}
+ @keyframes arena-enter{from{opacity:.7;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+ @keyframes arena-glow{0%,100%{box-shadow:0 0 16px #18a2de40}50%{box-shadow:0 0 26px #26e6c08c}}
+}
