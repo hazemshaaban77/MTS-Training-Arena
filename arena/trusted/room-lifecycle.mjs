@@ -50,6 +50,11 @@ export async function closeTrustedRound({db,uid,roomId,now=Date.now()}){
  check(ID.test(roomId),"Invalid room");
  await owner(db,uid,roomId);
  const ref=db.ref(root+"/rooms/"+roomId+"/public");
+ const previous=(await ref.get()).val();
+ check(previous?.status==="question"&&previous.deadline<=now,"Round is not active or deadline has not elapsed");
+ const closedRef=db.ref(internal+"/closedRounds/"+roomId+"/"+previous.round);
+ const saved=await closedRef.transaction(current=>current===null?{...previous,status:"between",closedAt:now}:undefined,undefined,false);
+ check(saved.committed||saved.snapshot.val()?.round===previous.round,"Failed to retain closed round");
  const tx=await ref.transaction(value=>{
   if(!value||value.status!=="question"||value.deadline>now)return;
   return {...value,status:"between"};
