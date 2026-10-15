@@ -3,6 +3,12 @@ const TRUSTED_ENDPOINT="https://mts-training-arena-api.hazem-mts-arena.workers.d
 let auth=null,roomId="",roundId="",signedIn=false,busy=false,serviceReady=false,phase="idle";
 const buttons=["create","open","close","settle"];
 const setStatus=message=>{el("output").textContent=message;};
+function serviceBanner(ready,description){
+ el("serviceTitle").textContent=ready?"Secure backend ready":"Live scoring not activated";
+ el("serviceDescription").textContent=description;
+ el("serviceBanner").style.background=ready?"#e8f7ed":"#fff3df";
+ el("serviceBanner").style.borderColor=ready?"#78b996":"#e5c184";
+}
 function render(){
  const enabled=signedIn&&!busy&&validService()&&serviceReady;
  el("create").disabled=!enabled;
@@ -48,9 +54,15 @@ try{
   const status=await response.json();
   serviceReady=status.ready===true;
   el("signin").disabled=!serviceReady;
-  el("authStatus").textContent=serviceReady?"Backend ready":"Backend connected in safe preview mode; scoring is not enabled";
+  el("authStatus").textContent=serviceReady?"Backend ready for trainer sign-in":"Sign-in intentionally locked — no need to enter credentials.";
+  serviceBanner(serviceReady,serviceReady?"Authenticated operations are available to permitted trainers.":"Cloudflare service is in safe-preview mode. You can use Arena Studio, the activity demos and simulator now. Live scoring stays locked until Firebase security is ready.");
   render();
- }).catch(error=>{el("authStatus").textContent="Cannot reach backend: "+error.message;});
+ }).catch(error=>{
+  serviceReady=false;
+  el("authStatus").textContent="Secure backend unavailable; sign-in remains locked.";
+  serviceBanner(false,"The backend health check could not be completed. Studio and offline demos remain available.");
+  render();
+ });
  el("signin").onclick=()=>task(async()=>{
   const email=el("email").value.trim(),password=el("password").value;
   if(!email||!password)throw Error("Enter trainer credentials");
@@ -81,4 +93,4 @@ try{
   const result=await api("/v1/settle",{roomId,roundId});phase="settled";render();return result;
  });
  render();
-}catch(error){setStatus("Setup error: "+error.message);el("signin").disabled=true;}
+}catch(error){setStatus("Setup error: "+error.message);serviceBanner(false,"Firebase client configuration is unavailable. Offline demos remain accessible.");el("signin").disabled=true;}
