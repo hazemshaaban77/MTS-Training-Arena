@@ -36,3 +36,18 @@ test("public health endpoint reveals no secrets and says not ready",async()=>{
  assert.equal(body.mode,"safe-preview");
  assert.equal(JSON.stringify(body).includes("firebase"),false);
 });
+
+test("health only becomes enabled when switch and both credentials are configured",async()=>{
+ const configs=[
+  {...env,ARENA_ENABLE_TRUSTED_V1:"true"},
+  {...env,ARENA_ENABLE_TRUSTED_V1:"true",GOOGLE_CLIENT_EMAIL:"sa@example.com",GOOGLE_PRIVATE_KEY:"secret"},
+  {...env,GOOGLE_CLIENT_EMAIL:"sa@example.com",GOOGLE_PRIVATE_KEY:"secret",FIREBASE_PROJECT_ID:"demo",FIREBASE_DATABASE_URL:"https://demo.firebaseio.com"}
+ ];
+ for(const candidate of configs){
+  const res=await handler.fetch(new Request("https://worker.example/health"),candidate);
+  assert.equal((await res.json()).ready,false);
+ }
+ const res=await handler.fetch(new Request("https://worker.example/health"),{...configs[2],ARENA_ENABLE_TRUSTED_V1:"true"});
+ assert.equal((await res.json()).ready,true);
+
+});
