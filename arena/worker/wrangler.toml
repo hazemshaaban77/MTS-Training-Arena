@@ -1,0 +1,15 @@
+name = "mts-training-arena-api"
+main = "index.mjs"
+compatibility_date = "2026-10-15"
+workers_dev = true
+
+[vars]
+ARENA_ALLOWED_ORIGIN = "https://hazemshaaban77.github.io"
+FIREBASE_PROJECT_ID = "mts-quiz-64faa"
+FIREBASE_DATABASE_URL = "https://mts-quiz-64faa-default-rtdb.europe-west1.firebasedatabase.app"
+ARENA_ENABLE_TRUSTED_V1 = "false"
+
+# REQUIRED SECRETS, set interactively in your own Cloudflare account:
+# npx wrangler secret put GOOGLE_CLIENT_EMAIL
+# npx wrangler secret put GOOGLE_PRIVATE_KEY
+# Do not commit service-account keys or use a paid Worker plan.
