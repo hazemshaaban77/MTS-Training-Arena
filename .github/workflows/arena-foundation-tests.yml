@@ -23,6 +23,7 @@ jobs:
           node --check arena/engine.mjs
           node --check arena/simulator.mjs
           node --check arena/live.mjs
+          node --check arena/trusted-console.mjs
           node --check arena/projector.mjs
           node --check arena/activity-contract.mjs
           node --check arena/activity-contract.test.mjs
