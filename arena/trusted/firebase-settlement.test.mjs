@@ -10,6 +10,7 @@ function fakeStore(){
   [base+"/trainerAllowlist/trainer"]:true,
   [secret+"/roomOwners/"+roomId]:"trainer",
   [base+"/rooms/"+roomId+"/public"]:{...round},
+  [secret+"/closedRounds/"+roomId+"/r1"]:{...round,roster:{p1:{name:"Ahmed"},p2:{name:"Mona"}}},
   [secret+"/roundKeys/"+roomId+"/r1"]:{roundId:"r1",kind:"Quiz",correctIndex:0,question:"Which?",options:["A","B"],pointsPerCorrect:100},
   [base+"/participants/"+roomId]:{p1:{name:"Ahmed"},p2:{name:"Mona"}},
   [base+"/answers/"+roomId+"/r1"]:{p1:{choice:0},p2:{choice:1}}
@@ -52,7 +53,7 @@ test("rejects answer-key mismatch and active question",async()=>{
  ctx.data[secret+"/roundKeys/"+roomId+"/r1"].question="Injected";
  await assert.rejects(settleRound(request(ctx)),/key mismatch/);
  ctx.data[secret+"/roundKeys/"+roomId+"/r1"].question="Which?";
- ctx.data[base+"/rooms/"+roomId+"/public"].status="question";
+ ctx.data[secret+"/closedRounds/"+roomId+"/r1"].status="question";
  await assert.rejects(settleRound(request(ctx)),/not closed/);
 });
 test("rejects injected answer records before ledger mutation",async()=>{
@@ -60,4 +61,12 @@ test("rejects injected answer records before ledger mutation",async()=>{
  ctx.data[base+"/answers/"+roomId+"/r1"].intruder={choice:0};
  await assert.rejects(settleRound(request(ctx)),/Invalid participant/);
  assert.equal(ctx.data[secret+"/ledgers/"+roomId],undefined);
+});
+
+test("a changed live roster cannot inflate closed-round scores",async()=>{
+ const ctx=fakeStore();
+ ctx.data[base+"/participants/"+roomId].intruder={name:"Spoofer"};
+ const answer=await settleRound(request(ctx));
+ assert.equal(answer.created,true);
+ assert.equal(ctx.data[base+"/scoreboards/"+roomId].players.length,2);
 });
