@@ -1,4 +1,4 @@
-import {randomBytes} from "node:crypto";
+const newRoomId=()=>Array.from(crypto.getRandomValues(new Uint8Array(12)),n=>n.toString(16).padStart(2,"0")).join("");
 
 const ID=/^[0-9a-f]{24}$/;
 const R=/^r[1-9][0-9]*$/;
@@ -11,7 +11,7 @@ async function owner(db,uid,roomId){
  ]);
  check(access.val()===true&&meta.val()===uid,"Not authorized for room");
 }
-export async function createTrustedRoom({db,uid,title,roomId=randomBytes(12).toString("hex")}){
+export async function createTrustedRoom({db,uid,title,roomId=newRoomId()}){
  check(ID.test(roomId)&&typeof uid==="string"&&uid.length>0,"Invalid room");
  check(typeof title==="string"&&title.trim().length>0&&title.length<=120,"Invalid title");
  check((await db.ref(root+"/trainerAllowlist/"+uid).get()).val()===true,"Trainer not authorized");
