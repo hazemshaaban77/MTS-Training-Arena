@@ -24,6 +24,9 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  if(!state?.roster||typeof state.roster!=="object")throw Error("Trusted participant roster missing");
  const participants=state.roster;
  const settlement=prepareClosedRound({roomId,roundId,publicRound:state,privateRound:key,participants,answers:snaps[5].val()||{}});
+ // Store each round roster alongside its immutable score event. Later rounds may
+ // have new entrants, but previous players must not disappear from totals.
+ settlement.members=participants;
  const ledgerRef=db.ref(service+"/ledgers/"+roomId);
  const tx=await ledgerRef.transaction(previous=>{
   if(previous&&Object.hasOwn(previous,roundId))return;
@@ -31,8 +34,14 @@ export async function settleRound({db,verifyIdToken,idToken,roomId,roundId,now=D
  },undefined,false);
  const ledger=tx.snapshot.val()||{};
  if(!Object.hasOwn(ledger,roundId))throw Error("Ledger transaction failed");
- const currentParticipants=participants;
- const board=prepareLeaderboard({participants:currentParticipants,ledger});
+ const allParticipants={};
+ for(const [roundKey,event] of Object.entries(ledger)){
+  if(!event.members||typeof event.members!=="object")throw Error("Ledger roster missing for "+roundKey);
+  for(const [memberId,details] of Object.entries(event.members)){
+   if(!Object.hasOwn(allParticipants,memberId))allParticipants[memberId]=details;
+  }
+ }
+ const board=prepareLeaderboard({participants:allParticipants,ledger});
  const published=await db.ref(prefix+"/scoreboards/"+roomId).transaction(previous=>{
   if(previous&&previous.settledRounds>=board.settledRounds)return;
   return {...board,updatedAt:now};
