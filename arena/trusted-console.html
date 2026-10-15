@@ -16,7 +16,7 @@
 <hr>
 <div class="field"><label for="title">Room title</label><input id="title" value="ACI Training" maxlength="120"></div>
 <button id="create" class="btn green" disabled>Create trusted room</button>
-<div class="field"><label for="room">Active room ID</label><input id="room" readonly></div><div class="field"><label for="joinLink">One trainee link for the entire session</label><input id="joinLink" readonly placeholder="Create a room to see the joining link"></div><div class="actions"><button id="copyJoin" class="btn secondary" disabled>Copy trainee link</button><a id="projectorLink" class="btn secondary" href="./projector.html" target="_blank" rel="noopener">Projector preview</a></div><p id="phaseStatus" class="note" role="status">Session has not started.</p>
+<div class="field"><label for="room">Active room ID</label><input id="room" readonly></div><div class="field"><label for="joinLink">One trainee link for the entire session</label><input id="joinLink" readonly placeholder="Create a room to see the joining link"></div><div id="roomQRSection" hidden style="margin:14px 0;padding:18px;border:1px solid #adc3db;border-radius:16px;background:white"><strong>One QR for the whole training session</strong><p class="note">Participants scan this once. Keep this room open while moving through activities. Test-only until live scoring is approved.</p><div id="roomQR" aria-label="Session joining QR code" style="display:inline-block;padding:12px;background:white"></div><p id="qrFallback" class="note" hidden>QR generator unavailable; copy the joining link instead.</p></div><div class="actions"><button id="copyJoin" class="btn secondary" disabled>Copy trainee link</button><a id="projectorLink" class="btn secondary" href="./projector.html" target="_blank" rel="noopener">Projector preview</a></div><p id="phaseStatus" class="note" role="status">Session has not started.</p>
 <div class="field"><label for="kind">Question type</label><select id="kind"><option>Quiz</option><option>Dropdown</option><option>Live Poll</option></select></div>
 <div class="field"><label for="question">Question</label><input id="question" value="What does ACID represent?"></div>
 <div class="field"><label for="options">Answer choices (one per line)</label><textarea id="options" rows="3">Advanced Cargo Information Declaration
@@ -31,4 +31,5 @@ A shipping company</textarea></div>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="../firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module" src="./trusted-console.mjs"></script></body></html>
