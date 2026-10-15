@@ -50,7 +50,39 @@ async function task(fn){
  catch(error){setStatus("Error: "+error.message);}
  finally{busy=false;render();}
 }
+
+const LIVE_TYPES=new Set(["Quiz","Dropdown","Live Poll"]);
+function loadStudioDrafts(){
+ let sessions=[];
+ try{const state=JSON.parse(localStorage.getItem("mts-arena-preview-v1")||"{}");if(Array.isArray(state.sessions))sessions=state.sessions;}catch{}
+ const picker=el("draftSession"),activityPicker=el("draftActivity");
+ if(!picker||!activityPicker)return;
+ const reset=()=>activityPicker.replaceChildren(new Option("Manual entry",""));
+ sessions.forEach((s,i)=>{if(s&&typeof s.name==="string"&&Array.isArray(s.activities))picker.add(new Option(s.name,String(i)));});
+ picker.onchange=()=>{
+  reset();
+  const session=picker.value===""?null:sessions[Number(picker.value)];
+  if(!session)return;
+  el("title").value=session.name.slice(0,120);
+  session.activities.forEach((a,i)=>{if(a&&LIVE_TYPES.has(a.type)&&Array.isArray(a.options)&&a.options.length>=2&&typeof a.question==="string")activityPicker.add(new Option((i+1)+". "+a.type+" — "+a.question.slice(0,60),String(i)));});
+ };
+ activityPicker.onchange=()=>{
+  const s=picker.value===""?null:sessions[Number(picker.value)];
+  const a=s?.activities?.[Number(activityPicker.value)];
+  if(!a||activityPicker.value===""||!LIVE_TYPES.has(a.type))return;
+  el("kind").value=a.type;
+  el("question").value=a.question;
+  el("options").value=a.options.join("\n");
+  el("correct").value=String(a.type==="Live Poll"?1:a.correct+1);
+  el("seconds").value=String(a.timer||30);
+  setStatus("Studio activity loaded. Secure server authorization is required before opening.");
+ };
+ const requested=new URLSearchParams(location.search).get("session");
+ if(requested){const index=sessions.findIndex(s=>s?.id===requested);if(index>=0){picker.value=String(index);picker.onchange();}}
+}
+
 try{
+ loadStudioDrafts();
  if(typeof FB_CONFIG==="undefined")throw Error("Firebase configuration unavailable");
  const app=firebase.initializeApp(FB_CONFIG,"mts-arena-trusted-console");
  auth=app.auth();
