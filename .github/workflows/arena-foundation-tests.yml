@@ -33,6 +33,7 @@ jobs:
           node --check arena/activity-contract.mjs
           node --check arena/activity-contract.test.mjs
           node --check arena/activity-lab.mjs
+          node --check arena/session-arcade.mjs
           node --check arena/team-engine.mjs
           node --check arena/team-engine.test.mjs
           node --check arena/queue-engine.mjs
