@@ -76,3 +76,20 @@ jobs:
         run: npm install --prefix arena --no-audit --no-fund
       - name: Test merged legacy and Arena rules
         run: cd arena && npx firebase emulators:exec --only database --project demo-mts-arena --config firebase.merged.emulator.json "node --test merged-rules.emulator.test.mjs"
+
+  scoring-rules-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install test-only Firebase dependencies
+        run: npm install --prefix arena --no-audit --no-fund
+      - name: Verify proposed secure scoreboard rules
+        run: cd arena && npx firebase emulators:exec --only database --project demo-mts-arena --config firebase.scoring.emulator.json "node --test scoring-rules.emulator.test.mjs"
