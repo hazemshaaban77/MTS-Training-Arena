@@ -51,7 +51,7 @@
           ".write": false,
           "public": {
             ".read": "auth != null",
-            ".write": "auth != null && root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true && newData.exists() && (!data.exists() || data.child('status').val() !== 'completed')",
+            ".write": "auth != null && root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true && newData.exists() && (!data.exists() || data.child('status').val() !== 'completed') && !root.child('arenaTrusted/roomOwners').child($roomId).exists()",
             ".validate": "newData.hasChildren(['title', 'status', 'round', 'question', 'options', 'deadline', 'joinOpen']) && (!data.exists() ||  (data.child('status').val() === 'lobby' && (newData.child('status').val() === 'lobby' || newData.child('status').val() === 'question' || newData.child('status').val() === 'completed')) ||  (data.child('status').val() === 'question' && (newData.child('status').val() === 'between' || newData.child('status').val() === 'completed')) ||  (data.child('status').val() === 'between' && (newData.child('status').val() === 'question' || newData.child('status').val() === 'completed'))) && (newData.child('status').val() !== 'completed' || newData.child('joinOpen').val() === false) && (!data.exists() || data.child('status').val() !== 'question' || (newData.child('round').val() === data.child('round').val() && newData.child('question').val() === data.child('question').val() && newData.child('deadline').val() === data.child('deadline').val() && newData.child('options/0').val() === data.child('options/0').val() && newData.child('options/1').val() === data.child('options/1').val() && newData.child('options/2').val() === data.child('options/2').val() && newData.child('options/3').val() === data.child('options/3').val() && newData.child('options/4').val() === data.child('options/4').val() && newData.child('options/5').val() === data.child('options/5').val() && newData.child('options/6').val() === data.child('options/6').val() && newData.child('options/7').val() === data.child('options/7').val())) && (!data.exists() || data.child('status').val() !== 'between' || newData.child('status').val() !== 'question' || newData.child('round').val() !== data.child('round').val())",
             "title": {
               ".validate": "newData.isString() && newData.val().length <= 120"
@@ -80,7 +80,7 @@
           },
           "private": {
             ".read": "auth != null && root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true",
-            ".write": "auth != null && root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true"
+            ".write": "auth != null && root.child('arenaV1/trainerAllowlist').child(auth.uid).val() === true && !root.child('arenaTrusted/roomOwners').child($roomId).exists()"
           }
         }
       },
@@ -138,6 +138,10 @@
           ".write": false
         }
       }
+    },
+    "arenaTrusted": {
+      ".read": false,
+      ".write": false
     }
   }
 }
