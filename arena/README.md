@@ -1,3 +1,17 @@
+# Current delivery snapshot (October 2026)
+
+The Studio is deployed on GitHub Pages: https://hazemshaaban77.github.io/MTS-Training-Arena/arena/index.html
+
+**Functional without a Firebase connection:** session drafts; bilingual UI; local authoring/validation of eleven activity formats; projector-stage previews; local activity demonstrations; versioned JSON backup/restore (replace after confirmation); session inventory and CSV authoring report; local scenario simulation. Storage is browser-local except exported backups. No official attendee records or scores are produced by these tools.
+
+**Staged but not live:** Cloudflare trusted grading Worker and separate Firebase pilot. The Worker explicitly has `ARENA_ENABLE_TRUSTED_V1=false`. Trusted live play, multi-device scored events, Firebase rules deployment, reissued service-account credential installation, and an actual 80-device concurrent test must occur before accepting real users. Never deploy an exposed service-account key. The QR link is scoped to a room/session, not a separate code per question.
+
+**Legacy safety:** do not overwrite the original Quiz rules or credentials. Proposed Arena scoring rules exist for review and emulator tests only.
+
+The older iteration notes below describe the history of this prototype and may refer to features that have since been expanded.
+
+---
+
 # MTS Training Arena — Foundation Preview
 
 This is an **isolated, locally functional design and authoring prototype**, developed on the `feature/mts-training-arena-foundation` branch of the existing MTS-Quiz repository. Existing production files remain untouched.
