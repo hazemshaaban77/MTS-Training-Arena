@@ -35,6 +35,14 @@ export async function openTrustedRound({db,uid,roomId,activity,now=Date.now()}){
  if(before.status==="between"){
   const archive=(await db.ref(internal+"/closedRounds/"+roomId+"/"+before.round).get()).val();
   check(archive?.round===before.round&&archive.status==="between","Previous round not archived yet");
+  // Do not advance while a completed round is still waiting for trusted grading
+  // and publication. This avoids an incomplete leaderboard in the next question.
+  const [ledgerSnap,scoreboardSnap]=await Promise.all([
+   db.ref(internal+"/ledgers/"+roomId+"/"+before.round).get(),
+   db.ref(root+"/scoreboards/"+roomId).get()
+  ]);
+  const settled=ledgerSnap.val(),scoreboard=scoreboardSnap.val();
+  check(settled?.roundId===before.round&&Number.isInteger(scoreboard?.settledRounds)&&scoreboard.settledRounds>=Number(before.round.slice(1)),"Settle and publish the previous round before continuing");
  }
  const nextIndex=Number(before.round.slice(1))+1,roundId="r"+nextIndex;
  check(R.test(roundId),"Invalid round ID");
