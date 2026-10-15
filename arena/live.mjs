@@ -4,10 +4,15 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const id=()=>Array.from(crypto.getRandomValues(new Uint8Array(12)),n=>n.toString(16).padStart(2,"0")).join("");
 const qs=new URLSearchParams(location.search);
 const queryRoom=qs.get("room")||"";
+const LAST_ROOM_KEY="mts-arena-pilot-last-room-v1";
+const validRoom=v=>/^[0-9a-f]{24}$/.test(v||"");
+function rememberedRoom(){try{return JSON.parse(localStorage.getItem(LAST_ROOM_KEY)||"null")}catch{return null}}
+function rememberRoom(value,uid){try{localStorage.setItem(LAST_ROOM_KEY,JSON.stringify({room:value,uid}))}catch{}}
+
 let app,auth,db,offset=0,room="",me="",trainer=false,publicState=null,stop=[],answers={},activityList=[],current=0;
 function show(s){box.innerHTML=s;}
 function note(s){const x=document.getElementById("notice");if(x)x.textContent=s;}
-function cleanup(){for(const fn of stop)fn();stop=[];publicState=null;answers={};}
+function cleanup(){for(const fn of stop)fn();stop=[];publicState=null;answers={};countedRound="";}
 function listen(path,cb){const ref=db.ref(path);ref.on("value",cb,err=>note("Firebase: "+err.message));stop.push(()=>ref.off("value",cb));}
 function init(){
   if(typeof FB_CONFIG==="undefined"||!FB_CONFIG?.projectId||!FB_CONFIG?.databaseURL) {show("<p>Firebase config missing or lacks a Realtime Database URL. This pilot cannot run until it is configured.</p>");return;}
@@ -63,16 +68,49 @@ function sampleActivities(){
 function trainerHome(){
   cleanup();
   const draft=sampleActivities();activityList=draft.activities;current=0;
-  show('<h2>Trainer Pilot Console</h2><p class="note">Pilot deliberately does not compute, store or reveal scores. Trainer controls one question at a time. Answer keys are not published to the public room.</p><div class="fields"><div class="field"><label>Room title</label><input id="title" maxlength="120" value="'+esc(draft.title)+'"></div><button class="btn green" id="create">Create Pilot Room</button></div><p id="notice" class="note"></p>');
+  show('<h2>Trainer Pilot Console</h2><p class="note">Pilot deliberately does not compute, store or reveal scores. Trainer controls one question at a time. Answer keys are not published to the public room.</p><div class="fields"><div class="field"><label>Room title</label><input id="title" maxlength="120" value="'+esc(draft.title)+'"></div><button class="btn green" id="create">Create Pilot Room</button></div><div id="resumeArea"></div><p id="notice" class="note"></p>');
+  const saved=rememberedRoom();
+  if(saved?.uid===me&&validRoom(saved.room)){
+    const area=document.getElementById("resumeArea");
+    area.innerHTML='<p class="note">Your last pilot room: <code>'+esc(saved.room)+'</code></p><button class="btn secondary" id="resume">Resume Last Room</button>';
+    document.getElementById("resume").onclick=()=>resumeTrainerRoom(saved.room);
+  }
+  if(validRoom(queryRoom)){
+    const area=document.getElementById("resumeArea");
+    if(!saved||saved.room!==queryRoom){
+      area.insertAdjacentHTML("beforeend",'<p class="note">Room link detected: <code>'+esc(queryRoom)+'</code></p><button class="btn secondary" id="resumeLink">Open This Room as Trainer</button>');
+      document.getElementById("resumeLink").onclick=()=>resumeTrainerRoom(queryRoom);
+    }
+  }
   document.getElementById("create").onclick=async()=>{
     try{
       room=id(); const title=document.getElementById("title").value.trim()||"MTS Arena Pilot";
       const p={title,status:"lobby",round:'r0',question:"Ready to play",options:["Waiting","Waiting"],deadline:0,joinOpen:true};
       await db.ref("arenaV1/rooms/"+room+"/public").set(p);
       await db.ref("arenaV1/rooms/"+room+"/private").set({createdBy:me,createdAt:firebase.database.ServerValue.TIMESTAMP});
+      rememberRoom(room,me);
       trainerRoom();
     }catch(error){note(error.message);}
   };
+}
+async function resumeTrainerRoom(target){
+  try{
+    if(!validRoom(target))throw Error("Invalid room code");
+    const base="arenaV1/rooms/"+target;
+    const [privateSnap,publicSnap]=await Promise.all([db.ref(base+"/private").once("value"),db.ref(base+"/public").once("value")]);
+    if(privateSnap.child("createdBy").val()!==me)throw Error("Only the trainer who created this room can resume it");
+    const state=publicSnap.val();
+    if(!state)throw Error("This room no longer exists");
+    const draft=sampleActivities();activityList=draft.activities;
+    const roundNumber=Number((state.round||"").slice(1));
+    if(!/^r\d+$/.test(state.round||"")||!Number.isSafeInteger(roundNumber))throw Error("Invalid round state");
+    if(roundNumber>activityList.length)throw Error("The current draft has fewer questions than this room. Restore the original draft before resuming.");
+    if(roundNumber>0){
+      const previous=activityList[roundNumber-1];
+      if(previous.question!==state.question||JSON.stringify(previous.options)!==JSON.stringify(state.options))throw Error("The activity draft has changed since this room was created. Restore the same draft to resume safely.");
+    }
+    room=target;current=roundNumber;rememberRoom(room,me);trainerRoom();
+  }catch(error){note("Cannot resume room: "+error.message);}
 }
 function trainerRoom(){
   cleanup();
@@ -86,6 +124,7 @@ function trainerRoom(){
     document.getElementById("question").textContent=publicState.question;
     document.getElementById("open").disabled=publicState.status==="question"||publicState.status==="completed"||current>=activityList.length;
     document.getElementById("close").disabled=publicState.status!=="question";
+    if(/^r[1-9]\d*$/.test(publicState.round||""))countRound(publicState.round,publicState.options||[]);
   });
   document.getElementById("open").onclick=async()=>{
     try{
@@ -95,7 +134,6 @@ function trainerRoom(){
       const next={title:publicState.title,status:"question",round,question:a.question,options:a.options,deadline:Date.now()+offset+a.timer*1000,joinOpen:publicState.joinOpen};
       await db.ref(pre+"/public").set(next);
       current++;
-      countRound(round,a.options);
     }catch(e){note(e.message);}
   };
   document.getElementById("close").onclick=async()=>{try{await db.ref(pre+"/public/status").set("between");}catch(e){note(e.message);}};
@@ -104,7 +142,11 @@ function trainerRoom(){
     try{await db.ref(pre+"/public").update({status:"completed",joinOpen:false});}catch(e){note(e.message);}
   };
 }
+let countedRound="";
 function countRound(round,options){
+  if(countedRound===room+"/"+round)return;
+  const previous=countedRound;countedRound=room+"/"+round;
+  if(previous){const priorRef=db.ref("arenaV1/answers/"+previous);priorRef.off("value");}
   const ref="arenaV1/answers/"+room+"/"+round;
   listen(ref,snap=>{
     const answerRecords=snap.val()||{};
