@@ -60,6 +60,8 @@ function activatePrepared(index){
  el("kind").value=a.type;el("question").value=a.question;el("options").value=a.options.join("\n");
  el("correct").value=String(a.type==="Live Poll"?1:a.correct+1);el("seconds").value=String(a.timer||30);
  el("draftProgress").textContent="Prepared activity "+(index+1)+" of "+preparedActivities.length+" — "+a.type;
+ el("draftPrevious").disabled=index===0;
+ el("draftNext").disabled=index>=preparedActivities.length-1;
 }
 function nextPrepared(){
  if(!preparedActivities.length)return;
@@ -76,6 +78,7 @@ function loadStudioDrafts(){
  sessions.forEach((s,i)=>{if(s&&typeof s.name==="string"&&Array.isArray(s.activities))picker.add(new Option(s.name,String(i)));});
  picker.onchange=()=>{
   reset();preparedActivities=[];preparedIndex=-1;
+  el("draftPrevious").disabled=true;el("draftNext").disabled=true;
   currentDraft=picker.value===""?null:sessions[Number(picker.value)];
   if(!currentDraft){el("draftProgress").textContent="Choose a saved session to prepare activities.";return;}
   el("title").value=currentDraft.name.slice(0,120);
@@ -85,13 +88,16 @@ function loadStudioDrafts(){
     activityPicker.add(new Option((i+1)+". "+a.type+" — "+a.question.slice(0,60),String(i)));
    }
   });
+  el("draftCoverage").textContent=preparedActivities.length+" of "+currentDraft.activities.length+" activities compatible with secure live play. Other types remain available in local demonstrations.";
   if(preparedActivities.length)activatePrepared(0);
-  else el("draftProgress").textContent="No compatible scored-live activities in this session.";
+  else el("draftProgress").textContent="No compatible live activities in this session.";
  };
  activityPicker.onchange=()=>{
   const i=preparedActivities.findIndex(a=>String(a.index)===activityPicker.value);
   if(i>=0){activatePrepared(i);setStatus("Studio activity loaded for manual review.");}
  };
+ el("draftPrevious").onclick=()=>{if(preparedIndex>0)activatePrepared(preparedIndex-1);};
+ el("draftNext").onclick=()=>{if(preparedIndex+1<preparedActivities.length)activatePrepared(preparedIndex+1);};
  const requested=new URLSearchParams(location.search).get("session");
  if(requested){const index=sessions.findIndex(s=>s?.id===requested);if(index>=0){picker.value=String(index);picker.onchange();}}
 }
