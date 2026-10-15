@@ -1,6 +1,6 @@
 const el=id=>document.getElementById(id);
 const TRUSTED_ENDPOINT="https://mts-training-arena-api.hazem-mts-arena.workers.dev";
-let auth=null,roomId="",roundId="",signedIn=false,busy=false,serviceReady=false,phase="idle";
+let auth=null,roomId="",roundId="",signedIn=false,busy=false,serviceReady=false,phase="idle",renderedQRLink="";
 const buttons=["create","open","close","settle"];
 const setStatus=message=>{el("output").textContent=message;};
 function serviceBanner(ready,description){
@@ -17,6 +17,14 @@ function render(){
  el("settle").disabled=!enabled||phase!=="closed";
  const link=roomId?new URL("./live.html?room="+roomId,window.location.href).href:"";
  el("joinLink").value=link;el("copyJoin").disabled=!link;
+ const qrSection=el("roomQRSection"),qrBox=el("roomQR"),fallback=el("qrFallback");
+ qrSection.hidden=!link;
+ if(link!==renderedQRLink){
+  renderedQRLink=link;qrBox.replaceChildren();fallback.hidden=true;
+  if(link&&typeof globalThis.QRCode==="function"){
+   new globalThis.QRCode(qrBox,{text:link,width:208,height:208,correctLevel:globalThis.QRCode.CorrectLevel.M});
+  }else if(link){fallback.hidden=false;}
+ }
  el("projectorLink").href=roomId?"./projector.html?room="+encodeURIComponent(roomId):"./projector.html";
  const labels={idle:"Create a room to begin.",lobby:"Lobby ready — trainees join using one link.",question:"Question active — close after the deadline.",closed:"Round closed — settle its scores before advancing.",settled:"Scores published — next activity is ready."};
  el("phaseStatus").textContent=labels[phase]||"Check room status.";
