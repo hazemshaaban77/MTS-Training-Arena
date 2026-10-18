@@ -9,3 +9,5 @@ Safety: preserve /arena/ and legacy root, no merge to main, no Work/Sites mutati
 This is a testing preview; live guest/mobile/projector classroom verification remains required.
 
 Preview workflow retry: continue only on GitHub-hosted Free services and preserve legacy site.
+
+Release update 2026-10-18: V6 GitHub login bridge removed; Firebase-specific error mapping enabled; new slogan and animated bilingual landing approved for preview after CI validation. Existing root/arena preserved.
