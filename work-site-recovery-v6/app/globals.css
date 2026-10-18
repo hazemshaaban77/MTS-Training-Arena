@@ -98,3 +98,34 @@
 .inline-survey-designer{display:grid;gap:14px;margin:14px 0;padding:20px;background:#101e34;border-radius:16px;border:1px solid #385a75}
 .inline-survey-designer fieldset{display:grid;gap:9px}
 .inline-survey-designer .btn{justify-self:start}
+
+/* Cinematic but skippable 1.45s entrance for each distinct challenge stage. */
+.stage-splash{position:fixed;inset:0;z-index:6000;display:grid;place-items:center;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse 72% 45% at 50% 52%,#193e63 0%,#0b1630 57%,#030914 100%);color:white;text-align:center}
+.stage-splash::before{content:"";position:absolute;inset:-45%;pointer-events:none;background:conic-gradient(from 90deg,transparent 0 55deg,#37d9fc30 80deg,transparent 115deg 210deg,#79ffaf1b 260deg,transparent 315deg);animation:arena-splash-spin 7s linear infinite}
+.stage-splash::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0008,transparent 28% 72%,#0008),repeating-linear-gradient(0deg,transparent 0 24px,#ffffff04 25px 26px);pointer-events:none}
+.splash-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:15px;padding:28px;width:min(94vw,800px);animation:arena-splash-entrance .65s cubic-bezier(.15,.8,.15,1) both}
+.splash-mark{position:relative;display:grid;place-items:center;width:134px;height:134px;border-radius:34px;color:#c3ffe1;background:linear-gradient(135deg,#14655e,#153454);border:1px solid #56ffcfbb;box-shadow:0 0 80px #52bce455,0 22px 90px #000b;transform:perspective(620px) rotateX(10deg) rotateY(-12deg)}
+.splash-mark svg{filter:drop-shadow(0 0 15px #70ffd999)}
+.splash-overline{letter-spacing:.26em;font-size:10px;font-weight:800;color:#aed6f8}
+.splash-center h2{font-size:clamp(37px,7vw,90px);line-height:1.12;text-shadow:0 8px 45px #000b;font-weight:900}
+.splash-center p{font-size:clamp(14px,2.1vw,23px);font-weight:700;color:#c2dcf0;letter-spacing:.08em}
+.splash-skip{margin-top:6px;padding:11px 22px;font-size:12px;color:#d9e9f6;border:1px solid #7092ab88;border-radius:30px;z-index:4;transition:background .2s}
+.splash-skip:hover{background:#ffffff20}
+.splash-orbit{position:absolute;inset:0;pointer-events:none;display:grid;place-items:center;perspective:900px}
+.splash-orbit i{position:absolute;border:1px solid #39d4f049;border-radius:50%;width:min(85vw,750px);aspect-ratio:1;transform:rotateX(68deg);box-shadow:0 0 50px #38bce820}
+.splash-orbit i:nth-child(2){width:min(115vw,1050px);transform:rotateX(70deg) rotateZ(28deg);border-color:#8dffb53c}
+.splash-orbit i:nth-child(3){width:min(150vw,1350px);transform:rotateX(67deg) rotateZ(-32deg);border-color:#7daede42}
+.splash-progress{position:absolute;bottom:0;inset-inline-start:0;height:6px;background:linear-gradient(90deg,#38c1ed,#bbffba);width:100%;transform-origin:left;animation:arena-splash-count 1.45s linear both}
+.stage-splash-wheel-of-fortune{background:radial-gradient(ellipse at center,#422260,#100f2e 56%,#030914)}
+.stage-splash-wheel-of-fortune .splash-mark{background:linear-gradient(130deg,#783ead,#303269)}
+.stage-splash-ultimate-game-show{background:radial-gradient(ellipse at center,#55351f,#171a31 56%,#050911)}
+.stage-splash-ultimate-game-show .splash-mark{background:linear-gradient(125deg,#9a661c,#513517);border-color:#ffdb7b}
+.stage-splash-escape-room{background:radial-gradient(ellipse at center,#183b42,#0b2328 57%,#030a0b)}
+.stage-splash-escape-room .splash-mark{background:linear-gradient(125deg,#11757d,#154346)}
+.stage-splash-open-the-box{background:radial-gradient(ellipse at center,#4a2441,#1b132f 57%,#050712)}
+.stage-splash-open-the-box .splash-mark{background:linear-gradient(125deg,#a4427f,#38236e)}
+@keyframes arena-splash-spin{to{transform:rotate(360deg)}}
+@keyframes arena-splash-entrance{from{transform:translateY(25px) scale(.8);opacity:0;filter:blur(16px)}to{transform:translateY(0) scale(1);opacity:1;filter:blur(0)}}
+@keyframes arena-splash-count{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){.stage-splash::before,.splash-center,.splash-progress{animation:none}}
+@media(max-width:650px){.splash-mark{height:100px;width:100px;border-radius:24px}.splash-mark svg{width:50px}.splash-overline{letter-spacing:.14em}.stage-splash{background:#071326}}
