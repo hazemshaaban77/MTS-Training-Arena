@@ -12,13 +12,34 @@ export default function ArenaApp(){
  const [ar,setAr]=useState(true),[view,setView]=useState('login'),[code,setCode]=useState(''),[tab,setTab]=useState('home'),[sessions,setSessions]=useState<any[]>([]),[error,setError]=useState(''),[builder,setBuilder]=useState<string|null>(null),[menu,setMenu]=useState(false),[loading,setLoading]=useState(true);
  const [identity,setIdentity]=useState<any>(null),[identityChecked,setIdentityChecked]=useState(false),[authError,setAuthError]=useState('');
  const [builderSource,setBuilderSource]=useState<any>(null);
- const authGeneration=useRef(0);
+ const authGeneration=useRef(0),signingIn=useRef(false);
  const t=(a:string,e:string)=>ar?a:e;
  function readRoute(){const p=new URLSearchParams(window.location.search);setView(p.get('view')||'login');setCode(p.get('code')||'');}
  function navigate(next:string,c=''){window.history.pushState({},'',siteUrl(next,c));setView(next);setCode(c);setError('');}
  useEffect(()=>{setAr(localStorage.getItem('arena-language')!=='en');readRoute();window.addEventListener('popstate',readRoute);return()=>window.removeEventListener('popstate',readRoute);},[]);
- useEffect(()=>{let active=true;const stop=watchTrainer(async user=>{const generation=++authGeneration.current;if(!active)return;if(!user){setIdentity(null);setIdentityChecked(true);return;}try{const data=await api('me');if(active&&generation===authGeneration.current){setIdentity(data);setAuthError('');}}catch(e:any){if(active&&generation===authGeneration.current){setIdentity(null);setAuthError(firebaseError(e.message));await signOutTrainer();}}finally{if(active&&generation===authGeneration.current)setIdentityChecked(true);}});return()=>{active=false;stop();};},[]);
- async function enterTrainer(email:string,password:string){setAuthError('');try{await signInTrainer(email,password);await api('connect',{});const data=await api('me');setIdentity(data);setIdentityChecked(true);navigate(view==='host'?'host':'home',code);}catch(e:any){await signOutTrainer();setIdentity(null);const message=firebaseError(e.code||e.message);setAuthError(message);throw Error(message);}}
+ useEffect(()=>{let active=true;const stop=watchTrainer(async user=>{const generation=++authGeneration.current;if(!active)return;if(signingIn.current)return;if(!user){setIdentity(null);setIdentityChecked(true);return;}try{const data=await api('me');if(active&&generation===authGeneration.current){setIdentity(data);setAuthError('');}}catch(e:any){if(active&&generation===authGeneration.current){setIdentity(null);setAuthError(firebaseError(e.message));}}finally{if(active&&generation===authGeneration.current)setIdentityChecked(true);}});return()=>{active=false;stop();};},[]);
+ async function enterTrainer(email:string,password:string){
+  signingIn.current=true;
+  setAuthError('');
+  try{
+   await signInTrainer(email,password);
+   // ChatGPT Sites used a private-account /api/connect bridge. GitHub Pages has
+   // no Sites user ID, so that redundant call must not block trainer sign-in.
+   const data=await api('me');
+   if(!data?.authenticated)throw Error('SIGN_IN');
+   ++authGeneration.current;
+   setIdentity(data);
+   setIdentityChecked(true);
+   navigate(view==='host'?'host':'home',code);
+  }catch(e:any){
+   setIdentity(null);
+   const message=firebaseError(e.code||e.message);
+   setAuthError(message);
+   throw Error(message);
+  }finally{
+   signingIn.current=false;
+  }
+ }
  async function leaveTrainer(){for(const key of Object.keys(localStorage))if(key.startsWith('arena-draft-recovery'))localStorage.removeItem(key);await signOutTrainer();setIdentity(null);setSessions([]);navigate('login');}
 
  useEffect(()=>{document.documentElement.lang=ar?'ar':'en';document.documentElement.dir=ar?'rtl':'ltr';localStorage.setItem('arena-language',ar?'ar':'en');},[ar]);
