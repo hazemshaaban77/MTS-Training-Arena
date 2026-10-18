@@ -1314,6 +1314,9 @@ var ArenaLiveRoom = class {
       this.state.acceptWebSocket(server);
       return new Response(null, { status: 101, webSocket: client });
     }
+    if (url.pathname === "/health" && request.method === "GET") {
+      return Response.json({ ready: true, transport: "websocket" });
+    }
     if (url.pathname === "/notify" && request.method === "POST") {
       let payload = {};
       try {
@@ -1408,6 +1411,17 @@ var github_api_worker_default = {
     if (request.method === "OPTIONS") {
       if (!origin) return Response.json({ error: "ORIGIN" }, { status: 403 });
       return new Response(null, { status: 204, headers: cors });
+    }
+    if (url.pathname === "/api/live-health" && request.method === "GET") {
+      if (!env.LIVE) return Response.json({ ready: false, transport: "fallback" }, { status: 503, headers: cors });
+      try {
+        const stub = env.LIVE.get(env.LIVE.idFromName("__health__"));
+        const result = await stub.fetch("https://arena.internal/health");
+        if (!result.ok) return Response.json({ ready: false, transport: "fallback" }, { status: 503, headers: cors });
+        return new Response(result.body, { status: 200, headers: { ...Object.fromEntries(cors), "Cache-Control": "public, max-age=60" } });
+      } catch {
+        return Response.json({ ready: false, transport: "fallback" }, { status: 503, headers: cors });
+      }
     }
     if (url.pathname === "/api/live") {
       if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return Response.json({ error: "UPGRADE_REQUIRED" }, { status: 426, headers: cors });
