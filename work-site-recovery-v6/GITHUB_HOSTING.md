@@ -15,15 +15,10 @@ The backend stays on a new **isolated Cloudflare Worker + D1**; it is not the ol
 
 ## Before any production deploy
 
-1. Provision a **new** D1 database named `mts-training-arena-v6`; replace the all-zero UUID in
-   `wrangler.github.toml` with that new database UUID (not the Sites production DB).
-2. Provision a separate R2 bucket `mts-training-arena-v6-media` to support real trainer image/video upload.
-   Its binding in `wrangler.github.toml` is `MEDIA`; without it uploads return
-   `MEDIA_UNAVAILABLE`. The Worker validates trainer Firebase tokens, verifies basic file
-   signatures, rejects unsafe MIME types, caps file size at 12 MB, and rate-limits requests.
-   Uploaded files are accessible through **unguessable public URLs**. Do not upload
-   confidential customer records or sensitive company documents until stronger signed
-   media-access controls are added.
+1. **Completed:** Provisioned isolated D1 `mts-training-arena-v6` on Workers Free and connected its ID in `wrangler.github.toml`. Its six schema migrations have been applied once and the 12 application tables verified; the original Sites database is unchanged.
+2. **Free-only mode (current decision)**: R2 is not enabled, and no R2 binding is configured.
+   Uploaded media remains disabled (`MEDIA_UNAVAILABLE`); use direct HTTPS image/video links
+   within activities instead. Do not enroll in R2 or enable paid services without separate approval.
 3. Apply the six `drizzle/000[0-5]_*.sql` migrations **once and in order** on that new database.
    Confirm it is empty before doing so.
 4. Publish a separately bundled `github-api-worker.ts` using that Wrangler file. Configure an optional
@@ -73,3 +68,10 @@ employee IDs, scores and tokens must not appear in the GitHub public source or b
 
 A passing CI build is not a substitute for verifying trainer login, a 60–80-person session,
 phone/projector synchronization, guest access, or media playbacks on a deployed domain.
+
+## 2026-10-18 free-only setup verification
+
+The account's subscriptions screenshot explicitly shows **Workers Free — Active**. We created the
+isolated D1 database and executed schema migrations successfully through the connected Cloudflare account.
+R2 is deliberately disabled. No Workers Paid upgrade was made; no production worker or Pages site was
+published by these steps. Under the Free plan, limits are hard caps, not permission to bill.
