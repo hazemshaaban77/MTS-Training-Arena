@@ -1,0 +1,15 @@
+# Separate worker for the Version 6 GitHub Pages frontend.
+# Do not deploy until the isolated D1 database is provisioned and UUID replaced.
+name = "mts-training-arena-v6-api"
+main = "github-api-worker.ts"
+compatibility_date = "2026-05-15"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ARENA_PUBLIC_ORIGIN = "https://hazemshaaban77.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mts-training-arena-v6"
+database_id = "00000000-0000-0000-0000-000000000000"
