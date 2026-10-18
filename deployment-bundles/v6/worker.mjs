@@ -1299,6 +1299,66 @@ function createProvisioner(raw, fetcher = globalThis.fetch) {
   };
 }
 
+// lib/arena-live-room.ts
+var ArenaLiveRoom = class {
+  constructor(state) {
+    this.state = state;
+  }
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === "/ws") {
+      if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return new Response("Upgrade required", { status: 426 });
+      if (this.state.getWebSockets().length >= 120) return new Response("Room capacity reached", { status: 429 });
+      const pair = new WebSocketPair();
+      const client = pair[0], server = pair[1];
+      this.state.acceptWebSocket(server);
+      return new Response(null, { status: 101, webSocket: client });
+    }
+    if (url.pathname === "/notify" && request.method === "POST") {
+      let payload = {};
+      try {
+        payload = await request.json();
+      } catch {
+        return new Response("Bad request", { status: 400 });
+      }
+      if (!["answer", "joined", "control", "interaction", "survey"].includes(payload.kind || "")) return new Response("Bad event", { status: 400 });
+      const message = JSON.stringify({ type: "changed", kind: payload.kind });
+      let recipients = 0;
+      for (const ws of this.state.getWebSockets()) {
+        try {
+          ws.send(message);
+          recipients++;
+        } catch {
+          try {
+            ws.close(1011, "Reconnecting");
+          } catch {
+          }
+        }
+      }
+      return Response.json({ ok: true, recipients });
+    }
+    return new Response("Not found", { status: 404 });
+  }
+  webSocketMessage(ws, message) {
+    if (typeof message === "string" && message === "ping") try {
+      ws.send("pong");
+    } catch {
+    }
+  }
+  webSocketClose(ws, code, reason, wasClean) {
+    try {
+      ws.close(code || 1e3, reason || "Goodbye");
+    } catch {
+    }
+  }
+  webSocketError(ws) {
+    try {
+      ws.close(1011, "Reconnect");
+    } catch {
+    }
+  }
+};
+
 // github-api-worker.ts
 var defaultOrigin = "https://hazemshaaban77.github.io";
 var allowedMethods = "GET, POST, OPTIONS";
@@ -1348,6 +1408,16 @@ var github_api_worker_default = {
     if (request.method === "OPTIONS") {
       if (!origin) return Response.json({ error: "ORIGIN" }, { status: 403 });
       return new Response(null, { status: 204, headers: cors });
+    }
+    if (url.pathname === "/api/live") {
+      if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return Response.json({ error: "UPGRADE_REQUIRED" }, { status: 426, headers: cors });
+      const code = url.searchParams.get("code") || "";
+      if (!/^\d{6}$/.test(code)) return Response.json({ error: "CODE" }, { status: 400, headers: cors });
+      if (!env.DB || !env.LIVE) return Response.json({ error: "LIVE_UNAVAILABLE" }, { status: 503, headers: cors });
+      const existing = await env.DB.prepare("SELECT code FROM sessions WHERE code=?").bind(code).first();
+      if (!existing) return Response.json({ error: "NOT_FOUND" }, { status: 404, headers: cors });
+      const obj = env.LIVE.get(env.LIVE.idFromName(code));
+      return obj.fetch(new Request("https://arena.internal/ws", { headers: { Upgrade: "websocket" } }));
     }
     if (url.pathname === "/api/auth-health") {
       if (request.method !== "GET") return Response.json({ error: "METHOD" }, { status: 405, headers: cors });
@@ -1404,11 +1474,29 @@ var github_api_worker_default = {
     if (!["GET", "POST"].includes(request.method)) {
       return Response.json({ error: "METHOD" }, { status: 405, headers: cors });
     }
+    const notifyFor = { "/api/answer": "answer", "/api/join": "joined", "/api/recover": "joined", "/api/control": "control", "/api/interact": "interaction", "/api/survey": "survey" };
+    const kind = request.method === "POST" ? notifyFor[url.pathname] : void 0;
+    let bodyCode = null;
+    if (kind && env.LIVE) {
+      try {
+        const payload = await request.clone().json();
+        if (typeof payload.code === "string" && /^\d{6}$/.test(payload.code)) bodyCode = payload.code;
+      } catch {
+      }
+    }
     const response = await handleArenaRequest(request, env.DB, void 0, {
       allowedOrigin: allowed,
       adminUids: env.ARENA_ADMIN_UIDS?.split(",").map((x) => x.trim()).filter(Boolean) || [],
       provision: createProvisioner(env.FIREBASE_SERVICE_ACCOUNT)
     });
+    if (response.ok && kind && bodyCode && env.LIVE) {
+      try {
+        const stub = env.LIVE.get(env.LIVE.idFromName(bodyCode));
+        await stub.fetch("https://arena.internal/notify", { method: "POST", body: JSON.stringify({ kind }) });
+      } catch (e) {
+        console.warn("Live invalidation skipped", { kind });
+      }
+    }
     const headers = new Headers(response.headers);
     for (const [k, v] of cors) headers.set(k, v);
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
@@ -1432,5 +1520,6 @@ function validMediaSignature(mime, b) {
   }
 }
 export {
+  ArenaLiveRoom,
   github_api_worker_default as default
 };
