@@ -209,3 +209,39 @@
 @media(prefers-reduced-motion:reduce){
  .login-story::before,.login-story h1,.login-story h1 em,.login-story>p,.login-kicker,.login-kicker .live-dot,.login-panel,.login-card::before,.login-orbit-ring,.login-orbit-ring.two,.login-orbit-core,.login-orbit-core>svg,.login-energy-rays i,.arena-art-rays i,.login-starfield i,.arena-particle-field i,.hero::before,.hero-copy>span.pill{animation:none!important}
 }
+
+/* MTS × Training Team identity: equal frames, clean cropping and safe spacing. */
+.brand-header{grid-template-columns:minmax(135px,180px) minmax(0,1fr) minmax(135px,180px);gap:clamp(12px,2.5vw,32px);padding:12px clamp(18px,4vw,64px);min-height:103px;align-items:center}
+.brand-logo-frame{position:relative;display:flex;align-items:center;justify-content:center;width:100%;max-width:176px;min-height:74px;padding:9px;border:1px solid #6c94b67d;border-radius:17px;background:linear-gradient(140deg,#1b3b59 0%,#0d2742 70%,#11384f 100%);box-shadow:0 12px 26px #020a1870,inset 0 1px 0 #a8daff2b,0 0 0 1px #07162d;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s}
+.brand-logo-frame:before{content:"";position:absolute;inset:1px;border-radius:15px;pointer-events:none;background:linear-gradient(130deg,#ffffff0d,transparent 44%,#8fffd60c 95%)}
+.brand-logo-frame:hover{border-color:#76c6cb;box-shadow:0 16px 30px #020a1880,0 0 28px #229eb22b,inset 0 1px 0 #a8daff30;transform:translateY(-2px)}
+.brand-logo-frame .official-logo{display:block;position:relative;flex-shrink:0;margin:auto;border-radius:10px;border:1px solid #d9e6ee;box-shadow:0 2px 8px #0004;background:#fff;overflow:hidden}
+.brand-logo-frame.mts-frame{max-width:158px;justify-self:start}
+.brand-logo-frame.training-frame{max-width:176px;justify-self:end}
+.brand-logo-frame.mts-frame .official-logo.mts{width:100px;height:54px;aspect-ratio:auto}
+.brand-logo-frame.training-frame .official-logo.training{width:146px;height:53px;aspect-ratio:auto}
+.brand-logo-frame .official-logo.mts img{width:335%;left:-120%;top:-58%}
+.brand-logo-frame .official-logo.training img{width:118%;left:-10%;top:-130%}
+.brand-header-center{min-width:0;text-align:center}
+.brand-header-center .wordmark{font-size:clamp(9px,.8vw,13px);letter-spacing:.17em;white-space:nowrap;font-weight:800;color:#d6ecf8}
+.login-brand-header{padding-inline:clamp(18px,4vw,64px)}
+.login-brand-header .brand-header-center{justify-content:center;gap:clamp(14px,4vw,60px);padding:0}
+.login-brand-header .language{margin-inline-start:auto;border:1px solid #54809b65;border-radius:8px;background:#0e2a45c2}
+.login-story h1{font-size:clamp(33px,3.9vw,59px);line-height:1.43;letter-spacing:-.035em}
+@media(max-width:800px){
+ .brand-header{grid-template-columns:112px minmax(0,1fr) 126px;gap:10px;padding:10px 15px;min-height:80px}
+ .brand-logo-frame{min-height:62px;padding:6px;border-radius:12px}
+ .brand-logo-frame:before{border-radius:10px}
+ .brand-logo-frame.mts-frame .official-logo.mts{width:77px;height:45px}
+ .brand-logo-frame.training-frame .official-logo.training{width:107px;height:44px}
+ .brand-header-center .wordmark{display:none}
+ .login-brand-header .language{margin-inline-start:0}
+}
+@media(max-width:470px){
+ .brand-header{grid-template-columns:92px minmax(0,1fr) 105px;gap:6px;padding-inline:8px}
+ .brand-logo-frame{min-height:54px;padding:5px}
+ .brand-logo-frame.mts-frame .official-logo.mts{width:66px;height:40px}
+ .brand-logo-frame.training-frame .official-logo.training{width:88px;height:38px}
+ .login-brand-header .language{font-size:10px;padding:5px}
+}
+@media(prefers-reduced-motion:reduce){.brand-logo-frame{transition:none}}
