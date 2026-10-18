@@ -61,6 +61,16 @@ export default {
    if(!origin) return Response.json({error:'ORIGIN'},{status:403});
    return new Response(null,{status:204,headers:cors});
   }
+  // Small read-only health check verifies LIVE Durable Object binding and migration.
+  if(url.pathname==='/api/live-health'&&request.method==='GET'){
+   if(!env.LIVE)return Response.json({ready:false,transport:'fallback'},{status:503,headers:cors});
+   try{
+    const stub=env.LIVE.get(env.LIVE.idFromName('__health__'));
+    const result=await stub.fetch('https://arena.internal/health');
+    if(!result.ok)return Response.json({ready:false,transport:'fallback'},{status:503,headers:cors});
+    return new Response(result.body,{status:200,headers:{...Object.fromEntries(cors),'Cache-Control':'public, max-age=60'}});
+   }catch{return Response.json({ready:false,transport:'fallback'},{status:503,headers:cors});}
+  }
   // WebSocket presence is public to a room code, but never carries identity or scores.
   // Request Origin must be the reviewed GitHub Pages origin (checked above).
   if(url.pathname==='/api/live'){
