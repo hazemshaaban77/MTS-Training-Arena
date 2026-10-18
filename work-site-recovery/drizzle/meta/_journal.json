@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1792072527495,
+      "tag": "0000_dazzling_tag",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792073955778,
+      "tag": "0001_daffy_mysterio",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792075241662,
+      "tag": "0002_tricky_lionheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792314091732,
+      "tag": "0003_shiny_thor_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792314991956,
+      "tag": "0004_nosy_sandman",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792315462093,
+      "tag": "0005_unknown_mongu",
+      "breakpoints": true
+    }
+  ]
+}

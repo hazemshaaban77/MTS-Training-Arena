@@ -1,0 +1,1 @@
+ALTER TABLE `answers` ADD `elapsed_ms` integer DEFAULT 0 NOT NULL;
