@@ -6,7 +6,8 @@ import {trainerProfile} from './roles';
 import {connectTrainer} from './trainer-link';
 export async function handleArenaRequest(req:Request,db:D1Database|undefined,authorize=authorizeFirebaseTrainer,options:{adminUids?:string[];provision?:(input:any)=>Promise<any>;allowedOrigin?:string}={}){try{
  const url=new URL(req.url),path=url.pathname;
- if(req.method==='POST'&&req.headers.get('origin')&&![url.origin,options.allowedOrigin].filter(Boolean).includes(req.headers.get('origin')))return Response.json({error:'ORIGIN'},{status:403});
+ const requestOrigin=req.headers.get('origin');
+ if(req.method==='POST'&&requestOrigin&&![url.origin,options.allowedOrigin].filter(Boolean).includes(requestOrigin))return Response.json({error:'ORIGIN'},{status:403});
  if(db)await checkRate(db,req);
  const needsTrainer=['/api/me','/api/connect','/api/sessions','/api/control','/api/drafts','/api/catalog','/api/admin','/api/report'].includes(path)||(path==='/api/branding'&&req.method==='POST')||(path==='/api/state'&&url.searchParams.get('role')==='host');
  let trainer:any=null;
