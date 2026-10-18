@@ -12,8 +12,8 @@ ARENA_PUBLIC_ORIGIN = "https://hazemshaaban77.github.io"
 [[d1_databases]]
 binding = "DB"
 database_name = "mts-training-arena-v6"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "35e417b9-1a99-46a8-8d00-5f88a79db756"
 
-[[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "mts-training-arena-v6-media"
+# R2 is not enabled on the Free account. Keep uploads disabled to avoid billing.
+# Activities can still show HTTPS image and video references.
+# Add an R2 binding only after the account owner explicitly approves it.
