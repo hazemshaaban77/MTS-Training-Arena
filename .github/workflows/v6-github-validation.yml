@@ -55,6 +55,13 @@ jobs:
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$api/api/me" | jq -e '.authenticated == false and .provider == "firebase"'
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$api/api/branding" | jq -e '.mts and .training'
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error -X OPTIONS -H "Origin: https://hazemshaaban77.github.io" -H "Access-Control-Request-Method: POST" "$api/api/join" > /dev/null
+      - name: Check public GitHub Pages V6 asset delivery
+        run: |
+          set -euo pipefail
+          page="https://hazemshaaban77.github.io/MTS-Training-Arena/v6/"
+          curl --retry 4 --retry-delay 4 --fail-with-body --silent --show-error "$page" > /tmp/arena-v6.html
+          grep -q 'id="arena-root"' /tmp/arena-v6.html
+          grep -q '/MTS-Training-Arena/v6/assets/' /tmp/arena-v6.html
       - uses: actions/upload-artifact@v4
         with:
           name: mts-arena-v6-worker-bundle
