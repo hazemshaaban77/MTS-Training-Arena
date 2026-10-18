@@ -31,6 +31,8 @@ jobs:
           VITE_ARENA_API_ORIGIN: ${{ vars.ARENA_V6_API_ORIGIN }}
       - name: Bundle the standalone Cloudflare backend
         run: pnpm run build:github-api
+      - name: Validate Durable Object migration and Worker bindings with Wrangler
+        run: pnpm exec wrangler deploy --config wrangler.github.toml --dry-run --outdir dist-github-dry-run
       - name: Validate built static and worker files
         run: |
           test -s dist-github/index.html
