@@ -65,3 +65,24 @@
 .local-effects-controls{display:flex;justify-content:center;align-items:center;gap:12px;padding:15px;color:var(--muted);font-size:10px}.local-effects-controls select{width:auto;max-width:140px;padding:5px 9px;font-size:10px}.local-effects-controls .text-button{font-size:10px}
 .arena-app{--lime:color-mix(in srgb,var(--brand-primary) 65%,white)}.btn.primary{background:color-mix(in srgb,var(--brand-primary) 86%,#071121);color:#fff}.btn.primary:hover:not(:disabled){background:color-mix(in srgb,var(--brand-primary) 92%,#071121)}.dropdown-question{font-size:15px;max-width:650px;margin:25px auto}.dropdown-question select{font-size:19px;padding:19px;border-color:#527d99;background:#102c45}.mini-clock,.mission-clock{font-size:23px;font-weight:700;color:#a5deca;margin:15px auto;text-align:center}
 .casting-stage{text-align:center;padding:35px 10px}.casting-stage h3{font-size:30px;margin:15px auto}.casting-players{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:25px 0}.casting-players button{display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;border:1px solid #3c6688;border-radius:13px;background:#0d2540;padding:22px}.casting-players button.selected{border-color:#c6b481;color:#ded1a5;box-shadow:0 0 25px #c6b48118}.casting-players small{color:var(--muted)}.timer:has(.timer-ring){position:relative;width:72px;height:72px;padding:0;display:flex;flex-direction:column;justify-content:center;align-items:center;border:0;border-radius:50%;box-shadow:none;gap:0}.timer:has(.timer-ring)>svg:not(.timer-ring){display:none}.timer:has(.timer-ring)>b{font-size:20px;line-height:1.1}.timer:has(.timer-ring)>small{font-size:9px}.timer-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}.timer-ring circle{fill:none;stroke:#2b4c60;stroke-width:3}.timer-ring circle+circle{stroke:var(--lime);stroke-width:4;stroke-dasharray:226;stroke-linecap:round;transition:stroke-dashoffset .2s linear}.timer.urgent circle+circle{stroke:#ff9caa}.projector .timer:has(.timer-ring){width:90px;height:90px}.projector .timer:has(.timer-ring)>b{font-size:27px}@media(max-width:700px){.casting-players{grid-template-columns:1fr 1fr}.casting-players button{padding:15px}.casting-stage h3{font-size:25px}.timer:has(.timer-ring){width:62px;height:62px}.timer:has(.timer-ring)>b{font-size:17px}}
+
+/* Version 6 competition clarity: do not paint a wrong selection green. */
+.answer-option.picked.wrong-answer {
+  border:2px solid #ff5777;
+  background:linear-gradient(110deg,#45192c,#26172a);
+  box-shadow:0 0 0 2px #ff57772b,0 0 24px #ff57771c;
+  color:#ffe5eb;
+}
+.answer-option.picked.wrong-answer .answer-letter{background:#db3d62;color:#fff}
+.answer-result.incorrect{background:#ff577715;border-color:#ff57775c;color:#ffd2dc}
+.answer-result.incorrect>b{color:#ff7995}
+/* The visual countdown remains accessible and respects reduced-motion settings. */
+@keyframes arena-last-seconds {
+  0%,100%{filter:drop-shadow(0 0 4px #ff597d55);transform:scale(1)}
+  50%{filter:drop-shadow(0 0 15px #ff597dcc);transform:scale(1.055)}
+}
+.timer.urgent{color:#ff7890;animation:arena-last-seconds .65s ease-in-out infinite}
+.timer.urgent svg{filter:drop-shadow(0 0 10px #ff577799)}
+@media (prefers-reduced-motion:reduce) {
+ .timer.urgent{animation:none}
+}
