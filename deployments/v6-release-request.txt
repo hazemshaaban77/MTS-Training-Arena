@@ -7,3 +7,5 @@ Database: isolated mts-training-arena-v6 (Cloudflare D1 Workers Free)
 Cost policy: Workers Free, D1 Free, GitHub Pages Free, no R2 or paid upgrades.
 Safety: preserve /arena/ and legacy root, no merge to main, no Work/Sites mutation.
 This is a testing preview; live guest/mobile/projector classroom verification remains required.
+
+Preview workflow retry: continue only on GitHub-hosted Free services and preserve legacy site.
