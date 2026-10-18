@@ -1,0 +1,43 @@
+name: V6 GitHub migration checks
+on:
+  push:
+    branches: ['develop/v6-github-arena']
+    paths:
+      - 'work-site-recovery-v6/**'
+      - '.github/workflows/v6-github-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check-v6:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - run: pnpm install --frozen-lockfile
+      - name: Existing V6 service, auth and rendering tests
+        run: pnpm test
+      - name: Compile the Github Pages React client
+        run: pnpm run build:github
+        env:
+          VITE_ARENA_API_ORIGIN: ${{ vars.ARENA_V6_API_ORIGIN }}
+      - name: Bundle the standalone Cloudflare backend
+        run: pnpm run build:github-api
+      - name: Validate built static and worker files
+        run: |
+          test -s dist-github/index.html
+          test -s dist-github-api/worker.mjs
+          test -d dist-github/assets
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mts-arena-v6-frontend-preview
+          path: work-site-recovery-v6/dist-github/
+          retention-days: 7
