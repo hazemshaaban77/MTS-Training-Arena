@@ -17,19 +17,26 @@ The backend stays on a new **isolated Cloudflare Worker + D1**; it is not the ol
 
 1. Provision a **new** D1 database named `mts-training-arena-v6`; replace the all-zero UUID in
    `wrangler.github.toml` with that new database UUID (not the Sites production DB).
-2. Apply the six `drizzle/000[0-5]_*.sql` migrations **once and in order** on that new database.
+2. Provision a separate R2 bucket `mts-training-arena-v6-media` to support real trainer image/video upload.
+   Its binding in `wrangler.github.toml` is `MEDIA`; without it uploads return
+   `MEDIA_UNAVAILABLE`. The Worker validates trainer Firebase tokens, verifies basic file
+   signatures, rejects unsafe MIME types, caps file size at 12 MB, and rate-limits requests.
+   Uploaded files are accessible through **unguessable public URLs**. Do not upload
+   confidential customer records or sensitive company documents until stronger signed
+   media-access controls are added.
+3. Apply the six `drizzle/000[0-5]_*.sql` migrations **once and in order** on that new database.
    Confirm it is empty before doing so.
-3. Publish a separately bundled `github-api-worker.ts` using that Wrangler file. Configure an optional
+4. Publish a separately bundled `github-api-worker.ts` using that Wrangler file. Configure an optional
    `ARENA_ADMIN_UIDS` value and `FIREBASE_SERVICE_ACCOUNT` **only as a Worker secret**, never in Git.
-4. Confirm Firebase Auth Email/Password and the existing `arenaV1/trainerAllowlist/<uid>`
+5. Confirm Firebase Auth Email/Password and the existing `arenaV1/trainerAllowlist/<uid>`
    access rules are valid. Do not weaken RTDB permissions or push Firebase keys to the frontend.
-5. Configure `VITE_ARENA_API_ORIGIN` as the exact `https://...` origin (without a trailing slash or path)
+6. Configure `VITE_ARENA_API_ORIGIN` as the exact `https://...` origin (without a trailing slash or path)
    of the new Worker. Builds on GitHub without this value intentionally fail safely with
    `API_NOT_CONFIGURED` when users try server-backed features.
-6. Use `pnpm install --frozen-lockfile`, `pnpm run test`, and
+7. Use `pnpm install --frozen-lockfile`, `pnpm run test`, and
    `pnpm run build:github` from `work-site-recovery-v6/` to build the static frontend.
    Inspect `dist-github` without publishing it.
-7. For Github Pages, place `dist-github` under a top-level `v6/` directory in the Pages
+8. For Github Pages, place `dist-github` under a top-level `v6/` directory in the Pages
    artifact *alongside the existing index.html and arena/ demo*. Never replace the legacy
    Pages artifact wholesale. Avoid auto-deployment while tests are failing.
 
@@ -50,3 +57,19 @@ credential-bearing CORS wildcard access.
 No Cloudflare production worker/database is overwritten. No merge to `main`.
 All pages and backend migrations require separate browser/real-device verification before public use;
 employee IDs, scores and tokens must not appear in the GitHub public source or build artifacts.
+
+## Development progress (not a deployment claim)
+
+- V6 React routes have GitHub Pages base paths for QR, join, and standalone projector.
+- The existing API service was adapted to a strict single trusted GitHub Pages origin.
+- In-Session Studio multiquestion surveys can be created and attached without leaving the editor.
+- Activities and nested quiz questions can contain HTTPS image/video; authenticated R2 upload is
+  available when the new Worker and bucket are deployed.
+- Incorrect selected answers are distinguished in red after the correct answer is revealed.
+- The timer pulses and optionally sounds during its final five seconds; game entrances are
+  1.45-second themed and skippable with a reduced-motion fallback.
+- `.github/workflows/v6-github-validation.yml` compiles and tests the source on an isolated
+  development branch without updating main or auto-deploying the current GitHub Pages site.
+
+A passing CI build is not a substitute for verifying trainer login, a 60–80-person session,
+phone/projector synchronization, guest access, or media playbacks on a deployed domain.
