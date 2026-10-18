@@ -3,7 +3,7 @@ import {useState,useEffect,useRef} from 'react';
 import QRCode from 'qrcode';
 import {Zap,ArrowLeft,ArrowUp,ArrowDown,Globe,Users,Monitor,Copy,Check,Play,Pause,Square,SkipForward,Trophy,ScanLine,Clock,Maximize,Volume2,VolumeX,Download,ChevronRight,CheckCircle2,Radio,ShieldCheck,RefreshCw,Flame,Gift,RotateCw,Send,Flag,Home,Target} from 'lucide-react';
 import {types,arTypes,presentation,colors,unscored,activityLabel,mainType} from '../../lib/catalog';
-import {api,errorText} from '../../lib/client';
+import {api,errorText,arenaLiveUrl} from '../../lib/client';
 import {siteUrl} from '../../lib/site-path';
 import {activityIcons} from './App';
 import BrandHeader,{OfficialLogo} from './Brand';
@@ -14,13 +14,69 @@ type Props={ar:boolean;view:string;code:string;navigate:(view:string,code?:strin
 export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  const t=(a:string,e:string)=>ar?a:e;const host=view==='host',display=view==='display';
  const [splash,setSplash]=useState<string|null>(null),[s,setS]=useState<any>(null),[error,setError]=useState(''),[connected,setConnected]=useState(true),[token,setToken]=useState<string|undefined>(),[name,setName]=useState(''),[team,setTeam]=useState('Lightning'),[joinCode,setJoinCode]=useState(code),[busy,setBusy]=useState(false),[now,setNow]=useState(Date.now()),[qr,setQr]=useState(''),[copied,setCopied]=useState(false),[sound,setSound]=useState(false),[endConfirm,setEndConfirm]=useState(false),[showQR,setShowQR]=useState(false),[editing,setEditing]=useState(false),[quiet,setQuiet]=useState(false),[intensity,setIntensity]=useState('full');
+ const [liveConnection,setLiveConnection]=useState<'live'|'fallback'>('fallback');
  const [employeeId,setEmployeeId]=useState(''),[confirmed,setConfirmed]=useState(false),[recovering,setRecovering]=useState(false),[recoveryInput,setRecoveryInput]=useState(''),[recoveryNote,setRecoveryNote]=useState('');
  useEffect(()=>{const preference=localStorage.getItem('arena-effects');setIntensity(preference|| (window.matchMedia('(max-width:700px)').matches?'light':'full'));setQuiet(localStorage.getItem('arena-quiet')==='true');},[]);
  const routeKey=useRef('');routeKey.current=code+view+(token||'');
  const received=useRef(Date.now()),audio=useRef<AudioContext|null>(null),lastStatus=useRef(''),lastIntro=useRef(''),lastBeep=useRef('');
+ const refreshLatest=useRef<()=>Promise<void>>(async()=>{});
+ const viewLatest=useRef(view);viewLatest.current=view;
+ const activityLatest=useRef<any>(null);activityLatest.current=s?.activity;
+
  async function refresh(){if(!/^\d{6}$/.test(code))return;try{const key=code+view+(token||'');const data=await api(`state?code=${code}${host?'&role=host':''}`,undefined,token);if(routeKey.current!==key)return;received.current=Date.now();setS((old:any)=>old?.code===data.code&&old.revision>data.revision?old:data);setConnected(true);if(data.teamMode&&!data.teamNames.includes(team))setTeam(data.teamNames[0]);}catch(e:any){setConnected(false);setError(e.message);}}
+ refreshLatest.current=refresh;
  useEffect(()=>{setS(null);setError('');setToken(localStorage.getItem('arena-player-'+code)||undefined);setJoinCode(code);},[code,view]);
- useEffect(()=>{if(!code)return;let live=true;async function poll(){if(!live)return;await refresh();}poll();const id=setInterval(poll,1800);return()=>{live=false;clearInterval(id);};},[code,host,token]);
+ // Event-driven invalidation: host + projector react to EVERY submitted answer
+ // immediately; guest devices refresh for stage changes but don't repeatedly
+ // re-fetch a room of 80 people on every other player's answer.
+ useEffect(()=>{
+  if(!/^\d{6}$/.test(code))return;
+  const endpoint=arenaLiveUrl(code);
+  if(!endpoint)return;
+  let alive=true,ws:WebSocket|null=null,attempt=0,retry:ReturnType<typeof setTimeout>|null=null;
+  function connect(){
+   if(!alive)return;
+   try{
+    ws=new WebSocket(endpoint!);
+    ws.onopen=()=>{if(!alive)return;attempt=0;setLiveConnection('live');refreshLatest.current();};
+    ws.onmessage=event=>{
+     if(!alive)return;
+     try{
+      const message=JSON.parse(event.data);
+      if(message.type!=='changed')return;
+      const type=message.kind;
+      const role=viewLatest.current;
+      const hasFastBoard=role==='host'||role==='display';
+      const autoClose=!!activityLatest.current?.autoClose;
+      if(type!=='answer'||hasFastBoard||autoClose)refreshLatest.current();
+     }catch{}
+    };
+    ws.onclose=()=>{
+     if(!alive)return;
+     setLiveConnection('fallback');
+     attempt=Math.min(attempt+1,6);
+     retry=setTimeout(connect,Math.min(15000,750*2**attempt));
+    };
+    ws.onerror=()=>{if(alive)ws?.close();};
+   }catch{
+    setLiveConnection('fallback');
+    attempt=Math.min(attempt+1,6);
+    retry=setTimeout(connect,Math.min(15000,750*2**attempt));
+   }
+  }
+  connect();
+  function onFocus(){if(alive)refreshLatest.current();}
+  document.addEventListener('visibilitychange',onFocus);
+  window.addEventListener('online',onFocus);
+  return()=>{alive=false;if(retry)clearTimeout(retry);document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('online',onFocus);ws?.close();};
+ },[code]);
+ useEffect(()=>{
+  if(!code)return;
+  // 45s is fail-safe consistency while socket works; shorter only if disconnected.
+  refreshLatest.current();
+  const id=setInterval(()=>refreshLatest.current(),liveConnection==='live'?45000:12000);
+  return()=>clearInterval(id);
+ },[code,host,token,liveConnection]);
  useEffect(()=>{const id=setInterval(()=>setNow(Date.now()),200);return()=>clearInterval(id);},[]);
  useEffect(()=>{
   if(s?.status!=='question'||!s.activity)return;
@@ -46,7 +102,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  },[seconds,sound,quiet,s?.status,s?.paused,s?.deadline,s?.current,s?.runtime?.quiet]);
  async function command(action:string,index?:number,extra:any={}){if(busy)return;setBusy(true);setError('');try{const result=await api('control',{code,revision:s.revision,action,index,...extra});if(result.code){navigate('host',result.code);return;}await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);setEndConfirm(false);}}
  async function join(e:React.FormEvent){e.preventDefault();if(!code){navigate('join',joinCode);return;}setBusy(true);setError('');try{const data=await api(recovering?'recover':'join',recovering?{code,employeeId,recoveryCode:recoveryInput}:{code,name,employeeId,confirmed,team,language:ar?'ar':'en'},token);localStorage.setItem('arena-player-'+code,data.token);setToken(data.token);setRecoveryNote(data.recoveryCode||'');navigate('play',code);}catch(e:any){setError(e.message);if(e.message==='ALREADY_REGISTERED')setRecovering(true);}finally{setBusy(false);}}
- async function submit(answer:any){setBusy(true);setError('');try{await api('answer',{code,round:s.current,answer},token);await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);}}
+ async function submit(answer:any){setBusy(true);setError('');try{await api('answer',{code,round:s.current,answer},token);setS((old:any)=>old?.mine&&!old.mine.answered?{...old,submitted:old.submitted+1,mine:{...old.mine,answered:true,answer}}:old);await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);}}
  async function interact(action:string,extra:any={}){if(busy)return;setBusy(true);setError('');try{await api('interact',{code,round:s.current,action,...extra},token);await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);}}
  async function projection(change:any){await command('projection',undefined,{board:s.runtime.board,quiet:s.runtime.quiet,intensity:s.runtime.intensity,analytics:s.runtime.analytics,...change});}
  async function copy(){try{await navigator.clipboard.writeText(siteUrl('join',code));setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{setShowQR(true);}}
@@ -56,7 +112,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  const meta=['Meta Plan','Categorize'].includes(s?.activity?.type);
  const isJoined=!!s?.mine?.employeeId&&(view==='play'||view==='join'),closed=s&&['results','completed','survey','archived'].includes(s.status),label=s?.activity?activityLabel(s.activity,ar):'';
  return <div className={'session-shell '+(display?'projector':'')+(isJoined?' trainee':'')+' scene-'+(s?.activity?mainType(s.activity).toLowerCase().replaceAll(' ','-'):'lobby')+' effects-'+(quiet||s?.runtime?.quiet||intensity==='off'||s?.runtime?.intensity==='off'?'off':intensity==='light'||s?.runtime?.intensity==='light'?'light':'full')}>
-  <BrandHeader className="session-brand-header"><span className="wordmark">MTS TRAINING ARENA</span><div className="session-header-actions">{code&&<span className="session-code"><ScanLine size={15}/><b dir="ltr">{code}</b></span>}{s&&<span className={'connection '+(!connected?'offline':'')}><i/>{connected?t('متصل','Connected'):t('إعادة الاتصال…','Reconnecting…')}</span>}<button className="language" onClick={toggleLanguage}><Globe size={14}/>{ar?'EN':'عربي'}</button>{(host||display)&&<button className="icon-button" aria-label={t('ملء الشاشة','Fullscreen')} onClick={fullscreen}><Maximize size={18}/></button>}</div></BrandHeader>
+  <BrandHeader className="session-brand-header"><span className="wordmark">MTS TRAINING ARENA</span><div className="session-header-actions">{code&&<span className="session-code"><ScanLine size={15}/><b dir="ltr">{code}</b></span>}{s&&<span className={'connection '+(!connected?'offline':'')}><i/>{connected?(liveConnection==='live'?t('مباشر لحظيًا','LIVE · INSTANT'):t('متصل · وضع احتياطي','Connected · fallback')):t('إعادة الاتصال…','Reconnecting…')}</span>}<button className="language" onClick={toggleLanguage}><Globe size={14}/>{ar?'EN':'عربي'}</button>{(host||display)&&<button className="icon-button" aria-label={t('ملء الشاشة','Fullscreen')} onClick={fullscreen}><Maximize size={18}/></button>}</div></BrandHeader>
   {splash&&s?.status==='question'&&s?.activity&&<StageSplash key={splash} type={mainType(s.activity)} label={activityLabel(s.activity,ar)} ar={ar} onComplete={()=>setSplash(null)}/>}
   {error&&<div className="error-banner live-error" role="alert">{errorText(error,ar)}<button onClick={()=>{setError('');refresh();}}><RefreshCw size={14}/>{t('إعادة المحاولة','Retry')}</button></div>}
   {!code?<main className="join-page"><div className="join-orbit"/><div className="join-card"><span className="big-zap"><Zap size={40} fill="currentColor"/></span><span className="eyebrow">YOUR NEXT CHALLENGE AWAITS</span><h1>{t('مكانك في الساحة.','Your place in the arena.')}</h1><p className="muted">{t('ادخل بكود الجلسة أو امسح QR اللي على شاشة المدرب.','Enter a session code or scan the QR on your trainer’s screen.')}</p><form onSubmit={join}><label>{t('كود الجلسة','Session code')}<input className="code-input" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required placeholder="000000" dir="ltr" value={joinCode} onChange={e=>setJoinCode(e.target.value.replace(/\D/g,''))}/></label><button className="btn primary wide" type="submit"><ArrowLeft size={18}/>{t('دخول الساحة','Enter the arena')}</button></form><p className="private-note"><ShieldCheck size={14}/>{t('نسخة خاصة للتجربة بحسابك المصرّح له.','Private trial for your authorised account.')}</p></div></main>:!s?<div className="waiting-load"><span className="loader"/>{t('بنوصل للساحة…','Connecting to the arena…')}</div>:(!host&&!display&&!isJoined)?<main className="join-page"><div className="join-orbit"/><div className="join-card"><span className="status-pill lobby"><i className="live-dot"/>{t('ساحة جاهزة','ARENA READY')}</span><h1>{s.title}</h1><p className="muted">{t('مسحة واحدة. تحدّيات كتير. أنت جاهز؟','One scan. Many challenges. Are you ready?')}</p>{s.status==='completed'?<><div className="info-banner">{t('الجلسة انتهت. تقدر تشوف النتائج.','The session has ended. You can view the results.')}</div><Leaderboard s={s} ar={ar}/></>:<form onSubmit={join}>{!recovering&&<label>{t('الاسم بالكامل','Full name')}<input maxLength={40} required autoComplete="name" placeholder={t('اكتب اسمك هنا','Enter your name')} value={name} onChange={e=>setName(e.target.value)}/></label>}<label>{t('لغة المشاركة','Participation language')}<select value={ar?'ar':'en'} onChange={e=>{if((e.target.value==='ar')!==ar)toggleLanguage();}}><option value="ar">العربية</option><option value="en">English</option></select></label><label>{t('الرقم الوظيفي','Employee ID')}<input required dir="ltr" maxLength={30} autoComplete="off" placeholder={t('اكتب الرقم الوظيفي','Enter your employee ID')} value={employeeId} onChange={e=>{setEmployeeId(e.target.value);setConfirmed(false);}}/></label>{recovering?<label>{t('كود استرجاع المشاركة','Participation recovery code')}<input required dir="ltr" autoComplete="off" value={recoveryInput} onChange={e=>setRecoveryInput(e.target.value)} placeholder="XXXXX-XXXXX-XXXXX-XXXXX"/></label>:s.teamMode&&<label>{t('اختار فريقك','Choose your team')}<select value={team} onChange={e=>setTeam(e.target.value)}>{s.teamNames.map((team:string)=><option key={team} value={team}>{team==='Lightning'?t('فريق البرق','Lightning'):team==='Wave'?t('فريق الموج','Wave'):team}</option>)}</select></label>}{!recovering&&<div className="identity-confirmation"><span className="identity-step">{t('تأكيد بيانات الدخول','CONFIRM YOUR DETAILS')}</span><p><b>{name||t('اسمك','Your name')}</b><span dir="ltr">{employeeId||'—'}</span></p><label className="checkbox-label"><input type="checkbox" checked={confirmed} required onChange={e=>setConfirmed(e.target.checked)}/><span>{t('أؤكد إن الاسم والرقم الوظيفي صحيحين.','I confirm my name and employee ID are correct.')}</span></label></div>}<button className="btn primary wide" disabled={busy||(!recovering&&!confirmed)}><ShieldCheck size={18}/>{recovering?t('استرجاع مشاركتي','Restore my participation'):t('تأكيد الدخول والانضمام','Confirm & join the arena')}</button><button type="button" className="text-button recovery-link" onClick={()=>{setRecovering(!recovering);setError('');}}>{recovering?t('أنا مشارك جديد','I am a new participant'):t('مسجل من جهاز تاني؟ استرجع مشاركتك','Registered on another device? Restore your place')}</button>{['question','results'].includes(s.status)&&<p className="small muted">{t('الجلسة بدأت. المدرب يراجع طلبك قبل المشاركة من النشاط القادم.','Session is live. Your trainer must approve your request before the next activity.')}</p>}</form>}<p className="private-note"><ShieldCheck size={14}/>{t('الجلسة خاصة، والدخول بالحساب المصرّح له.','Private session. Authorised account access required.')}</p></div></main>:<main className="live-workspace">
