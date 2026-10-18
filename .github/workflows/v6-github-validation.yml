@@ -7,7 +7,7 @@ on:
       - '.github/workflows/v6-github-validation.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   check-v6:
     runs-on: ubuntu-latest
@@ -36,6 +36,17 @@ jobs:
           test -s dist-github/index.html
           test -s dist-github-api/worker.mjs
           test -d dist-github/assets
+      - name: Save reviewed Worker bundle in separate development path
+        run: |
+          mkdir -p deployment-bundles/v6
+          cp work-site-recovery-v6/dist-github-api/worker.mjs deployment-bundles/v6/worker.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-bundles/v6/worker.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "Build v6 Worker bundle from verified source [skip ci]"
+            git push origin HEAD:develop/v6-github-arena
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: mts-arena-v6-worker-bundle
