@@ -55,6 +55,12 @@ jobs:
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$api/api/me" | jq -e '.authenticated == false and .provider == "firebase"'
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$api/api/branding" | jq -e '.mts and .training'
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error -X OPTIONS -H "Origin: https://hazemshaaban77.github.io" -H "Access-Control-Request-Method: POST" "$api/api/join" > /dev/null
+      - name: Probe deployed Firebase and Cloudflare dependencies
+        run: |
+          set -euo pipefail
+          endpoint="https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/auth-health"
+          curl --retry 3 --retry-delay 2 --silent --show-error --fail-with-body "$endpoint" | tee /tmp/arena-v6-auth-health.json
+          jq -e '.googleKeys == "reachable" and .firebaseDatabase == "reachable" and .appDatabase == "ready"' /tmp/arena-v6-auth-health.json
       - name: Check public GitHub Pages V6 asset delivery
         run: |
           set -euo pipefail
