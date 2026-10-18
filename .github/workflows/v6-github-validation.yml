@@ -37,6 +37,7 @@ jobs:
           test -s dist-github-api/worker.mjs
           test -d dist-github/assets
       - name: Save reviewed Worker bundle in separate development path
+        working-directory: .
         run: |
           mkdir -p deployment-bundles/v6
           cp work-site-recovery-v6/dist-github-api/worker.mjs deployment-bundles/v6/worker.mjs
