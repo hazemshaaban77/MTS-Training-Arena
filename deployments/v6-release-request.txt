@@ -1,0 +1,9 @@
+MTS Training Arena Version 6 additive preview release request
+Date: 2026-10-18
+Deployment target: https://hazemshaaban77.github.io/MTS-Training-Arena/v6/
+Frontend: GitHub Pages, same recovered V6 source + approved development changes.
+Backend: mts-training-arena-v6-api.hazem-mts-arena.workers.dev
+Database: isolated mts-training-arena-v6 (Cloudflare D1 Workers Free)
+Cost policy: Workers Free, D1 Free, GitHub Pages Free, no R2 or paid upgrades.
+Safety: preserve /arena/ and legacy root, no merge to main, no Work/Sites mutation.
+This is a testing preview; live guest/mobile/projector classroom verification remains required.
