@@ -1,7 +1,9 @@
 name: Release MTS Training Arena V6 on GitHub Pages
 on:
   push:
-    tags: ['arena-v6-release-*']
+    branches: ['develop/v6-github-arena']
+    paths: ['deployments/v6-release-request.txt']
+  workflow_dispatch:
 permissions:
   contents: read
   pages: write
@@ -22,18 +24,15 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: '11.25.0'
-      - name: Require reviewed backend endpoint
-        env:
-          VITE_ARENA_API_ORIGIN: ${{ vars.ARENA_V6_API_ORIGIN }}
+      - name: Check isolated Cloudflare Free backend
         run: |
-          if [[ ! "$VITE_ARENA_API_ORIGIN" =~ ^https://[^/]+$ ]]; then
-            echo "::error::Set ARENA_V6_API_ORIGIN to the verified HTTPS Worker origin before creating a release tag."
-            exit 1
-          fi
+          set -euo pipefail
+          curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/me" | jq -e '.authenticated == false'
+          curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/branding" | jq -e '.mts and .training'
       - name: Test and build the same Version 6 source
         working-directory: work-site-recovery-v6
         env:
-          VITE_ARENA_API_ORIGIN: ${{ vars.ARENA_V6_API_ORIGIN }}
+          VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev
         run: |
           pnpm install --frozen-lockfile
           pnpm test
