@@ -5,6 +5,18 @@ function apiOrigin():string {
  if(!external && window.location.hostname.endsWith('.github.io')) throw Error('API_NOT_CONFIGURED');
  return external || window.location.origin;
 }
+export function arenaLiveUrl(code:string):string|null{
+ if(!/^\d{6}$/.test(code))return null;
+ try{
+  const api=apiOrigin();
+  const url=new URL(api);
+  if(url.protocol!=='https:')return null;
+  url.protocol='wss:';
+  url.pathname='/api/live';
+  url.searchParams.set('code',code);
+  return url.toString();
+ }catch{return null;}
+}
 export async function api(path:string,body?:any,token?:string){
  const firebaseToken=await trainerToken();
  let r:Response;
