@@ -16,6 +16,29 @@ type ArenaEnv = {
 const defaultOrigin='https://hazemshaaban77.github.io';
 const allowedMethods='GET, POST, OPTIONS';
 const allowedHeaders='Content-Type, X-Firebase-Token, X-Player-Token';
+let authHealthCache:{until:number;result:{googleKeys:'reachable'|'unavailable';firebaseDatabase:'reachable'|'unavailable';appDatabase:'ready'|'unavailable'}}|undefined;
+async function authHealth(db:D1Database|undefined){
+ if(authHealthCache&&authHealthCache.until>Date.now())return authHealthCache.result;
+ const keys='https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
+ const url=new URL(firebaseConfig.databaseURL);
+ url.pathname='/arenaV1/trainerAllowlist.json';
+ url.searchParams.set('shallow','true');
+ const statuses=await Promise.allSettled([
+  fetch(keys,{redirect:'manual',signal:AbortSignal.timeout(5000)}),
+  fetch(url.toString(),{redirect:'manual',signal:AbortSignal.timeout(5000)})
+ ]);
+ let ready=false;
+ if(db)try{const record:any=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='sessions'").first();ready=record?.name==='sessions';}catch{}
+ const result={
+  googleKeys:statuses[0].status==='fulfilled'&&statuses[0].value.ok?'reachable':'unavailable',
+  // 401/403 without a Firebase token is expected: it proves RTDB is reachable
+  // while keeping the trainer allowlist private.
+  firebaseDatabase:statuses[1].status==='fulfilled'&&[200,401,403].includes(statuses[1].value.status)?'reachable':'unavailable',
+  appDatabase:ready?'ready':'unavailable'
+ } as const;
+ authHealthCache={until:Date.now()+60000,result};
+ return result;
+}
 export default {
  async fetch(request:Request,env:ArenaEnv):Promise<Response>{
   const url=new URL(request.url);
@@ -35,6 +58,12 @@ export default {
   if(request.method==='OPTIONS'){
    if(!origin) return Response.json({error:'ORIGIN'},{status:403});
    return new Response(null,{status:204,headers:cors});
+  }
+  // Public, bounded diagnostic for upstream availability only; no identities or tokens.
+  if(url.pathname==='/api/auth-health'){
+   if(request.method!=='GET')return Response.json({error:'METHOD'},{status:405,headers:cors});
+   const result=await authHealth(env.DB);
+   return Response.json(result,{status:200,headers:{...Object.fromEntries(cors),'Cache-Control':'public, max-age=60'}});
   }
   // Authenticated media upload; no Firebase/Cloudflare credentials are ever sent to GitHub Pages.
   if(url.pathname==='/api/media-upload'){
