@@ -14,6 +14,9 @@ export class ArenaLiveRoom {
    this.state.acceptWebSocket(server);
    return new Response(null,{status:101,webSocket:client});
   }
+  if(url.pathname==='/health'&&request.method==='GET'){
+   return Response.json({ready:true,transport:'websocket'});
+  }
   if(url.pathname==='/notify'&&request.method==='POST'){
    let payload:{kind?:string}={};
    try{payload=await request.json();}catch{return new Response('Bad request',{status:400});}
