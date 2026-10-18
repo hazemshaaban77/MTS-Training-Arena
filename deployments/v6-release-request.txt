@@ -11,3 +11,5 @@ This is a testing preview; live guest/mobile/projector classroom verification re
 Preview workflow retry: continue only on GitHub-hosted Free services and preserve legacy site.
 
 Release update 2026-10-18: V6 GitHub login bridge removed; Firebase-specific error mapping enabled; new slogan and animated bilingual landing approved for preview after CI validation. Existing root/arena preserved.
+
+2026-10-18 refinement release: premium 'تجربة تعلّم تُلهم… وأثر يدوم' headline, balanced framed MTS/Training Team marks, removal of ChatGPT referral tracking in URL, one-click browser Cloudflare diagnostic. CI preflight GET with x-firebase-token and 401 CORS verified; publish only /v6/ on GitHub Pages.
