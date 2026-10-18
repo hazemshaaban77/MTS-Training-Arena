@@ -1,0 +1,55 @@
+name: Release MTS Training Arena V6 on GitHub Pages
+on:
+  push:
+    tags: ['arena-v6-release-*']
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  v6-pages:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - name: Require reviewed backend endpoint
+        env:
+          VITE_ARENA_API_ORIGIN: ${{ vars.ARENA_V6_API_ORIGIN }}
+        run: |
+          if [[ ! "$VITE_ARENA_API_ORIGIN" =~ ^https://[^/]+$ ]]; then
+            echo "::error::Set ARENA_V6_API_ORIGIN to the verified HTTPS Worker origin before creating a release tag."
+            exit 1
+          fi
+      - name: Test and build the same Version 6 source
+        working-directory: work-site-recovery-v6
+        env:
+          VITE_ARENA_API_ORIGIN: ${{ vars.ARENA_V6_API_ORIGIN }}
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm run build:github
+      - name: Preserve legacy GitHub Pages pilot and add /v6/
+        run: |
+          mkdir -p pages-site/v6
+          cp index.html firebase-config.js mts.png training.png pages-site/
+          cp -R arena pages-site/
+          cp -R work-site-recovery-v6/dist-github/. pages-site/v6/
+          touch pages-site/.nojekyll
+          test -s pages-site/v6/index.html
+          test -s pages-site/arena/projector.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-site
+      - id: deployment
+        uses: actions/deploy-pages@v4
