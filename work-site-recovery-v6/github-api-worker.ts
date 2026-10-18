@@ -5,9 +5,11 @@ import {createProvisioner} from './lib/firebase-admin';
 import {authorizeFirebaseTrainer} from './lib/firebase-verifier.mjs';
 import {firebaseConfig} from './lib/firebase-config';
 import {checkRate} from './lib/request-security';
+export {ArenaLiveRoom} from './lib/arena-live-room';
 
 type ArenaEnv = {
  DB?:D1Database;
+ LIVE?:DurableObjectNamespace;
  MEDIA?:R2Bucket;
  ARENA_PUBLIC_ORIGIN?:string;
  ARENA_ADMIN_UIDS?:string;
@@ -59,6 +61,18 @@ export default {
    if(!origin) return Response.json({error:'ORIGIN'},{status:403});
    return new Response(null,{status:204,headers:cors});
   }
+  // WebSocket presence is public to a room code, but never carries identity or scores.
+  // Request Origin must be the reviewed GitHub Pages origin (checked above).
+  if(url.pathname==='/api/live'){
+   if(request.method!=='GET'||request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return Response.json({error:'UPGRADE_REQUIRED'},{status:426,headers:cors});
+   const code=url.searchParams.get('code')||'';
+   if(!/^\d{6}$/.test(code))return Response.json({error:'CODE'},{status:400,headers:cors});
+   if(!env.DB||!env.LIVE)return Response.json({error:'LIVE_UNAVAILABLE'},{status:503,headers:cors});
+   const existing=await env.DB.prepare('SELECT code FROM sessions WHERE code=?').bind(code).first();
+   if(!existing)return Response.json({error:'NOT_FOUND'},{status:404,headers:cors});
+   const obj=env.LIVE.get(env.LIVE.idFromName(code));
+   return obj.fetch(new Request('https://arena.internal/ws',{headers:{Upgrade:'websocket'}}));
+  }
   // Public, bounded diagnostic for upstream availability only; no identities or tokens.
   if(url.pathname==='/api/auth-health'){
    if(request.method!=='GET')return Response.json({error:'METHOD'},{status:405,headers:cors});
@@ -106,11 +120,25 @@ export default {
   if(!['GET','POST'].includes(request.method)){
    return Response.json({error:'METHOD'},{status:405,headers:cors});
   }
+  const notifyFor:Record<string,string>={'/api/answer':'answer','/api/join':'joined','/api/recover':'joined','/api/control':'control','/api/interact':'interaction','/api/survey':'survey'};
+  const kind=request.method==='POST'?notifyFor[url.pathname]:undefined;
+  let bodyCode:string|null=null;
+  if(kind&&env.LIVE){
+   try{const payload:any=await request.clone().json();if(typeof payload.code==='string'&&/^\d{6}$/.test(payload.code))bodyCode=payload.code;}catch{}
+  }
   const response=await handleArenaRequest(request,env.DB,undefined,{
    allowedOrigin:allowed,
    adminUids:env.ARENA_ADMIN_UIDS?.split(',').map(x=>x.trim()).filter(Boolean)||[],
    provision:createProvisioner(env.FIREBASE_SERVICE_ACCOUNT)
   });
+  // The persisted D1 response is authoritative. Publish an invalidation only
+  // after a successful mutation, without delaying the response if live fails.
+  if(response.ok&&kind&&bodyCode&&env.LIVE){
+   try{
+    const stub=env.LIVE.get(env.LIVE.idFromName(bodyCode));
+    await stub.fetch('https://arena.internal/notify',{method:'POST',body:JSON.stringify({kind})});
+   }catch(e){console.warn('Live invalidation skipped',{kind});}
+  }
   const headers=new Headers(response.headers);
   for(const [k,v] of cors)headers.set(k,v);
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
