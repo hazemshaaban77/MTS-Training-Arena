@@ -8,6 +8,8 @@ export const presentation=type=>['Spin Wheel','Wheel of Fortune','Open the Box',
 export const unscored=a=>['Meta Plan','Categorize','Live Poll','Flashcards'].includes(a.type)||a.scored===false;
 export function validateActivity(a,depth=0){
  ok(a&&typeof a==='object'&&!Array.isArray(a)&&depth<=3&&str(a.prompt)&&Number.isInteger(a.timer)&&a.timer>=0&&a.timer<=3600);
+ // Optional learning media; never allow HTML/data/javascript URLs in participant views.
+ if(a.media!=null){ok(a.media&&typeof a.media==='object'&&['image','video'].includes(a.media.type)&&str(a.media.url,2048)&&/^https:\/\/[^\s]+$/i.test(a.media.url)&&(!a.media.alt||typeof a.media.alt==='string'&&a.media.alt.length<=200));}
  const type=a.type;
  if(['Quiz','Ultimate Game Show'].includes(type)&&a.questions){ok(Array.isArray(a.questions)&&a.questions.length&&a.questions.length<=500);a.questions.forEach(q=>validateActivity({...q,timer:q.timer??a.timer},depth+1));return a;}
  if(['Quiz','Dropdown','True/False','Ultimate Game Show'].includes(type)){ok(list(a.options,2,4)&&idx(a.correct,a.options.length));if(type==='True/False')ok(a.options.length===2);}
