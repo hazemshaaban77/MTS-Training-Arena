@@ -84,6 +84,12 @@ jobs:
           jq -e '.ready == true and .transport == "websocket"' /tmp/arena-live-health.json
           status=$(curl -sS -o /tmp/live-invalid.json -w '%{http_code}' "$base/api/live?code=INVALID")
           test "$status" = "426" -o "$status" = "400"
+      - name: Check Cloudflare live room upgrade
+        run: |
+          set -euo pipefail
+          url="https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/live?code=996624"
+          status=$(curl -sS --http1.1 --max-time 8 -D /tmp/live-ws-headers -o /tmp/live-ws-body -w '%{http_code}' -H "Origin: https://hazemshaaban77.github.io" -H "Upgrade: websocket" -H "Connection: Upgrade" -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" "$url" || true)
+          grep -q '101 Switching Protocols' /tmp/live-ws-headers
       - name: Check public GitHub Pages V6 asset delivery
         run: |
           set -euo pipefail
