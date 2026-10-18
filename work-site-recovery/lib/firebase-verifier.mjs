@@ -1,13 +1,15 @@
 // Extends the upstream Arena Firebase verifier for the Sites backend.
 // Uses only public Google signing keys. No admin key and no Firebase writes.
 const decoder=new TextDecoder();
+// Safe diagnostic metadata. Never log ID tokens, passwords, Firebase URLs or credentials.
+function upstreamUnavailable(stage){const error=new Error('AUTH_NETWORK');error.stage=stage;return error;}
 function bytes(value){if(!/^[A-Za-z0-9_-]+$/.test(value))throw Error('INVALID_TOKEN');return Uint8Array.from(atob(value.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(value.length/4)*4,'=')),c=>c.charCodeAt(0));}
 export function createFirebaseVerifier({fetcher=globalThis.fetch,now=()=>Date.now()}={}){
  let keys=[],expires=0;
  async function keyset(force=false){
   if(!force&&keys.length&&now()<expires)return keys;
-  let r;try{r=await fetcher('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com',{signal:AbortSignal.timeout(10000),redirect:'error'});}catch{throw Error('AUTH_NETWORK');}
-  if(!r.ok)throw Error('AUTH_NETWORK');const body=await r.json();if(!Array.isArray(body.keys))throw Error('AUTH_NETWORK');
+  let r;try{r=await fetcher('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com',{signal:AbortSignal.timeout(10000),redirect:'error'});}catch{throw upstreamUnavailable('google_keys_fetch');}
+  if(!r.ok)throw upstreamUnavailable('google_keys_http');let body;try{body=await r.json();}catch{throw upstreamUnavailable('google_keys_parse');}if(!Array.isArray(body.keys))throw upstreamUnavailable('google_keys_format');
   const age=Number(/(?:^|,)\s*max-age=(\d+)/i.exec(r.headers.get('Cache-Control')||'')?.[1]??300);
   keys=body.keys;expires=now()+Math.min(age,86400)*1000;return keys;
  }
@@ -29,7 +31,7 @@ export async function authorizeFirebaseTrainer(req,{projectId='',databaseURL='',
  const user=await verifier(token,projectId);
  const url=new URL(databaseURL);if(url.protocol!=='https:'||!url.hostname.endsWith('.firebasedatabase.app')&&!url.hostname.endsWith('.firebaseio.com'))throw Error('FIREBASE_CONFIG');
  url.pathname='/arenaV1/trainerAllowlist/'+encodeURIComponent(user.uid)+'.json';url.searchParams.set('auth',token);
- let response;try{response=await fetcher(url.toString(),{method:'GET',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'Cache-Control':'no-cache'}});}catch{throw Error('AUTH_NETWORK');}
- if(!response.ok){if([401,403].includes(response.status))throw Error('TRAINER_NOT_ALLOWED');throw Error('AUTH_NETWORK');}
+ let response;try{response=await fetcher(url.toString(),{method:'GET',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'Cache-Control':'no-cache'}});}catch{throw upstreamUnavailable('firebase_allowlist_fetch');}
+ if(!response.ok){if([401,403].includes(response.status))throw Error('TRAINER_NOT_ALLOWED');throw upstreamUnavailable('firebase_allowlist_http');}
  if(await response.json()!==true)throw Error('TRAINER_NOT_ALLOWED');return {...user,owner:'firebase:'+user.uid};
 }
