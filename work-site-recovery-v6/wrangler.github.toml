@@ -13,3 +13,7 @@ ARENA_PUBLIC_ORIGIN = "https://hazemshaaban77.github.io"
 binding = "DB"
 database_name = "mts-training-arena-v6"
 database_id = "00000000-0000-0000-0000-000000000000"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "mts-training-arena-v6-media"
