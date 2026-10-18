@@ -76,6 +76,14 @@ jobs:
           test "$code" = "401"
           grep -qi "^access-control-allow-origin: $origin" /tmp/v6-auth-headers
           jq -e '.error == "INVALID_TOKEN"' /tmp/v6-auth-body
+      - name: Confirm deployed Free Durable Object instant channel
+        run: |
+          set -euo pipefail
+          base="https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev"
+          curl --retry 3 --retry-delay 2 --fail-with-body -sS "$base/api/live-health" | tee /tmp/arena-live-health.json
+          jq -e '.ready == true and .transport == "websocket"' /tmp/arena-live-health.json
+          status=$(curl -sS -o /tmp/live-invalid.json -w '%{http_code}' "$base/api/live?code=INVALID")
+          test "$status" = "426" -o "$status" = "400"
       - name: Check public GitHub Pages V6 asset delivery
         run: |
           set -euo pipefail
