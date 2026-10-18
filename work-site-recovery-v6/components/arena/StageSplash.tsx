@@ -7,7 +7,7 @@ const visuals:Record<string,any>={
  'Order It':ListOrdered,'Open the Box':Gift,'Flashcards':GalleryVerticalEnd,'Scenario Challenge':Route,
 };
 export default function StageSplash({type,label,ar,onComplete}:{type:string;label:string;ar:boolean;onComplete:()=>void}){
- useEffect(()=>{const id=setTimeout(onComplete,1450);return()=>clearTimeout(id);},[onComplete]);
+ useEffect(()=>{const id=setTimeout(onComplete,1450);return()=>clearTimeout(id);},[type]);
  const Icon=visuals[type]||Zap;
  const identity=type.toLowerCase().replace(/[^a-z0-9]+/g,'-');
  return <div className={'stage-splash stage-splash-'+identity} role="status" aria-live="polite">
