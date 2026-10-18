@@ -38,6 +38,11 @@ jobs:
           test -d dist-github/assets
       - uses: actions/upload-artifact@v4
         with:
+          name: mts-arena-v6-worker-bundle
+          path: work-site-recovery-v6/dist-github-api/worker.mjs
+          retention-days: 2
+      - uses: actions/upload-artifact@v4
+        with:
           name: mts-arena-v6-frontend-preview
           path: work-site-recovery-v6/dist-github/
           retention-days: 7
