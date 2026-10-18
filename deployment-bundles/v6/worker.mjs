@@ -1303,6 +1303,33 @@ function createProvisioner(raw, fetcher = globalThis.fetch) {
 var defaultOrigin = "https://hazemshaaban77.github.io";
 var allowedMethods = "GET, POST, OPTIONS";
 var allowedHeaders = "Content-Type, X-Firebase-Token, X-Player-Token";
+var authHealthCache;
+async function authHealth(db) {
+  if (authHealthCache && authHealthCache.until > Date.now()) return authHealthCache.result;
+  const keys = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
+  const url = new URL(firebaseConfig.databaseURL);
+  url.pathname = "/arenaV1/trainerAllowlist.json";
+  url.searchParams.set("shallow", "true");
+  const statuses = await Promise.allSettled([
+    fetch(keys, { redirect: "manual", signal: AbortSignal.timeout(5e3) }),
+    fetch(url.toString(), { redirect: "manual", signal: AbortSignal.timeout(5e3) })
+  ]);
+  let ready = false;
+  if (db) try {
+    const record = await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='sessions'").first();
+    ready = record?.name === "sessions";
+  } catch {
+  }
+  const result = {
+    googleKeys: statuses[0].status === "fulfilled" && statuses[0].value.ok ? "reachable" : "unavailable",
+    // 401/403 without a Firebase token is expected: it proves RTDB is reachable
+    // while keeping the trainer allowlist private.
+    firebaseDatabase: statuses[1].status === "fulfilled" && [200, 401, 403].includes(statuses[1].value.status) ? "reachable" : "unavailable",
+    appDatabase: ready ? "ready" : "unavailable"
+  };
+  authHealthCache = { until: Date.now() + 6e4, result };
+  return result;
+}
 var github_api_worker_default = {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -1321,6 +1348,11 @@ var github_api_worker_default = {
     if (request.method === "OPTIONS") {
       if (!origin) return Response.json({ error: "ORIGIN" }, { status: 403 });
       return new Response(null, { status: 204, headers: cors });
+    }
+    if (url.pathname === "/api/auth-health") {
+      if (request.method !== "GET") return Response.json({ error: "METHOD" }, { status: 405, headers: cors });
+      const result = await authHealth(env.DB);
+      return Response.json(result, { status: 200, headers: { ...Object.fromEntries(cors), "Cache-Control": "public, max-age=60" } });
     }
     if (url.pathname === "/api/media-upload") {
       if (request.method !== "POST") return Response.json({ error: "METHOD" }, { status: 405, headers: cors });
