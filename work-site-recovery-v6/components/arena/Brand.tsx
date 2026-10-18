@@ -1,0 +1,7 @@
+'use client';
+import {createContext,useContext,useEffect,useState} from 'react';
+const original={mts:'/mts.png',training:'/training.png',primary:'#218e5b',blue:'#176aa4',navy:'#0c2545'};
+const Branding=createContext(original);
+export function BrandProvider({children}:{children:React.ReactNode}){const [brand,setBrand]=useState(original);useEffect(()=>{let active=true;fetch('/api/branding',{cache:'no-store'}).then(r=>r.ok?r.json():null).then((b:any)=>{if(!active||!b)return;setBrand(b);document.documentElement.style.setProperty('--brand-primary',b.primary);document.documentElement.style.setProperty('--brand-blue',b.blue);document.documentElement.style.setProperty('--brand-navy',b.navy);}).catch(()=>{});return()=>{active=false;};},[]);return <Branding.Provider value={brand}>{children}</Branding.Provider>;}
+export function OfficialLogo({kind,className=''}:{kind:'mts'|'training';className?:string}){const brand=useContext(Branding);return <span className={`official-logo ${kind} ${brand[kind]!==original[kind]?'custom-logo':''} ${className}`}><img src={brand[kind]} alt={kind==='mts'?'MTS — Misr Technology Services':'Training Team'}/></span>;}
+export default function BrandHeader({children,className=''}:{children?:React.ReactNode;className?:string}){return <header className={`brand-header ${className}`}><a href="/" className="official-home" aria-label="MTS Training Arena"><OfficialLogo kind="mts"/></a><div className="brand-header-center">{children}</div><OfficialLogo kind="training"/></header>;}
