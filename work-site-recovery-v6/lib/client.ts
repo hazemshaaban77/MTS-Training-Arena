@@ -1,6 +1,6 @@
 import {trainerToken} from './firebase-client';
 function apiOrigin():string {
- const external=(import.meta.env.VITE_ARENA_API_ORIGIN||'').trim().replace(/\/$/,'');
+ const external=(import.meta.env?.VITE_ARENA_API_ORIGIN||'').trim().replace(/\/$/,'');
  if(external && !/^https:\/\/[^/]+$/i.test(external)) throw Error('API_NOT_CONFIGURED');
  if(!external && window.location.hostname.endsWith('.github.io')) throw Error('API_NOT_CONFIGURED');
  return external || window.location.origin;
