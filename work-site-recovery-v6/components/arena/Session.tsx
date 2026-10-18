@@ -20,10 +20,30 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  const routeKey=useRef('');routeKey.current=code+view+(token||'');
  const received=useRef(Date.now()),audio=useRef<AudioContext|null>(null),lastStatus=useRef(''),lastIntro=useRef(''),lastBeep=useRef('');
  const refreshLatest=useRef<()=>Promise<void>>(async()=>{});
+ const refreshIssued=useRef(0),refreshApplied=useRef(0);
+ const eventRefreshTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const lastEventRefresh=useRef(0);
  const viewLatest=useRef(view);viewLatest.current=view;
  const activityLatest=useRef<any>(null);activityLatest.current=s?.activity;
 
- async function refresh(){if(!/^\d{6}$/.test(code))return;try{const key=code+view+(token||'');const data=await api(`state?code=${code}${host?'&role=host':''}`,undefined,token);if(routeKey.current!==key)return;received.current=Date.now();setS((old:any)=>old?.code===data.code&&old.revision>data.revision?old:data);setConnected(true);if(data.teamMode&&!data.teamNames.includes(team))setTeam(data.teamNames[0]);}catch(e:any){setConnected(false);setError(e.message);}}
+ async function refresh(){
+  if(!/^\d{6}$/.test(code))return;
+  const seq=++refreshIssued.current;
+  const key=code+view+(token||'');
+  try{
+   const data=await api(`state?code=${code}${host?'&role=host':''}`,undefined,token);
+   if(routeKey.current!==key||seq<refreshApplied.current)return;
+   refreshApplied.current=seq;
+   received.current=Date.now();
+   setS((old:any)=>old?.code===data.code&&old.revision>data.revision?old:data);
+   setConnected(true);
+   if(data.teamMode&&!data.teamNames.includes(team))setTeam(data.teamNames[0]);
+  }catch(e:any){
+   if(routeKey.current!==key||seq<refreshApplied.current)return;
+   setConnected(false);
+   setError(e.message);
+  }
+ }
  refreshLatest.current=refresh;
  useEffect(()=>{setS(null);setError('');setToken(localStorage.getItem('arena-player-'+code)||undefined);setJoinCode(code);},[code,view]);
  // Event-driven invalidation: host + projector react to EVERY submitted answer
@@ -48,7 +68,16 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
       const role=viewLatest.current;
       const hasFastBoard=role==='host'||role==='display';
       const autoClose=!!activityLatest.current?.autoClose;
-      if(type!=='answer'||hasFastBoard||autoClose)refreshLatest.current();
+      if(type!=='answer'||hasFastBoard||autoClose){
+       if(eventRefreshTimer.current===null){
+        const wait=Math.max(90,550-(Date.now()-lastEventRefresh.current));
+        eventRefreshTimer.current=setTimeout(()=>{
+         eventRefreshTimer.current=null;
+         lastEventRefresh.current=Date.now();
+         refreshLatest.current();
+        },wait);
+       }
+      }
      }catch{}
     };
     ws.onclose=()=>{
@@ -68,15 +97,22 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   function onFocus(){if(alive)refreshLatest.current();}
   document.addEventListener('visibilitychange',onFocus);
   window.addEventListener('online',onFocus);
-  return()=>{alive=false;if(retry)clearTimeout(retry);document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('online',onFocus);ws?.close();};
+  return()=>{alive=false;if(retry)clearTimeout(retry);if(eventRefreshTimer.current){clearTimeout(eventRefreshTimer.current);eventRefreshTimer.current=null;}document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('online',onFocus);ws?.close();};
  },[code]);
  useEffect(()=>{
   if(!code)return;
   // 45s is fail-safe consistency while socket works; shorter only if disconnected.
   refreshLatest.current();
-  const id=setInterval(()=>refreshLatest.current(),liveConnection==='live'?45000:12000);
+  const id=setInterval(()=>refreshLatest.current(),liveConnection==='live'?45000:host||view==='display'?1400:12000);
   return()=>clearInterval(id);
  },[code,host,token,liveConnection]);
+ // Timed rounds complete on schedule even when no audience events arrive.
+ useEffect(()=>{
+  if(!s?.deadline||s.status!=='question'||s.paused)return;
+  const remaining=Math.max(0,s.deadline-(Date.now()+(s.serverNow-received.current)));
+  const id=setTimeout(()=>refreshLatest.current(),remaining+140);
+  return()=>clearTimeout(id);
+ },[s?.deadline,s?.paused,s?.status,s?.code,s?.current]);
  useEffect(()=>{const id=setInterval(()=>setNow(Date.now()),200);return()=>clearInterval(id);},[]);
  useEffect(()=>{
   if(s?.status!=='question'||!s.activity)return;
