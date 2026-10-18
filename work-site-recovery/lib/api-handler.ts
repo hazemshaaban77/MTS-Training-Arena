@@ -13,7 +13,7 @@ export async function handleArenaRequest(req:Request,db:D1Database|undefined,aut
  if(needsTrainer){
   if(path==='/api/me'&&!req.headers.get('X-Firebase-Token'))return Response.json({authenticated:false,provider:'firebase'},{headers:{'Cache-Control':'no-store'}});
   try{trainer=await authorize(req,{projectId:firebaseConfig.projectId,databaseURL:firebaseConfig.databaseURL});}
-  catch(e:any){const code=e.message||'INVALID_TOKEN';throw new ApiError(code,code==='TRAINER_NOT_ALLOWED'?403:['AUTH_NETWORK','FIREBASE_CONFIG'].includes(code)?503:401);}
+  catch(e:any){const code=e.message||'INVALID_TOKEN';if(code==='AUTH_NETWORK'&&typeof e.stage==='string'){console.warn('Arena trainer authentication upstream unavailable',{stage:e.stage,path});return Response.json({error:'AUTH_NETWORK',stage:e.stage},{status:503,headers:{'Cache-Control':'no-store'}});}throw new ApiError(code,code==='TRAINER_NOT_ALLOWED'?403:['AUTH_NETWORK','FIREBASE_CONFIG'].includes(code)?503:401);}
  }
  const profile=trainer&&db?await trainerProfile(db,trainer,options.adminUids):null;
  if(path==='/api/me'&&req.method==='GET')return Response.json({authenticated:true,provider:'firebase',name:trainer.name,email:trainer.email,uid:trainer.uid,role:profile?.role||'trainer',owner:trainer.owner},{headers:{'Cache-Control':'no-store'}});
