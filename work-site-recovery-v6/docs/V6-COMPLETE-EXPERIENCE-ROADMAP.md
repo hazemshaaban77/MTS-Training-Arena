@@ -296,3 +296,18 @@ Only V6 source under `work-site-recovery-v6/` was changed, no merge to `main`, n
 **Acceptance distinction:** CI/Pages release are confirmed success, but the actual scanned-QR classroom E2E on Android/iOS and physical projector with 20/80 clients has NOT been performed. Do not mark such UAT as done.
 
 **What's next in unified plan:** immersive **Scenario Challenge** consequence/path game, then final targeted **Live Poll/Quiz** improvements and distinct activity reports; accurate server-rule multi-trainee simulator and reliable real-device classroom stress testing remain important P0/P1 work. Preserve the same V6 source/URL.
+
+## Checkpoint — Scenario Challenge immersive decision path (2026-10-20)
+
+**Scope:** next planned V6 game wave, not a new V6.1 product. Development sources changed under `work-site-recovery-v6/` only. Branch `develop/v6-github-arena`.
+
+**Implementation completed:**
+- New `components/arena/ArenaScenario.tsx`, wired from `GamePlay.tsx` for authored branching scenarios (`nodes`), with a dedicated theatrical scene, high-contrast decision cards, consequence reveal from real individual progress, self-only decision timeline and end-of-path debrief.
+- Trainer and projector get a distinct stage and facilitator prompt; they do **not** show private participant route, choices, consequence or future nodes. No invented group results, scores or aggregate votes.
+- Authoritative `session-games.ts` decision transition, `version` concurrency check, weight/scoring, backend node routing and `publicActivity` redaction remain unchanged. The component emits only `send('decision',{choice:i})`; the server still owns progress.
+- Arabic/English and responsive phone/projector styles, focus-visible, >=43px mobile decision index, large choice touch surfaces, prefers-reduced-motion and `effects-off`.
+- Added RTL/LTR trainer, participant, spectator, branch consequence, ending and confidentiality regression checks in `tests/render.test.tsx`.
+
+**CI validation:** [V6 Actions run 39342716351](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39342716351) **SUCCESS** on source commit `25ed0a61902f6d7a1b9a22350214342e53303d0b`. The actual Pages release is tracked separately, not presumed successful here.
+
+**Still pending:** genuine live phone/projector E2E, multi-participant simulator rule parity and stress tests, Live Poll/Quiz focused finishing, per-activity learning analytics, PDF report and signed media hardening/security review. Preserve unchanged employee-ID/name/language/team participant registration form, original MTS branding, existing V6 URL, all existing Worker/D1/Firebase/data and legacy main/arena routes.
