@@ -17,7 +17,6 @@ export function LivePollChart({s,ar}:{s:any;ar:boolean}){
  const totalVotes=voteCounts.reduce((sum:number,n:number)=>sum+n,0);
  const count=safe(s.submitted);
  let points:Point[]=[];
- let valueUnit=t('صوت','votes');
  let label=t('توزيع الأصوات','VOTE DISTRIBUTION');
  let graphKind='choice';
  if(kind==='word'){
@@ -31,7 +30,6 @@ export function LivePollChart({s,ar}:{s:any;ar:boolean}){
  }else if(kind==='rating'){
   const count=safe(summary?.count),average=count?Math.min(5,safe(summary?.average)):0;
   points=[{label:t('متوسط التقييم','Average rating'),value:average,maximum:5,detail:average.toFixed(1)+' / 5'}];
-  valueUnit=t('تقييم','ratings');
   label=t('متوسط تقييم المشاركين','AVERAGE RATING');
   graphKind='rating';
  }else if(kind==='priority'){
@@ -40,7 +38,6 @@ export function LivePollChart({s,ar}:{s:any;ar:boolean}){
   points=scores.map((row:any)=>({
    label:String(row.label||''),value:safe(row.value),maximum,detail:safe(row.value).toLocaleString(ar?'ar-EG':'en-US')
   }));
-  valueUnit=t('نقطة ترجيح','ranking points');
   label=t('ترتيب الأولويات','PRIORITY RANKING');
   graphKind='priority';
  }else{
@@ -117,10 +114,10 @@ export default function LivePoll({s,ar,host,display,canAnswer,busy,onSubmit}:any
    <div className="live-poll-vote__actions">
     <button type="button" className="live-poll-vote__submit" disabled={!allow||(kind==='word'?!word.trim():kind==='priority'?priority.length!==(a.options||[]).length:choice===null)}
      onClick={()=>vote(kind==='word'?word.trim():kind==='priority'?priority:choice)}>
-     {already||success?<CheckCircle2 size={19}/>:<Send size={19}/>}
+     {already?<CheckCircle2 size={19}/>:<Send size={19}/>}
      {already&&canChange?t('تحديث صوتي','Update my vote'):t('إرسال صوتي','Cast my vote')}
     </button>
-    {(already||success)&&<span className="live-poll-vote__success"><CheckCircle2 size={17}/>{t('تم تسجيل صوتك','Your vote is recorded')}</span>}
+    {already&&<span className="live-poll-vote__success"><CheckCircle2 size={17}/>{t('تم تسجيل صوتك','Your vote is recorded')}</span>}
    </div>
   </div>:<div className="live-poll-experience__audience">
    <div className="live-poll-experience__signal" aria-hidden="true"><i/><i/><i/><Vote size={45}/></div>
