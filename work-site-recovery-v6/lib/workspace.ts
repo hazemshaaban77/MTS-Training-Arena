@@ -19,7 +19,7 @@ export async function workspace(db:D1Database,url:URL,method:string,b:any,owner:
  }
  if(path==='/api/catalog'){return {sessions:(await db.prepare("SELECT code,title,owner,status,language,teams,created_at FROM sessions WHERE status!='draft' ORDER BY created_at DESC LIMIT 500").all()).results.map((x:any)=>({...x,editable:x.owner===owner||admin}))};}
  if(path==='/api/branding'){
-  if(method==='GET'){const row:any=await db.prepare("SELECT payload FROM settings WHERE id='branding'").first();return row?JSON.parse(row.payload):{mts:'/mts.png',training:'/training.png',primary:'#218e5b',blue:'#176aa4',navy:'#0c2545'};}
+  if(method==='GET'){const row:any=await db.prepare("SELECT payload FROM settings WHERE id='branding'").first();return row?JSON.parse(row.payload):{mts:'/mts-transparent.png',training:'/training-transparent.png',primary:'#218e5b',blue:'#176aa4',navy:'#0c2545'};}
   if(!admin)fail('ADMIN_ONLY',403);for(const key of ['mts','training'])if(typeof b[key]!=='string'||!/^https:\/\/|^\/[^/]/.test(b[key]))fail('MEDIA');for(const key of ['primary','blue','navy'])if(!/^#[0-9a-f]{6}$/i.test(b[key]))fail('INVALID');
   const payload=Object.fromEntries(['mts','training','primary','blue','navy'].map(k=>[k,b[k]]));await db.prepare("INSERT INTO settings(id,payload,updated_at) VALUES('branding',?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at").bind(JSON.stringify(payload),now).run();await audit(db,owner,null,'branding-updated');return {ok:true};
  }
