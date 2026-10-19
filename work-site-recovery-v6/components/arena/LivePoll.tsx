@@ -29,7 +29,7 @@ export function LivePollChart({s,ar}:{s:any;ar:boolean}){
   graphKind='word';
  }else if(kind==='rating'){
   const count=safe(summary?.count),average=count?Math.min(5,safe(summary?.average)):0;
-  points=[{label:t('متوسط التقييم','Average rating'),value:average,maximum:5,detail:average.toFixed(1)+' / 5'}];
+  points=count>0?[{label:t('متوسط التقييم','Average rating'),value:average,maximum:5,detail:average.toFixed(1)+' / 5'}]:[];
   label=t('متوسط تقييم المشاركين','AVERAGE RATING');
   graphKind='rating';
  }else if(kind==='priority'){
@@ -47,6 +47,10 @@ export function LivePollChart({s,ar}:{s:any;ar:boolean}){
   }));
  }
  const revealed=kind==='choice'?Array.isArray(s.tally):!!summary;
+ const chartHasVotes=kind==='choice'?totalVotes>0:kind==='rating'?safe(summary?.count)>0:
+  kind==='word'?Object.values(summary?.words||{}).some((n:any)=>safe(n)>0):
+  safe(s.submitted)>0;
+ const highest=graphKind==='choice'&&totalVotes>0?Math.max(...voteCounts):0;
  // Do not fabricate zeros in place of results the trainer has not revealed.
  if(!revealed)return <div className="live-poll-chart live-poll-chart--pending" role="status">
   <div className="live-poll-chart__pending-icon"><BarChart3 size={43}/></div>
@@ -58,17 +62,18 @@ export function LivePollChart({s,ar}:{s:any;ar:boolean}){
    <span><BarChart3 size={19}/>{label}</span>
    <div className="live-poll-chart__total"><Users size={18}/><b>{count.toLocaleString(ar?'ar-EG':'en-US')}</b><small>{t('مشاركة','responses')}</small></div>
   </div>
-  {points.length?<div className="live-poll-chart__rows" role="list" aria-label={label}>{points.map((point,i)=>{
+  {chartHasVotes&&points.length?<div className="live-poll-chart__rows" role="list" aria-label={label}>{points.map((point,i)=>{
    const ratio=Math.max(0,Math.min(100,point.value/Math.max(1,point.maximum)*100));
-   return <div className="live-poll-chart__row" role="listitem" key={i}>
-    <div className="live-poll-chart__row-header"><span title={point.label}>{point.label}</span><strong dir="ltr">{point.detail}</strong></div>
+   const leading=graphKind==='choice'&&highest>0&&point.value===highest;
+   return <div className={'live-poll-chart__row'+(leading?' live-poll-chart__row--leading':'')} role="listitem" key={i}>
+    <div className="live-poll-chart__row-header"><span title={point.label}>{point.label}{leading&&<small className="live-poll-chart__lead-label">{t('الأكثر اختيارًا','MOST SELECTED')}</small>}</span><strong dir="ltr">{point.detail}</strong></div>
     <div className="live-poll-chart__track" role="meter" aria-label={point.label+' · '+point.detail}
      aria-valuemin={0} aria-valuemax={point.maximum} aria-valuenow={point.value}>
      <div className="live-poll-chart__fill" style={{width:ratio+'%'}}/>
     </div>
     {(graphKind==='choice'||graphKind==='word')&&<small>{point.value.toLocaleString(ar?'ar-EG':'en-US')} {t('صوت','votes')}</small>}
    </div>;
-  })}</div>:<div className="live-poll-chart__empty">{t('لسه مفيش ردود للعرض','No votes to chart yet')}</div>}
+  })}</div>:<div className="live-poll-chart__empty" role="status">{t('لسه ما وصلش أي تصويت لعرضه في الرسم البياني','No votes have arrived yet for the chart')}</div>}
   {graphKind==='priority'&&<p className="live-poll-chart__note">{t('الأعمدة هنا بتعرض نقاط ترتيب الأولويات، مش نسبة أصوات.','Bar lengths represent weighted ranking points, not vote percentages.')}</p>}
   {graphKind==='rating'&&<p className="live-poll-chart__note">{t('طول العمود بيمثل متوسط التقييم من ٥ نجوم.','The bar shows the average rating out of five stars.')}</p>}
  </section>;
