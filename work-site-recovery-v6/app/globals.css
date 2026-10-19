@@ -2044,3 +2044,46 @@
  .trainee-answer-receipt{margin:13px 0;padding:13px 10px;gap:8px;text-align:start}
  .trainee-answer-receipt.uncertain .btn{width:100%;justify-content:center}
 }
+
+
+/* V6 Trainer Readiness — live network/deck metrics + explicitly manual equipment checks. */
+.trainer-readiness{max-width:1500px;margin:12px auto 16px;padding:clamp(13px,2vw,23px);
+ background:linear-gradient(127deg,#09273be8,#102842e8);
+ border:1px solid #3da1a087;border-radius:19px;
+ box-shadow:inset 0 1px 0 #c7eff31a,0 12px 28px #0005;color:#e4fdff}
+.trainer-readiness__heading{display:flex;align-items:center;justify-content:space-between;
+ gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.trainer-readiness__heading>span{display:flex;align-items:center;gap:10px;color:#a6f4e9;
+ font-size:clamp(12px,1.6vw,17px);font-weight:900;letter-spacing:.045em}
+.trainer-readiness__heading .btn{display:inline-flex;align-items:center;gap:8px;min-height:39px}
+.trainer-readiness__signals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.trainer-readiness__signals>div{display:flex;align-items:flex-start;gap:11px;min-width:0;
+ background:#0d2b4770;padding:13px 12px;border-radius:12px;border:1px solid #40849a45}
+.trainer-readiness__signals svg{flex:none}
+.trainer-readiness__signals .ok svg{color:#64eac7}
+.trainer-readiness__signals .warning svg{color:#f3b970}
+.trainer-readiness__signals .neutral svg{color:#7ad7e7}
+.trainer-readiness__signals>div>span{display:flex;flex-direction:column;gap:5px;min-width:0}
+.trainer-readiness__signals strong{font-size:clamp(12px,1.35vw,15px);font-weight:800;line-height:1.4;color:#d8f9ff}
+.trainer-readiness__signals small{font-size:11px;color:#92c8d6;line-height:1.5;overflow-wrap:anywhere}
+.trainer-readiness__checklist{margin-top:14px;padding:12px 14px;
+ border:1px solid #2e708868;border-radius:13px;background:#061b2d66}
+.trainer-readiness__checklist-head{display:flex;align-items:center;justify-content:space-between;
+ gap:15px;color:#a7e8e5;font-size:11px;font-weight:850;margin:0 0 9px}
+.trainer-readiness__checklist-head>span{display:flex;gap:7px;align-items:center}
+.trainer-readiness__checklist-head small{font-size:13px;color:#c6f0f3;font-variant-numeric:tabular-nums}
+.trainer-readiness__check{display:flex;align-items:center;gap:12px;min-height:44px;
+ padding:7px 2px;cursor:pointer;font-size:13px;color:#d9eefa}
+.trainer-readiness__check input{width:21px;height:21px;accent-color:#42d9ad;flex:none;cursor:pointer}
+.trainer-readiness__check svg{color:#83d8e3;flex:none}
+.trainer-readiness__check:has(input:checked){color:#a4f3d7}
+.trainer-readiness__check:focus-within{outline:2px solid #80e7dd;outline-offset:2px;border-radius:5px}
+.trainer-readiness__note{display:flex;align-items:flex-start;gap:8px;margin:12px 0 0;
+ color:#9ab7c9;font-size:11px;line-height:1.65}
+.trainer-readiness__note svg{flex:none;margin-top:2px;color:#f1bd65}
+@media(max-width:800px){
+ .trainer-readiness__signals{grid-template-columns:1fr}
+ .trainer-readiness__signals>div{min-height:57px}
+ .trainer-readiness__check{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){.trainer-readiness *{animation:none!important;transition:none!important}}
