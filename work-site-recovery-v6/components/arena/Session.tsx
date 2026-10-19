@@ -105,11 +105,15 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  },[code]);
  useEffect(()=>{
   if(!code)return;
-  // 45s is fail-safe consistency while socket works; shorter only if disconnected.
+  // Socket remains the normal path. When it fails during a timed learner round,
+  // reconcile more often instead of waiting 12s (while bounding backend traffic).
+  // Trainer/projector keep the existing 1.4s fallback; lobby keeps 12s.
+  const activeLearner=(view==='play'||view==='join')&&!!s?.mine&&s?.status==='question';
+  const fallbackMs=host||view==='display'?1400:activeLearner?5000:12000;
   refreshLatest.current();
-  const id=setInterval(()=>refreshLatest.current(),liveConnection==='live'?45000:host||view==='display'?1400:12000);
+  const id=setInterval(()=>refreshLatest.current(),liveConnection==='live'?45000:fallbackMs);
   return()=>clearInterval(id);
- },[code,host,token,liveConnection]);
+ },[code,host,view,token,liveConnection,s?.status,!!s?.mine]);
  // Timed rounds complete on schedule even when no audience events arrive.
  useEffect(()=>{
   if(!s?.deadline||s.status!=='question'||s.paused)return;
