@@ -448,7 +448,7 @@ async function checkRate(db, req) {
   if (req.method !== "POST") return;
   const path = new URL(req.url).pathname, token = req.headers.get("X-Player-Token") || req.headers.get("X-Firebase-Token") || "", bucket = Math.floor(Date.now() / 6e4), source = (req.headers.get("CF-Connecting-IP") || "gateway") + ":" + path + ":" + (["/api/recover", "/api/join"].includes(path) ? "" : token) + ":" + bucket;
   const bytes2 = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source))), key = Array.from(bytes2, (b) => b.toString(16).padStart(2, "0")).join("");
-  const limit = path === "/api/media-upload" ? 10 : path === "/api/recover" ? 10 : path === "/api/join" ? 120 : 180;
+  const limit = ["/api/media-upload", "/api/media-sign"].includes(path) ? 10 : path === "/api/recover" ? 10 : path === "/api/join" ? 120 : 180;
   const r = await db.prepare("INSERT INTO rate_buckets(key,count,expires) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count").bind(key, Date.now() + 12e4).first();
   if (r.count > limit) throw new ApiError("RATE_LIMIT", 429);
   if (r.count === 1) await db.prepare("DELETE FROM rate_buckets WHERE key IN (SELECT key FROM rate_buckets WHERE expires<? LIMIT 50)").bind(Date.now()).run();
@@ -1437,6 +1437,57 @@ var github_api_worker_default = {
       if (request.method !== "GET") return Response.json({ error: "METHOD" }, { status: 405, headers: cors });
       const result = await authHealth(env.DB);
       return Response.json(result, { status: 200, headers: { ...Object.fromEntries(cors), "Cache-Control": "public, max-age=60" } });
+    }
+    if (url.pathname === "/api/media-sign") {
+      if (request.method !== "POST") return Response.json({ error: "METHOD" }, { status: 405, headers: cors });
+      if (!env.DB) return Response.json({ error: "DATABASE" }, { status: 503, headers: cors });
+      if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
+        return Response.json({ error: "CLOUDINARY_NOT_CONFIGURED" }, { status: 503, headers: cors });
+      }
+      if (!/^[a-z0-9_-]{2,64}$/i.test(env.CLOUDINARY_CLOUD_NAME) || !/^[0-9]{5,32}$/.test(env.CLOUDINARY_API_KEY)) {
+        return Response.json({ error: "CLOUDINARY_NOT_CONFIGURED" }, { status: 503, headers: cors });
+      }
+      try {
+        await authorizeFirebaseTrainer(request, { projectId: firebaseConfig.projectId, databaseURL: firebaseConfig.databaseURL });
+      } catch {
+        return Response.json({ error: "SIGN_IN" }, { status: 401, headers: cors });
+      }
+      try {
+        await checkRate(env.DB, request);
+      } catch {
+        return Response.json({ error: "RATE_LIMIT" }, { status: 429, headers: cors });
+      }
+      let details;
+      try {
+        details = await request.json();
+      } catch {
+        return Response.json({ error: "MEDIA" }, { status: 400, headers: cors });
+      }
+      const allowed2 = {
+        "image/png": { kind: "image", max: 1e7 },
+        "image/jpeg": { kind: "image", max: 1e7 },
+        "image/webp": { kind: "image", max: 1e7 },
+        "video/mp4": { kind: "video", max: 5e7 },
+        "video/webm": { kind: "video", max: 5e7 }
+      };
+      const rule = allowed2[details?.type];
+      if (!rule || !Number.isSafeInteger(details?.size) || details.size < 1 || details.size > rule.max) {
+        return Response.json({ error: details?.size > 5e7 ? "TOO_LARGE" : "MEDIA" }, { status: 415, headers: cors });
+      }
+      const folder = "mts-training-arena/uploads";
+      const timestamp = Math.floor(Date.now() / 1e3);
+      const toSign = "folder=" + folder + "&timestamp=" + timestamp + env.CLOUDINARY_API_SECRET;
+      const sha = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(toSign));
+      const signature = Array.from(new Uint8Array(sha), (x) => x.toString(16).padStart(2, "0")).join("");
+      return Response.json({
+        cloudName: env.CLOUDINARY_CLOUD_NAME,
+        apiKey: env.CLOUDINARY_API_KEY,
+        folder,
+        timestamp,
+        signature,
+        resourceType: rule.kind,
+        maxBytes: rule.max
+      }, { status: 200, headers: cors });
     }
     if (url.pathname === "/api/media-upload") {
       if (request.method !== "POST") return Response.json({ error: "METHOD" }, { status: 405, headers: cors });
