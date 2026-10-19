@@ -623,3 +623,38 @@ test('facilitator starter templates preserve the original session editor and req
  assert.ok(session.includes("t('الاسم بالكامل','Full name')"));
  assert.ok(session.includes("t('الرقم الوظيفي','Employee ID')"));
 });
+
+test('premium Order It stage keeps revealed ordering server-authoritative and supports touch controls',()=>{
+ const activity:any=sample('Order It','en');
+ const mine={id:'p',name:'Practice Learner',eligible:true,approval:'approved',answered:false};
+ const session:any={
+  activity,status:'question',current:0,runtime:{phase:'answering'},players:[],individual:[],
+  mine,keyRevealed:false,game:{version:1}
+ };
+ const render=(state:any,role:'host'|'play'|'display')=>renderToStaticMarkup(<GamePlay s={state} ar={false}
+  host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false}
+  onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ const learner=render(session,'play');
+ assert.ok(learner.includes('arena-sequence'),'Order It has its own stage instead of Quiz');
+ assert.ok(learner.includes('LOCK IN MY SEQUENCE'));
+ assert.ok(learner.includes('Move '),'Mobile-friendly accessible up and down step controls');
+ assert.ok(learner.includes('aria-label="Step order"'));
+ assert.ok(learner.includes('draggable="true"'));
+ const projector=render({...session,mine:null},'display');
+ assert.ok(projector.includes('arena-sequence'));
+ assert.ok(!projector.includes('LOCK IN MY SEQUENCE'),'Projector never submits answers');
+ assert.ok(!projector.includes('draggable="true"'),'Projector cannot reorder');
+ const waiting=render({...session,mine:{...mine,answered:true,answer:[3,1,2,0]}},'play');
+ assert.ok(waiting.includes('Your sequence is recorded'));
+ assert.ok(!waiting.includes('LOCK IN MY SEQUENCE'));
+ const withheld=render({...session,status:'results',keyRevealed:false},'display');
+ assert.ok(withheld.includes('Wait for the trainer to reveal'));
+ assert.ok(!withheld.includes('officially revealed correct order'));
+ const revealed=render({...session,status:'results',keyRevealed:true},'display');
+ assert.ok(revealed.includes('officially revealed correct order'));
+ assert.ok(revealed.includes('arena-sequence__step--revealed'));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 Order It: accessible cinematic sequencing board'));
+ assert.ok(css.includes('.arena-sequence__step-actions button'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});
