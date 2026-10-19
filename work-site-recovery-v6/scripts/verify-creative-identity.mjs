@@ -1,0 +1,23 @@
+// Ensure the approved V6 creative identity survives future builds.
+import assert from 'node:assert/strict';
+import {readFile,access} from 'node:fs/promises';
+const text=async p=>readFile(new URL('../'+p,import.meta.url),'utf8');
+const login=await text('components/arena/Login.tsx');
+const workspace=await text('components/arena/App.tsx');
+const session=await text('components/arena/Session.tsx');
+const brand=await text('components/arena/Brand.tsx');
+const stylesheet=await text('app/globals.css');
+assert.match(login,/حيث يتحول التدريب/);
+assert.match(login,/إلى إبداع/);
+assert.match(workspace,/إلى إبداع/);
+assert.match(session,/waiting-slogan/);
+assert.match(session,/حيث يتحول التدريب إلى إبداع/);
+assert.match(session,/isJoined&&<>/);
+assert.match(brand,/siteAsset\(original\[kind\]\)/);
+assert.match(brand,/original=\{mts:'\/mts\.png',training:'\/training\.png'/);
+assert.match(stylesheet,/\.login-arena-scene/);
+assert.match(stylesheet,/\.session-shell\.trainee/);
+assert.match(stylesheet,/\.session-shell\.projector/);
+assert.match(stylesheet,/\.workspace\s*\.hero/);
+await Promise.all(['arena-hero.svg','mts.png','training.png'].map(async name=>access(new URL('../public/'+name,import.meta.url))));
+console.log('V6 CREATIVE IDENTITY PASS: original logos, new slogan, trainee lobby and unified palette.');
