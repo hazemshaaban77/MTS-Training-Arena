@@ -217,3 +217,37 @@ test('victory finale is a real champion reveal and avoids inventing winners on a
  assert.ok(css.includes('V6 FINALE: ARENA VICTORY SHOW'));
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
+
+test('cinematic victory honors real winner or ties and never fabricates champions',()=>{
+ const players=[
+  {uid:'one',name:'First',score:230,rank:1},
+  {uid:'two',name:'Runner-up',score:180,rank:2}
+ ];
+ const base:any={teamMode:false,individual:players,teams:[],players:[],status:'completed'};
+ const html=renderToStaticMarkup(<ArenaVictory s={base} ar={false}/>);
+ assert.ok(html.includes('ARENA VICTORY MOMENT'));
+ assert.ok(html.includes('THE CHAMPIONS!'));
+ assert.ok(html.includes('First'));
+ assert.ok(html.includes('230'));
+ assert.ok(!html.includes('Runner-up'));
+ assert.ok(html.includes('arena-victory__firework'));
+ assert.ok(html.includes('arena-victory__confetti'));
+ assert.ok(html.includes('Replay victory moment'));
+ const tie=renderToStaticMarkup(<ArenaVictory s={{...base,individual:[
+  {uid:'one',name:'Amira',score:250,rank:1},{uid:'two',name:'Nour',score:250,rank:1}
+ ]}} ar={true}/>);
+ assert.ok(tie.includes('Amira')&&tie.includes('Nour'));
+ assert.ok(tie.includes('أبطال المركز الأول'));
+ const teams={...base,teamMode:true,teams:[{team:'Team Alpha',score:220,rank:1}]};
+ assert.equal(championsFromSession(teams,false)[0].name,'Team Alpha');
+ const noScores=renderToStaticMarkup(<ArenaVictory s={{...base,individual:[]}} ar={true}/>);
+ assert.ok(noScores.includes('كل المشاركين أبطال'));
+ assert.ok(!noScores.includes('First Place Winners'));
+ const code=readFileSync('components/arena/Session.tsx','utf8');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(code.includes('<ArenaVictory s={s} ar={ar}/>'));
+ assert.ok(code.includes('<Leaderboard s={s} ar={ar} podium/>'));
+ assert.ok(css.includes('ARENA VICTORY — GRAND FINALE'));
+ assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
+ assert.ok(css.includes('.projector .arena-victory__trophy'));
+});
