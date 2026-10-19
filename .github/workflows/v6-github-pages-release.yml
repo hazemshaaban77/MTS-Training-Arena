@@ -43,6 +43,8 @@ jobs:
           cp -R work-site-recovery-v6/dist-github/. pages-site/v6/
           touch pages-site/.nojekyll
           test -s pages-site/v6/index.html
+          test -s pages-site/v6/arena-hero-final.webp
+          test "$(wc -c < pages-site/v6/arena-hero-final.webp)" -ge 30000
           test -s pages-site/arena/projector.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
