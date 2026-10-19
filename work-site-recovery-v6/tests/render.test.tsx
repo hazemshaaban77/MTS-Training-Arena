@@ -473,3 +473,21 @@ test('trainee finale reports only real personal points, rank and team, not fabri
 });
 
 
+
+test('mobile quiz option selections are accessible and submission stays reachable',()=>{
+ const activity:any={...sample('Quiz','en'),prompt:'What matters?',options:['Listen','Speak','Think','Act'],timer:20};
+ const html=renderToStaticMarkup(<GamePlay s={{
+  activity,players:[],individual:[],status:'question',serverNow:Date.now(),current:0,
+  runtime:{phase:'answering'},mine:{id:'p',name:'Student',eligible:true,approval:'approved'}
+ }} ar={false} host={false} display={false} canAnswer={true} busy={false}
+ onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(html.includes('aria-pressed="false"'),'Choice controls communicate selection state');
+ assert.ok(html.includes('aria-label="Lock in answer"'),'Submit action is announced to assistive tech');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 learner smartphone usability'));
+ assert.ok(css.includes('.session-shell.trainee .round-stage .question-interaction>.submit-answer'));
+ assert.ok(css.includes('position:sticky'),'Confirm action remains reachable on long mobile questions');
+ assert.ok(css.includes('min-height:66px'),'Mobile choices have generous touch targets');
+ const src=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(src.includes('aria-pressed={selected===i}'));
+});
