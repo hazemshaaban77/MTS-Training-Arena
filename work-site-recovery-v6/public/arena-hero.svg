@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="sky" x2=".15" y2="1"><stop stop-color="#031126"/><stop offset=".55" stop-color="#0a315a"/><stop offset="1" stop-color="#2785a8"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#173b67"/><stop offset="1" stop-color="#020d1c"/></linearGradient>
+ <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#baf9ff"/><stop offset=".5" stop-color="#3c96c6"/><stop offset="1" stop-color="#0b3455"/></linearGradient>
+ <radialGradient id="halo"><stop stop-color="#c7f9f9" stop-opacity=".85"/><stop offset=".42" stop-color="#6bdde9" stop-opacity=".4"/><stop offset="1" stop-color="#4db3dc" stop-opacity="0"/></radialGradient>
+ <radialGradient id="glow"><stop stop-color="#5de8e5" stop-opacity=".65"/><stop offset="1" stop-color="#5de8e5" stop-opacity="0"/></radialGradient>
+ <linearGradient id="blazer" x2=".8" y2="1"><stop stop-color="#294963"/><stop offset=".5" stop-color="#0a1d35"/><stop offset="1" stop-color="#05101f"/></linearGradient>
+ <filter id="blur"><feGaussianBlur stdDeviation="17"/></filter>
+ <filter id="soft"><feGaussianBlur stdDeviation="2.2"/></filter>
+ <pattern id="audience" width="36" height="25" patternUnits="userSpaceOnUse"><path d="M0 25V13q16-14 32 0v12" fill="#244465" stroke="#356c8c" stroke-width="2"/><circle cx="16" cy="8" r="3" fill="#70d2e4" opacity=".5"/></pattern>
+</defs>
+<rect width="1280" height="720" fill="url(#sky)"/>
+<ellipse cx="654" cy="435" rx="530" ry="330" fill="url(#halo)" opacity=".8"/>
+<path d="M-60 275Q260 60 640 198Q1035 50 1340 285L1280 500Q1000 375 640 420Q275 360 0 490Z" fill="#0d2848" stroke="#57c8e1" stroke-opacity=".55" stroke-width="4"/>
+<path d="M-60 295Q270 100 640 237Q1020 96 1340 295L1340 480Q1020 410 640 440Q270 400-60 500Z" fill="url(#audience)" opacity=".48"/>
+<g opacity=".8"><path d="M85 0L310 470" stroke="#58cbef" stroke-width="17" opacity=".16" filter="url(#blur)"/><path d="M1180-10L950 470" stroke="#65cbf2" stroke-width="16" opacity=".15" filter="url(#blur)"/><path d="M350 0L475 420" stroke="#9cfff4" stroke-width="7" opacity=".18" filter="url(#blur)"/><path d="M920 0L760 420" stroke="#9cfff4" stroke-width="7" opacity=".18" filter="url(#blur)"/></g>
+<ellipse cx="660" cy="455" rx="375" ry="125" fill="url(#glow)" opacity=".7"/>
+<path d="M322 310Q640 155 958 310V488Q640 400 322 488Z" fill="#082d4c" stroke="#8cf4ff" stroke-width="5"/>
+<path d="M345 328Q640 199 935 328V466Q640 390 345 466Z" fill="url(#panel)" opacity=".78"/>
+<path d="M355 327Q645 215 930 327" fill="none" stroke="#e3ffff" stroke-width="4" opacity=".65"/>
+<g stroke="#baf8f7" fill="none" opacity=".45"><circle cx="650" cy="385" r="69" stroke-width="2"/><circle cx="650" cy="385" r="55"/><path d="M555 389H745M650 300V462"/></g>
+<path d="M-30 560Q640 436 1300 560L1310 730H-10Z" fill="url(#floor)" stroke="#85effb" stroke-width="4"/>
+<ellipse cx="650" cy="515" rx="510" ry="85" fill="#0e3156" stroke="#73ddec" stroke-width="4"/>
+<ellipse cx="650" cy="490" rx="350" ry="50" fill="#164d70" stroke="#9cffff" stroke-width="5"/>
+<ellipse cx="650" cy="486" rx="275" ry="32" fill="#9bf6fb" opacity=".23" filter="url(#soft)"/>
+<path d="M0 688L485 522M1280 688L827 522M260 710L540 520M1020 710L765 520" stroke="#67d5e7" stroke-width="4" opacity=".75"/>
+<g fill="none" stroke="#4ccedf" stroke-width="3" opacity=".48"><path d="M150 560Q650 650 1140 560"/><path d="M35 618Q650 737 1255 618"/></g>
+<g transform="translate(650 452)">
+<ellipse cy="64" rx="80" ry="14" fill="#5ceaf6" opacity=".7" filter="url(#blur)"/>
+<path d="M-42-29H42L38-5Q32 19 11 26V47H27V55H-27V47H-11V26Q-34 18-38-5Z" fill="#d6f9ff" stroke="#62c8ea" stroke-width="4"/>
+<path d="M-42-27H42M-43-24Q-67-15-55 4Q-48 19-32 17M43-24Q66-15 55 4Q48 19 31 17" fill="none" stroke="#afeaf9" stroke-width="8"/>
+<path d="M-38-15Q-5 10 37-15" stroke="#f3ffff" stroke-width="2" fill="none"/>
+</g>
+<!-- Semi-formal trainer seen from behind: crisp shirt, tailored blazer and trousers -->
+<g transform="translate(315 500)">
+<ellipse cx="0" cy="172" rx="135" ry="30" fill="#000a" filter="url(#blur)"/>
+<path d="M-39-55Q-68-22-73 42L-86 203H-10L0 103L11 203H85L76 32Q64-29 35-55Z" fill="url(#blazer)" stroke="#2f607c" stroke-width="3"/>
+<path d="M-31-53L0-3L30-53L17 47L0 66L-17 45Z" fill="#e0eef4"/>
+<path d="M-13 1L0 34L12 1L7 96H-5Z" fill="#123d5a"/>
+<path d="M-41-56L-63-16L-38 27L-16 70L-25-4Z" fill="#153654" stroke="#49677a" stroke-width="2"/>
+<path d="M39-56L65-17L39 28L15 70L26-4Z" fill="#163b59" stroke="#49677a" stroke-width="2"/>
+<path d="M-70 26L-92 164L-71 182L-45 73M70 26L96 166L72 180L44 68" stroke="#102740" stroke-width="25" fill="none" stroke-linecap="round"/>
+<path d="M-19-89Q-38-101-31-129Q-25-151-2-153Q31-149 33-120Q29-91 12-86L10-70L-13-68Z" fill="#8b6253"/>
+<path d="M-36-132Q-28-167-3-169Q29-170 39-146L39-127Q27-148 4-144L-15-137L-33-119Z" fill="#081a2a"/>
+<path d="M-30-108Q-43-140-27-154M29-118Q40-143 30-154" stroke="#0b2235" stroke-width="7" fill="none"/>
+</g>
+<g opacity=".75"><circle cx="100" cy="180" r="3" fill="#81efff"/><circle cx="1170" cy="145" r="3" fill="#81efff"/><circle cx="900" cy="200" r="3" fill="#81efff"/><circle cx="115" cy="445" r="4" fill="#75ebd5"/><circle cx="1050" cy="430" r="4" fill="#75ebd5"/></g>
+<rect width="1280" height="720" fill="url(#sky)" opacity=".07"/>
+</svg>
