@@ -37,7 +37,7 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
  const [revealed,setRevealed]=useState(false);
  const [phase,setPhase]=useState<'intro'|'question'>('intro');
  const [step,setStep]=useState(0);
- const [seconds,setSeconds]=useState(Math.max(0,a.timer||0));
+ const [seconds,setSeconds]=useState(Math.max(0,a.questions?.[0]?.timer??a.timer??0));
  const [paused,setPaused]=useState(true);
  const [note,setNote]=useState('');
  const isPresentation=['Wheel of Fortune','Spin Wheel','Open the Box','Flashcards'].includes(mainType(a));
@@ -51,9 +51,18 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
  },[seconds,paused,phase,revealed]);
  const progress=active.timer?Math.min(100,seconds/Math.max(1,active.timer)*100):100;
  function resetStage(){setGame(initialGame(a));setAnswer(null);setVotes([]);setRevealed(false);
-  setPhase('intro');setStep(0);setSeconds(Math.max(0,a.timer||0));setPaused(true);setNote('');}
+  setPhase('intro');setStep(0);setSeconds(Math.max(0,a.questions?.[0]?.timer??a.timer??0));setPaused(true);setNote('');}
  function reveal(){setRevealed(true);setPaused(true);}
  function submit(value:any){setAnswer(value);if(isPoll)setVotes(v=>[...v.slice(-19),value]);setNote(t('اتسجلت إجابتك التجريبية. تقدر تعرض النتيجة أو ترجع تغيّرها.','Practice response recorded. Reveal the result or try another answer.'));}
+ function addDemoVotes(){
+  const format=a.pollKind||'choice',v=Array.from({length:7},(_,i)=>{
+   if(format==='word')return [ar?'تنظيم':'Planning',ar?'تعاون':'Teamwork',ar?'تعلم':'Learning'][i%3];
+   if(format==='rating')return [4,5,3,5,4,5,2][i];
+   if(format==='priority')return (a.options||[]).map((_:string,j:number)=>(j+i)%(a.options?.length||1));
+   return i%(a.options?.length||1);
+  });
+  setVotes(v);setNote(t('دي أصوات تجريبية فقط، مش بيانات مشاركين حقيقيين.','Demo votes only; these are not real participant data.'));
+ }
  function action(type:string,payload:any){
   if(type==='decision'){
    const s=game.scenario,now=a.nodes?.find((n:any)=>n.id===s?.node),c=now?.choices?.[payload.choice];
@@ -139,7 +148,7 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
     }}/>
    {note&&<p className="arena-sim-note" role="status">{note}</p>}
    <div className="arena-sim-controls">
-    {host&&<><button className="btn secondary" onClick={()=>setPaused(v=>!v)} disabled={closed||!active.timer}>
+    {host&&<>{isPoll&&<button className="btn secondary" onClick={addDemoVotes}><Users size={17}/>{t('أضف أصوات تجريبية','Add demo votes')}</button>}<button className="btn secondary" onClick={()=>setPaused(v=>!v)} disabled={closed||!active.timer}>
      {paused?t('استكمال العداد','Resume timer'):t('إيقاف العداد','Pause timer')}</button>
      {!closed&&<button className="btn primary" onClick={reveal}>{t('اعرض النتيجة','Reveal results')}</button>}</>}
     {play&&!closed&&answer!==null&&<button className="btn secondary" onClick={()=>{setAnswer(null);setNote('');}}>{t('جرّب إجابة أخرى','Try another answer')}</button>}
