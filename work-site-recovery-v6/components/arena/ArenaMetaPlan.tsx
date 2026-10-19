@@ -23,7 +23,7 @@ export default function ArenaMetaPlan({
  const [notes,setNotes]=useState(String(s.runtime?.notes||''));
  const [notesDirty,setNotesDirty]=useState(false);
  const ready=actor&&canAnswer&&!busy&&!closed&&!already;
- const selected=already&&Array.isArray(mine.answer)?mine.answer:mapping;
+ const selected:number[]=already&&Array.isArray(mine.answer)?mine.answer:mapping;
  const completed=selected.filter(x=>Number.isInteger(x)&&x>=0&&x<categories.length).length;
  const allAssigned=categories.length>0&&items.length>0&&completed===items.length;
  const correct=closed&&s.keyRevealed&&Array.isArray(a.assignments)?a.assignments:null;
