@@ -14,6 +14,9 @@ type ArenaEnv = {
  ARENA_PUBLIC_ORIGIN?:string;
  ARENA_ADMIN_UIDS?:string;
  FIREBASE_SERVICE_ACCOUNT?:string;
+ CLOUDINARY_CLOUD_NAME?:string;
+ CLOUDINARY_API_KEY?:string;
+ CLOUDINARY_API_SECRET?:string;
 };
 const defaultOrigin='https://hazemshaaban77.github.io';
 const allowedMethods='GET, POST, OPTIONS';
@@ -88,6 +91,45 @@ export default {
    if(request.method!=='GET')return Response.json({error:'METHOD'},{status:405,headers:cors});
    const result=await authHealth(env.DB);
    return Response.json(result,{status:200,headers:{...Object.fromEntries(cors),'Cache-Control':'public, max-age=60'}});
+  }
+  // Cloudinary Free: request a short-lived SIGNED direct browser upload.
+  // The real API secret remains a Cloudflare Worker secret, never in Vite/GitHub.
+  // This endpoint does not transfer image/video bytes through Worker or D1.
+  if(url.pathname==='/api/media-sign'){
+    if(request.method!=='POST')return Response.json({error:'METHOD'},{status:405,headers:cors});
+    if(!env.DB)return Response.json({error:'DATABASE'},{status:503,headers:cors});
+    if(!env.CLOUDINARY_CLOUD_NAME||!env.CLOUDINARY_API_KEY||!env.CLOUDINARY_API_SECRET){
+      return Response.json({error:'CLOUDINARY_NOT_CONFIGURED'},{status:503,headers:cors});
+    }
+    if(!/^[a-z0-9_-]{2,64}$/i.test(env.CLOUDINARY_CLOUD_NAME)||!/^[0-9]{5,32}$/.test(env.CLOUDINARY_API_KEY)){
+      return Response.json({error:'CLOUDINARY_NOT_CONFIGURED'},{status:503,headers:cors});
+    }
+    try{await authorizeFirebaseTrainer(request,{projectId:firebaseConfig.projectId,databaseURL:firebaseConfig.databaseURL});}
+    catch{return Response.json({error:'SIGN_IN'},{status:401,headers:cors});}
+    try{await checkRate(env.DB,request);}catch{return Response.json({error:'RATE_LIMIT'},{status:429,headers:cors});}
+    let details:any;
+    try{details=await request.json();}catch{return Response.json({error:'MEDIA'},{status:400,headers:cors});}
+    const allowed:Record<string,{kind:'image'|'video';max:number}>={
+      'image/png':{kind:'image',max:10_000_000},'image/jpeg':{kind:'image',max:10_000_000},
+      'image/webp':{kind:'image',max:10_000_000},
+      'video/mp4':{kind:'video',max:50_000_000},'video/webm':{kind:'video',max:50_000_000}
+    };
+    const rule=allowed[details?.type];
+    if(!rule||!Number.isSafeInteger(details?.size)||details.size<1||details.size>rule.max){
+      return Response.json({error:details?.size>50_000_000?'TOO_LARGE':'MEDIA'},{status:415,headers:cors});
+    }
+    // Only server-chosen upload parameters are signed; no client-supplied folder,
+    // public_id or transforms, avoiding arbitrary privileged asset modification.
+    const folder='mts-training-arena/uploads';
+    const timestamp=Math.floor(Date.now()/1000);
+    const toSign='folder='+folder+'&timestamp='+timestamp+env.CLOUDINARY_API_SECRET;
+    const sha=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(toSign));
+    const signature=Array.from(new Uint8Array(sha),x=>x.toString(16).padStart(2,'0')).join('');
+    return Response.json({
+      cloudName:env.CLOUDINARY_CLOUD_NAME,apiKey:env.CLOUDINARY_API_KEY,
+      folder,timestamp,signature,resourceType:rule.kind,
+      maxBytes:rule.max
+    },{status:200,headers:cors});
   }
   // Authenticated media upload; no Firebase/Cloudflare credentials are ever sent to GitHub Pages.
   if(url.pathname==='/api/media-upload'){
