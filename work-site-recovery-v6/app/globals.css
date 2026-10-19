@@ -988,3 +988,74 @@
   .session-brand-header .trainer-home-button span,
   .workspace-brand-header .trainer-home-button span{display:none}
 }
+
+/* V6 original transparent corporate marks: no crop, distortion, or framed matte. */
+.official-logo,
+.brand-logo-frame .official-logo,
+.final-brand-pair .official-logo,
+.sidebar .official-logo{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ position:relative!important;overflow:visible!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;max-width:100%!important;
+}
+.official-logo img,
+.brand-logo-frame .official-logo img,
+.sidebar .official-logo img,
+.final-brand-pair .official-logo img{
+ display:block!important;position:static!important;inset:auto!important;
+ top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;
+ width:100%!important;height:100%!important;max-width:100%!important;
+ object-fit:contain!important;object-position:center!important;
+ transform:none!important;filter:none!important;opacity:1!important;
+}
+.official-logo.mts{aspect-ratio:1.32!important;height:auto!important;}
+.official-logo.training{aspect-ratio:3.08!important;height:auto!important;}
+.brand-logo-frame.mts-frame .official-logo.mts{width:min(110px,100%)!important;height:auto!important;aspect-ratio:1.32!important}
+.brand-logo-frame.training-frame .official-logo.training{width:min(150px,100%)!important;height:auto!important;aspect-ratio:3.08!important}
+.brand-header .brand-logo-frame{min-height:0!important;max-height:100%!important;}
+.final-brand-pair .official-logo.mts{width:110px!important;height:auto!important}
+.final-brand-pair .official-logo.training{width:185px!important;height:auto!important}
+.sidebar .official-logo.mts{width:62px!important;height:auto!important}
+.sidebar .official-logo.training{width:105px!important;height:auto!important}
+@media(max-width:700px){
+ .brand-logo-frame.mts-frame .official-logo.mts{width:min(66px,100%)!important;height:auto!important}
+ .brand-logo-frame.training-frame .official-logo.training{width:min(97px,100%)!important;height:auto!important}
+}
+/* Shared art direction: all 10 activities are image + accessible label everywhere. */
+.activity-artwork{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;max-width:100%}
+.activity-tile{min-height:178px}
+.activity-tile .activity-visual-photo{display:block;width:100%;height:auto;aspect-ratio:16/9;flex:none;overflow:hidden;border:1px solid #5cbacd4f;border-radius:13px;transform:none;background:#081c35}
+.activity-tile .activity-visual-photo img{object-fit:cover;width:100%;height:100%}
+.activity-tile .activity-visual-photo svg{display:none}
+.deck-cover{height:56px!important;width:100px!important;flex:none;object-fit:cover;border:1px solid #4ea3c455;border-radius:9px}
+.queue-cover{width:55px!important;height:36px!important;flex:none;object-fit:cover;border-radius:6px;border:1px solid #5bcbd544}
+.stage-activity-identity{
+ display:flex;align-items:center;gap:15px;min-height:82px;margin:12px 18px 0;
+ padding:9px 13px;border-radius:14px;
+ background:linear-gradient(110deg,#143f6190,#091e3988);border:1px solid #3e9ab155;
+ color:#eafcff;direction:inherit;
+}
+.stage-activity-identity .stage-current-cover{width:122px;height:69px;flex:none;object-fit:cover;border-radius:10px;border:1px solid #5ee3db50}
+.stage-activity-identity div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stage-activity-identity small{font-size:9px;letter-spacing:.08em;color:#90e8e0}
+.stage-activity-identity strong{font-size:clamp(15px,1.7vw,24px);line-height:1.35}
+.projector .stage-activity-identity{min-height:115px;gap:20px;padding:12px 20px}
+.projector .stage-activity-identity .stage-current-cover{width:178px;height:100px}
+.projector .stage-activity-identity strong{font-size:clamp(23px,3.5vw,39px)}
+.splash-center .splash-activity-cover{
+ width:min(380px,66vw)!important;height:auto!important;aspect-ratio:16/9!important;
+ display:block!important;margin-inline:auto;border:2px solid #54eadc77;
+ border-radius:18px;overflow:hidden;background:#071b35;
+ box-shadow:0 16px 60px #071324aa,0 0 32px #2dc4d536;
+}
+.splash-center .splash-activity-cover img{width:100%;height:100%;object-fit:cover}
+@media(max-width:760px){
+ .activity-tile{min-height:154px}
+ .deck-cover{width:76px!important;height:45px!important}
+ .queue-cover{width:40px!important;height:28px!important}
+ .stage-activity-identity{min-height:70px;margin:7px 10px 0;padding:8px 9px;gap:10px}
+ .stage-activity-identity .stage-current-cover{width:82px;height:48px}
+ .stage-activity-identity strong{font-size:16px}
+ .projector .stage-activity-identity .stage-current-cover{width:115px;height:64px}
+}
