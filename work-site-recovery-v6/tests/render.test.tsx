@@ -289,6 +289,8 @@ test('complete rehearsal retains draft and NEVER creates a live server session',
  assert.ok(simulation.includes("mode==='display'"));
  assert.ok(!simulation.includes("api('sessions'"));
  assert.ok(!simulation.includes("api('control'"));
- const css=readFileSync('app/globals.css','utf8');
- assert.ok(css.includes('V6 TRAINER PRACTICE ARENA'));
+ const css=readFileSync('components/arena/ArenaSimulator.css','utf8');
+ assert.ok(css.includes('.arena-simulator-overlay'));
+ assert.ok(css.includes('.arena-practice-library-card__try'));
+ assert.ok(css.includes('@media(max-width:850px)'));
 });
