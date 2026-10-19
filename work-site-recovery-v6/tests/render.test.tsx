@@ -2,6 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';import {r
 import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';
 import ArenaGameShow from '../components/arena/ArenaGameShow';
 import ArenaEscapeRoom from '../components/arena/ArenaEscapeRoom';
+import ArenaMetaPlan from '../components/arena/ArenaMetaPlan';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
@@ -763,4 +764,58 @@ test('premium Escape Room: actor-only puzzles, stage map and audited trainer ove
  assert.ok(code.includes("onControl('override',undefined,{player:participant.uid||participant.id,reason:reason.trim()})"));
  assert.ok(code.includes('const readyToOverride='));
  assert.ok(!code.includes('a.rooms[e.room].puzzles['),'Never read hidden full room puzzle content on the client');
+});
+
+
+test('Meta Plan notes never leak hidden answers across roles',()=>{
+ for(const ar of [false,true]){
+  const a:any={type:'Meta Plan',prompt:'Classify ideas',items:['Invoice','Inspection','Clearance'],
+   categories:['Before arrival','After arrival'],assignments:[0,1,1],timer:0};
+  const base:any={activity:a,status:'question',current:0,keyRevealed:false,
+   players:[{uid:'u1',name:'Learner'}],mine:null,submitted:0,metaSummary:null,
+   runtime:{highlight:-1,analytics:false,notes:''}};
+  const host=renderToStaticMarkup(<ArenaMetaPlan s={base} ar={ar} host display={false} actor={false}
+   canAnswer={false} busy={false} onSubmit={()=>{}} onControl={()=>{}}/>);
+  assert.ok(host.includes('arena-metaplan__columns'));
+  assert.ok(host.includes('arena-metaplan__loose'));
+  assert.ok(host.includes('arena-metaplan__trainer-notes'));
+  assert.ok(!host.includes('arena-metaplan__placed'),'Never reveal classified cards before host opens reveal');
+  const display=renderToStaticMarkup(<ArenaMetaPlan s={base} ar={ar} host={false} display actor={false}
+   canAnswer={false} busy={false} onSubmit={()=>{}} onControl={()=>{}}/>);
+  assert.ok(display.includes('arena-metaplan__columns'));
+  assert.ok(!display.includes('arena-metaplan__trainer-notes'));
+  assert.ok(!display.includes('arena-metaplan__trainer'));
+  const learner=renderToStaticMarkup(<ArenaMetaPlan
+   s={{...base,mine:{id:'u1',eligible:true,answered:false},status:'question'}}
+   ar={ar} host={false} display={false} actor canAnswer busy={false}
+   onSubmit={()=>{}} onControl={()=>{}}/>);
+  assert.ok(learner.includes('arena-metaplan__learner'));
+  assert.ok(learner.includes('arena-metaplan__choose'));
+  assert.ok(learner.includes('aria-expanded="false"'));
+  assert.ok(learner.includes('arena-metaplan__submit'));
+  assert.ok(learner.includes('disabled=""'),'Submit stays disabled until every item is assigned');
+  assert.ok(!learner.includes('arena-metaplan__correct'));
+  const closed=renderToStaticMarkup(<ArenaMetaPlan
+   s={{...base,status:'results',keyRevealed:true,activity:{...a,assignments:[0,-1,-1]}}}
+   ar={ar} host display={false} actor={false} canAnswer={false} busy={false}
+   onSubmit={()=>{}} onControl={()=>{}}/>);
+  assert.equal((closed.match(/arena-metaplan__placed/g)||[]).length,1,
+   'Progressive reveal exposes only server disclosed assignments');
+  assert.equal((closed.match(/class="arena-metaplan__loose"/g)||[]).length,2,
+   'Unrevealed notes stay in the unsorted pile');
+ }
+ const source=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(source.includes("if(['Meta Plan','Categorize'].includes(a.type))return <ArenaMetaPlan"));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 Meta Plan premium sticky-note board'));
+ assert.ok(css.includes('.projector .arena-metaplan'));
+});
+test('Meta Plan reveal, notes, and aggregate insights remain server-owned',()=>{
+ const source=readFileSync('components/arena/ArenaMetaPlan.tsx','utf8');
+ assert.ok(source.includes("closed&&s.keyRevealed&&Array.isArray(a.assignments)"));
+ assert.ok(source.includes("onControl('metareveal')"));
+ assert.ok(source.includes("onControl('revealkey')"));
+ assert.ok(source.includes("onControl('notes',undefined,{notes})"));
+ assert.ok(source.includes('Array.isArray(s.metaSummary)'));
+ assert.ok(!source.includes("api('answer'"));
 });
