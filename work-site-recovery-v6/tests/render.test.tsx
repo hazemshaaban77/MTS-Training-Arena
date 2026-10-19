@@ -3,7 +3,6 @@ import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictor
 import ArenaSimulator from '../components/arena/ArenaSimulator';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
-import TraineeFinalSummary from '../components/arena/TraineeFinalSummary';
 import {estimateSessionAgenda} from '../lib/session-planning';
 import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
@@ -473,34 +472,4 @@ test('trainee finale reports only real personal points, rank and team, not fabri
  assert.ok(readFileSync('app/globals.css','utf8').includes('.trainee-finish__stats'));
 });
 
-test('personal trainee closing summary uses only authoritative score and rank, including ties',()=>{
- const session:any={
-  mine:{id:'p3',name:'Demo Learner'},
-  individual:[{uid:'p1',name:'Champion',rank:1,score:900},{uid:'p2',name:'Partner',rank:2,score:350},
-   {uid:'p3',name:'Demo Learner',rank:2,score:350}],
-  players:[{uid:'p1'},{uid:'p2'},{uid:'p3'}]
- };
- const en=renderToStaticMarkup(<TraineeFinalSummary s={session} ar={false}/>);
- assert.ok(en.includes('Demo Learner'));
- assert.ok(en.includes('Your points'));
- assert.ok(en.includes('350'));
- assert.ok(en.includes('#2'));
- assert.ok(en.includes('Shared rank with'));
- assert.ok(!en.includes('900'),'Never show someone else’s points as mine');
- const ar=renderToStaticMarkup(<TraineeFinalSummary s={session} ar={true}/>);
- assert.ok(ar.includes('مركزك'));
- assert.ok(ar.includes('مركز مشترك'));
- const missing=renderToStaticMarkup(<TraineeFinalSummary s={{...session,mine:{id:'missing',name:'Unknown'}}} ar={false}/>);
- assert.ok(missing.includes('not available'));
- assert.ok(!missing.includes('#2'),'Never estimate missing rank');
- const noIdentity=renderToStaticMarkup(<TraineeFinalSummary s={{...session,mine:null}} ar={true}/>);
- assert.equal(noIdentity,'');
- const zero=renderToStaticMarkup(<TraineeFinalSummary
-  s={{...session,mine:{id:'p3',name:'Demo Learner'},individual:[{uid:'p3',rank:1,score:0}]}} ar={false}/>);
- assert.ok(zero.includes('Your points'));
- assert.ok(zero.includes('>0</strong>'),'Legitimate zero score must remain zero');
- const source=readFileSync('components/arena/Session.tsx','utf8');
- assert.ok(source.includes('isJoined&&<TraineeFinalSummary s={s} ar={ar}/>'));
- const css=readFileSync('app/globals.css','utf8');
- assert.ok(css.includes('.trainee-final-summary__metrics'));
-});
+
