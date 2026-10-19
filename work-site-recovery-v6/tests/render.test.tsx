@@ -1,7 +1,8 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
 import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
-import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
+import TrainerReadiness from '../components/arena/TrainerReadiness';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -376,4 +377,35 @@ test('server-acknowledged participant answers never claim success on a click',()
  assert.ok(!poll.includes('setSuccess(true)'),'Voting click is not the successful server receipt');
  assert.ok(poll.includes('already&&<span className="live-poll-vote__success"'));
  assert.ok(css.includes('.trainee-answer-receipt.uncertain'));
+});
+
+test('trainer launch readiness distinguishes actual state from manual checks',()=>{
+ for(const ar of [true,false]){
+  const before=renderToStaticMarkup(<TrainerReadiness ar={ar} status="ready"
+    players={[]} activityCount={5} connectionOk={true} transport="live"
+    nextActivity="Quiz" onRefresh={()=>{}}/>);
+  assert.ok(before.includes("Quiz"));
+  assert.ok(before.includes(ar?'فحص الاستعداد قبل التشغيل':'PRE-SESSION READINESS'));
+  assert.ok(before.includes(ar?'التسجيل يفتح بعد فتح اللوبي':'Registration opens with the lobby'));
+  assert.ok(before.includes('type="checkbox"'), 'Equipment must require trainer confirmation');
+  assert.ok(before.includes('0/3'), 'No manually verified equipment before trainer confirms');
+  const lobby=renderToStaticMarkup(<TrainerReadiness ar={ar} status="lobby"
+    players={[{approval:'approved'},{approval:'pending'}]} activityCount={2}
+    connectionOk={true} transport="fallback" onRefresh={()=>{}}/>);
+  assert.ok(lobby.includes(ar?'تحديث احتياطي يعمل':'Fallback synchronization'));
+  assert.ok(lobby.includes(ar?'طلبات معلقة: ':'Pending approvals: '));
+  const broken=renderToStaticMarkup(<TrainerReadiness ar={ar} status="lobby"
+    players={[]} activityCount={0} connectionOk={false}
+    transport="fallback" onRefresh={()=>{}}/>);
+  assert.ok(broken.includes(ar?'الاتصال غير متاح':'Connection unavailable'));
+ }
+ const source=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(source.includes("import TrainerReadiness from './TrainerReadiness'"));
+ assert.ok(source.includes("onClick={beginSession}"));
+ assert.ok(source.includes("s.status==='ready'?t('افتح استقبال المتدربين','Open participant lobby'):t('ابدأ أول نشاط','Start first activity')"));
+ assert.ok(source.includes("s.status==='ready'){command('launch');return;"));
+ assert.ok(source.includes("if(ready===0&&!window.confirm"),'Warn before running empty session');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 Trainer Readiness'));
+ assert.ok(css.includes('.trainer-readiness__signals'));
 });
