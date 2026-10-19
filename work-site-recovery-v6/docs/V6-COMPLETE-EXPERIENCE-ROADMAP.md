@@ -319,3 +319,16 @@ Only V6 source under `work-site-recovery-v6/` was changed, no merge to `main`, n
 - Release contains immersive branching narrative cards, authoritative consequence reveal, private learner journey recap, facilitated trainer/projector stage without exposed private paths; mobile, bilingual and reduced-motion improvements.
 - **Not verified:** end-to-end real trainer + phone QR + projector in a classroom, iOS/Android actual interaction, 20/80-client stress. These remain explicit gates.
 - **Next priority:** Live Poll and Quiz refinement, activity-specific reporting, multi-learner simulator fidelity, then classroom acceptance and signed-upload hardening. All work continues within Version 6; the participant registration form/fields stay unchanged.
+
+
+## Checkpoint — final Live Poll and Quiz experience (2026-10-20)
+
+**Implemented, CI-validated and published to the existing Version 6 Pages route.**
+
+- Source enhancement commit `598f1ed6faeaf32234ae3532e3614a5da51d19e4`, V6 TypeScript/render/unit/migration validation [Actions 39344450427](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39344450427) **SUCCESS**.
+- Same V6 Pages release request commit `0d28cd0acad32f5ec48734dd942b43364b555842`, [Actions 39344622623](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39344622623) **SUCCESS**. Live URL unchanged: `https://hazemshaaban77.github.io/MTS-Training-Arena/v6/?view=home`.
+- **Live Poll:** graph-only results remain independent of Quiz. Bars now distinguish all highest choices including ties based on actual server tally; honest no-votes chart empty state for all poll modes, especially no fake 0/5 rating average for an empty poll. Existing backend summary/weighted ranking units, vote privacy and response counts retained.
+- **Quiz:** distinct high-contrast premium experience, accessible options and role-specific received-answer counts. Strong authorized answer reveal shown **only after both closed and `keyRevealed`**; defense-in-depth strips unpublished answer keys, explanation and ordering/matching solutions before passing activity to Question display. Retains existing answer submission, points and server grading. Bilingual trainer/trainee/projector and unrevealed/revealed tests cover regression.
+- **Preserved:** exact trainee name/language/employee-ID/conditional team/confirmation/recovery registration form, Firebase/Cloudflare Worker/D1 and existing rooms/session scores, original MTS branding and assets, `main`, legacy `/arena/`, single QR, existing Version 6 path. No V6.1.
+
+**Remaining priorities:** (1) per-activity training analytics and optionally branded PDF/CSV, avoiding incorrect percent-correct reports for Poll/Flashcards; (2) deterministic multi-trainee trainer simulator sharing authoritative game logic; (3) authorized end-to-end trainer/Android/iOS/projector walkthrough with 20 trainees and realistic 60–80 live-client load; (4) uploaded media security/hardening review, and final accessibility/performance audit. **These are NOT marked complete.** CI and Pages success prove validated deployment, not genuine physical classroom acceptance.
