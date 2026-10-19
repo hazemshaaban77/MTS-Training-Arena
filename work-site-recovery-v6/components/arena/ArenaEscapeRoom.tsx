@@ -113,9 +113,10 @@ export default function ArenaEscapeRoom({
     <h5><Users size={18}/>{t('تقدّم المشاركين','PARTICIPANT PROGRESS')}</h5>
     {progress.length?progress.map((p:any,i:number)=>{
      const participant=(s.players||[]).find((x:any)=>x.uid===p.actor||x.id===p.actor);
-     const displayName=participant?.name||p.actor==='collaborative'?t('الفريق بالكامل','Collaborative team'):
-      String(p.actor||t('مشارك','Participant')).startsWith('team:')?String(p.actor).slice(5):
-      String(p.actor||t('مشارك','Participant'));
+     const displayName=participant?.name||(
+      p.actor==='collaborative'?t('الفريق بالكامل','Collaborative team'):
+      String(p.actor||'').startsWith('team:')?String(p.actor).slice(5):
+      String(p.actor||t('مشارك','Participant')));
      const progressRoom=Math.max(0,Number(p.room)||0);
      const readyToOverride=!!(s.players||[]).find((x:any)=>x.uid===p.actor||x.id===p.actor||p.actor==='team:'+x.team
       ||p.actor==='collaborative'&&x.approval==='approved');
