@@ -40,8 +40,12 @@ test('all ten activities have shipped brand-consistent image assets with readabl
   const html=renderToStaticMarkup(<ActivityArt activity={name} label={name}/>);
   assert.ok(html.includes('activity-art/'),name);
   assert.ok(html.includes('alt="'+name+'"'),name);
-  const path='public/'+(html.match(/activity-art\/[^"]+\.svg/)||[])[0];
-  assert.ok(readFileSync(path,'utf8').includes('<svg'),name);
+  const asset='public/'+(html.match(/activity-art\\/[^"]+\\.(?:svg|webp)/)||[])[0];
+  const bytes=readFileSync(asset);
+  if(asset.endsWith('.webp')){
+   assert.equal(bytes.toString('ascii',0,4),'RIFF');
+   assert.equal(bytes.toString('ascii',8,12),'WEBP');
+  }else assert.ok(bytes.toString('utf8').includes('<svg'),name);
  }
 });
 test('video and uploaded image URLs stay reachable through the Pages gateway',()=>{
