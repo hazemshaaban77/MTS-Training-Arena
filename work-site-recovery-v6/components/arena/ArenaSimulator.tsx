@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {ArrowLeft,ArrowRight,CheckCircle2,Eye,Gamepad2,Monitor,Play,RotateCcw,ShieldCheck,Smartphone,Users,X} from 'lucide-react';
+import {ArrowLeft,ArrowRight,CheckCircle2,Eye,Gamepad2,BookOpen,Monitor,Play,RotateCcw,ShieldCheck,Smartphone,Users,X} from 'lucide-react';
 import {activityLabel,mainType,type Activity} from '../../lib/catalog';
 import {publicActivity,flattenDeck} from '../../lib/domain.mjs';
 import ActivityArt from './ActivityArt';
@@ -9,6 +9,19 @@ import StageMedia from './StageMedia';
 import './ArenaSimulator.css';
 
 type Mode='host'|'play'|'display';
+const activityGuides:Record<string,[string,string]>={
+ 'Quiz':['اختار إجابة من الاختيارات، ثبّتها، وبعدها شاهد الكشف عن الحل.','Pick an option, submit it and reveal the answer.'],
+ 'Ultimate Game Show':['جرّب الإجابة ووسائل المساعدة، ثم راجع كيف تظهر النتيجة.','Try the answer and lifelines, then reveal the outcome.'],
+ 'Wheel of Fortune':['افتح منظور المدرب ولفّ العجلة، وجرّب تحدّي القطاع المختار.','Switch to Trainer to spin the wheel and explore its sector challenge.'],
+ 'Meta Plan':['جرّب تصنيف كل عنصر بالفئة المناسبة ثم اكشف التصنيف.','Sort each item into the right category, then reveal the grouping.'],
+ 'Escape Room':['ابدأ كمتدرب؛ كل إجابة صحيحة تفتح اللغز التالي ثم الغرفة التالية.','Try as a learner; each solved puzzle opens the next step or room.'],
+ 'Live Poll':['صوّت كمتدرب، ومن شاشة المدرب أضف أصواتًا تجريبية وشاهد الرسم البياني.','Vote as a learner, add demo votes as trainer, then show the chart.'],
+ 'Order It':['رتّب الخطوات بالسحب أو الأسهم، ثم ثبّت الترتيب.','Arrange steps using drag-and-drop or arrow buttons, then submit.'],
+ 'Open the Box':['افتح الصناديق لتكتشف التحدّيات والمفاجآت واحدًا واحدًا.','Open boxes to discover the challenges and surprises inside.'],
+ 'Flashcards':['اقلب البطاقة، راجع المعلومة، وانتقل للبطاقة التالية.','Flip each card, review its answer, and move to the next card.'],
+ 'Scenario Challenge':['اختار قرارًا وشاهد مسار القصة ونتيجة اختياراتك.','Make a decision and follow its consequence through the scenario.']
+};
+
 const fakePlayer={uid:'simulated-player',id:'simulated-player',name:'Demo Learner',team:'Lightning',approval:'approved'};
 const isOrder=(v:any)=>Array.isArray(v);
 function samplePollSummary(a:any,answers:any[]){
@@ -196,6 +209,7 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
        aria-pressed={mode===value}><Icon size={16}/>{label}</button>)}
     </div>
    </div>
+   <div className="arena-simulator-learning-tip"><BookOpen size={17}/><span>{(activityGuides[mainType(a)]||activityGuides[a.type]||['جرّب النشاط وراجع خطواته.','Explore and rehearse this activity.'])[ar?0:1]}</span></div>
    <main className="arena-simulator-main"><PracticeStage key={index+'-'+runId} a={a} ar={ar} mode={mode} runId={runId}/></main>
    <footer className="arena-simulator-footer">
     <button className="btn secondary" disabled={index===0} onClick={()=>go(index-1)}><ArrowRight size={17}/>{t('النشاط السابق','Previous activity')}</button>
