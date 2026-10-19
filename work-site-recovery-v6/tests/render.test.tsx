@@ -355,3 +355,25 @@ test('QR entry states protect the unchanged participant registration form',()=>{
  assert.ok(css.includes('.session-entry-feedback__actions'));
  assert.ok(css.includes('min-height:49px'));
 });
+
+test('server-acknowledged participant answers never claim success on a click',()=>{
+ const source=readFileSync('components/arena/Session.tsx','utf8');
+ const poll=readFileSync('components/arena/LivePoll.tsx','utf8');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(source.includes("async function checkAnswerReceipt(round:number)"),'There is a safe state verification path');
+ assert.ok(source.includes("const receipt=await api('answer',{code,round,answer},token)"));
+ assert.ok(source.includes("receipt?.ok!==true"),'Receipt must come from backend');
+ assert.ok(source.includes("setAnswerProgress({round,phase:'sending'})"));
+ assert.ok(source.includes("setAnswerProgress({round,phase:'verifying'})"));
+ assert.ok(source.includes("setAnswerProgress({round,phase:'confirmed'})"));
+ assert.ok(source.includes("setAnswerProgress({round,phase:state?.mine?.answered?'confirmed':'uncertain'})"));
+ assert.ok(source.includes("state?.status==='question'&&!state.paused&&state.mine?.eligible"));
+ assert.ok(source.includes("answerSendLock.current"),'Avoid same-render double sends');
+ assert.ok(source.includes('role="status" aria-live="polite"'));
+ assert.ok(source.includes('onClick={verifyAnswerReceipt}'));
+ assert.ok(!source.includes('submitted:old.submitted+1,mine:{...old.mine,answered:true,answer}'),'Never fabricate a server receipt or count');
+ assert.ok(poll.includes("function vote(answer:any){if(!allow)return;onSubmit(answer);}"));
+ assert.ok(!poll.includes('setSuccess(true)'),'Voting click is not the successful server receipt');
+ assert.ok(poll.includes('already&&<span className="live-poll-vote__success"'));
+ assert.ok(css.includes('.trainee-answer-receipt.uncertain'));
+});
