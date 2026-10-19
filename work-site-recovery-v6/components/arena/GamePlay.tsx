@@ -1,11 +1,12 @@
 'use client';
 import {useState,useRef} from 'react';
-import {Send,Check,CheckCircle2,ArrowUp,ArrowDown,RotateCw,Gift,Zap,Lightbulb,DoorOpen,Flag,ChevronRight,Users,Clock,Star} from 'lucide-react';
+import {Send,Check,CheckCircle2,ArrowUp,ArrowDown,RotateCw,Gift,Zap,Lightbulb,DoorOpen,Flag,Users,Clock,Star} from 'lucide-react';
 import LivePoll from './LivePoll';
 import ArenaGameShow from './ArenaGameShow';
 import ArenaEscapeRoom from './ArenaEscapeRoom';
 import ArenaOrderIt from './ArenaOrderIt';
 import ArenaMetaPlan from './ArenaMetaPlan';
+import ArenaScenario from './ArenaScenario';
 import {OpenBoxExperience,FlashcardExperience} from './ArenaDiscoveryGames';
 export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onInteract,onControl}:any){
  const a=s.activity,t=(a:string,e:string)=>ar?a:e,closed=s.status!=='question',g=s.game||{},mine=s.mine,actor=!!mine&&!host&&!display;
@@ -19,10 +20,9 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
  if(a.type==='Escape Room')
   return <ArenaEscapeRoom s={s} ar={ar} host={host} display={display} actor={actor} usable={usable}
    busy={busy} closed={closed} g={g} QuestionComponent={Question} onControl={onControl} send={send}/>;
- if(a.nodes||a.type==='Scenario Challenge'&&!a.options){
-  if(!actor)return <div className="scenario-world"><div className="decision-orbit"><ChevronRight size={45}/></div><h3>{t('قرار واحد يغيّر المسار','One decision changes the path')}</h3><p className="muted">{t('المشاركون يكتشفون النتائج على أجهزتهم. أغلق النشاط لبدء النقاش.','Participants explore consequences on their devices. Close the activity to begin discussion.')}</p></div>;
-  const n=g.scenario;if(!n)return null;return <div className={'scenario-world '+(n.ending?'ending':'')}><span className="eyebrow">{n.ending?'YOUR ENDING':'DECISION POINT'}</span>{n.consequence&&<p className="consequence">{n.consequence}</p>}<h3>{n.text}</h3>{n.ending?<><span className="mission-stars">✦</span><p className="discussion-prompt">{n.discussion}</p><p className="muted">{t('شارك المدرب حكاية قراراتك في النقاش.','Bring your decision path into the discussion.')}</p></>:<div className="scenario-choices">{n.choices.map((c:any,i:number)=><button key={i} className="answer-option" disabled={!usable} onClick={()=>send('decision',{choice:i})}><b>{String(i+1).padStart(2,'0')}</b><span>{c.label}</span><ChevronRight size={18}/></button>)}</div>}<div className="path-trail">{n.path.map((p:any,i:number)=><span key={i}>{i+1} · {p.consequence}</span>)}</div></div>;
- }
+ if(a.nodes||a.type==='Scenario Challenge'&&!a.options)
+  return <ArenaScenario s={s} ar={ar} host={host} display={display}
+   actor={actor} usable={usable} busy={busy} closed={closed} g={g} send={send}/>;
  if(['Wheel of Fortune','Spin Wheel'].includes(a.type)){
   const sectors=a.sectors||a.items.map((label:string)=>({label})),spin=g.spin,now=s.clockNow||s.serverNow,count=spin?Math.ceil((spin.startsAt-now)/1000):0,turnPlayer=s.players.find((x:any)=>x.uid===(spin&&!spin.revealed||g.mini?.question?g.spinTarget:g.target)),selected=g.target===mine?.id,miniSelected=s.mine?.id===s.players.find((x:any)=>x.uid===s.game?.spinTarget)?.uid;
   // Visual sectors are derived from authored content only. Spin outcome,
