@@ -64,7 +64,7 @@ type FlashProps={a:any;ar:boolean;actor:boolean;host:boolean;usable:boolean;clos
  g:any;s:any;card:number;setCard:(next:number)=>void;onControl:(action:string,index?:number,extra?:any)=>void;
  send:(action:string,extra?:any)=>void};
 
-export function FlashcardExperience({a,ar,actor,usable,closed,busy,g,s,card,setCard,onControl,send}:FlashProps){
+export function FlashcardExperience({a,ar,actor,host,usable,closed,busy,g,s,card,setCard,onControl,send}:FlashProps){
  const t=(arText:string,enText:string)=>ar?arText:enText;
  const fronts:Array<string>=Array.isArray(a.fronts)?a.fronts:[];
  const count=fronts.length;
@@ -76,14 +76,14 @@ export function FlashcardExperience({a,ar,actor,usable,closed,busy,g,s,card,setC
  const mastered=[...uniqueReviewed.values()].filter(Boolean).length;
  const progress=count?(actor?uniqueReviewed.size:index+1)/count*100:0;
  const back=actor?g.back:a.revealed?.back;
- const canFlip=!busy&&!closed&&(actor?usable:true);
+ const canFlip=!busy&&!closed&&(actor?usable:host&&!revealed);
  const flip=()=>{
   if(!canFlip)return;
   if(actor)send(revealed?'card':'flip',{index});
   else onControl('reveal',index);
  };
  const move=(next:number)=>{
-  if(next<0||next>=count||busy)return;
+  if(next<0||next>=count||busy||(!host&&!actor))return;
   if(actor)send('card',{index:next});else setCard(next);
  };
  return <section className="flash-stage flash-stage--academy"
@@ -118,11 +118,11 @@ export function FlashcardExperience({a,ar,actor,usable,closed,busy,g,s,card,setC
    </button>
   </div>
   <nav className="flash-academy-controls" aria-label={t('أدوات التنقل بين البطاقات','Card navigation')}>
-   <button className="btn secondary" disabled={index===0||busy}
+   <button className="btn secondary" disabled={index===0||busy||(!host&&!actor)}
     onClick={()=>move(index-1)}><ChevronRight size={18}/>{t('السابقة','Previous')}</button>
    <button className="btn primary" disabled={!canFlip||count===0}
     onClick={flip}><RotateCcw size={18}/>{revealed?t('ارجع للسؤال','Show question'):t('اكشف الإجابة','Reveal answer')}</button>
-   <button className="btn secondary" disabled={index===count-1||busy}
+   <button className="btn secondary" disabled={index===count-1||busy||(!host&&!actor)}
     onClick={()=>move(index+1)}>{t('التالية','Next')}<ChevronLeft size={18}/></button>
   </nav>
   {actor&&revealed&&<div className="flash-academy-selfassess" role="group"
