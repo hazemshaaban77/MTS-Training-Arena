@@ -140,7 +140,7 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
    <div className="arena-sim-controls">
     {host&&<><button className="btn secondary" onClick={()=>setPaused(v=>!v)} disabled={closed||!active.timer}>
      {paused?t('استكمال العداد','Resume timer'):t('إيقاف العداد','Pause timer')}</button>
-     {!closed&&<button className="btn primary" onClick={reveal}>{t('اعرض النتيجة','Reveal results')}</button></>}
+     {!closed&&<button className="btn primary" onClick={reveal}>{t('اعرض النتيجة','Reveal results')}</button>}</>}
     {play&&!closed&&answer!==null&&<button className="btn secondary" onClick={()=>{setAnswer(null);setNote('');}}>{t('جرّب إجابة أخرى','Try another answer')}</button>}
     {display&&!closed&&<p className="muted">{t('عرض محاكاة البروجيكتور، من غير تحكم في الجلسة.','Simulated projector view: read only.')}</p>}
     {closed&&a.questions?.length>step+1&&<button className="btn primary" onClick={()=>{
