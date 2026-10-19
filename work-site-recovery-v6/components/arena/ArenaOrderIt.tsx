@@ -16,7 +16,7 @@ export default function ArenaOrderIt({a,s,ar,actor,canAnswer,busy,onSubmit}:{
  const drag=useRef<number|null>(null);
  const valid=order.length===items.length&&new Set(order).size===items.length&&order.every(i=>i>=0&&i<items.length);
  const ready=actor&&canAnswer&&!busy&&!closed&&!already;
- const revealed=closed&&Array.isArray(a.order)&&a.order.length===items.length;
+ const revealed=closed&&!!s.keyRevealed&&Array.isArray(a.order)&&a.order.length===items.length;
  const shown=revealed?a.order:already&&Array.isArray(mine.answer)?mine.answer:order;
  function swap(from:number,to:number){
   if(!ready||to<0||to>=order.length||from===to)return;
