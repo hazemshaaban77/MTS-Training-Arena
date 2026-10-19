@@ -125,7 +125,30 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   setSplash(key);
  },[s?.code,s?.current,s?.status]);
  useEffect(()=>{if(!code)return;QRCode.toDataURL(siteUrl('join',code),{width:280,margin:2,errorCorrectionLevel:'M',color:{dark:'#091016',light:'#ffffff'}}).then(setQr).catch(()=>setQr(''));},[code]);
- useEffect(()=>{if(!s)return;if(lastStatus.current!==s.status&&s.status==='results'&&sound&&!quiet&&!s.runtime?.quiet&&audio.current){const ctx=audio.current;[523,659,784].forEach((frequency,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=frequency;g.gain.value=.035;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+i*.12);o.stop(ctx.currentTime+i*.12+.1);});}lastStatus.current=s.status;},[s?.status,sound]);
+ useEffect(()=>{
+  if(!s)return;
+  const changed=lastStatus.current!==s.status;
+  if(changed&&sound&&!quiet&&!s.runtime?.quiet&&audio.current){
+   const ctx=audio.current;
+   if(s.status==='results'){
+    [523,659,784].forEach((frequency,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=frequency;g.gain.value=.035;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+i*.12);o.stop(ctx.currentTime+i*.12+.1);});
+   }else if(s.status==='completed'&&!s.surveyOnly){
+    // Optional victory fanfare, ONLY for the existing user-enabled sound toggle.
+    // No new audio files, network requests, autoplay or effect when quiet.
+    [392,523,659,784,1047,784,1047].forEach((frequency,i)=>{
+     const at=ctx.currentTime+[0,.19,.38,.57,.83,1.04,1.23][i];
+     const duration=i===6?.8:.29;
+     const o=ctx.createOscillator(),g=ctx.createGain();
+     o.type=i===6?'triangle':'sine';o.frequency.value=frequency;
+     g.gain.setValueAtTime(.0001,at);
+     g.gain.exponentialRampToValueAtTime(i===6?.038:.027,at+.025);
+     g.gain.exponentialRampToValueAtTime(.0001,at+duration);
+     o.connect(g);g.connect(ctx.destination);o.start(at);o.stop(at+duration+.01);
+    });
+   }
+  }
+  lastStatus.current=s.status;
+ },[s?.status,sound]);
  const remaining=s?.status==='question'?Math.max(0,s.paused?s.remaining:(s.deadline?s.deadline-(now+(s.serverNow-received.current)):0)):0,seconds=Math.ceil(remaining/1000);
  useEffect(()=>{
   if(!sound||quiet||s?.runtime?.quiet||s?.status!=='question'||s?.paused||!s?.deadline||seconds>5||seconds<1||!audio.current)return;
