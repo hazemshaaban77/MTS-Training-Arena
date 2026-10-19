@@ -1,0 +1,33 @@
+name: Install V6 Approved Hero Asset
+on:
+  push:
+    branches: ['develop/v6-github-arena']
+    paths:
+      - '.github/workflows/v6-install-hero-asset.yml'
+      - 'work-site-recovery-v6/scripts/assemble-hero-asset.mjs'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop/v6-github-arena
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Reconstruct and verify original WebP source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node work-site-recovery-v6/scripts/assemble-hero-asset.mjs
+      - name: Commit photo to the same Version 6 public directory
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work-site-recovery-v6/public/arena-hero-final.webp
+          if ! git diff --cached --quiet; then
+            git commit -m "Install verified, approved high-quality trainer hero image [skip ci]"
+            git push origin HEAD:develop/v6-github-arena
+          fi
