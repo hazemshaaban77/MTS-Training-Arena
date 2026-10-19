@@ -12,7 +12,11 @@ export function ownSessionResult(s:any){
  const ownTeam=players.find((p:any)=>String(p.uid)===String(id))?.team;
  const teams=Array.isArray(s.teams)?s.teams:[];
  const team=s.teamMode&&ownTeam?teams.find((p:any)=>p.team===ownTeam):null;
- const competitive=board.some((p:any)=>Number(p.score)>0);
+ const queue=Array.isArray(s.queue)?s.queue:[];
+ const hasCompetitiveRounds=queue.some((a:any)=>!['Live Poll','Meta Plan','Categorize','Flashcards'].includes(a?.type));
+ const competitive=board.some((p:any)=>Number(p.score)>0)||hasCompetitiveRounds;
+ const currentRank=player&&Number.isInteger(Number(player.rank))?Number(player.rank):null;
+ const sameRank=currentRank===null?0:board.filter((p:any)=>Number(p.rank)===currentRank).length;
  return {
   name:String(s.mine.name||player?.name||'').slice(0,80),
   score:player&&Number.isFinite(Number(player.score))?Number(player.score):null,
@@ -21,7 +25,7 @@ export function ownSessionResult(s:any){
   teamName:team?String(team.team):null,
   teamRank:team&&Number.isInteger(Number(team.rank))?Number(team.rank):null,
   teamScore:team&&Number.isFinite(Number(team.score))?Number(team.score):null,
-  competitive
+  competitive,tieCount:sameRank
  };
 }
 
@@ -46,7 +50,7 @@ export default function TraineeFinish({s,ar}:{s:any;ar:boolean}){
     </div>
     {own.rank!==null&&<div className="trainee-finish__stat">
      <Award size={24}/><span>{t('مركزك بين الأفراد','YOUR INDIVIDUAL RANK')}</span>
-     <strong>#{nf(own.rank)}</strong><small>{t('من ','out of ')}{nf(own.count)}</small>
+     <strong>#{nf(own.rank)}</strong><small>{t('من ','out of ')}{nf(own.count)}</small>{own.tieCount>1&&<small>{t('تعادل في المركز مع ','Shared rank with ')}{nf(own.tieCount-1)}{t(' مشارك',' other participant(s)')}</small>}
     </div>}
     {own.teamRank!==null&&<div className="trainee-finish__stat">
      <Users size={24}/><span>{t('مركز فريقك','YOUR TEAM RANK')}</span>
