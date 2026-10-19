@@ -512,7 +512,7 @@ test('Fortune Wheel stage artwork follows server selected sector and keeps game 
  assert.ok(html.includes('aria-current="true"'),'Accessible winning section marker');
  assert.ok(html.includes('Participation star'),'Real server outcome label is displayed');
  assert.ok(html.includes('+200'),'Real server assigned points are displayed');
- assert.ok(html.includes('server-spin-1'));
+ assert.ok(html.includes('--wheel-stop'),'Wheel stop angle follows server index');
  assert.ok(html.includes('SPIN THE WHEEL'),'Original trainer control remains');
  const untouched=renderToStaticMarkup(<GamePlay s={{
   ...base,game:{...base.game,spin:null,outcome:null,turn:0,used:[]}
