@@ -891,3 +891,70 @@ test('Scenario client cannot override authoritative scoring, branch navigation o
  const serializer=readFileSync('lib/session-games.ts','utf8');
  assert.ok(serializer.includes("choices:node.choices?.map((c:any)=>({label:c.label}))"));
 });
+
+
+test('V6 final Quiz spotlight and Poll charts are backend-authoritative',()=>{
+ const quiz:any={...sample('Quiz','en'),prompt:'Choose safely',
+   options:['Account','Unrelated','Invoice','Cargo'],correct:2,
+   explanation:'PRIVATE CORRECT ANSWER EXPLANATION',timer:25};
+ const base:any={activity:quiz,players:[{uid:'p1',name:'Student',approval:'approved'}],
+   submitted:3,individual:[],current:0,paused:false,runtime:{phase:'answering'},
+   status:'question',keyRevealed:false,mine:{id:'p1',name:'Student',eligible:true,answered:false}};
+ for(const ar of [true,false])for(const role of ['play','host','display']){
+  const props={ar,host:role==='host',display:role==='display',
+   canAnswer:role==='play',busy:false,onSubmit:()=>{},onInteract:()=>{},onControl:()=>{}};
+  const actor=role==='play'?base.mine:null;
+  const playing=renderToStaticMarkup(<GamePlay s={{...base,mine:actor}} {...props}/>);
+  assert.ok(playing.includes('arena-quiz-show'),'Quiz has distinct stage');
+  assert.ok(playing.includes('arena-quiz-show__masthead'));
+  assert.ok(!playing.includes('CORRECT ANSWER'));
+  assert.ok(!playing.includes('PRIVATE CORRECT ANSWER EXPLANATION'));
+  assert.ok(!playing.includes('right-answer'));
+  const hidden=renderToStaticMarkup(<GamePlay s={{...base,mine:actor,status:'results',keyRevealed:false}}
+   {...props} canAnswer={false}/>);
+  assert.ok(hidden.includes('arena-quiz-show__locked'));
+  assert.ok(!hidden.includes('CORRECT ANSWER'));
+  assert.ok(!hidden.includes('PRIVATE CORRECT ANSWER EXPLANATION'));
+  assert.ok(!hidden.includes('right-answer'));
+  const open=renderToStaticMarkup(<GamePlay s={{...base,mine:actor,status:'results',
+    keyRevealed:true,tally:[0,1,2,0]}} {...props} canAnswer={false}/>);
+  assert.ok(open.includes('arena-quiz-show__reveal'));
+  assert.ok(open.includes('arena-quiz-show__winning-answer'));
+  assert.ok(open.includes('PRIVATE CORRECT ANSWER EXPLANATION'));
+  assert.ok(open.includes('right-answer'));
+ }
+ const a:any={...sample('Live Poll','en'),pollKind:'choice',liveResults:false};
+ const emptyChoice=renderToStaticMarkup(<LivePollChart s={{
+   activity:a,status:'results',submitted:0,tally:[0,0,0,0],pollSummary:null}} ar={false}/>);
+ assert.ok(emptyChoice.includes('No votes have arrived yet for the chart'));
+ assert.ok(!emptyChoice.includes('live-poll-chart__rows'));
+ const votes=renderToStaticMarkup(<LivePollChart s={{
+   activity:a,status:'results',submitted:10,tally:[5,5,0,0],pollSummary:null}} ar={false}/>);
+ assert.equal((votes.match(/live-poll-chart__row--leading/g)||[]).length,2,'Both tied top choices are highlighted');
+ assert.ok(votes.includes('50%'));
+ assert.ok(!votes.includes('correct-answer'));
+ assert.ok(!votes.includes('answer-option'));
+ const emptyRating=renderToStaticMarkup(<LivePollChart s={{
+  activity:{...a,pollKind:'rating'},status:'results',submitted:0,
+  pollSummary:{count:0,average:0}}} ar={true}/>);
+ assert.ok(emptyRating.includes('لسه ما وصلش أي تصويت'));
+ assert.ok(!emptyRating.includes('0.0 / 5'),'No fake rating average with zero responses');
+ const emptyWords=renderToStaticMarkup(<LivePollChart s={{
+  activity:{...a,pollKind:'word'},status:'results',submitted:0,
+  pollSummary:{words:{}}}} ar={false}/>);
+ assert.ok(emptyWords.includes('No votes have arrived yet for the chart'));
+ const unrevealed=renderToStaticMarkup(<LivePollChart s={{
+  activity:a,status:'results',submitted:10,tally:null,pollSummary:null}} ar={false}/>);
+ assert.ok(unrevealed.includes('Chart awaiting reveal'));
+ const source=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(source.includes('QuestionComponent={Question}'));
+ assert.ok(source.includes('hidePrompt=false'));
+ const quizSource=readFileSync('components/arena/ArenaQuizExperience.tsx','utf8');
+ assert.ok(quizSource.includes('const visibleQuestion=revealed?a:'));
+ assert.ok(quizSource.includes('revealed&&Number.isInteger(a.correct)'));
+ assert.ok(!quizSource.includes("api('answer'"));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 LIVE POLL + KNOWLEDGE QUIZ'));
+ assert.ok(css.includes('.projector .arena-quiz-show'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});
