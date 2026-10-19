@@ -12,37 +12,25 @@ jobs:
   gateway-smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Gateway HTTPS health and unchanged backend identity
+      - name: Gateway HTTPS and unchanged backend health
         run: |
           set -euo pipefail
           url="https://mts-training-arena-v6-gateway.pages.dev"
-          curl --retry 5 --retry-delay 2 --fail-with-body -sS -m 20 "$url/api/auth-health" | jq -e '.googleKeys and .firebaseDatabase and .appDatabase'
-          curl --retry 5 --retry-delay 2 --fail-with-body -sS -m 20 -H 'Origin: https://hazemshaaban77.github.io' "$url/api/me" | jq -e '.authenticated == false'
-      - name: Browser CORS preflight for trainer Firebase token
+          curl --retry 4 --retry-delay 2 --fail-with-body -sS -m 20 "$url/api/auth-health" | jq -e '.googleKeys and .firebaseDatabase and .appDatabase'
+          curl --retry 4 --retry-delay 2 --fail-with-body -sS -m 20 -H 'Origin: https://hazemshaaban77.github.io' "$url/api/me" | jq -e '.authenticated == false'
+      - name: Browser CORS preflight and Firebase token rejection
         run: |
           set -euo pipefail
+          url="https://mts-training-arena-v6-gateway.pages.dev/api/me"
           response="$(curl --retry 3 --retry-delay 2 -sS -m 20 -D - -o /dev/null -X OPTIONS \
             -H 'Origin: https://hazemshaaban77.github.io' \
             -H 'Access-Control-Request-Method: GET' \
             -H 'Access-Control-Request-Headers: x-firebase-token' \
-            https://mts-training-arena-v6-gateway.pages.dev/api/me)"
-          echo "$response" | tr -d '\r' | grep -Ei '^(HTTP/|access-control-|content-type:)' || true
+            "$url")"
           echo "$response" | tr -d '\r' | grep -Eq '^HTTP/[0-9.]+ 204( |$)'
-          echo "$response" | tr -d '\r' | grep -qi '^access-control-allow-origin: https://hazemshaaban77.github.io
-      - name: Invalid token remains rejected
-        run: |
-          set -euo pipefail
-          code="$(curl -sS -m 20 -o /tmp/arena-invalid-token.json -w '%{http_code}' \
+          echo "$response" | tr -d '\r' | grep -qi 'access-control-allow-origin: https://hazemshaaban77.github.io'
+          echo "$response" | tr -d '\r' | grep -qi 'access-control-allow-headers:.*X-Firebase-Token'
+          code="$(curl -sS -m 20 -o /dev/null -w '%{http_code}' \
              -H 'Origin: https://hazemshaaban77.github.io' \
-             -H 'X-Firebase-Token: arena-connection-test' \
-             https://mts-training-arena-v6-gateway.pages.dev/api/me)"
-          test "$code" = "401"
-
-      - name: Invalid token remains rejected
-        run: |
-          set -euo pipefail
-          code="$(curl -sS -m 20 -o /tmp/arena-invalid-token.json -w '%{http_code}' \
-             -H 'Origin: https://hazemshaaban77.github.io' \
-             -H 'X-Firebase-Token: arena-connection-test' \
-             https://mts-training-arena-v6-gateway.pages.dev/api/me)"
+             -H 'X-Firebase-Token: arena-connection-test' "$url")"
           test "$code" = "401"
