@@ -311,3 +311,11 @@ Only V6 source under `work-site-recovery-v6/` was changed, no merge to `main`, n
 **CI validation:** [V6 Actions run 39342716351](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39342716351) **SUCCESS** on source commit `25ed0a61902f6d7a1b9a22350214342e53303d0b`. The actual Pages release is tracked separately, not presumed successful here.
 
 **Still pending:** genuine live phone/projector E2E, multi-participant simulator rule parity and stress tests, Live Poll/Quiz focused finishing, per-activity learning analytics, PDF report and signed media hardening/security review. Preserve unchanged employee-ID/name/language/team participant registration form, original MTS branding, existing V6 URL, all existing Worker/D1/Firebase/data and legacy main/arena routes.
+
+### Scenario Challenge release verified — 2026-10-20
+
+- **Source CI:** [39342716351](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39342716351) **SUCCESS** for commit `25ed0a61902f6d7a1b9a22350214342e53303d0b`.
+- **Same V6 public Pages deployment:** [39342934629](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39342934629) **SUCCESS** for release commit `778dec363766f13d61a9240e6facb3ea52b4116a`. Full test/build + API + Pages gateway checks all succeeded in the release workflow. Public URL unchanged: `https://hazemshaaban77.github.io/MTS-Training-Arena/v6/?view=home`.
+- Release contains immersive branching narrative cards, authoritative consequence reveal, private learner journey recap, facilitated trainer/projector stage without exposed private paths; mobile, bilingual and reduced-motion improvements.
+- **Not verified:** end-to-end real trainer + phone QR + projector in a classroom, iOS/Android actual interaction, 20/80-client stress. These remain explicit gates.
+- **Next priority:** Live Poll and Quiz refinement, activity-specific reporting, multi-learner simulator fidelity, then classroom acceptance and signed-upload hardening. All work continues within Version 6; the participant registration form/fields stay unchanged.
