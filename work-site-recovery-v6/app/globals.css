@@ -2161,3 +2161,43 @@
  .trainee-finish__stat strong{font-size:31px}
  .trainee-finish__stat small{font-size:10px}
 }
+
+
+/* V6 personal trainee graduation card — authoritative scoreboard only. */
+.trainee-final-summary{position:relative;isolation:isolate;max-width:1000px;margin:12px auto 35px;
+ padding:clamp(18px,3.5vw,38px);border:1px solid #61cfd584;border-radius:22px;
+ background:linear-gradient(135deg,#092a40f5,#0f1e38f5 70%,#162d46ee);
+ box-shadow:0 18px 40px #0008,inset 0 1px 0 #a2fbef36;color:#edffff}
+.trainee-final-summary__header{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.trainee-final-summary__header .eyebrow{display:inline-flex;align-items:center;justify-content:center;
+ gap:8px;font-size:11px;color:#7af0da;letter-spacing:.13em;font-weight:850}
+.trainee-final-summary__header h3{margin:6px 0 0;font-size:clamp(22px,3vw,35px);
+ color:#edfffa;line-height:1.35}
+.trainee-final-summary__header p{color:#9fcbdb;font-size:clamp(12px,1.4vw,15px);line-height:1.65}
+.trainee-final-summary__identity{display:flex;align-items:center;justify-content:center;gap:9px;
+ color:#ffdf99;font-size:clamp(16px,2.1vw,22px);font-weight:850;margin:15px auto}
+.trainee-final-summary__identity b{overflow-wrap:anywhere;max-width:100%}
+.trainee-final-summary__metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.trainee-final-summary__metric{display:flex;min-width:0;flex-direction:column;align-items:center;gap:9px;
+ padding:18px 10px;border:1px solid #2da5b57a;border-radius:15px;
+ background:linear-gradient(145deg,#1447659a,#102539a8);text-align:center}
+.trainee-final-summary__metric svg{color:#a8eade}
+.trainee-final-summary__metric>span{color:#a2c6d8;font-size:12px;line-height:1.4}
+.trainee-final-summary__metric>strong{color:#f2ffc8;font-size:clamp(22px,3.7vw,39px);
+ font-variant-numeric:tabular-nums;font-weight:950}
+.trainee-final-summary__tie,.trainee-final-summary__note{display:flex;align-items:center;
+ justify-content:center;gap:8px;text-align:center;line-height:1.65;
+ border-radius:10px;padding:12px;margin-top:16px;font-size:13px}
+.trainee-final-summary__tie{background:#98721b38;color:#ffe7af}
+.trainee-final-summary__note{background:#245a6757;color:#b3dae5}
+.trainee-final-summary__tie svg{flex:none}
+.trainee-final-summary__closing{text-align:center;font-size:13px;line-height:1.7;
+ color:#9bded4;margin:22px auto 2px;max-width:800px}
+@media(max-width:680px){
+ .trainee-final-summary{padding:19px 13px;border-radius:16px;margin:6px auto 28px}
+ .trainee-final-summary__metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .trainee-final-summary__metric{padding:13px 8px;gap:5px}
+ .trainee-final-summary__metric:last-child{grid-column:1/-1}
+ .trainee-final-summary__metric>span{font-size:11px}
+ .trainee-final-summary__metric>strong{font-size:27px}
+}
