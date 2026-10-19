@@ -79,7 +79,8 @@ test('Futuristic Arena timer uses server remaining time in all roles and respect
   assert.ok(html.includes('arena-power-timer--'+mode),mode);
   assert.ok(html.includes('00:27'),mode);
   assert.ok(html.includes('الوقت المتبقي'),mode);
-  assert.ok(html.includes('stroke-dashoffset="55"'),mode);
+  const arc=html.match(/stroke-dashoffset="([0-9.]+)"/);
+  assert.ok(arc&&Math.abs(Number(arc[1])-55)<0.001,mode);
  }
  const nearly=renderToStaticMarkup(<ArenaPowerTimer mode="display" seconds={5} remainingMs={4800} totalSeconds={30} timed paused={false} closed={false} ar={false}/>);
  assert.ok(nearly.includes('is-critical'));
