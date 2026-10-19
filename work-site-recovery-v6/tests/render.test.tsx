@@ -294,3 +294,31 @@ test('complete rehearsal retains draft and NEVER creates a live server session',
  assert.ok(css.includes('.arena-practice-library-card__try'));
  assert.ok(css.includes('@media(max-width:850px)'));
 });
+
+test("trainee registration UI is frozen by the trainer's explicit decision",()=>{
+ const source=readFileSync('components/arena/Session.tsx','utf8');
+ // Source-level contract: the whole actual join form, not just input labels,
+ // must stay byte-for-byte (UTF-16 code-unit) unchanged during V6 UX upgrades.
+ // Changes require user approval and a deliberate baseline review.
+ const start=source.indexOf('<form onSubmit={join}>{!recovering');
+ const end=source.indexOf('</form>',start);
+ assert.ok(start>=0&&end>start,'The current real participant join form must remain present');
+ const form=source.slice(start,end+7);
+ assert.equal(form.length,2478,'Registration form structure/labels/ordering must not change');
+ let hash=0xcbf29ce484222325n;
+ for(let i=0;i<form.length;i++)hash=((hash^BigInt(form.charCodeAt(i)))*0x100000001b3n)&0xffffffffffffffffn;
+ assert.equal(hash.toString(16).padStart(16,'0'),'7861f77111d75e6a','The owner-approved participant login form must remain unchanged');
+ const fields=[
+  "t('الاسم بالكامل','Full name')",
+  "t('لغة المشاركة','Participation language')",
+  "t('الرقم الوظيفي','Employee ID')",
+  "t('كود استرجاع المشاركة','Participation recovery code')",
+  "t('اختار فريقك','Choose your team')",
+  "t('أؤكد إن الاسم والرقم الوظيفي صحيحين.','I confirm my name and employee ID are correct.')"
+ ];
+ for(const label of fields)assert.ok(form.includes(label),'Missing required participant registration field: '+label);
+ assert.ok(form.includes('disabled={busy||(!recovering&&!confirmed)}'));
+ assert.ok(form.includes("onClick={()=>{setRecovering(!recovering);setError('');}}"));
+ const codeForm=source.slice(source.indexOf('<form onSubmit={join}><label>'),start);
+ assert.ok(codeForm.includes("t('كود الجلسة','Session code')"),'Standalone session code entry remains separate');
+});
