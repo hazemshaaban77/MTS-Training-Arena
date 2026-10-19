@@ -527,3 +527,63 @@ test('Fortune Wheel stage artwork follows server selected sector and keeps game 
  assert.ok(css.includes('.projector .wheel-wrap--grand'));
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
+
+
+test('Mystery Vault opens only the selected server box and marks exhausted boxes',()=>{
+ const a:any=sample('Open the Box','en');
+ const base:any={activity:a,status:'question',current:0,
+  runtime:{phase:'answering'},players:[{uid:'p',name:'Alex',approval:'approved'}],
+  mine:null,game:{target:'p',turn:0,used:[1],version:2,
+   box:{index:1,label:'DISCOVERY CHALLENGE',detail:'Team reflection prompt',question:null}}};
+ const host=renderToStaticMarkup(<GamePlay s={base} ar={false} host={true} display={false}
+  canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(host.includes('box-stage--vault'));
+ assert.ok(host.includes('box-vault-box--active'));
+ assert.ok(host.includes('box-vault-box--used'));
+ assert.ok(host.includes('DISCOVERY CHALLENGE'),'Use actual server reveal, never sample text');
+ assert.ok(host.includes('Team reflection prompt'));
+ assert.ok(host.includes('Select player'));
+ assert.ok(host.includes('aria-pressed="true"'));
+ assert.ok(host.includes('already opened'));
+ assert.ok(host.includes('disabled=""'),'Used box cannot be reopened without repeatable flag');
+ const spectator=renderToStaticMarkup(<GamePlay s={{...base,game:{...base.game,used:[],box:null}}}
+  ar={true} host={false} display={true} canAnswer={false} busy={false}
+  onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(spectator.includes('صناديق المفاجآت'));
+ assert.ok(spectator.includes('disabled=""'),'Projector has no authority to open a box');
+ assert.ok(!spectator.includes('DISCOVERY CHALLENGE'),'No reveal before server sends it');
+ const src=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(src.includes('questionSlot={g.box?.question&&!g.box.answered?'),'Nested quiz remains playable');
+ assert.ok(src.includes("send('boxquiz',{answer})"),'Existing backend mini-quiz action stays unchanged');
+});
+test('Knowledge Flashcards flip only on server reveal and keep self-review unscored',()=>{
+ const a:any=sample('Flashcards','en');
+ const base:any={activity:a,status:'question',current:0,paused:false,
+  runtime:{phase:'answering'},players:[],individual:[],
+  game:{card:0,flipped:false,back:'Secret correct answer',reviewed:[],version:1},
+  mine:{id:'p',name:'Student',eligible:true,approval:'approved'}};
+ const front=renderToStaticMarkup(<GamePlay s={base} ar={false} host={false} display={false}
+  canAnswer={true} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(front.includes('flash-stage--academy'));
+ assert.ok(front.includes('flash-academy-deck'));
+ assert.ok(front.includes('aria-pressed="false"'));
+ assert.ok(!front.includes('Secret correct answer'),'Cannot reveal the back before card flip');
+ const revealed=renderToStaticMarkup(<GamePlay s={{...base,game:{...base.game,flipped:true,reviewed:[{index:0,known:true}]}}}
+  ar={false} host={false} display={false} canAnswer={true} busy={false}
+  onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(revealed.includes('Secret correct answer'));
+ assert.ok(revealed.includes('I knew it'));
+ assert.ok(revealed.includes('Review again'));
+ assert.ok(revealed.includes('marked as known'));
+ assert.ok(revealed.includes('aria-pressed="true"'));
+ const spectator=renderToStaticMarkup(<GamePlay s={{...base,mine:null,reveal:-1}}
+  ar={false} host={false} display={true} canAnswer={false} busy={false}
+  onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(spectator.includes('flash-academy-deck'));
+ assert.ok(spectator.includes('disabled=""'),'Projector cannot change backend card states');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 SIGNATURE DISCOVERY GAMES'));
+ assert.ok(css.includes('box-vault-box--active'));
+ assert.ok(css.includes('.flash-academy-card--flipped .flash-academy-card__inner'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});
