@@ -85,9 +85,8 @@ export default function LivePoll({s,ar,host,display,canAnswer,busy,onSubmit}:any
  const allow=!!canAnswer&&!busy&&!closed;
  const already=!!mine?.answered;
  const canChange=!!a.allowChanges;
- const [success,setSuccess]=useState(false);
  const total=safe(s.submitted);
- function vote(answer:any){if(!allow)return;setSuccess(true);onSubmit(answer);}
+ function vote(answer:any){if(!allow)return;onSubmit(answer);}
  function move(from:number,to:number){
   if(!allow||to<0||to>=priority.length)return;
   setPriority(old=>{const next=[...old];const [item]=next.splice(from,1);next.splice(to,0,item);return next;});
