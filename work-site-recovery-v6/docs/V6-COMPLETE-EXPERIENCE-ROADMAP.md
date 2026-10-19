@@ -253,3 +253,17 @@ A task is DONE only after:
 - **Remaining signature games:** Ultimate Game Show and Escape Room next; then Meta Plan, Order It, Scenario Challenge, Live Poll and Quiz final polish. Simulator multi-person fidelity, exact per-game reporting, PDF, upload security and realistic 20/80-client UAT remain incomplete.
 
 Only V6 source under `work-site-recovery-v6/` was changed, no merge to `main`, no legacy `/arena/` modifications, no Worker/D1/Firebase auth/data changes.
+
+
+## Progress checkpoint — Game Show, Escape, Order It + trainer starter templates (2026-10-19)
+
+**Production V6 Pages release succeeded:** [39295263189](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39295263189). Validated core source: [39295021404](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39295021404) SUCCESS at commit `4dc3c9271e3476e2c95a3f9410c86f22550100c5`; Pages re-ran V6 tests and built from release commit `fe811f126ae6c452e3264bd961b1fec5febfcf6c`.
+
+**Implemented and published to existing `/v6/`:**
+- **B01–B02 trainer quick-start templates:** editable 15/30/60-minute session *starters*, created from actual catalog sample activities; bilingual descriptions, confirm before replacing an edited deck, fully nonbinding estimate for timed/untimed sessions; not guaranteed real session runtime. Check: [39294715934](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39294715934) SUCCESS.
+- **Ultimate Game Show:** separate premium television stage, correct cast sizes (individual/head-to-head), actual participant score/bet constraints, server-controlled lifeline actions, actual audience tally, role secrecy for questions and spectator view.
+- **Escape Room:** immersive doors, current room and mission progress from server, clue/hint rendering, authorized audited override and clear stage mode; backend scoring and room routing unchanged.
+- **Order It:** dedicated accessible sequence design, tap-friendly arrows and touch interaction; correct sequence remains hidden until legitimate answer-key reveal; server scoring unchanged.
+- No trainee registration form/fields/order changes. No new V6.1, no `main` merge, no legacy route change, no modifications to Firebase/D1/Worker.
+
+**Still pending, not to be claimed as completed:** actual Android/iOS/projection test within a live authorized room; 20/80-person load test; simulator's multi-trainee fidelity; Meta Plan, Scenario, Live Poll and Quiz final game polish; post-session per-game reports and PDF; media upload hardening/security review. CI and Pages success do not count as physical classroom acceptance.
