@@ -40,7 +40,8 @@ test('all ten activities have shipped brand-consistent image assets with readabl
   const html=renderToStaticMarkup(<ActivityArt activity={name} label={name}/>);
   assert.ok(html.includes('activity-art/'),name);
   assert.ok(html.includes('alt="'+name+'"'),name);
-  const asset='public/'+(html.match(/activity-art\\/[^"]+\\.(?:svg|webp)/)||[])[0];
+  const id=name.toLowerCase().replaceAll(' ','-');
+  const asset='public/activity-art/'+id+(html.includes(id+'.webp')?'.webp':'.svg');
   const bytes=readFileSync(asset);
   if(asset.endsWith('.webp')){
    assert.equal(bytes.toString('ascii',0,4),'RIFF');
