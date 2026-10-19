@@ -1,4 +1,4 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import ActivityArt from '../components/arena/ActivityArt';import StageMedia from '../components/arena/StageMedia';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import ActivityArt from '../components/arena/ActivityArt';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -71,4 +71,33 @@ test('unsigned Cloudinary uploads have a fixed non-secret preset, strict client 
  assert.ok(!client.includes("await api('media-sign'"));
  assert.ok(workspace.includes('uploadLibraryFile'));
  assert.ok(workspace.includes('video/mp4,video/webm'));
+});
+
+test('Futuristic Arena timer uses server remaining time in all roles and respects pause/zero',()=>{
+ for(const mode of ['host','play','display'] as const){
+  const html=renderToStaticMarkup(<ArenaPowerTimer mode={mode} seconds={27} remainingMs={27000} totalSeconds={60} timed paused={false} closed={false} ar={true}/>);
+  assert.ok(html.includes('arena-power-timer--'+mode),mode);
+  assert.ok(html.includes('00:27'),mode);
+  assert.ok(html.includes('الوقت المتبقي'),mode);
+  assert.ok(html.includes('stroke-dashoffset="55"'),mode);
+ }
+ const nearly=renderToStaticMarkup(<ArenaPowerTimer mode="display" seconds={5} remainingMs={4800} totalSeconds={30} timed paused={false} closed={false} ar={false}/>);
+ assert.ok(nearly.includes('is-critical'));
+ assert.ok(nearly.includes('FINAL SECONDS'));
+ const paused=renderToStaticMarkup(<ArenaPowerTimer mode="host" seconds={9} remainingMs={9000} totalSeconds={30} timed paused closed={false} ar={false}/>);
+ assert.ok(paused.includes('PAUSED'));
+ assert.ok(paused.includes('00:09'));
+ assert.ok(!paused.includes('is-critical'));
+ const ended=renderToStaticMarkup(<ArenaPowerTimer mode="display" seconds={0} remainingMs={0} totalSeconds={30} timed paused={false} closed={false} ar={false}/>);
+ assert.ok(ended.includes('TIME UP'));
+ const untimed=renderToStaticMarkup(<ArenaPowerTimer mode="play" seconds={0} remainingMs={0} totalSeconds={30} timed={false} paused={false} closed={false} ar={false}/>);
+ assert.ok(untimed.includes('YOUR PACE'));
+ const source=readFileSync('components/arena/Session.tsx','utf8');
+ const component=readFileSync('components/arena/ArenaPowerTimer.tsx','utf8');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(source.includes("mode={display?'display':host?'host':'play'}"));
+ assert.ok(source.includes('remainingMs={remaining}'));
+ assert.ok(!component.includes('setInterval('));
+ assert.ok(css.includes('FUTURISTIC ARENA — 3D HUD'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
