@@ -6,6 +6,7 @@ import {publicActivity,flattenDeck} from '../../lib/domain.mjs';
 import ActivityArt from './ActivityArt';
 import GamePlay from './GamePlay';
 import StageMedia from './StageMedia';
+import './ArenaSimulator.css';
 
 type Mode='host'|'play'|'display';
 const fakePlayer={uid:'simulated-player',id:'simulated-player',name:'Demo Learner',team:'Lightning',approval:'approved'};
@@ -41,7 +42,7 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
  const [note,setNote]=useState('');
  const isPresentation=['Wheel of Fortune','Spin Wheel','Open the Box','Flashcards'].includes(mainType(a));
  const active:any=a.questions?.length?{...a.questions[Math.min(step,a.questions.length-1)],mainType:a.type}:a;
- const displayActive=publicActivity({...active});
+ const displayActive=revealed?{...active}:publicActivity({...active});
  const isPoll=a.type==='Live Poll';
  useEffect(()=>{
   if(phase!=='question'||paused||revealed||seconds<=0)return;
