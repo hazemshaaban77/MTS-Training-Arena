@@ -2087,3 +2087,33 @@
  .trainer-readiness__check{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.trainer-readiness *{animation:none!important;transition:none!important}}
+
+
+/* V6 session starter choices + conservative (non-promised) schedule estimate. */
+.builder-starter-panel{padding:15px 14px;border:1px solid #328da56e;border-radius:14px;
+ background:linear-gradient(120deg,#11476367,#1529467d);display:grid;gap:12px}
+.builder-starter-heading{display:flex;align-items:center;gap:9px;color:#bff9f0;
+ font-size:clamp(12px,1.4vw,16px);letter-spacing:.045em}
+.builder-starter-actions{display:flex;gap:9px;flex-wrap:wrap}
+.builder-starter-actions button{display:flex;align-items:center;justify-content:center;
+ gap:9px;min-height:45px;padding:9px 12px;flex:1 1 205px}
+.builder-starter-panel>p{color:#a4c4ce;line-height:1.55;font-size:11px;margin:0}
+.builder-planning-summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+ padding:14px;border:1px solid #4eb8ac8a;border-radius:13px;
+ background:#0e414960;margin:11px 0}
+.builder-planning-summary>span{display:flex;align-items:center;gap:8px;
+ font-size:12px;color:#a2f1dc;font-weight:850}
+.builder-planning-summary strong{margin-inline-start:auto;font-size:clamp(19px,2vw,25px);
+ color:#e5ffff;font-variant-numeric:tabular-nums}
+.builder-planning-summary small{display:block;flex-basis:100%;font-size:11px;
+ line-height:1.6;color:#accbd1}
+.builder-plan-forecast{font-size:13px;color:#b7f4e8;line-height:1.6}
+.builder-plan-forecast b{font-size:17px;color:#d8fff2}
+.builder-plan-forecast small{font-size:11px;color:#b2cbd1}
+@media(max-width:700px){
+ .builder-starter-panel{padding:12px}
+ .builder-starter-actions{flex-direction:column;gap:7px}
+ .builder-starter-actions button{flex-basis:auto;width:100%;min-height:48px}
+ .builder-planning-summary{align-items:flex-start}
+ .builder-planning-summary strong{font-size:20px}
+}
