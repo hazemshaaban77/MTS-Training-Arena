@@ -282,3 +282,17 @@ Only V6 source under `work-site-recovery-v6/` was changed, no merge to `main`, n
 **Still pending:** controlled real browser role walkthrough (trainer, phones, projector), 20/80 real-device capacity/latency, simulator fidelity beyond local preview, Meta Plan and Scenario Challenge visual/learning upgrades, polling/Quiz finishing, activity-specific reporting, PDF, media upload security review. Do not mark any physical acceptance as passed without performing it. No changes to production data, D1/Worker/Firebase credentials/rules, main or legacy `/arena/`.
 
 **Recommended next dev wave:** Meta Plan sticky-note collaborative category board and touch alternative, then Scenario Challenge consequence/path immersive design. Follow with precise game-specific reporting, full multi-participant simulator, device E2E and hardening.
+
+
+## Checkpoint — Meta Plan premium learning board (2026-10-19)
+
+**Implemented on the actual Version 6 branch, GitHub Actions CI passed, and published on the SAME existing `/v6/` public route.**
+- Source/validation: `695f90cf91cdbfd216263a91896b8bb59dbf1072`, [V6 CI run 39296958774](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39296958774) **SUCCESS**, including strict TypeScript, render and migration tests.
+- Publish request commit: `5b0bd037ae4867f22b4ec88ab7fd23ef0263386e`, [V6 GitHub Pages run 39297201503](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39297201503) **SUCCESS**. Pages re-ran tests and built the same V6 source, preserved root `/arena/` legacy site.
+- **Meta Plan / Categorize:** new dedicated `ArenaMetaPlan.tsx` rather than generic Quiz/Question fallback. Stage has rich colored category columns, gold and pastel sticky notes, explicit unrevealed tray, category highlight, trainer discussion notes and actual server-derived response totals. Mobile learner uses tap-to-assign, progress counter and single explicit complete-classification submit; tutor controls partial one-note-at-a-time reveal or full reveal only after answers close. Projector is read-only.
+- **Correctness/privacy:** independently tested Arabic/English trainer/learner/display views; no early `assignments` exposure before `closed && keyRevealed`, and unrevealed `-1` assignment slots stay hidden in gradual reveal. The existing server still owns all answer writes, activity status, reveal permissions and aggregate counts. No fabricated score.
+- Responsive projector-sized category headings, mobile 44px category picker targets, explicit keyboard focus, reduced-motion and effects-off. Original training logos, participant registration fields/order, V6 URL and live Worker/D1/Firebase/session history were not changed.
+
+**Acceptance distinction:** CI/Pages release are confirmed success, but the actual scanned-QR classroom E2E on Android/iOS and physical projector with 20/80 clients has NOT been performed. Do not mark such UAT as done.
+
+**What's next in unified plan:** immersive **Scenario Challenge** consequence/path game, then final targeted **Live Poll/Quiz** improvements and distinct activity reports; accurate server-rule multi-trainee simulator and reliable real-device classroom stress testing remain important P0/P1 work. Preserve the same V6 source/URL.
