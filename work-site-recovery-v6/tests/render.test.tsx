@@ -1,5 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
-import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';
+import ArenaSimulator from '../components/arena/ArenaSimulator';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -250,4 +251,44 @@ test('cinematic victory honors real winner or ties and never fabricates champion
  assert.ok(css.includes('ARENA VICTORY — GRAND FINALE'));
  assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
  assert.ok(css.includes('.projector .arena-victory__trophy'));
+});
+
+test('all 10 activity prototypes launch local practice without server rooms or side effects',()=>{
+ for(const lang of ['ar','en']){
+  for(const type of types){
+   const activity=sample(type,lang);
+   const html=renderToStaticMarkup(<ArenaSimulator ar={lang==='ar'} activities={[activity]}
+    onClose={()=>{}} title={lang==='ar'?'تجربة':'Practice'}/>);
+   assert.ok(html.includes('ARENA PRACTICE MODE'),lang+' '+type);
+   assert.ok(html.includes('arena-sim-intro'),lang+' '+type);
+   assert.ok(html.includes('activity-art/'),lang+' '+type);
+   assert.ok(html.includes('arena-simulator-modes'),lang+' '+type);
+   assert.ok(html.includes('arena-simulator-progress'),lang+' '+type);
+   assert.ok(html.includes('arena-simulator-footer'),lang+' '+type);
+  }
+ }
+});
+test('complete rehearsal retains draft and NEVER creates a live server session',()=>{
+ const b=renderToStaticMarkup(<Builder ar={true} initial="Quiz"
+  owner="trainer" onClose={()=>{}} onCreated={()=>{}}/>);
+ assert.ok(b.includes('محاكاة الجلسة'));
+ assert.ok(b.includes('جرّب النشاط'));
+ const builderSource=readFileSync('components/arena/Builder.tsx','utf8');
+ const library=readFileSync('components/arena/App.tsx','utf8');
+ const simulation=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.ok(builderSource.includes('setSimulate({activities:structuredClone(deck),index:0})'));
+ assert.ok(builderSource.includes("simulateActivity(i)"));
+ assert.ok(!builderSource.includes('create(true)'));
+ assert.ok(!builderSource.includes('simulation?t('));
+ assert.ok(library.includes('arena-practice-library-card__try'));
+ assert.ok(library.includes("setPractice([sample(type,ar?'ar':'en')])"));
+ assert.ok(simulation.includes('flattenDeck(activities)'));
+ assert.ok(simulation.includes('onClose'));
+ assert.ok(simulation.includes("mode==='play'"));
+ assert.ok(simulation.includes("mode==='host'"));
+ assert.ok(simulation.includes("mode==='display'"));
+ assert.ok(!simulation.includes("api('sessions'"));
+ assert.ok(!simulation.includes("api('control'"));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 TRAINER PRACTICE ARENA'));
 });
