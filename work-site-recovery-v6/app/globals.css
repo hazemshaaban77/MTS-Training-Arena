@@ -871,23 +871,72 @@
 .brand-header .brand-logo-frame.training-frame{justify-self:start}
 .brand-header .brand-logo-frame.mts-frame{justify-self:end}
 
-/* Reframe the actual image rather than moving the surrounding login panel:
-   the speaker was at the bottom edge of the cropped image on desktop. */
+/* V6 visual QA 2026-10-19: preserve detail in the approved 1100 x 619
+   image. Previous 154% crop massively enlarged the source on login. */
 .trainer-entry .login-story-photo-v2 .login-arena-scene {
-  height:154%!important;
-  top:-54%!important;
+  width:100%!important;
+  height:110%!important;
+  top:-10%!important;
   bottom:auto!important;
-  object-position:26% 58%!important;
+  object-fit:cover!important;
+  object-position:28% center!important;
+  transform:none!important;
+  animation:none!important;
+  will-change:auto!important;
 }
 @media(max-width:1150px){
   .trainer-entry .login-story-photo-v2 .login-arena-scene {
-    height:143%!important;top:-43%!important;bottom:auto!important;
-    object-position:23% 56%!important;
+    height:107%!important;
+    top:-7%!important;
+    object-position:26% center!important;
   }
 }
 @media(max-width:760px){
   .trainer-entry .login-story-photo-v2 .login-arena-scene {
-    height:126%!important;top:-26%!important;bottom:auto!important;
-    object-position:25% 55%!important;
+    height:100%!important;
+    top:0!important;
+    object-position:25% center!important;
+  }
+}
+
+/* The home picture must occupy the entire banner as a FLAT background.
+   The legacy .arena-art 3D transform and responsive scale (.85/.7/.64)
+   were shrinking and offsetting the photographic hero inside its frame. */
+.workspace .dashboard .hero .dashboard-hero-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  scale:1!important;
+  transform:none!important;
+  transform-origin:center!important;
+  opacity:1!important;
+  overflow:hidden!important;
+}
+.workspace .dashboard .hero .dashboard-hero-scene{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:cover!important;
+  object-position:center 55%!important;
+  transform:none!important;
+  animation:none!important;
+  will-change:auto!important;
+}
+@media(max-width:760px){
+  .workspace .dashboard .hero .dashboard-hero-art{
+    scale:1!important;
+    transform:none!important;
+    margin:0!important;
+  }
+  .workspace .dashboard .hero .dashboard-hero-scene{
+    object-position:33% center!important;
   }
 }
