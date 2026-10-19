@@ -1,0 +1,76 @@
+/* V6 trainer-only browser practice. Shared game components keep their live visual identity. */
+.arena-simulator-overlay{position:fixed;inset:0;z-index:1100;display:flex;align-items:center;justify-content:center;padding:clamp(8px,2vw,24px);background:rgba(1,7,18,.93);backdrop-filter:blur(15px)}
+.arena-simulator-shell{position:relative;width:min(1440px,100%);max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;color:#eaf6ff;border:1px solid #46b5dd55;border-radius:26px;background:radial-gradient(circle at 12% 3%,#1769ab42,transparent 35%),radial-gradient(circle at 95% 85%,#008f8640,transparent 30%),#091323;box-shadow:0 36px 110px #000c,0 0 65px #108fe729}
+.arena-simulator-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:21px 28px;border-bottom:1px solid #72cdf12c}
+.arena-simulator-header h2{font-size:clamp(20px,2.5vw,31px);line-height:1.25;margin:7px 0}
+.arena-simulator-header p{font-size:12px;color:#afc5d8;margin:0}
+.arena-simulator-header .eyebrow{display:inline-flex;align-items:center;gap:8px;color:#5be1f9;letter-spacing:.14em}
+.arena-simulator-header button{flex-shrink:0}
+.arena-simulator-progress{display:flex;gap:8px;overflow-x:auto;flex-shrink:0;padding:12px 25px;scrollbar-width:thin;border-bottom:1px solid #ffffff13}
+.arena-simulator-progress button{flex-shrink:0;max-width:240px;padding:11px 13px;border:1px solid #2c4d62;border-radius:12px;font-size:11px;text-align:start;color:#aabed0;background:#112235;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arena-simulator-progress button:hover,.arena-simulator-progress button.selected{color:#e5fbff;border-color:#3aebfc;background:linear-gradient(135deg,#196c8a,#0d3654);box-shadow:0 0 16px #1ac8dd35}
+.arena-simulator-toolbar{display:flex;gap:15px;align-items:center;justify-content:space-between;padding:13px 25px;border-bottom:1px solid #72cdf11c;background:#091827}
+.arena-simulator-toolbar>span{display:flex;align-items:center;gap:9px;color:#94d4c9;font-size:11px;line-height:1.6}
+.arena-simulator-modes{display:flex;gap:5px;align-items:center;padding:4px;border-radius:11px;background:#020d18;border:1px solid #28465b}
+.arena-simulator-modes button{display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;padding:9px 13px;color:#99b0c8;border-radius:8px;font-size:12px}
+.arena-simulator-modes button.selected{background:#087f9a;color:white;box-shadow:0 0 18px #20bdc954}
+.arena-simulator-main{min-height:0;overflow:auto;flex:1;padding:20px 25px 25px;scrollbar-width:thin}
+.arena-sim-stage{position:relative;min-height:420px;display:flex;flex-direction:column;gap:17px;padding:25px;overflow:hidden;border-radius:23px;border:1px solid #28668a;background:radial-gradient(ellipse at 50% -30%,#1b779b61,transparent 69%),linear-gradient(155deg,#102e4b,#0b1930 65%,#06172b);box-shadow:inset 0 1px 1px #ffffff2a}
+.arena-sim-stage:before{position:absolute;content:"";inset:0;pointer-events:none;background-image:linear-gradient(#50a7d60c 1px,transparent 1px),linear-gradient(90deg,#50a7d60c 1px,transparent 1px);background-size:36px 36px}
+.arena-sim-stage>*{position:relative}
+.arena-sim-stage--display{min-height:520px;border-color:#48cadc}
+.arena-sim-intro{min-height:365px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;animation:arena-sim-enter .55s ease-out both}
+.arena-sim-intro img{display:block;width:min(470px,85%);height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:16px;box-shadow:0 25px 65px #0009,0 0 40px #0db2d840}
+.arena-sim-intro h2{font-size:clamp(27px,4vw,51px);margin:2px 0;color:#efffff}
+.arena-sim-intro p{font-size:clamp(13px,1.4vw,18px);max-width:700px;color:#b2cbd9}
+.arena-sim-intro .eyebrow{color:#7ce3f9;letter-spacing:.2em}
+.arena-sim-intro>.btn{margin-top:8px}
+.arena-sim-question-head{display:flex;justify-content:space-between;align-items:center;gap:15px;font-size:clamp(13px,2vw,20px);padding-bottom:10px}
+.arena-sim-question-head strong{color:#f3fcff}
+.arena-sim-question-head span{white-space:nowrap;display:inline-flex;align-items:center;padding:9px 12px;color:#64e4f3;border-radius:10px;background:#00aacc11;border:1px solid #35def02d;font-size:12px}
+.arena-sim-timer-track{height:8px;overflow:hidden;border-radius:20px;background:#192e46;box-shadow:inset 0 2px 4px #000a}
+.arena-sim-timer-track i{display:block;height:100%;background:linear-gradient(90deg,#1597da,#47f5df);border-radius:20px;transition:width .8s linear}
+.arena-sim-stage .question-engine,.arena-sim-stage .presentation-play,.arena-sim-stage .poll-stage,.arena-sim-stage .meta-stage{position:relative;max-width:100%;min-height:190px}
+.arena-sim-stage .answer-option,.arena-sim-stage .poll-choice{max-width:100%}
+.arena-sim-stage .wheel-stage,.arena-sim-stage .escape-stage,.arena-sim-stage .box-stage,.arena-sim-stage .flash-stage,.arena-sim-stage .scenario-world{margin:0 auto;width:100%}
+.arena-sim-note{font-size:12px;color:#a4efe0;padding:12px 15px;border:1px solid #52d5bb3e;border-radius:10px;background:#0e63402b}
+.arena-sim-controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.arena-sim-stage-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:auto;border-top:1px solid #73dfff22;padding-top:16px}
+.arena-sim-stage-footer span{display:flex;align-items:center;gap:8px;color:#82c6be;font-size:11px}
+.arena-sim-stage-footer .text-button{color:#72e0f5}
+.arena-simulator-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 25px;border-top:1px solid #72cdf12d;background:#081523}
+.arena-simulator-footer>span{color:#b9e3f1;text-align:center;font-size:12px}
+.arena-simulator-overlay button:focus-visible{outline:3px solid #6df2ed;outline-offset:3px}
+.arena-practice-library-card{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:9px 10px 11px;min-width:0;min-height:135px;overflow:hidden}
+.arena-practice-library-card__design{display:flex;align-items:center;gap:10px;width:100%;text-align:start;min-width:0;padding:7px 3px;background:transparent;color:inherit}
+.arena-practice-library-card__label{display:flex;flex:1;flex-direction:column;align-items:flex-start;min-width:0;gap:5px}
+.arena-practice-library-card__label b{font-size:13px;color:#eaf4ff;line-height:1.4}
+.arena-practice-library-card__label small{font-size:9px;color:#8aa2b8}
+.arena-practice-library-card__design .tile-arrow{position:static;opacity:.7;flex-shrink:0}
+.arena-practice-library-card__try{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:9px 12px;border:1px solid #12c4d98a;border-radius:8px;background:#0a78972d;color:#a1fbff;font-weight:750;font-size:12px;transition:background .2s,transform .2s}
+.arena-practice-library-card__try:hover{transform:translateY(-1px);background:#0d9eab5c}
+.arena-simulator-single{color:#6be9ea!important}
+.arena-simulator-single:hover{background:#145d71!important}
+.arena-simulator-launch{border-color:#20bbd3;color:#c8fbff}
+@keyframes arena-sim-enter{from{opacity:0;transform:translateY(25px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:850px){
+ .arena-simulator-overlay{padding:6px}
+ .arena-simulator-shell{width:100%;height:100dvh;max-height:100dvh;border-radius:0}
+ .arena-simulator-header{padding:14px 15px}
+ .arena-simulator-header h2{font-size:19px}
+ .arena-simulator-header p{display:none}
+ .arena-simulator-header>.btn{padding:9px;font-size:11px}
+ .arena-simulator-toolbar{flex-direction:column;align-items:stretch;padding:10px 13px;gap:9px}
+ .arena-simulator-modes{justify-content:space-between}
+ .arena-simulator-modes button{flex:1;padding:8px;font-size:11px}
+ .arena-simulator-progress{padding:9px 13px}
+ .arena-simulator-main{padding:12px}
+ .arena-sim-stage{padding:16px;min-height:360px}
+ .arena-sim-question-head{flex-direction:column;align-items:flex-start}
+ .arena-sim-intro{min-height:310px}
+ .arena-simulator-footer{padding:11px 12px}
+ .arena-simulator-footer>span{font-size:10px}
+ .arena-simulator-footer .btn{font-size:11px;padding:10px}
+ .arena-practice-library-card{min-height:132px}
+}
+@media(prefers-reduced-motion:reduce){.arena-sim-intro{animation:none!important}.arena-sim-timer-track i{transition:none!important}.arena-practice-library-card__try{transition:none!important}}
