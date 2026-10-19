@@ -21,14 +21,19 @@ assert.match(session,/waiting-slogan/);
 assert.match(session,/حيث يتحول التدريب إلى إبداع/);
 assert.match(session,/isJoined&&<>/);
 assert.match(brand,/siteAsset\(original\[kind\]\)/);
-assert.match(brand,/original=\{mts:'\/mts\.png',training:'\/training\.png'/);
+assert.match(brand,/original=\{mts:'\/mts-transparent\.png',training:'\/training-transparent\.png'/);
 assert.match(stylesheet,/\.login-arena-scene/);
 assert.match(stylesheet,/\.session-shell\.trainee/);
 assert.match(stylesheet,/\.session-shell\.projector/);
 assert.match(stylesheet,/\.workspace\s*\.hero/);
 assert.match(stylesheet,/\.dashboard-hero-art:after/);
 assert.match(stylesheet,/dashboard-arena-light-motion/);
-await Promise.all(['arena-hero-final.webp','mts.png','training.png'].map(async name=>access(new URL('../public/'+name,import.meta.url))));
+await Promise.all(['arena-hero-final.webp','mts.png','training.png','mts-transparent.png','training-transparent.png'].map(async name=>access(new URL('../public/'+name,import.meta.url))));
+// Approved raw brand files must remain byte-for-byte intact; transparency is a derived copy.
+for(const [file,bytes] of [['mts.png',86001],['training.png',836433]]){
+ const original=await readFile(new URL('../public/'+file,import.meta.url));
+ assert.equal(original.length,bytes,'Original brand artwork must not change');
+}
 const photo=await readFile(new URL('../public/arena-hero-final.webp',import.meta.url));
 assert.equal(photo.toString('ascii',0,4),'RIFF');
 assert.equal(photo.toString('ascii',8,12),'WEBP');
