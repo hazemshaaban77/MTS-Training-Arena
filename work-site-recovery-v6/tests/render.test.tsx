@@ -3,7 +3,8 @@ import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictor
 import ArenaSimulator from '../components/arena/ArenaSimulator';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
-import {estimateSessionAgenda} from '../lib/session-planning';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import {estimateSessionAgenda} from '../lib/session-planning';
+import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -438,4 +439,35 @@ test('trainer session builder supports safe blank vs sample deck and honest timi
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('.builder-starter-panel'));
  assert.ok(css.includes('.builder-planning-summary'));
+});
+
+test('trainee finale reports only real personal points, rank and team, not fabricated scores',()=>{
+ const base:any={
+  status:'completed',teamMode:false,mine:{id:'u2',name:'Mona'},
+  players:[{uid:'u1',name:'Ali',team:'Lightning'},{uid:'u2',name:'Mona',team:'Wave'}],
+  individual:[{uid:'u1',name:'Ali',rank:1,score:3500},{uid:'u2',name:'Mona',rank:2,score:1700}],
+  teams:[{team:'Lightning',rank:1,score:3500},{team:'Wave',rank:2,score:1700}]
+ };
+ const own=ownSessionResult(base);
+ assert.equal(own?.score,1700);
+ assert.equal(own?.rank,2);
+ assert.equal(own?.count,2);
+ assert.equal(own?.teamRank,null);
+ const en=renderToStaticMarkup(<TraineeFinish s={base} ar={false}/>);
+ assert.ok(en.includes('Mona'));
+ assert.ok(en.includes('1,700'));
+ assert.ok(en.includes('#2'));
+ assert.ok(!en.includes('3,500'), 'Do not misrepresent another person\'s points as my own');
+ const ar=renderToStaticMarkup(<TraineeFinish s={{...base,teamMode:true}} ar={true}/>);
+ assert.ok(ar.includes('مركز فريقك'));
+ assert.ok(ar.includes('Wave'));
+ assert.ok(!ar.includes('Lightning'));
+ assert.equal(ownSessionResult({...base,teamMode:true})?.teamRank,2);
+ const unscored={...base,individual:base.individual.map((p:any)=>({...p,score:0}))};
+ const noScores=renderToStaticMarkup(<TraineeFinish s={unscored} ar={false}/>);
+ assert.ok(noScores.includes('Every contribution counts!'));
+ assert.ok(!noScores.includes('YOUR INDIVIDUAL RANK'), 'Unscored polls should not imply a competition rank');
+ const source=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(source.includes('{isJoined&&<TraineeFinish s={s} ar={ar}/>'));
+ assert.ok(readFileSync('app/globals.css','utf8').includes('.trainee-finish__stats'));
 });
