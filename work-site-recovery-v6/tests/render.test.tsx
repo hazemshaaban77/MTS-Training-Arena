@@ -58,19 +58,17 @@ test('video and uploaded image URLs stay reachable through the Pages gateway',()
  assert.ok(html.includes('mts-training-arena-v6-gateway.pages.dev'));
 });
 
-test('Cloudinary upload path is Firebase-signed on Worker and does not reveal server secret in browser code',()=>{
- const worker=readFileSync('github-api-worker.ts','utf8');
+test('unsigned Cloudinary uploads have a fixed non-secret preset, strict client limits and safe CDN validation',()=>{
  const client=readFileSync('lib/client.ts','utf8');
  const workspace=readFileSync('components/arena/WorkspaceTools.tsx','utf8');
- assert.ok(worker.includes("url.pathname==='/api/media-sign'"));
- assert.ok(worker.includes('await authorizeFirebaseTrainer(request'));
- assert.ok(worker.includes('await checkRate(env.DB,request)'));
- assert.ok(worker.includes("crypto.subtle.digest('SHA-256'"));
- assert.ok(worker.includes('CLOUDINARY_API_SECRET'));
- assert.ok(client.includes("await api('media-sign'"));
- assert.ok(client.includes("api.cloudinary.com/v1_1/"));
- assert.ok(!client.includes('CLOUDINARY_API_SECRET'));
+ assert.ok(client.includes("cloudName:'kzez0dlv'"));
+ assert.ok(client.includes("preset:'mtsarena_v6_u_7c94f2a1'"));
+ assert.ok(client.includes("payload.append('upload_preset',arenaUnsignedUpload.preset)"));
+ assert.ok(client.includes("'/auto/upload'"));
+ assert.ok(client.includes("expectedType==='image'?10_000_000:50_000_000"));
  assert.ok(client.includes("parsed.hostname!=='res.cloudinary.com'"));
+ assert.ok(!client.includes('CLOUDINARY_API_SECRET'));
+ assert.ok(!client.includes("await api('media-sign'"));
  assert.ok(workspace.includes('uploadLibraryFile'));
  assert.ok(workspace.includes('video/mp4,video/webm'));
 });
