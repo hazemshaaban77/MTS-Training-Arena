@@ -1,4 +1,5 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
+import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -182,4 +183,37 @@ test('every Live Poll subtype charts its REAL aggregation rather than Quiz optio
  const session=readFileSync('components/arena/Session.tsx','utf8');
  assert.ok(session.includes("s.activity?.type!=='Live Poll'"));
  assert.ok(session.includes("s.activity.type!=='Live Poll'"));
+});
+
+test('victory finale is a real champion reveal and avoids inventing winners on a tie',()=>{
+ const individual=[
+  {uid:'a',rank:1,name:'Champion A',score:1700},
+  {uid:'b',rank:2,name:'Runner B',score:1400}
+ ];
+ const s:any={teamMode:false,individual,teams:[],players:[]};
+ const solo=renderToStaticMarkup(<ArenaVictory s={s} ar={false}/>);
+ assert.ok(solo.includes('THE CHAMPIONS!'));
+ assert.ok(solo.includes('Champion A'));
+ assert.ok(solo.includes('1,700'));
+ assert.ok(solo.includes('Replay victory moment'));
+ assert.ok(solo.includes('arena-victory__firework'));
+ assert.ok(solo.includes('arena-victory__confetti'));
+ assert.ok(!solo.includes('Runner B'));
+ assert.deepEqual(championsFromSession(s,false).map(x=>x.name),['Champion A']);
+ const tied={...s,individual:[...individual,{uid:'c',rank:1,name:'Champion C',score:1700}]};
+ const tie=renderToStaticMarkup(<ArenaVictory s={tied} ar={true}/>);
+ assert.ok(tie.includes('Champion A'));
+ assert.ok(tie.includes('Champion C'));
+ assert.ok(tie.includes('أبطال المركز الأول'));
+ const team={...s,teamMode:true,teams:[{team:'Alpha',rank:1,score:3000},{team:'Beta',rank:2,score:2000}]};
+ assert.deepEqual(championsFromSession(team,false).map(x=>x.name),['Alpha']);
+ const noScores=renderToStaticMarkup(<ArenaVictory s={{teamMode:false,individual:[],teams:[]}} ar={true}/>);
+ assert.ok(noScores.includes('كل المشاركين أبطال'));
+ assert.ok(!noScores.includes('المركز الأول'));
+ const source=readFileSync('components/arena/Session.tsx','utf8');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(source.includes('<ArenaVictory s={s} ar={ar}/>'));
+ assert.ok(source.includes('<Leaderboard s={s} ar={ar} podium/>'));
+ assert.ok(css.includes('V6 FINALE: ARENA VICTORY SHOW'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
