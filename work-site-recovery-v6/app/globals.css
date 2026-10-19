@@ -846,3 +846,48 @@
 @media(prefers-reduced-motion:reduce){
   .workspace .dashboard .hero .dashboard-hero-scene{animation:none!important;transform:none!important}
 }
+
+/* V6 refinements — official logos float on the existing white header.
+   Keep the transparent clipping needed by the original uncropped logo images. */
+.brand-header .brand-logo-frame,
+.brand-header .brand-logo-frame:hover {
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  outline:none!important;
+  padding:0!important;
+  transform:none!important;
+  overflow:visible!important;
+}
+.brand-header .brand-logo-frame::before{display:none!important}
+.brand-header .brand-logo-frame .official-logo {
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  outline:none!important;
+}
+.brand-header .brand-logo-frame.training-frame{justify-self:start}
+.brand-header .brand-logo-frame.mts-frame{justify-self:end}
+
+/* Reframe the actual image rather than moving the surrounding login panel:
+   the speaker was at the bottom edge of the cropped image on desktop. */
+.trainer-entry .login-story-photo-v2 .login-arena-scene {
+  height:154%!important;
+  top:-54%!important;
+  bottom:auto!important;
+  object-position:26% 58%!important;
+}
+@media(max-width:1150px){
+  .trainer-entry .login-story-photo-v2 .login-arena-scene {
+    height:143%!important;top:-43%!important;bottom:auto!important;
+    object-position:23% 56%!important;
+  }
+}
+@media(max-width:760px){
+  .trainer-entry .login-story-photo-v2 .login-arena-scene {
+    height:126%!important;top:-26%!important;bottom:auto!important;
+    object-position:25% 55%!important;
+  }
+}
