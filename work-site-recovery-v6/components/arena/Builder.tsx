@@ -8,6 +8,7 @@ import StageMedia from './StageMedia';
 import ActivityArt from './ActivityArt';
 import ArenaSimulator from './ArenaSimulator';
 import {estimateSessionAgenda} from '../../lib/session-planning';
+import {makeSessionStarter,sessionTemplateOptions,type SessionTemplateId} from '../../lib/session-templates';
 export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,live,owner}:{ar:boolean;initial:string;onClose:()=>void;onCreated:(c:string)=>void;onGoHome?:()=>void;source?:any;live?:any;owner?:string}){
  const t=(a:string,e:string)=>ar?a:e,seed=source||{};
  const [title,setTitle]=useState(seed.title||t('رحلة الاستيراد | ساحة التعلّم','Import journey | Learning arena')),[lang,setLang]=useState(seed.language||(ar?'ar':'en')),[teams,setTeams]=useState(!!seed.teams),[deck,setDeck]=useState<Activity[]>(seed.activities|| (initial==='all'?types.map(type=>sample(type,ar?'ar':'en')):[sample(initial,ar?'ar':'en')])),[settings,setSettings]=useState(seed.settings||{tie:'shared',progression:'manual',reveal:'auto',teamNames:['Lightning','Wave'],teamScoring:'sum'}),[survey,setSurvey]=useState<any>(seed.survey||null);
@@ -45,6 +46,16 @@ export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,li
   setAdding(blank);
   setSaved(t('تم تحديث نقطة البداية. احفظ المسودة لو حابب تحتفظ بيها.','Starter deck updated. Save your draft to keep it.'));
  }
+ function useSessionTemplate(template:SessionTemplateId){
+  if(live)return;
+  if(deck.length&&!window.confirm(t(
+   'القالب هيستبدل الأنشطة الموجودة في المحرر. لو محتاجهم احفظ نسخة أولًا. تكمل؟',
+   'This template replaces the current editor activities. Save a copy first if needed. Continue?')))return;
+  setDeck(makeSessionStarter(template,lang==='en'?'en':'ar'));
+  setAdding(false);
+  setSaved(t('اتحمّل قالب البداية. راجع المحتوى والوقت وعدّله قبل إنشاء الجلسة.',
+    'Starting template loaded. Review and edit all content and timings before creating the session.'));
+ }
  const agenda=estimateSessionAgenda(deck);
  function leaveForHome(){
   if(!onGoHome||busy)return;
@@ -79,6 +90,14 @@ export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,li
    <div className="builder-starter-actions">
     <button type="button" className="btn secondary" onClick={()=>changeStarterDeck(true)}><Plus size={16}/>{t('ابدأ بجلسة فاضية','Start with a blank session')}</button>
     <button type="button" className="btn secondary" onClick={()=>changeStarterDeck(false)}><Layers size={16}/>{t('حمّل نماذج الألعاب العشرة','Load all 10 game examples')}</button>
+   </div>
+   <div className="builder-session-templates" aria-label={t('قوالب مدة الجلسة','Session-duration starter templates')}>
+    {sessionTemplateOptions.map(option=><button type="button" key={option.id}
+      className="builder-session-template" onClick={()=>useSessionTemplate(option.id)}
+      aria-label={ar?option.ar:option.en}>
+      <Clock size={18}/><span><strong>{ar?option.ar:option.en}</strong><small>{ar?option.arDetail:option.enDetail}</small></span>
+      <ChevronLeft size={17} className="builder-session-template__arrow"/>
+    </button>)}
    </div>
    <p>{t('لو في أنشطة عندك بالفعل هنطلب تأكيد قبل استبدالها.','You will be asked to confirm before replacing an existing deck.')}</p>
   </div>}
