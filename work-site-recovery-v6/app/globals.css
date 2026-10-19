@@ -940,3 +940,51 @@
     object-position:33% center!important;
   }
 }
+
+/* V6 navigation: trainer-only return to Home (never ends an active room). */
+.trainer-home-button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  gap:8px;
+  min-height:38px;
+  padding:8px 13px;
+  border:1px solid #b7dcd5;
+  border-radius:11px;
+  background:#ebf8f4;
+  color:#076e64;
+  box-shadow:0 3px 11px #0c665c12;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.25;
+  white-space:nowrap;
+  transition:background-color .15s ease,border-color .15s ease;
+}
+.trainer-home-button:hover:not(:disabled){
+  background:#daf3ec;
+  border-color:#66bca9;
+}
+.trainer-home-button:focus-visible{
+  outline:3px solid #138f7b;
+  outline-offset:3px;
+}
+.trainer-home-button:disabled{opacity:.55}
+.trainer-home-button svg{flex:0 0 auto}
+.trainer-builder-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.session-shell:not(.projector):not(.trainee)>.session-brand-header{
+  position:sticky;
+  top:0;
+  z-index:45;
+}
+@media(max-width:760px){
+  .trainer-home-button{padding:7px 9px;gap:5px;min-height:34px;font-size:10px}
+  .trainer-home-button svg{width:15px;height:15px}
+  .trainer-builder-header-actions{gap:6px}
+}
+@media(max-width:520px){
+  .session-brand-header .trainer-home-button,
+  .workspace-brand-header .trainer-home-button{min-width:36px;padding-inline:8px}
+  .session-brand-header .trainer-home-button span,
+  .workspace-brand-header .trainer-home-button span{display:none}
+}
