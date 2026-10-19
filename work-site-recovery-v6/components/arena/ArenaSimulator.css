@@ -74,3 +74,10 @@
  .arena-practice-library-card{min-height:132px}
 }
 @media(prefers-reduced-motion:reduce){.arena-sim-intro{animation:none!important}.arena-sim-timer-track i{transition:none!important}.arena-practice-library-card__try{transition:none!important}}
+
+/* Local step-by-step teaching cue, visible in every trainer simulator role. */
+.arena-simulator-learning-tip{display:flex;gap:11px;align-items:flex-start;
+ border-bottom:1px solid #2f82915b;background:linear-gradient(90deg,#15567549,#0b394d2b);
+ padding:11px 20px;font-size:12px;line-height:1.65;color:#c6fbf5}
+.arena-simulator-learning-tip svg{color:#6ce8d1;flex:none;margin-top:2px}
+@media(max-width:850px){.arena-simulator-learning-tip{font-size:11px;padding:9px 12px;line-height:1.4}}
