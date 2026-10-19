@@ -27,6 +27,8 @@ jobs:
         run: pnpm test
       - name: Verify live room event fanout and privacy
         run: node scripts/verify-live.mjs
+      - name: Protect approved Arena creative design and original logos
+        run: node scripts/verify-creative-identity.mjs
       - name: Compile the Github Pages React client
         run: pnpm run build:github
         env:
