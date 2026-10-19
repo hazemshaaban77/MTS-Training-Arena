@@ -267,3 +267,18 @@ Only V6 source under `work-site-recovery-v6/` was changed, no merge to `main`, n
 - No trainee registration form/fields/order changes. No new V6.1, no `main` merge, no legacy route change, no modifications to Firebase/D1/Worker.
 
 **Still pending, not to be claimed as completed:** actual Android/iOS/projection test within a live authorized room; 20/80-person load test; simulator's multi-trainee fidelity; Meta Plan, Scenario, Live Poll and Quiz final game polish; post-session per-game reports and PDF; media upload hardening/security review. CI and Pages success do not count as physical classroom acceptance.
+
+
+## Checkpoint — Game Show, Escape Room and Order It (2026-10-19)
+
+**Implemented in actual Version 6 sources. CI-green and Pages published.**
+- Unified validation GitHub Actions [39295021404](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39295021404) — **success** at commit `4dc3c9271e3476e2c95a3f9410c86f22550100c5`. Standalone Order It role/reveal tests passed separately at [39294967934](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39294967934).
+- Existing V6 GitHub Pages release [39295263189](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39295263189) — **success**, release request `fe811f126ae6c452e3264bd961b1fec5febfcf6c`. There may be a later overlapping release request; check that separately.
+- **Ultimate Game Show** — separate premium TV-style screen and cast selection, server-synchronized bet phase, verified available lifelines, and advisory audience chart. Trainer/trainee/projector role-specific UI. Stake and score calculation remain server-controlled. No future correct-answer display before authorized reveal.
+- **Escape Room** — immersive mission door/rooms progression, distinct room labels, puzzle/hint experience, server-backed progress and host-audited room override; projector readonly with participant details shown to authorized host only.
+- **Order It** — dedicated sequencing stage, large projector sequence, 44–46px mobile arrow controls and desktop drag/drop, server-confirmed learner answer receipt, locked state after submission and withheld correct order until `keyRevealed`. CSS reduced-motion and effects-off.
+- **Facilitator session starter options** — editable 15/30/60-minute examples (planning estimates are not live guarantees). Form/registration locked.
+
+**Still pending:** controlled real browser role walkthrough (trainer, phones, projector), 20/80 real-device capacity/latency, simulator fidelity beyond local preview, Meta Plan and Scenario Challenge visual/learning upgrades, polling/Quiz finishing, activity-specific reporting, PDF, media upload security review. Do not mark any physical acceptance as passed without performing it. No changes to production data, D1/Worker/Firebase credentials/rules, main or legacy `/arena/`.
+
+**Recommended next dev wave:** Meta Plan sticky-note collaborative category board and touch alternative, then Scenario Challenge consequence/path immersive design. Follow with precise game-specific reporting, full multi-participant simulator, device E2E and hardening.
