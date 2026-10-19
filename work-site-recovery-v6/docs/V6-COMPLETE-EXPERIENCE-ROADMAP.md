@@ -205,3 +205,31 @@ A task is DONE only after:
 **Still not complete and not to be misrepresented:** real phone/device scan, simulator/server equivalence, staged disconnection/lost-ack QA, 20/80 participant concurrency, projector visual validation, game-by-game WOW rework (Wheel, Box, Flashcards, etc.), professional PDF and per-activity reports, signed media upload/security review. The latest release demonstrates CI/build/release success, not full in-room UAT.
 
 **Next planned development:** B05 simulator rules/fidelity, B09/B10 richer live trainer director controls, C05/C06 trainee mobile legibility and touch target pass, and Wave 2 signature game redesigns. Preserve registration form, exact V6 URL and the historical released artifacts.
+
+
+## Progress checkpoint — V6 published trainer, trainee, mobile and Wheel improvements (2026-10-19)
+
+**Published on existing GitHub Pages `/v6/`, never a separate V6.1:** 
+- Trainer/trainee functional fixes: GitHub Actions full validation `39288293308` SUCCESS; Pages release `39288778923` SUCCESS. Covers QR pre-lobby states, actionable invalid/unavailable access state, trainee re-scroll between rounds, 5s loss-of-socket learner reconciliation, server-confirmed answer receipts and retry verification, Live Poll no click-only false success; trainer preflight with honest manual hardware checks, clear lobby vs first activity controls, safe empty-room confirmation, blank/example deck options and nonbinding time estimate. Only one canonical team-aware `TraineeFinish` is rendered. Form remains frozen.
+- Learner phone interface: full validation `39289372728` SUCCESS; release `39289643952` SUCCESS. Quiz choice `aria-pressed`, accessible confirmation button, sticky mobile submit, legibility/touch CSS and reduced-motion safeguards. Actual device UX remains to be observed.
+- **Wheel of Fortune Wave 2, first game visual upgrade:** validation `39290530367` SUCCESS and release `39290777642` SUCCESS. Larger responsive 3D-look wheel and luminous pointer, sector colors derived from original authored kind, more legible numbered badges/sector legend, server-index winner highlighting, stage banner and outcome reveal; the Worker still controls spin, prizes, turns and scores. Reduced-motion/effects-off provided. **Real device / room visual assessment is still pending.**
+
+### Acceptance ledger — do not conflate
+
+| Area | Source | CI | Published to same V6 | Full browser + real phones/projector |
+| --- | --- | --- | --- | --- |
+| Participant sign-up form unchanged | Frozen checksum/test | Passed | Yes | Pending actual 20-person join |
+| QR pre-lobby/error handling | Implemented | Passed | Yes | Pending |
+| Answer delivery + receipt recovery | Implemented | Passed | Yes | Pending lost network response E2E |
+| Trainer readiness / separate lobby launch | Implemented | Passed | Yes | Pending trainer walkthrough |
+| Blank session / conservative timing | Implemented | Passed | Yes | Pending live planning validation |
+| Learner personal final rank / team score | Canonical team-aware `TraineeFinish` | Passed | Yes | Pending end-of-session browser checks |
+| Mobile quiz readability / submit | Implemented | Passed | Yes | Pending Android/iOS |
+| Fortune Wheel grand stage visual | Implemented | Passed | Yes | Pending projector + smartphone/low-motion |
+| Accurate multi-person offline simulator | Incomplete | — | No | Not performed |
+| Open the Box / Flashcards visual redesign | Not started in this checkpoint | — | No | Not performed |
+| Remaining seven games deep polish | Outstanding | — | No | Not performed |
+| Activity-specific analytics / PDF / media hardening | Outstanding | — | No | Not performed |
+| 20/80 real participant acceptance | Outstanding | — | No | Not performed |
+
+**Next priority after this checkpoint:** (1) Open the Box, (2) Flashcards, (3) Game Show and Escape Room, while continuing genuine trainer/trainee E2E and simulator fidelity verification; then Meta Plan, Order It, Scenario, Live Poll and Quiz fine-tuning, projector / reporting and security. Use the same `develop/v6-github-arena` branch and only the existing `/v6/` public route; preserve existing participant registration fields and all authoritative backend behavior.
