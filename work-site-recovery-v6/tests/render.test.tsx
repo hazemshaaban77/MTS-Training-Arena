@@ -1,4 +1,4 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -125,4 +125,61 @@ test('cinematic WebP art appears in every activity intro, trainer and bilingual 
  assert.ok(session.includes('durationMs={display?2300:host?1450:1100}'));
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('Approved cinematic 3D art'));
+});
+
+test('Live Poll uses distinct vote cards rather than Quiz answers before results',()=>{
+ const activity={...sample('Live Poll','ar'),pollKind:'choice',liveResults:false};
+ const s:any={activity,status:'question',runtime:{phase:'answering'},current:0,submitted:3,
+  mine:{id:'learner',name:'Participant',eligible:true,answered:false},tally:null,pollSummary:null};
+ const voting=renderToStaticMarkup(<GamePlay s={s} ar={true} host={false} display={false}
+  canAnswer={true} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(voting.includes('live-poll-vote__card'));
+ assert.ok(voting.includes('صوتك يفرق'));
+ assert.ok(voting.includes('إرسال صوتي'));
+ assert.ok(!voting.includes('answer-option'));
+ assert.ok(!voting.includes('answer-grid'));
+ assert.ok(!voting.includes('تثبيت الإجابة'));
+ const projector=renderToStaticMarkup(<GamePlay s={{...s,mine:null}} ar={false} host={false} display
+  canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(projector.includes('LIVE VOTING IN PROGRESS'));
+ assert.ok(!projector.includes('answer-option'));
+});
+test('Live Poll results are chart ONLY with true shares, zero votes, English and Arabic labels',()=>{
+ const activity={...sample('Live Poll','en'),pollKind:'choice',liveResults:false};
+ const base:any={activity,status:'results',runtime:{phase:'answering'},current:0,
+  submitted:10,tally:[5,3,2,0],pollSummary:null,mine:null};
+ for(const ar of [true,false]){
+  const html=renderToStaticMarkup(<GamePlay s={base} ar={ar} host={false} display={true}
+   canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(html.includes('live-poll-chart__rows'));
+  assert.ok(html.includes('50%'));
+  assert.ok(html.includes('30%'));
+  assert.ok(html.includes('20%'));
+  assert.ok(html.includes('0%'));
+  assert.ok(!html.includes('answer-option'));
+  assert.ok(!html.includes('answer-grid'));
+  assert.ok(!html.includes('right-answer'));
+  assert.ok(!html.includes('option-tally'));
+ }
+ const awaiting=renderToStaticMarkup(<LivePollChart s={{...base,tally:null}} ar={true}/>);
+ assert.ok(awaiting.includes('pending'));
+ assert.ok(!awaiting.includes('live-poll-chart__rows'));
+});
+test('every Live Poll subtype charts its REAL aggregation rather than Quiz options',()=>{
+ const a=sample('Live Poll','en'),base:any={activity:a,status:'results',submitted:4};
+ const rating=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'rating'},pollSummary:{average:4.25,count:4}} ar={false}/>);
+ assert.ok(rating.includes('4.3 / 5'));
+ assert.ok(rating.includes('live-poll-chart--rating'));
+ const words=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'word'},pollSummary:{words:{feedback:3,collaboration:1}}} ar={false}/>);
+ assert.ok(words.includes('feedback'));
+ assert.ok(words.includes('75%'));
+ assert.ok(words.includes('live-poll-chart--word'));
+ assert.ok(!words.includes('word-cloud'));
+ const ranking=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'priority'},pollSummary:{ranking:[{label:'Priority A',value:9},{label:'Priority B',value:5}]}} ar={false}/>);
+ assert.ok(ranking.includes('Priority A'));
+ assert.ok(ranking.includes('9'));
+ assert.ok(ranking.includes('weighted ranking points'));
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes("s.activity?.type!=='Live Poll'"));
+ assert.ok(session.includes("s.activity.type!=='Live Poll'"));
 });
