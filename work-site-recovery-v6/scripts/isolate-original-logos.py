@@ -7,6 +7,7 @@ from pathlib import Path
 from PIL import Image
 import hashlib
 
+# Retains the original pixel colors on opaque strokes.
 ROOT=Path('work-site-recovery-v6/public')
 for name in ['mts','training']:
     source=ROOT / f'{name}.png'
