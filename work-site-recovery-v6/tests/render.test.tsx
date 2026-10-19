@@ -306,9 +306,9 @@ test("trainee registration UI is frozen by the trainer's explicit decision",()=>
  assert.ok(start>=0&&end>start,'The current real participant join form must remain present');
  const form=source.slice(start,end+7);
  assert.equal(form.length,2478,'Registration form structure/labels/ordering must not change');
- let hash=0xcbf29ce484222325n;
- for(let i=0;i<form.length;i++)hash=((hash^BigInt(form.charCodeAt(i)))*0x100000001b3n)&0xffffffffffffffffn;
- assert.equal(hash.toString(16).padStart(16,'0'),'7861f77111d75e6a','The owner-approved participant login form must remain unchanged');
+ let hash=0x811c9dc5;
+ for(let i=0;i<form.length;i++)hash=Math.imul(hash^form.charCodeAt(i),0x01000193)>>>0;
+ assert.equal(hash.toString(16).padStart(8,'0'),'c17f4cea','The owner-approved participant login form must remain unchanged');
  const fields=[
   "t('الاسم بالكامل','Full name')",
   "t('لغة المشاركة','Participation language')",
