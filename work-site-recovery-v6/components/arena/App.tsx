@@ -40,6 +40,23 @@ export default function ArenaApp(){
    signingIn.current=false;
   }
  }
+ async function retryTrainerAccess(){
+  setAuthError('');
+  try{
+   // Firebase keeps the verified user session even if the Cloudflare API
+   // was temporarily unreachable; do not demand a second password login.
+   const data=await api('me');
+   if(!data?.authenticated)throw Error('SIGN_IN');
+   ++authGeneration.current;
+   setIdentity(data);
+   setIdentityChecked(true);
+   navigate(view==='host'?'host':'home',code);
+  }catch(e:any){
+   const message=firebaseError(e.code||e.message);
+   setAuthError(message);
+   throw Error(message);
+  }
+ }
  async function leaveTrainer(){for(const key of Object.keys(localStorage))if(key.startsWith('arena-draft-recovery'))localStorage.removeItem(key);await signOutTrainer();setIdentity(null);setSessions([]);navigate('login');}
 
  useEffect(()=>{document.documentElement.lang=ar?'ar':'en';document.documentElement.dir=ar?'rtl':'ltr';localStorage.setItem('arena-language',ar?'ar':'en');},[ar]);
@@ -47,7 +64,7 @@ export default function ArenaApp(){
  useEffect(()=>{if(view==='home'&&identity?.authenticated)load();},[view,identity]);
  const current=sessions.filter(s=>!['completed','archived'].includes(s.status)),finished=sessions.filter(s=>['completed','archived'].includes(s.status));
  return <BrandProvider><div className={'arena-app '+(ar?'arabic':'english')} dir={ar?'rtl':'ltr'}>
- {(view==='login'||(['home','host'].includes(view)&&!identity?.authenticated))?<Login ar={ar} toggleLanguage={()=>setAr(!ar)} identity={identity} loading={!identityChecked} onEnter={()=>navigate(view==='host'?'host':'home',code)} onSignIn={enterTrainer} onSignOut={leaveTrainer} authError={authError} onJoin={()=>navigate('join')}/>:view==='home'?<><aside className={'sidebar '+(menu?'expanded':'')}><a href={siteUrl("home")} aria-label="MTS Training Arena"><OfficialLogo kind="mts" className="sidebar-official"/></a><nav>{[[LayoutDashboard,'home',t('مساحتي','Overview')],[Radio,'sessions',t('الجلسات','Sessions')],[Layers,'library',t('مكتبة الألعاب','Game library')],[FileText,'drafts',t('المسودات','Drafts')],[CopyIcon,'templates',t('القوالب','Templates')],[BookOpen,'questions',t('بنك الأسئلة','Question bank')],[Image,'media',t('الوسائط','Media')],[ClipboardList,'surveys',t('الاستبيانات','Surveys')],[Users,'teams',t('الفرق','Teams')],[FolderOpen,'catalog',t('الكتالوج المشترك','Shared catalog')],[Trophy,'reports',t('التقارير','Reports')],[Settings,'settings',t('الإعدادات','Settings')]].map(([Icon,id,label]:any)=><button key={id} className={tab===id?'nav-item active':'nav-item'} onClick={()=>{setTab(id);setMenu(false);}}><Icon size={22}/><span>{label}</span></button>)}</nav><div className="side-bottom"><OfficialLogo kind="training" className="sidebar-training"/><span className="avatar">{(identity?.name||"H").charAt(0)}</span></div></aside>
+ {(view==='login'||(['home','host'].includes(view)&&!identity?.authenticated))?<Login ar={ar} toggleLanguage={()=>setAr(!ar)} identity={identity} loading={!identityChecked} onEnter={()=>navigate(view==='host'?'host':'home',code)} onSignIn={enterTrainer} onSignOut={leaveTrainer} onRetryAuth={retryTrainerAccess} authError={authError} onJoin={()=>navigate('join')}/>:view==='home'?<><aside className={'sidebar '+(menu?'expanded':'')}><a href={siteUrl("home")} aria-label="MTS Training Arena"><OfficialLogo kind="mts" className="sidebar-official"/></a><nav>{[[LayoutDashboard,'home',t('مساحتي','Overview')],[Radio,'sessions',t('الجلسات','Sessions')],[Layers,'library',t('مكتبة الألعاب','Game library')],[FileText,'drafts',t('المسودات','Drafts')],[CopyIcon,'templates',t('القوالب','Templates')],[BookOpen,'questions',t('بنك الأسئلة','Question bank')],[Image,'media',t('الوسائط','Media')],[ClipboardList,'surveys',t('الاستبيانات','Surveys')],[Users,'teams',t('الفرق','Teams')],[FolderOpen,'catalog',t('الكتالوج المشترك','Shared catalog')],[Trophy,'reports',t('التقارير','Reports')],[Settings,'settings',t('الإعدادات','Settings')]].map(([Icon,id,label]:any)=><button key={id} className={tab===id?'nav-item active':'nav-item'} onClick={()=>{setTab(id);setMenu(false);}}><Icon size={22}/><span>{label}</span></button>)}</nav><div className="side-bottom"><OfficialLogo kind="training" className="sidebar-training"/><span className="avatar">{(identity?.name||"H").charAt(0)}</span></div></aside>
  <div className="workspace"><BrandHeader className="workspace-brand-header"><button className="mobile-menu icon-button" aria-label="Menu" onClick={()=>setMenu(!menu)}>{menu?<X/>:<Menu/>}</button><span className="wordmark">MTS TRAINING ARENA</span><span className="muted small">{t('مساحة المدرب','Trainer workspace')}</span><button className="language" onClick={()=>setAr(!ar)}><Globe size={15}/>{ar?'EN':'عربي'}</button><button className="account-exit" onClick={leaveTrainer}>{t('تسجيل الخروج','Sign out')}</button></BrandHeader>
  <main className="dashboard"><div className="page-heading"><div><div className="eyebrow">{t('من المعرفة إلى الأثر.','FROM KNOWLEDGE TO IMPACT.')}</div><h1>{tab==='library'?t('مكتبة التحدّيات','The challenge library'):tab==='reports'?t('كل إنجاز له حكاية.','Every win tells a story.'):t('أهلًا '+(identity?.name?.split(' ')[0]||'بالمدرب')+'، جاهز تبدأ؟','Welcome '+(identity?.name?.split(' ')[0]||'Trainer')+'. Ready to begin?')}</h1><p className="muted">{t('من أول مسح للـQR لآخر لحظة فوز. جلسة واحدة تجمع الكل.','From the first QR scan to the final victory. One session brings everyone together.')}</p></div><button className="btn primary" onClick={()=>setBuilder('all')}><Plus size={18}/>{t('إنشاء جلسة','Create session')}</button></div>
  {error&&<div className="error-banner">{errorText(error,ar)} <button onClick={load}>{t('حاول تاني','Retry')}</button></div>}
