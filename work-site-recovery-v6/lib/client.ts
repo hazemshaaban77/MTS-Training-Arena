@@ -1,9 +1,13 @@
 import {trainerToken} from './firebase-client';
+// Free Cloudflare Pages gateway invokes the same V6 Worker by service binding.
+// Keep the original Worker as a browser-network fallback (never a separate database).
+const alternateV6Api='https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev';
+let connectedApiOrigin:string|null=null;
 function apiOrigin():string {
  const external=(import.meta.env?.VITE_ARENA_API_ORIGIN||'').trim().replace(/\/$/,'');
  if(external && !/^https:\/\/[^/]+$/i.test(external)) throw Error('API_NOT_CONFIGURED');
  if(!external && window.location.hostname.endsWith('.github.io')) throw Error('API_NOT_CONFIGURED');
- return external || window.location.origin;
+ return connectedApiOrigin || external || window.location.origin;
 }
 export function arenaLiveUrl(code:string):string|null{
  if(!/^\d{6}$/.test(code))return null;
@@ -19,19 +23,24 @@ export function arenaLiveUrl(code:string):string|null{
 }
 export async function api(path:string,body?:any,token?:string){
  const firebaseToken=await trainerToken();
- const url=apiOrigin()+'/api/'+path;
- // Only retry safe GET requests. Retrying writes could duplicate answers or actions.
- const attempts=body===undefined ? 3 : 1;
+ const configured=apiOrigin();
+ // Fallback applies ONLY to idempotent GETs. Never resend a POST after network
+ // uncertainty: that could duplicate an answer, vote, room, or admin action.
+ const canFallback=body===undefined && window.location.hostname.endsWith('.github.io');
+ const endpoints=canFallback && configured!==alternateV6Api?[configured,alternateV6Api]:[configured];
  let r:Response|undefined;
- for(let i=0;i<attempts;i++){
-  try{
-   r=await fetch(url,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(firebaseToken?{'X-Firebase-Token':firebaseToken}:{}),...(token?{'X-Player-Token':token}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store',...(body===undefined?{signal:AbortSignal.timeout(8500)}:{})});
-   break;
-  }catch{
-   if(i===attempts-1)throw Error('API_UNREACHABLE');
-   // A short pause lets the browser recover from brief Workers/DNS interruptions.
-   await new Promise(resolve=>setTimeout(resolve,400*(i+1)));
+ for(const origin of endpoints){
+  const attempts=body===undefined?2:1;
+  for(let i=0;i<attempts;i++){
+   try{
+    r=await fetch(origin+'/api/'+path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(firebaseToken?{'X-Firebase-Token':firebaseToken}:{}),...(token?{'X-Player-Token':token}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store',...(body===undefined?{signal:AbortSignal.timeout(8500)}:{})});
+    connectedApiOrigin=origin;
+    break;
+   }catch{
+    if(i<attempts-1)await new Promise(resolve=>setTimeout(resolve,350*(i+1)));
+   }
   }
+  if(r)break;
  }
  if(!r)throw Error('API_UNREACHABLE');
  let data:any;
