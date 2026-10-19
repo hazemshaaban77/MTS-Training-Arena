@@ -51,7 +51,7 @@ export default function ArenaGameShow({s,ar,host,display,actor,usable,busy,close
     {(s.players||[]).filter((p:any)=>p.approval==='approved').map((p:any)=>{
      const picked=cast.includes(p.uid);
      return <button type="button" key={p.uid} aria-pressed={picked} className={picked?'picked':''} disabled={busy}
-      onClick={()=>setCast(old=>picked?old.filter(id=>id!==p.uid):[...old.slice(-(castMax-1)),p.uid])}>
+      onClick={()=>setCast(old=>picked?old.filter(id=>id!==p.uid):[...(castMax===1?[]:old.slice(-(castMax-1))),p.uid])}>
       <span className="arena-tv-show__avatar">{String(p.name||'?').charAt(0)}</span>
       <b>{p.name}</b><small>{p.team||''}</small>{picked&&<CheckCircle2 size={18}/>}
      </button>;
