@@ -2016,3 +2016,31 @@
 @media(prefers-reduced-motion:reduce){
  .session-entry-feedback *{animation:none!important;transition:none!important}
 }
+
+
+/* V6 Wave 0 — backend-authoritative participant answer receipt.
+   Distinguish sending/verifying/confirmed/uncertain without pretending a failed
+   network response means the answer wasn't received by the server. */
+.trainee-answer-receipt{max-width:920px;margin:16px auto 11px;display:flex;align-items:center;
+ justify-content:center;gap:12px;flex-wrap:wrap;padding:15px clamp(13px,3vw,22px);
+ border:1px solid #64c1d37d;border-radius:15px;background:#103d5b24;
+ font-size:clamp(13px,1.7vw,17px);font-weight:760;line-height:1.55;color:inherit}
+.trainee-answer-receipt.sending,.trainee-answer-receipt.verifying{border-color:#2dabb8a0;
+ background:#2d9cb31e}
+.trainee-answer-receipt.confirmed{border-color:#25bb9ca6;background:#18ac8622}
+.trainee-answer-receipt.uncertain{border-color:#d5974b91;background:#cf92341b}
+.trainee-answer-receipt.uncertain span{flex:1;min-width:min(225px,100%)}
+.trainee-answer-receipt .loader{min-width:17px;width:17px;height:17px;min-height:17px;
+ border-width:2px;flex:none}
+.trainee-answer-receipt svg{flex:none}
+.trainee-answer-receipt .btn{font-size:13px;min-height:45px;padding:9px 14px}
+.session-shell.trainee .trainee-answer-receipt{color:#174864;border-radius:15px;
+ border-color:#81b7c7;background:#eff8ff}
+.session-shell.trainee .trainee-answer-receipt.confirmed{color:#086d53;border-color:#3bb998;
+ background:#e2f9ee}
+.session-shell.trainee .trainee-answer-receipt.uncertain{color:#805219;
+ border-color:#e1a851;background:#fff7e6}
+@media(max-width:720px){
+ .trainee-answer-receipt{margin:13px 0;padding:13px 10px;gap:8px;text-align:start}
+ .trainee-answer-receipt.uncertain .btn{width:100%;justify-content:center}
+}
