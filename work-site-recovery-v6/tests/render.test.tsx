@@ -1,6 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
 import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';
-import ArenaSimulator from '../components/arena/ArenaSimulator';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import ArenaSimulator from '../components/arena/ArenaSimulator';
+import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -321,4 +322,33 @@ test("trainee registration UI is frozen by the trainer's explicit decision",()=>
  assert.ok(form.includes("onClick={()=>{setRecovering(!recovering);setError('');}}"));
  const codeForm=source.slice(source.indexOf('<form onSubmit={join}><label>'),start);
  assert.ok(codeForm.includes("t('كود الجلسة','Session code')"),'Standalone session code entry remains separate');
+});
+
+test('QR entry states protect the unchanged participant registration form',()=>{
+ for(const ar of [true,false]){
+  const waiting=renderToStaticMarkup(<SessionEntryFeedback ar={ar} kind="not-ready"
+   title="Communication Workshop" onRetry={()=>{}} onChangeCode={()=>{}}/>);
+  assert.ok(waiting.includes('Communication Workshop'));
+  assert.ok(waiting.includes(ar?'الجلسة لسه بتتجهّز':'Your session is being prepared'));
+  assert.ok(waiting.includes(ar?'تحديث حالة الجلسة':'Refresh session status'));
+  assert.ok(!waiting.includes('name="employeeId"')); // The existing form never appears before lobby.
+  const unavailable=renderToStaticMarkup(<SessionEntryFeedback ar={ar} kind="unavailable"
+   onRetry={()=>{}} onChangeCode={()=>{}}/>);
+  assert.ok(unavailable.includes(ar?'إعادة المحاولة':'Try again'));
+  assert.ok(unavailable.includes(ar?'أدخل كود مختلف':'Use a different session code'));
+  const invalid=renderToStaticMarkup(<SessionEntryFeedback ar={ar} kind="invalid" onChangeCode={()=>{}}/>);
+  assert.ok(invalid.includes(ar?'راجع كود الجلسة':'Check your session code'));
+  assert.ok(!invalid.includes(ar?'تحديث حالة الجلسة':'Refresh session status'));
+ }
+ const source=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(source.includes('SessionEntryFeedback'));
+ assert.ok(source.includes("kind=\"not-ready\" title={s.title}"));
+ assert.ok(source.includes("kind=\"invalid\""));
+ assert.ok(source.includes("kind=\"unavailable\""));
+ assert.ok(source.includes("['ready','draft'].includes(s.status)"));
+ assert.ok(source.includes("lastTraineeRound.current===key"));
+ assert.ok(source.includes("window.scrollTo({top:0,behavior:'auto'})"));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('.session-entry-feedback__actions'));
+ assert.ok(css.includes('min-height:49px'));
 });
