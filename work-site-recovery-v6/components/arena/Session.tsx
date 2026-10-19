@@ -20,6 +20,8 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  const [splash,setSplash]=useState<string|null>(null),[s,setS]=useState<any>(null),[error,setError]=useState(''),[connected,setConnected]=useState(true),[token,setToken]=useState<string|undefined>(),[name,setName]=useState(''),[team,setTeam]=useState('Lightning'),[joinCode,setJoinCode]=useState(code),[busy,setBusy]=useState(false),[now,setNow]=useState(Date.now()),[qr,setQr]=useState(''),[copied,setCopied]=useState(false),[sound,setSound]=useState(false),[endConfirm,setEndConfirm]=useState(false),[showQR,setShowQR]=useState(false),[editing,setEditing]=useState(false),[quiet,setQuiet]=useState(false),[intensity,setIntensity]=useState('full');
  const [liveConnection,setLiveConnection]=useState<'live'|'fallback'>('fallback');
  const [employeeId,setEmployeeId]=useState(''),[confirmed,setConfirmed]=useState(false),[recovering,setRecovering]=useState(false),[recoveryInput,setRecoveryInput]=useState(''),[recoveryNote,setRecoveryNote]=useState('');
+ const [answerProgress,setAnswerProgress]=useState<{round:number;phase:'sending'|'verifying'|'confirmed'|'uncertain'}|null>(null);
+ const answerSendLock=useRef(false);
  useEffect(()=>{const preference=localStorage.getItem('arena-effects');setIntensity(preference|| (window.matchMedia('(max-width:700px)').matches?'light':'full'));setQuiet(localStorage.getItem('arena-quiet')==='true');},[]);
  const routeKey=useRef('');routeKey.current=code+view+(token||'');
  const received=useRef(Date.now()),audio=useRef<AudioContext|null>(null),lastStatus=useRef(''),lastIntro=useRef(''),lastBeep=useRef(''),lastTraineeRound=useRef('');
@@ -49,7 +51,8 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   }
  }
  refreshLatest.current=refresh;
- useEffect(()=>{setS(null);setError('');setToken(localStorage.getItem('arena-player-'+code)||undefined);setJoinCode(code);},[code,view]);
+ useEffect(()=>{setS(null);setError('');setAnswerProgress(null);answerSendLock.current=false;setToken(localStorage.getItem('arena-player-'+code)||undefined);setJoinCode(code);},[code,view]);
+ useEffect(()=>{setAnswerProgress(null);},[s?.current]);
  // Event-driven invalidation: host + projector react to EVERY submitted answer
  // immediately; guest devices refresh for stage changes but don't repeatedly
  // re-fetch a room of 80 people on every other player's answer.
@@ -179,7 +182,53 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  },[seconds,sound,quiet,s?.status,s?.paused,s?.deadline,s?.current,s?.runtime?.quiet]);
  async function command(action:string,index?:number,extra:any={}){if(busy)return;setBusy(true);setError('');try{const result=await api('control',{code,revision:s.revision,action,index,...extra});if(result.code){navigate('host',result.code);return;}await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);setEndConfirm(false);}}
  async function join(e:React.FormEvent){e.preventDefault();if(!code){navigate('join',joinCode);return;}setBusy(true);setError('');try{const data=await api(recovering?'recover':'join',recovering?{code,employeeId,recoveryCode:recoveryInput}:{code,name,employeeId,confirmed,team,language:ar?'ar':'en'},token);localStorage.setItem('arena-player-'+code,data.token);setToken(data.token);setRecoveryNote(data.recoveryCode||'');navigate('play',code);}catch(e:any){setError(e.message);if(e.message==='ALREADY_REGISTERED')setRecovering(true);}finally{setBusy(false);}}
- async function submit(answer:any){setBusy(true);setError('');try{await api('answer',{code,round:s.current,answer},token);if('vibrate' in navigator)navigator.vibrate?.(35);setS((old:any)=>old?.mine&&!old.mine.answered?{...old,submitted:old.submitted+1,mine:{...old.mine,answered:true,answer}}:old);await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);}}
+ // A failed POST response is NOT proof an answer was rejected: the request
+ // might have reached the authoritative Worker while the response was lost.
+ // Always reconcile an uncertain write with a READ before enabling re-submit.
+ async function checkAnswerReceipt(round:number):Promise<any|null>{
+  const key=code+view+(token||'');
+  try{
+   const state=await api(`state?code=${code}`,undefined,token);
+   if(routeKey.current!==key)return null;
+   received.current=Date.now();
+   setConnected(true);
+   setS((old:any)=>old?.code===state.code&&old.revision>state.revision?old:state);
+   return state.current===round?state:null;
+  }catch{return null;}
+ }
+ async function submit(answer:any){
+  if(busy||answerSendLock.current||!s?.mine||s.status!=='question')return;
+  const round=s.current;
+  answerSendLock.current=true;setBusy(true);setError('');
+  setAnswerProgress({round,phase:'sending'});
+  try{
+   const receipt=await api('answer',{code,round,answer},token);
+   if(receipt?.ok!==true)throw Error('API_BAD_RESPONSE');
+   // The server accepted the write; never advance counts or grades locally.
+   setAnswerProgress({round,phase:'confirmed'});
+   if('vibrate' in navigator)navigator.vibrate?.(35);
+   await checkAnswerReceipt(round);
+  }catch{
+   setAnswerProgress({round,phase:'verifying'});
+   const state=await checkAnswerReceipt(round);
+   setAnswerProgress({round,phase:state?.mine?.answered?'confirmed':'uncertain'});
+  }finally{
+   answerSendLock.current=false;setBusy(false);
+  }
+ }
+ async function verifyAnswerReceipt(){
+  if(!s?.mine||busy||answerSendLock.current)return;
+  const round=s.current;
+  setAnswerProgress({round,phase:'verifying'});
+  const state=await checkAnswerReceipt(round);
+  // Safe retry is only offered after the server confirms this round is open
+  // and does not contain the player's receipt. The server still enforces
+  // first-write-wins for races between a pending POST and any new attempt.
+  if(state?.mine?.answered)setAnswerProgress({round,phase:'confirmed'});
+  else if(state?.status==='question'&&!state.paused&&state.mine?.eligible&&(!state.deadline||state.deadline>state.serverNow))
+   setAnswerProgress(null);
+  else setAnswerProgress({round,phase:'uncertain'});
+ }
  async function interact(action:string,extra:any={}){if(busy)return;setBusy(true);setError('');try{await api('interact',{code,round:s.current,action,...extra},token);await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);}}
  async function projection(change:any){await command('projection',undefined,{board:s.runtime.board,quiet:s.runtime.quiet,intensity:s.runtime.intensity,analytics:s.runtime.analytics,...change});}
  async function copy(){try{await navigator.clipboard.writeText(siteUrl('join',code));setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{setShowQR(true);}}
@@ -207,7 +256,13 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
      <h2 className="question-prompt">{s.activity.prompt}</h2><StageMedia media={s.activity.media}/>{s.activity.type==='Scenario Challenge'&&<div className="scenario-intro"><Target size={18}/>{t('فكّر في الموقف. اختار القرار اللي يفرق.','Read the situation. Choose the decision that matters.')}</div>}
      {s.paused&&<div className="info-banner"><Pause size={17}/>{t('وقفة سريعة. المدرب هيكمّل حالًا.','A quick pause. Your trainer will resume shortly.')}</div>}
      {isJoined&&!s.mine.eligible&&!closed&&<div className="info-banner">{s.mine.approval==='pending'?t('طلبك في انتظار موافقة المدرب.','Your request is awaiting trainer approval.'):s.mine.approval==='rejected'?t('المدرب لم يعتمد طلب الدخول.','Your join request was declined.'):s.runtime.targets?.length?t('الجمهور جزء من التحدّي. تابع نجوم المرحلة وشارك في التصويت.','You are in the audience. Follow the contestants and share your vote.'):t('انضمامك مؤكد. المشاركة من النشاط القادم.','You are approved. Play begins with the next activity.')}</div>}
-     <GamePlay key={s.current} s={{...s,clockNow:now+(s.serverNow-received.current)}} ar={ar} host={host} display={display} canAnswer={isJoined&&s.mine.eligible&&(!s.mine.answered||s.activity.type==='Live Poll'&&s.activity.allowChanges)&&!closed&&!s.paused&&(!s.deadline||seconds>0)&&!busy&&connected} busy={busy} onSubmit={submit} onInteract={interact} onControl={command}/>
+     <GamePlay key={s.current} s={{...s,clockNow:now+(s.serverNow-received.current)}} ar={ar} host={host} display={display} canAnswer={isJoined&&s.mine.eligible&&(!s.mine.answered||s.activity.type==='Live Poll'&&s.activity.allowChanges)&&!closed&&!s.paused&&(!s.deadline||seconds>0)&&!busy&&connected&&!(answerProgress?.round===s.current&&(answerProgress.phase!=='confirmed'||!s.mine.answered))} busy={busy} onSubmit={submit} onInteract={interact} onControl={command}/>
+     {isJoined&&s.status==='question'&&answerProgress?.round===s.current&&<div className={'trainee-answer-receipt '+answerProgress.phase} role="status" aria-live="polite">
+      {answerProgress.phase==='sending'?<><span className="loader"/>{t('جاري إرسال إجابتك…','Sending your answer…')}</>:
+       answerProgress.phase==='verifying'?<><RefreshCw size={20}/>{t('بنتحقق من حالة الإجابة على السيرفر…','Checking your answer on the server…')}</>:
+       answerProgress.phase==='confirmed'?<><CheckCircle2 size={20}/>{t('السيرفر أكد تسجيل إجابتك','The server confirmed your answer')}</>:
+       <><ShieldCheck size={20}/><span>{t('الاتصال انقطع قبل ما نتأكد من وصول الإجابة. ما تبعتش تاني قبل ما نتحقق.','Connection failed before we could confirm your answer. Check receipt before trying again.')}</span><button className="btn secondary" disabled={busy} onClick={verifyAnswerReceipt}><RefreshCw size={16}/>{t('تحقق من وصول الإجابة','Check answer receipt')}</button></>}
+     </div>}
      {isJoined&&s.mine.answered&&!closed&&s.activity.type!=='Live Poll'&&<div className="answer-sent"><CheckCircle2 size={26}/><div><b>{t('إجابتك اتسجلت!','You’re locked in!')}</b><span>{t('استنى النتيجة. التحدّي لسه مكمل.','Results are coming. The challenge continues.')}</span></div></div>}
      {isJoined&&!meta&&s.activity.type!=='Live Poll'&&s.keyRevealed&&s.mine.answered&&<div className={'answer-result '+(s.mine.correct?'correct':s.activity.type==='Live Poll'?'':'incorrect')}><b>{s.mine.points?`+${s.mine.points.toLocaleString()}`:unscored(s.activity.type)?'✓':'+0'}</b><span>{s.mine.correct?t('إجابة صح. حماس يستاهل!','Correct. That’s arena energy!'):s.activity.type==='Live Poll'?t('رأيك جزء من الصورة.','Your voice is part of the picture.'):t('محاولة مهمة. ركّز على اللي جاي!','Every attempt counts. Focus on the next one!')}</span>{!!s.mine.correct&&<Confetti/>}</div>}
      <div className="round-footer"><span><Users size={15}/>{s.submitted} {t('إجابة مسجلة','answers in')}</span><span>{unscored(s.activity.type)?t('تعلّم ومشاركة · بدون نقاط','Learning & participation · Unscored'):t('نقاط موثوقة بوزن النشاط وإعداداته','Server scoring · Configured activity weight')}</span></div>
