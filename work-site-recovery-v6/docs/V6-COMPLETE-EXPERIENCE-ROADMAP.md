@@ -145,3 +145,46 @@ A task is DONE only after:
 | Reports, upload hardening, acceptance | P1/P2 | Planned | — | Pending |
 
 **This document is a plan and audit scope; it does not mean the UI has been changed, real classrooms tested, or any issue reproduced in a mobile browser.**
+
+
+## Implementation progress — 2026-10-19, checkpoint 2
+
+**Important separation:** implemented-in-development != CI verified != released to the live `/v6/` website. The items below were added to `develop/v6-github-arena`; they are **not marked fully accepted** until the latest branch build passes and is released, then real-device checks are performed. Do not update `main` or legacy `/arena/`.
+
+| Work item | Latest implementation state | Evidence | Not yet verified |
+| --- | --- | --- | --- |
+| C12 Participant form frozen | **Source and regression guard implemented** (registration form checksum unchanged); TypeScript-incompatible BigInt from earlier guard replaced by compatible numeric hash | `work-site-recovery-v6/tests/render.test.tsx` | Latest CI |
+| C01 Early QR / pre-lobby | **Implemented on dev branch**: explicit preparation message until lobby opens, no form change | `SessionEntryFeedback.tsx`, `Session.tsx` | Latest CI; real QR device |
+| C02 Invalid code / unavailable state | **Implemented on dev branch**: retry / change session code; no indefinite blocking spinner on failed initial request | `SessionEntryFeedback.tsx` | Network conditions E2E |
+| C08 New activity scrolled to top | **Implemented on dev branch**: learner-only scroll reset on round/intro change; join form not covered by intro | `Session.tsx` | iOS/Android keyboard scroll QA |
+| C09 Active learner fallback | **Implemented on dev branch**: 5s fallback during active round vs previous 12s, preserving standard socket and lobby slower fallback | `Session.tsx` | Cross-client latency and load test |
+| C07 Server-verified answer | **Implemented on dev branch**: acknowledged/varying/uncertain receipt states, read-before-resubmit; Live Poll no longer says recorded on click alone | `Session.tsx`, `LivePoll.tsx`, CSS/tests | CI; actual lost-response simulation |
+| B07 Readiness checklist | **Implemented on dev branch (first pass)**: honest API, queue and player state plus manually confirmed projector/audio/media | `TrainerReadiness.tsx`, `Session.tsx` | Automated media probes & real hardware QA |
+| B08 Separate trainer launch states | **Implemented on dev branch**: clear lobby opening and first-activity labels, confirmation before starting with zero approved learners | `Session.tsx` | CI; real trainer walkthrough |
+| B09 Director metrics | **Partially improved on dev branch**: in pre-launch, shows approved participants rather than meaningless answer count; existing live answer counter remains | `Session.tsx` | Remaining richer telemetry/actions |
+| B01 Builder templates | **Partially implemented on dev branch**: choose blank vs ten sample activities with confirm-before-replace; no designed 15/30/60 templates yet | `Builder.tsx` | CI; draft preservation UX |
+| B02 Trainer duration planning | **First-pass implemented on dev branch**: explicitly conservative timing estimate + untimed step count; no target budget, breaks or discussion estimator yet | `lib/session-planning.ts`, `Builder.tsx` | Test build; workshop pacing validation |
+
+### Previously live/released V6 capabilities, subject to true classroom validation
+
+- Existing V6 GitHub Pages site, ten-activity catalog, one room QR, player/host/projector roles.
+- Original cinematic 3D images attached to ten activity intros.
+- Immersive Live Poll vote cards and chart-only results; victory podium with effects.
+- Existing trainer simulator with per-activity trial and session rehearsal **as an offline/local preview only**; it still needs fidelity work against real authoritative game rules.
+- These earlier features were released successfully in a previous V6 Pages workflow, **not** evidence that current new fixes were released.
+
+### Current CI/release gate
+
+- Previous GitHub Actions V6 tests failed on the old frozen-form test's unsupported BigInt syntax.
+- BigInt test source was subsequently fixed. Latest **combined** branch run must be green; status not presumed until checked.
+- No V6 release request for the current wave should be added before that green run. No real-live production data was changed.
+
+### Pending major plan items
+
+- Complete server-authored dry-run simulator with multi-learner/tie/offline scenarios (B05–B06).
+- Full trainer playbook/dashboard/late arrivals and projected legibility (B03/B09–B11, D01–D06).
+- Remaining learner accessibility, 44px touch targets, clear per-activity result, personal result, and recovery copy (C03–C06/C10–C11).
+- Five signature game show / WOW overhauls: Wheel, Open the Box, Flashcards, Game Show, Escape Room; plus the other five games' educational/gameplay polish (E).
+- Accurate activity-specific analytics, branded PDF, upload security review and complete 20/80 participant stress and physical room acceptance (F, A).
+
+**Next execution gate:** wait for latest Actions run, fix any failing checks; only then publish reviewed tested V6 to the same /v6/ path and verify asset/route delivery.
