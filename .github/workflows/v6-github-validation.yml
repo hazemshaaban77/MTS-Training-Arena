@@ -95,6 +95,9 @@ jobs:
           curl --retry 4 --retry-delay 4 --fail-with-body --silent --show-error "$page" > /tmp/arena-v6.html
           grep -q 'id="arena-root"' /tmp/arena-v6.html
           grep -q '/MTS-Training-Arena/v6/assets/' /tmp/arena-v6.html
+          curl --retry 3 --retry-delay 3 --fail-with-body --silent --show-error "${page}arena-hero.svg" > /tmp/arena-hero.svg
+          grep -q 'viewBox="0 0 1280 720"' /tmp/arena-hero.svg
+          grep -q 'Semi-formal trainer' /tmp/arena-hero.svg
       - uses: actions/upload-artifact@v4
         with:
           name: mts-arena-v6-worker-bundle
