@@ -491,3 +491,39 @@ test('mobile quiz option selections are accessible and submission stays reachabl
  const src=readFileSync('components/arena/GamePlay.tsx','utf8');
  assert.ok(src.includes('aria-pressed={selected===i}'));
 });
+
+test('Fortune Wheel stage artwork follows server selected sector and keeps game controls',()=>{
+ const a:any=sample('Wheel of Fortune','en');
+ const now=Date.now();
+ const base:any={
+  activity:a,status:'question',current:0,serverNow:now,clockNow:now,
+  players:[{uid:'p1',name:'Test Player',approval:'approved'}],individual:[],
+  mine:null,paused:false,runtime:{phase:'answering'},
+  game:{turn:1,rounds:3,used:[1],target:'p1',spin:{
+   id:'server-spin-1',index:1,startsAt:now-6000,stopsAt:now-1000,revealed:true
+  },outcome:{kind:'prize',label:'Participation star',detail:'Well played',points:200}}
+ };
+ const html=renderToStaticMarkup(<GamePlay s={base} ar={false} host={true}
+  display={false} canAnswer={false} busy={false} onSubmit={()=>{}}
+  onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(html.includes('wheel-wrap--grand'));
+ assert.ok(html.includes('arena-wheel-gradient'),'Segments are painted from authored kinds');
+ assert.ok(html.includes('wheel-legend-winner'),'Server selected sector is highlighted');
+ assert.ok(html.includes('aria-current="true"'),'Accessible winning section marker');
+ assert.ok(html.includes('Participation star'),'Real server outcome label is displayed');
+ assert.ok(html.includes('+200'),'Real server assigned points are displayed');
+ assert.ok(html.includes('server-spin-1'));
+ assert.ok(html.includes('SPIN THE WHEEL'),'Original trainer control remains');
+ const untouched=renderToStaticMarkup(<GamePlay s={{
+  ...base,game:{...base.game,spin:null,outcome:null,turn:0,used:[]}
+ }} ar={true} host={true} display={false} canAnswer={false} busy={false}
+ onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(untouched.includes('لف العجلة'));
+ assert.ok(!untouched.includes('wheel-legend-winner'));
+ const source=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(source.includes("spin?.revealed&&spin.index===i"),'Winners must come from server spin, never client randomness');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 WHEEL OF FORTUNE — GRAND ARENA SHOW'));
+ assert.ok(css.includes('.projector .wheel-wrap--grand'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});
