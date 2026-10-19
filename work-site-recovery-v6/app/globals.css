@@ -1874,3 +1874,115 @@
 }
 .effects-off .arena-victory__backdrop .arena-victory__firework,
 .effects-off .arena-victory__backdrop .arena-victory__confetti{display:none!important}
+
+
+/* V6 TRAINER PRACTICE ARENA — isolated rehearsal (never API creates rooms).
+   The ten activity cards expose DESIGN and TRY as separate accessible buttons. */
+.arena-practice-library-card{padding:11px!important;display:flex!important;flex-direction:column!important;gap:8px!important;min-height:0!important}
+.arena-practice-library-card__design{display:flex;position:relative;width:100%;flex-direction:column;
+ text-align:start;gap:10px;min-width:0;align-items:stretch;border-radius:12px;color:#e8f8ff;cursor:pointer}
+.arena-practice-library-card__design .activity-visual-photo{width:100%;height:auto;aspect-ratio:16/9}
+.arena-practice-library-card__label{display:flex;flex-direction:column;gap:3px;min-height:41px;padding:0 5px}
+.arena-practice-library-card__label b{font-size:14px}
+.arena-practice-library-card__label small{font-size:10px;direction:inherit}
+.arena-practice-library-card__try{display:flex;align-items:center;justify-content:center;gap:9px;
+ padding:12px 10px;min-height:43px;width:100%;border:1px solid #4dc8db82;border-radius:11px;
+ background:linear-gradient(115deg,#12617ea1,#0d3857db);color:#c7fcf5;
+ font-size:12px;font-weight:850;transition:background .2s,box-shadow .2s}
+.arena-practice-library-card__try:hover{background:linear-gradient(115deg,#1a8caf,#176685);
+ box-shadow:0 0 22px #36cbd935}
+.arena-practice-library-card__try:focus-visible,.arena-practice-library-card__design:focus-visible{
+ outline:3px solid #6afde6;outline-offset:3px}
+.deck-controls{grid-template-columns:repeat(3,minmax(25px,30px));gap:3px}
+.deck-controls .arena-simulator-single{color:#62ebdd;background:#124259;border:1px solid #3ecfca65}
+.arena-simulator-review-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:13px;margin:18px 0}
+.arena-simulator-launch{border-color:#4ef1c67d!important;color:#ccfff8!important}
+.arena-simulator-overlay{position:fixed;inset:0;z-index:9999;
+ background:#010811f2;backdrop-filter:blur(11px);
+ display:flex;align-items:center;justify-content:center;padding:clamp(6px,2vw,22px);box-sizing:border-box;
+ overflow:auto;color:#e9faff}
+.arena-simulator-shell{display:flex;flex-direction:column;min-width:0;width:min(1320px,100%);
+ height:min(95dvh,1000px);border:1px solid #328ba4a0;border-radius:21px;
+ background:radial-gradient(ellipse 58% 27% at 50% 13%,#155b7750,transparent),
+ linear-gradient(160deg,#071b30,#061323 70%,#0b2440);
+ box-shadow:0 32px 125px #000e,0 0 38px #24aecb32;overflow:hidden}
+.arena-simulator-header{display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:12px;padding:18px clamp(14px,3vw,34px);border-bottom:1px solid #377b927a}
+.arena-simulator-header>div{min-width:0}
+.arena-simulator-header .eyebrow{display:flex;align-items:center;gap:8px;color:#6af4df;font-size:10px}
+.arena-simulator-header h2{font-size:clamp(19px,2.8vw,29px);font-weight:850;line-height:1.2;margin:6px 0 4px;color:#eaffff}
+.arena-simulator-header p{font-size:11px;color:#9bc0ce}
+.arena-simulator-header>.btn{white-space:nowrap}
+.arena-simulator-progress{display:flex;gap:6px;padding:12px 17px;overflow-x:auto;
+ border-bottom:1px solid #28768e42;scrollbar-color:#268da0 #071629}
+.arena-simulator-progress button{display:flex;flex:0 0 auto;align-items:center;
+ min-height:37px;padding:7px 12px;white-space:nowrap;border:1px solid #26516f82;
+ border-radius:20px;color:#94becf;font-size:10px;background:#0c2541;cursor:pointer}
+.arena-simulator-progress button.selected{background:linear-gradient(110deg,#168fa5,#158579);
+ color:#f7ffff;border-color:#7aefe6;box-shadow:0 0 15px #23d3c63d;font-weight:800}
+.arena-simulator-toolbar{display:flex;justify-content:space-between;align-items:center;
+ gap:13px;flex-wrap:wrap;padding:10px 20px;border-bottom:1px solid #38889a3d}
+.arena-simulator-toolbar>span{display:flex;gap:7px;align-items:center;font-size:11px;color:#9ee6d8}
+.arena-simulator-modes{display:flex;flex-wrap:wrap;gap:6px}
+.arena-simulator-modes button{display:flex;align-items:center;gap:7px;min-height:35px;
+ padding:8px 13px;border:1px solid #2768846c;border-radius:22px;background:#0f2c43;
+ color:#a9c7d5;font-weight:700;font-size:11px}
+.arena-simulator-modes button.selected{background:#1d6879;color:#f3ffff;border-color:#5defd6}
+.arena-simulator-main{flex:1;min-height:0;overflow-y:auto;padding:clamp(12px,2vw,25px);
+ scrollbar-color:#2885a3 #0b1b34}
+.arena-sim-stage{max-width:1070px;min-width:0;margin:0 auto;padding:12px 10px;
+ border:1px solid #32748e6b;border-radius:19px;
+ background:linear-gradient(135deg,#0b274196,#0a1a30a6);box-shadow:0 15px 35px #0005}
+.arena-sim-stage--display{max-width:1190px}
+.arena-sim-intro{display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:14px;padding:clamp(12px,3vw,30px);text-align:center}
+.arena-sim-intro img{display:block;width:min(640px,100%);aspect-ratio:16/9;object-fit:cover;border-radius:20px;
+ border:1px solid #4be7d987;box-shadow:0 20px 50px #000b,0 0 35px #43aeca30}
+.arena-sim-intro .eyebrow{font-size:11px;color:#86f1eb;letter-spacing:.13em}
+.arena-sim-intro h2{font-size:clamp(25px,4vw,45px);color:#f7ffff}
+.arena-sim-intro p{max-width:800px;font-size:clamp(14px,1.7vw,21px);color:#a2d6e6;line-height:1.65}
+.arena-sim-intro .btn{margin:5px}
+.arena-sim-question-head{display:flex;align-items:center;justify-content:space-between;
+ gap:12px;padding:17px 22px}
+.arena-sim-question-head strong{font-size:clamp(18px,2.5vw,29px);line-height:1.5;color:#f5ffff}
+.arena-sim-question-head>span{flex:none;color:#6aead4;font-size:13px;font-weight:800}
+.arena-sim-timer-track{height:5px;border-radius:7px;background:#17445b;overflow:hidden;margin:0 23px 15px}
+.arena-sim-timer-track i{height:100%;background:linear-gradient(90deg,#147fdd,#64f2cb);display:block;
+ transition:width .3s}
+.arena-sim-stage .question-engine,.arena-sim-stage .question-interaction{max-width:950px;margin:auto}
+.arena-sim-stage .question-interaction{padding:13px}
+.arena-sim-stage .answer-option{min-height:76px}
+.arena-sim-stage .live-poll-experience,.arena-sim-stage .live-poll-chart{max-width:900px;margin:10px auto}
+.arena-sim-note{margin:12px 22px;padding:12px 15px;border-radius:10px;
+ background:#11546e6b;border:1px solid #40a9b377;color:#abf3e0;font-size:12px}
+.arena-sim-controls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 15px}
+.arena-sim-stage-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;
+ margin:20px 12px 5px;padding:12px 6px 1px;border-top:1px solid #24648160;flex-wrap:wrap}
+.arena-sim-stage-footer>span{display:flex;align-items:center;gap:6px;font-size:10px;color:#84c6b5}
+.arena-simulator-footer{display:flex;justify-content:space-between;align-items:center;
+ gap:11px;padding:13px clamp(12px,3vw,30px);border-top:1px solid #32748c73}
+.arena-simulator-footer>span{font-size:12px;font-weight:800;color:#acf3e5;text-align:center}
+.arena-simulator-footer .btn{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.arena-simulator-shell button:focus-visible{outline:3px solid #77f5dd;outline-offset:2px}
+@media(max-width:730px){
+ .arena-simulator-overlay{padding:0;align-items:stretch}
+ .arena-simulator-shell{border-radius:0;height:100dvh;max-height:100dvh;border:0}
+ .arena-simulator-header{padding:12px 11px;gap:7px}
+ .arena-simulator-header p{font-size:10px}
+ .arena-simulator-header>.btn{min-height:36px;padding:7px 9px;font-size:11px}
+ .arena-simulator-toolbar{padding:9px 10px}
+ .arena-simulator-toolbar>span{font-size:10px}
+ .arena-simulator-modes{width:100%;justify-content:space-between}
+ .arena-simulator-modes button{padding:8px 10px;font-size:10px}
+ .arena-simulator-main{padding:8px}
+ .arena-sim-question-head{padding:13px 9px;flex-wrap:wrap}
+ .arena-sim-intro img{width:min(94vw,640px);border-radius:13px}
+ .arena-simulator-footer{padding:9px 8px}
+ .arena-simulator-footer .btn{padding:8px 9px;font-size:10px}
+ .arena-simulator-footer>span{font-size:10px}
+ .deck-controls{gap:2px}
+ .deck-controls .icon-button{min-width:24px;padding:2px}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-simulator-shell *, .arena-practice-library-card *{animation:none!important;transition:none!important}
+}
