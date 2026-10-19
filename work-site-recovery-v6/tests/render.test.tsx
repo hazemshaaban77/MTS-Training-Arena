@@ -4,6 +4,7 @@ import ArenaSimulator from '../components/arena/ArenaSimulator';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
 import {estimateSessionAgenda} from '../lib/session-planning';
+import {makeSessionStarter,sessionTemplateOptions} from '../lib/session-templates';
 import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
@@ -586,4 +587,39 @@ test('Knowledge Flashcards flip only on server reveal and keep self-review unsco
  assert.ok(css.includes('box-vault-box--active'));
  assert.ok(css.includes('.flash-academy-card--flipped .flash-academy-card__inner'));
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});
+
+test('facilitator starter templates preserve the original session editor and required registration fields',()=>{
+ assert.deepEqual(sessionTemplateOptions.map(x=>x.targetMinutes),[15,30,60]);
+ for(const language of ['ar','en'] as const){
+  for(const [id,count] of [['warmup',3],['workshop',4],['full',7]] as const){
+   const deck=makeSessionStarter(id,language);
+   assert.equal(deck.length,count);
+   assert.ok(deck.every(a=>typeof a.prompt==='string'&&a.prompt.length>0));
+   assert.ok(deck.every(a=>types.includes(a.type)),id);
+   assert.equal(deck[0].type,'Live Poll');
+   assert.ok(deck.some(a=>a.type==='Quiz'));
+   const separate=makeSessionStarter(id,language);
+   separate[0].prompt='CHANGED ONLY FOR TEST';
+   assert.notEqual(deck[0].prompt,separate[0].prompt,'Templates must be independent objects');
+  }
+ }
+ for(const ar of [true,false]){
+  const html=renderToStaticMarkup(<Builder ar={ar} initial="all" owner="trainer"
+   onClose={()=>{}} onCreated={()=>{}}/>);
+  for(const minutes of [15,30,60])assert.ok(html.includes(String(minutes)),String(minutes));
+  assert.ok(html.includes(ar?'كسر جليد':'Warm-up'));
+  assert.ok(html.includes(ar?'سيشن تفاعلي':'Interactive'));
+  assert.ok(html.includes(ar?'ورشة كاملة':'Full workshop'));
+ }
+ const builder=readFileSync('components/arena/Builder.tsx','utf8');
+ assert.ok(builder.includes("if(deck.length&&!window.confirm("));
+ assert.ok(builder.includes('setDeck(makeSessionStarter('));
+ assert.ok(builder.includes("if(live)return;"));
+ assert.ok(builder.includes('sessionTemplateOptions.map('));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('.builder-session-template:focus-visible'));
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes("t('الاسم بالكامل','Full name')"));
+ assert.ok(session.includes("t('الرقم الوظيفي','Employee ID')"));
 });
