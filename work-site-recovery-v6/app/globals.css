@@ -1862,3 +1862,15 @@
 .effects-off .arena-victory__firework,.effects-off .arena-victory__confetti,.effects-off .arena-victory__spotlight{display:none!important}
 .effects-light .arena-victory__confetti>i:nth-child(odd),
 .effects-light .arena-victory__firework:nth-child(odd){display:none}
+
+/* V6 controlled victory bursts: prevent perpetual heavy FX on projector displays.
+   Clicking Replay remounts the stage and replays all animation sequences. */
+.arena-victory__firework,
+.arena-victory__firework>i,
+.arena-victory__confetti>i{animation-iteration-count:3!important}
+@media(prefers-reduced-motion:reduce){
+ .arena-victory__backdrop .arena-victory__firework,
+ .arena-victory__backdrop .arena-victory__confetti{display:none!important}
+}
+.effects-off .arena-victory__backdrop .arena-victory__firework,
+.effects-off .arena-victory__backdrop .arena-victory__confetti{display:none!important}
