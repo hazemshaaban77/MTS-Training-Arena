@@ -13,6 +13,10 @@ export default function ArenaQuizExperience({
  const revealed=closed&&!!s.keyRevealed;
  const choices=Array.isArray(a.options)?a.options:[];
  const disclosedIndex=revealed&&Number.isInteger(a.correct)&&a.correct>=0&&a.correct<choices.length?a.correct:null;
+ // Defense in depth: even if a future response includes authored answer keys,
+ // never hand them to a presentation component before the server reveal flag.
+ const visibleQuestion=revealed?a:{...a,correct:undefined,explanation:undefined,
+  order:undefined,pairs:undefined,assignments:undefined,regions:undefined};
  const t=(arabic:string,english:string)=>ar?arabic:english;
  const responses=Number.isFinite(Number(s.submitted))?Math.max(0,Number(s.submitted)):0;
  return <section className={'arena-quiz-show '+(actor?'arena-quiz-show--learner':display?'arena-quiz-show--projector':'arena-quiz-show--trainer')}>
@@ -25,7 +29,7 @@ export default function ArenaQuizExperience({
   {actor&&!s.mine?.answered&&!closed&&<div className="arena-quiz-show__tip"><HelpCircle size={17}/>
     {t('اختار إجابتك، وبعدها اضغط تثبيت الإجابة قبل انتهاء الوقت.','Pick an answer, then lock it in before time runs out.')}</div>}
   <div className="arena-quiz-show__question">
-   <QuestionComponent key={s.current} a={a} ar={ar} disabled={!canAnswer||busy}
+   <QuestionComponent key={s.current} a={visibleQuestion} ar={ar} disabled={!canAnswer||busy}
     closed={closed} mine={s.mine} eliminated={s.game?.eliminated||[]}
     tally={revealed?s.tally:null} onSubmit={onSubmit}
     hideSubmit={!actor} hidePrompt={true}/>
