@@ -1,0 +1,27 @@
+name: V6 prepare original logo transparencies
+on:
+  push:
+    branches: ['develop/v6-github-arena']
+    paths: ['work-site-recovery-v6/scripts/isolate-original-logos.py']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  isolate-logos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Generate cropped transparent copies
+        run: |
+          python -m pip install --disable-pip-version-check pillow==11.3.0
+          python work-site-recovery-v6/scripts/isolate-original-logos.py
+      - name: Commit only newly isolated images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work-site-recovery-v6/public/mts-transparent.png work-site-recovery-v6/public/training-transparent.png
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "V6: add precisely cropped transparent original brand artwork"
+          git push origin HEAD:develop/v6-github-arena
