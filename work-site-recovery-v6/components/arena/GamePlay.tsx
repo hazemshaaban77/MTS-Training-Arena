@@ -5,6 +5,7 @@ import LivePoll from './LivePoll';
 import ArenaGameShow from './ArenaGameShow';
 import ArenaEscapeRoom from './ArenaEscapeRoom';
 import ArenaOrderIt from './ArenaOrderIt';
+import ArenaMetaPlan from './ArenaMetaPlan';
 import {OpenBoxExperience,FlashcardExperience} from './ArenaDiscoveryGames';
 export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onInteract,onControl}:any){
  const a=s.activity,t=(a:string,e:string)=>ar?a:e,closed=s.status!=='question',g=s.game||{},mine=s.mine,actor=!!mine&&!host&&!display;
@@ -46,8 +47,10 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
  if(a.type==='Flashcards')return <FlashcardExperience a={a} ar={ar} actor={actor} host={host}
   usable={usable} closed={closed} busy={busy} g={g} s={s} card={card}
   setCard={setCard} onControl={onControl} send={send}/>;
- const meta=['Meta Plan','Categorize'].includes(a.type);
- if(meta&&(host||display))return <div className="meta-stage"><div className="metaplan-board">{a.categories.map((c:string,i:number)=><div className={'meta-category '+(s.runtime.highlight===i?'highlighted':'')} key={i}><h3 onClick={()=>host&&onControl('highlight',i)}>{c}</h3>{s.keyRevealed?a.items.map((v:string,j:number)=>a.assignments?.[j]===i?<span className="meta-card revealed" key={j}>{v}</span>:null):<span className="muted">{t('التصنيف مستقل على الموبايل','Independent classification on mobile')}</span>}</div>)}</div>{!s.keyRevealed&&<div className="meta-unassigned">{a.items.map((v:string,i:number)=><span className="meta-card" key={i}>{v}</span>)}</div>}{host&&closed&&<div className="hero-actions"><button className="btn primary" onClick={()=>onControl('revealkey')}>{t('كشف التصنيف الصحيح','Reveal correct classification')}</button><button className="btn secondary" onClick={()=>onControl('metareveal')}>{t('كشف تدريجي','Progressive reveal')}</button></div>}{host&&<label>{t('ملاحظات النقاش','Discussion notes')}<textarea defaultValue={s.runtime.notes||''} onBlur={e=>onControl('notes',undefined,{notes:e.target.value})}/></label>}{(host||s.runtime.analytics)&&s.metaSummary&&<div className="meta-analytics">{s.metaSummary.map((x:any,i:number)=><div key={i}><span>{a.items[i]}</span>{x.map((n:number,j:number)=><b key={j}>{a.categories[j]}: {n}</b>)}</div>)}</div>}</div>;
+ if(['Meta Plan','Categorize'].includes(a.type))return <ArenaMetaPlan key={s.current} s={s} ar={ar}
+  host={host} display={display} actor={actor} canAnswer={canAnswer} busy={busy}
+  onSubmit={onSubmit} onControl={onControl}/>;
+ const meta=false;
  if(a.type==='Live Poll')return <LivePoll s={s} ar={ar} host={host} display={display} canAnswer={canAnswer} busy={busy} onSubmit={onSubmit}/>;
  if(a.type==='Order It')return <ArenaOrderIt key={s.current} a={a} s={s} ar={ar} actor={actor} canAnswer={canAnswer} busy={busy} onSubmit={onSubmit}/>;
  if(a.mainType==='Ultimate Game Show'||a.type==='Ultimate Game Show')
