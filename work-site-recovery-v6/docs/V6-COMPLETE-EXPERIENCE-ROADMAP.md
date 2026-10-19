@@ -188,3 +188,20 @@ A task is DONE only after:
 - Accurate activity-specific analytics, branded PDF, upload security review and complete 20/80 participant stress and physical room acceptance (F, A).
 
 **Next execution gate:** wait for latest Actions run, fix any failing checks; only then publish reviewed tested V6 to the same /v6/ path and verify asset/route delivery.
+
+
+## Verified V6 release checkpoint — 2026-10-19
+
+**Latest actual V6 Pages publish completed SUCCESSFULLY:** [GitHub Actions release #39288217789](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39288217789), commit `c9b179461c0598eb99b82d1c780e0af14a4ffd22`. It re-ran full V6 tests/build and deployed the existing `/v6/` path. Earlier combined pre-release validation at `045bf036ca58791490fa1f1a922c611ea9330d66` also passed [run #39287859705](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39287859705).
+
+**Now implemented, CI-built and deployed in V6 (software-level confirmation):**
+- QR early-scan/pre-lobby, invalid-code and API failure retry, no unregistered participant intro splash; current full registration form stays unchanged.
+- Explicit server receipt status for answers, safe uncertain POST verification, removal of misleading instant-success Poll click state, mobile question scroll reset, 5s fallback refresh during active disconnected rounds.
+- Trainer preflight panel with accurate API/attendance/deck indicators and visibly manual media/projector/sound confirmations; distinct lobby-open vs first-round-start controls and zero-attendee warning.
+- Builder blank/sample deck choice with guard against accidental replacement; conservative timed-step/transition estimate.
+- Personal trainee results using existing authoritative scoreboard, including team rank when relevant and participation acknowledgment for unscored cases; recovery-code copy button **outside** the unchanged registration form.
+- Existing simulator, all ten games, images, finale, one session QR, original branding and legacy routes remain intact.
+
+**Still not complete and not to be misrepresented:** real phone/device scan, simulator/server equivalence, staged disconnection/lost-ack QA, 20/80 participant concurrency, projector visual validation, game-by-game WOW rework (Wheel, Box, Flashcards, etc.), professional PDF and per-activity reports, signed media upload/security review. The latest release demonstrates CI/build/release success, not full in-room UAT.
+
+**Next planned development:** B05 simulator rules/fidelity, B09/B10 richer live trainer director controls, C05/C06 trainee mobile legibility and touch target pass, and Wave 2 signature game redesigns. Preserve registration form, exact V6 URL and the historical released artifacts.
