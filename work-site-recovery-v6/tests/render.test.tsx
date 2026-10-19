@@ -9,6 +9,8 @@ test('approved arena photo fills home banner without legacy perspective/scale, a
  assert.match(revision,/height:110%!important/);
  assert.match(revision,/height:100%!important/);
  assert.doesNotMatch(revision,/height:154%/);
- assert.match(revision,/\.workspace \.dashboard \.hero \.dashboard-hero-art\s*\{[^}]*scale:1!important;[^}]*transform:none!important/s);
- assert.match(revision,/\.workspace \.dashboard \.hero \.dashboard-hero-scene\s*\{[^}]*object-fit:cover!important;[^}]*animation:none!important/s);
+ const art=revision.split('.workspace .dashboard .hero .dashboard-hero-art{')[1]?.split('}')[0]||'';
+ const scene=revision.split('.workspace .dashboard .hero .dashboard-hero-scene{')[1]?.split('}')[0]||'';
+ assert.ok(art.includes('scale:1!important;')&&art.includes('transform:none!important;'));
+ assert.ok(scene.includes('object-fit:cover!important;')&&scene.includes('animation:none!important;'));
 });
