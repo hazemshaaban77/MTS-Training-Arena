@@ -52,3 +52,20 @@ test('video and uploaded image URLs stay reachable through the Pages gateway',()
  assert.ok(html.includes('controls=""'));
  assert.ok(html.includes('mts-training-arena-v6-gateway.pages.dev'));
 });
+
+test('Cloudinary upload path is Firebase-signed on Worker and does not reveal server secret in browser code',()=>{
+ const worker=readFileSync('github-api-worker.ts','utf8');
+ const client=readFileSync('lib/client.ts','utf8');
+ const workspace=readFileSync('components/arena/WorkspaceTools.tsx','utf8');
+ assert.ok(worker.includes("url.pathname==='/api/media-sign'"));
+ assert.ok(worker.includes('await authorizeFirebaseTrainer(request'));
+ assert.ok(worker.includes('await checkRate(env.DB,request)'));
+ assert.ok(worker.includes("crypto.subtle.digest('SHA-256'"));
+ assert.ok(worker.includes('CLOUDINARY_API_SECRET'));
+ assert.ok(client.includes("await api('media-sign'"));
+ assert.ok(client.includes("api.cloudinary.com/v1_1/"));
+ assert.ok(!client.includes('CLOUDINARY_API_SECRET'));
+ assert.ok(client.includes("parsed.hostname!=='res.cloudinary.com'"));
+ assert.ok(workspace.includes('uploadLibraryFile'));
+ assert.ok(workspace.includes('video/mp4,video/webm'));
+});
