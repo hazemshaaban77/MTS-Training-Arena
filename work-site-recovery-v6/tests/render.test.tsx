@@ -3,6 +3,7 @@ import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictor
 import ArenaGameShow from '../components/arena/ArenaGameShow';
 import ArenaEscapeRoom from '../components/arena/ArenaEscapeRoom';
 import ArenaMetaPlan from '../components/arena/ArenaMetaPlan';
+import ArenaScenario from '../components/arena/ArenaScenario';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
@@ -818,4 +819,75 @@ test('Meta Plan reveal, notes, and aggregate insights remain server-owned',()=>{
  assert.ok(source.includes("onControl('notes',undefined,{notes})"));
  assert.ok(source.includes('Array.isArray(s.metaSummary)'));
  assert.ok(!source.includes("api('answer'"));
+});
+
+test('Scenario Challenge has its own bilingual trainer, learner and projector stage without leaking private paths',()=>{
+ const source=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(source.includes('return <ArenaScenario s={s} ar={ar}'));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 Scenario Challenge — fully distinct cinematic'));
+ assert.ok(css.includes('.arena-scenario__choice:focus-visible'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+ for(const ar of [true,false]){
+  const a=sample('Scenario Challenge',ar?'ar':'en');
+  const current={text:'The package is incomplete',choices:[{label:'Review first'},{label:'Send now'}],
+    ending:false,path:[]};
+  const base:any={activity:publicActivity(a),status:'question',mine:{id:'demo',eligible:true,answered:false},
+   current:0,paused:false,game:{version:2,scenario:current},players:[{uid:'demo',name:'Learner'}],
+   runtime:{},serverNow:Date.now()};
+  const learner=renderToStaticMarkup(<GamePlay s={base} ar={ar} host={false} display={false}
+   canAnswer busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(learner.includes('arena-scenario--learner'));
+  assert.ok(learner.includes('arena-scenario__case'));
+  assert.ok(learner.includes('arena-scenario__choices'));
+  assert.ok(learner.includes('Review first'));
+  assert.ok(!learner.includes('disabled=""'));
+  const privateState={...base,game:{version:4,scenario:{text:'Current',choices:[{label:'Private decision'}],
+    consequence:'PRIVATE CONSEQUENCE',path:[{consequence:'PRIVATE PATH STEP'}]}}};
+  for(const role of ['host','display']){
+   const rendered=renderToStaticMarkup(<GamePlay s={{...privateState,mine:null}} ar={ar}
+    host={role==='host'} display={role==='display'} canAnswer={false} busy={false}
+    onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+   assert.ok(rendered.includes('arena-scenario--stage'));
+   assert.ok(!rendered.includes('PRIVATE CONSEQUENCE'));
+   assert.ok(!rendered.includes('PRIVATE PATH STEP'));
+   assert.ok(!rendered.includes('Private decision'));
+   assert.ok(!rendered.includes('arena-scenario__choices'));
+   if(role==='host')assert.ok(rendered.includes('arena-scenario__facilitator'));
+   else assert.ok(!rendered.includes('arena-scenario__facilitator'));
+  }
+  const progressed=renderToStaticMarkup(<ArenaScenario s={base} ar={ar}
+   host={false} display={false} actor usable busy={false} closed={false}
+   g={{scenario:{...current,consequence:'I reviewed the details',
+    path:[{node:'start',choice:0,consequence:'I reviewed the details'}]}}}
+   send={()=>{}}/>);
+  assert.ok(progressed.includes('I reviewed the details'));
+  assert.ok(progressed.includes('arena-scenario__trail'));
+  assert.ok(progressed.includes('arena-scenario__consequence'));
+  const ending=renderToStaticMarkup(<ArenaScenario s={base} ar={ar}
+   host={false} display={false} actor usable={false} busy={false} closed={false}
+   g={{scenario:{text:'Safe delivery',ending:true,discussion:'Talk about the checks',
+    choices:[],path:[{consequence:'Checked data'}]}}} send={()=>{}}/>);
+  assert.ok(ending.includes('arena-scenario--ending'));
+  assert.ok(ending.includes('Talk about the checks'));
+  assert.ok(!ending.includes('arena-scenario__choice-index'));
+  const closed=renderToStaticMarkup(<ArenaScenario s={base} ar={ar}
+   host={false} display={false} actor usable={false} busy={false} closed
+   g={{scenario:current}} send={()=>{}}/>);
+  assert.ok(closed.includes(ar?'الجولة اتقفلت':'The round has closed'));
+  assert.ok(!closed.includes('Review first'));
+ }
+});
+test('Scenario client cannot override authoritative scoring, branch navigation or hidden node access',()=>{
+ const src=readFileSync('components/arena/ArenaScenario.tsx','utf8');
+ assert.ok(src.includes("send('decision',{choice:i})"));
+ assert.ok(!src.includes("api('answer'"));
+ assert.ok(!src.includes("setNode("));
+ assert.ok(!src.includes("c.next"));
+ assert.ok(!src.includes("c.points"));
+ const logic=readFileSync('lib/session-games.ts','utf8');
+ assert.ok(logic.includes("b.action!=='decision'"));
+ assert.ok(logic.includes("d.node=c.next"));
+ const serializer=readFileSync('lib/session-games.ts','utf8');
+ assert.ok(serializer.includes("choices:node.choices?.map((c:any)=>({label:c.label}))"));
 });
