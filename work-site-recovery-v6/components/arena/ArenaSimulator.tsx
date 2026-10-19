@@ -109,7 +109,7 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
   individual:[{uid:fakePlayer.uid,name:fakePlayer.name,score:0}],teams:[],teamMode:false,
   tally:isPoll&&((a.liveResults&&!closed)||closed)?tally:null,
   pollSummary:isPoll&&((a.liveResults&&!closed)||closed)?samplePollSummary(a,votes):null,
-  game, keyRevealed:closed,reveal:game.card,metaSummary:null
+  game, keyRevealed:closed,reveal:game.flipped?game.card:-1,metaSummary:null
  };
  const host=mode==='host',display=mode==='display',play=mode==='play';
  return <div key={runId} className={'arena-sim-stage arena-sim-stage--'+mode}>
