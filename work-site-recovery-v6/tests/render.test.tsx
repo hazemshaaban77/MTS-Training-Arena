@@ -348,6 +348,7 @@ test('QR entry states protect the unchanged participant registration form',()=>{
  assert.ok(source.includes("['ready','draft'].includes(s.status)"));
  assert.ok(source.includes("lastTraineeRound.current===key"));
  assert.ok(source.includes("window.scrollTo({top:0,behavior:'auto'})"));
+ assert.ok(source.includes("splash&&(host||display||isJoined)"),'The intro must never cover the unregistered trainee form');
  assert.ok(source.includes("const fallbackMs=host||view==='display'?1400:activeLearner?5000:12000"));
  assert.ok(source.includes("liveConnection==='live'?45000:fallbackMs"));
  const css=readFileSync('app/globals.css','utf8');
