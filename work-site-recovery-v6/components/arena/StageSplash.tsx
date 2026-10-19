@@ -7,7 +7,7 @@ const visuals:Record<string,any>={
  'Meta Plan':Boxes,'Escape Room':DoorOpen,'Live Poll':Radio,
  'Order It':ListOrdered,'Open the Box':Gift,'Flashcards':GalleryVerticalEnd,'Scenario Challenge':Route,
 };
-export default function StageSplash({type,label,ar,onComplete,durationMs=1300}:{type:string;label:string;ar:boolean;onComplete:()=>void;durationMs?:number}){
+export default function StageSplash({type,label,ar,onComplete,durationMs=1750}:{type:string;label:string;ar:boolean;onComplete:()=>void;durationMs?:number}){
  useEffect(()=>{const id=setTimeout(onComplete,durationMs);return()=>clearTimeout(id);},[type]);
  const Icon=visuals[type]||Zap;
  const identity=type.toLowerCase().replace(/[^a-z0-9]+/g,'-');

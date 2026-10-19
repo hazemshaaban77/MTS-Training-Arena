@@ -1185,3 +1185,46 @@
 }
 .effects-off .arena-power-timer,.effects-off .arena-power-timer *{animation:none!important;transition:none!important}
 .effects-light .arena-power-timer,.effects-light .arena-power-timer *{animation-duration:.16s!important}
+
+/* Approved cinematic 3D art: larger, immersive opening for each activity.
+   Reuse original branded full-screen splash; do not replace the session clock. */
+.stage-splash:has(.splash-activity-cover){background:
+ radial-gradient(ellipse 63% 63% at 50% 40%,#194a66 0%,#08283b 37%,#050e23 74%,#020610 100%)}
+.stage-splash .splash-center{width:min(96vw,1020px);gap:clamp(10px,2vh,18px);
+ padding:clamp(15px,3.3vh,38px);max-height:100dvh;box-sizing:border-box}
+.stage-splash .splash-center .splash-activity-cover{
+ width:min(680px,86vw,calc(67dvh * 16 / 9))!important;
+ max-height:52dvh!important;aspect-ratio:16/9!important;
+ border:2px solid #6deee4a8;border-radius:23px;
+ box-shadow:0 15px 65px #000d,0 0 60px #24c3fa40,0 0 0 8px #72d9ed08;
+ transform:none!important;overflow:hidden;
+ animation:arena-art-showcase .7s cubic-bezier(.2,.75,.25,1) both;
+}
+.stage-splash .splash-center .splash-activity-cover img{
+ display:block;width:100%;height:100%;object-fit:cover;
+ transform:none;filter:none;
+}
+.stage-splash .splash-center h2{
+ margin:0;font-size:clamp(30px,5.8vw,76px);line-height:1.12;
+ letter-spacing:-.025em;color:#f4fcff;text-shadow:0 8px 30px #000e,0 0 18px #0b9de35e;
+}
+.stage-splash .splash-center p{margin:0;color:#aee9ef;font-size:clamp(13px,1.5vw,20px)}
+.stage-splash .splash-overline{color:#88eadd}
+.stage-splash .splash-skip{margin:0;flex:none}
+.stage-splash .splash-progress{height:4px;background:linear-gradient(90deg,#14afe3,#51f4ca,#2fb4f7)}
+@keyframes arena-art-showcase{
+ from{opacity:0;scale:.84;filter:blur(3px)}
+ to{opacity:1;scale:1;filter:blur(0)}
+}
+@media(max-width:720px){
+ .stage-splash .splash-center{gap:10px;padding:18px 12px}
+ .stage-splash .splash-center .splash-activity-cover{width:min(91vw,540px)!important;max-height:42dvh!important;border-radius:15px}
+ .stage-splash .splash-overline{font-size:8px;letter-spacing:.12em}
+ .stage-splash .splash-center h2{font-size:clamp(28px,8vw,46px)}
+ .stage-splash .splash-center p{font-size:12px}
+ .stage-splash .splash-skip{padding:9px 17px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .stage-splash .splash-center .splash-activity-cover{animation:none!important}
+}
+.effects-off .stage-splash .splash-center .splash-activity-cover{animation:none!important}
