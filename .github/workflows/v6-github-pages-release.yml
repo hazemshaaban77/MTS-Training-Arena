@@ -27,10 +27,18 @@ jobs:
           set -euo pipefail
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/me" | jq -e '.authenticated == false'
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/branding" | jq -e '.mts and .training'
+      - name: Verify alternate Pages gateway and browser CORS
+        run: |
+          set -euo pipefail
+          gateway="https://mts-training-arena-v6-gateway.pages.dev"
+          curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$gateway/api/me" | jq -e '.authenticated == false'
+          headers="$(curl --fail-with-body -sS -D - -o /dev/null -X OPTIONS -H "Origin: https://hazemshaaban77.github.io" -H "Access-Control-Request-Method: GET" -H "Access-Control-Request-Headers: x-firebase-token" "$gateway/api/me")"
+          echo "$headers" | grep -Eqi 'HTTP/[0-9.]+ 204'
+          echo "$headers" | grep -qi 'access-control-allow-origin: https://hazemshaaban77.github.io'
       - name: Test and build the same Version 6 source
         working-directory: work-site-recovery-v6
         env:
-          VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev
+          VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-gateway.pages.dev
         run: |
           pnpm install --frozen-lockfile
           pnpm test
