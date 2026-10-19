@@ -1059,3 +1059,129 @@
  .stage-activity-identity strong{font-size:16px}
  .projector .stage-activity-identity .stage-current-cover{width:115px;height:64px}
 }
+
+
+/* FUTURISTIC ARENA — 3D HUD: zero changes to canonical server timer or scores.
+   Viewport role sizes: projection 202px, host 128px, trainee 108px.
+   Everything is CSS/SVG and respects reduced-motion/effects-off. */
+.round-meta{gap:14px;min-width:0}
+.round-meta>.activity-label{flex:0 1 auto;min-width:0;max-width:calc(100% - 135px)}
+.arena-power-timer{
+ --timer-neon:#27e3fc;
+ --timer-glow:#0583ff;
+ --timer-hot:#ff843e;
+ position:relative;isolation:isolate;flex-shrink:0;
+ inline-size:128px;block-size:128px;aspect-ratio:1;
+ display:grid;place-items:center;margin:-12px 0 -12px 0;
+ border-radius:50%;
+ color:#d7f9ff;font-variant-numeric:tabular-nums;
+ filter:drop-shadow(0 13px 18px #000c) drop-shadow(0 0 11px #0c9ed355);
+}
+.arena-power-timer--display{inline-size:202px;block-size:202px;margin:-18px 0}
+.arena-power-timer--play{inline-size:108px;block-size:108px;margin:-7px 0}
+.arena-power-timer__hardware{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+ background:
+ radial-gradient(circle at 50% 54%,#051224 0 32%,#0b2848 39%,#030e21 56%,transparent 58%),
+ conic-gradient(from 200deg,#081828,#7991b1 12%,#c8f3ff 18%,#253e5b 26%,#090f1e 38%,#7eabc9 57%,#c2eeff 66%,#1e344f 79%,#071125 92%,#a1c6df 98%);
+ border:2px solid #789ab9;box-shadow:
+ inset 0 0 0 2px #030913,inset 0 0 0 6px #15263e,
+ inset 2px 6px 13px #d6ffff33,inset -6px -12px 12px #000b,
+ 0 5px 0 #010714,0 9px 0 #0e2948,0 12px 18px #0009,
+ 0 0 32px #03acfb45;
+}
+.arena-power-timer__rim{position:absolute;inset:8%;border-radius:50%;
+ background:radial-gradient(circle,#05172b 0 54%,#13395a 57%,#020817 60%,#061b39 69%,#062138 70%,transparent 71%);
+ border:1px solid #249ce08f;
+ box-shadow:inset 0 0 27px #020813,inset 0 0 6px #21eaff8a,0 0 11px #1bbef0a1;
+}
+.arena-power-timer__ticks{position:absolute;inset:15%;border-radius:50%;
+ background:repeating-conic-gradient(from 0deg,#7fcffd95 0deg 1.3deg,transparent 1.3deg 9deg);
+ mask:radial-gradient(circle,transparent 0 82%,#000 83% 90%,transparent 91%);
+ opacity:.68;
+}
+.arena-power-timer__arc{position:absolute;inset:0;width:100%;height:100%;
+ transform:rotate(-90deg);
+ overflow:visible;filter:drop-shadow(0 0 4px var(--timer-neon));
+}
+.arena-power-timer__arc circle{fill:none;stroke-width:8}
+.arena-power-timer__arc-bed{stroke:#1a4769;opacity:.65}
+.arena-power-timer__arc-live{
+ stroke:var(--timer-neon);stroke-linecap:round;
+ transition:stroke-dashoffset .2s linear,stroke .25s ease;
+}
+.arena-power-timer__shine{position:absolute;inset:6%;border-radius:50%;
+ background:linear-gradient(145deg,#ffffff2d 0 6%,transparent 18% 67%,#38aaff13 78%,transparent 91%);
+ opacity:.6;
+}
+.arena-power-timer__hub{position:absolute;inset:30%;border-radius:50%;
+ background:radial-gradient(circle at 50% 50%,#0b2945 0%,#06162c 72%,#050d1f 100%);
+ box-shadow:0 0 30px #052a4e,inset 0 0 20px #030d1d;
+}
+.arena-power-timer__readout{position:relative;z-index:1;min-width:0;width:100%;
+ display:flex;align-items:center;flex-direction:column;justify-content:center;gap:2px;
+ direction:ltr;line-height:1;text-align:center;text-shadow:0 0 14px #09b8ffb0;
+}
+.arena-power-timer__caption{
+ font:800 7px/1.1 system-ui,sans-serif;letter-spacing:.17em;
+ text-transform:uppercase;color:#90dff0;
+}
+.arena-power-timer__digits{
+ color:#e5fcff;font-size:clamp(18px,2vw,25px);font-weight:900;
+ letter-spacing:-.06em;line-height:1.12;font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace;
+ text-shadow:0 0 8px #0aaafa,0 0 22px #00a7ffad,0 1px 0 #e0fbff;
+ display:flex;align-items:center;justify-content:center;white-space:nowrap;
+ animation:arena-hud-tick .2s ease-out both;
+}
+.arena-power-timer__indicator{
+ font:700 6px/1 system-ui,sans-serif;letter-spacing:.08em;
+ color:#65d8e8;text-transform:uppercase;
+}
+.arena-power-timer--display .arena-power-timer__digits{font-size:44px}
+.arena-power-timer--display .arena-power-timer__caption{font-size:10px;letter-spacing:.22em}
+.arena-power-timer--display .arena-power-timer__indicator{font-size:9px}
+.arena-power-timer--play .arena-power-timer__digits{font-size:20px}
+.arena-power-timer--play .arena-power-timer__caption{font-size:6px}
+.arena-power-timer--play .arena-power-timer__indicator{font-size:5px}
+.arena-power-timer.is-warning{--timer-neon:#ffb54e;--timer-glow:#f58130}
+.arena-power-timer.is-critical{--timer-neon:#ff515d;--timer-glow:#f31b3b;
+ animation:arena-hud-critical .75s ease-in-out infinite alternate;
+}
+.arena-power-timer.is-warning .arena-power-timer__digits,
+.arena-power-timer.is-critical .arena-power-timer__digits{color:#fff3ed;text-shadow:0 0 9px var(--timer-neon),0 0 25px var(--timer-glow)}
+.arena-power-timer.is-warning .arena-power-timer__indicator,
+.arena-power-timer.is-critical .arena-power-timer__indicator{color:var(--timer-neon)}
+.arena-power-timer.is-paused{--timer-neon:#ffbe6c;filter:drop-shadow(0 5px 14px #000b)}
+.arena-power-timer.is-paused .arena-power-timer__arc-live{transition:none}
+.arena-power-timer.is-ended{--timer-neon:#6af4ba;--timer-glow:#1a9e78}
+.arena-power-timer.is-untimed{--timer-neon:#8bcadd}
+.arena-power-timer.is-untimed .arena-power-timer__digits{gap:2px}
+.arena-power-timer__sr-alert{position:absolute;clip:rect(0 0 0 0);clip-path:inset(50%);
+ width:1px;height:1px;overflow:hidden;white-space:nowrap}
+@keyframes arena-hud-critical{
+ from{transform:scale(1);filter:drop-shadow(0 10px 15px #000b) drop-shadow(0 0 5px #f7255088)}
+ to{transform:scale(1.045);filter:drop-shadow(0 13px 18px #000b) drop-shadow(0 0 20px #fa3b4fb0)}
+}
+@keyframes arena-hud-tick{from{opacity:.7;transform:translateY(-2px) scale(1.05)}to{opacity:1;transform:none}}
+/* The 3D countdown stays beside the label, not over question or answer controls. */
+@media(max-width:760px){
+ .arena-power-timer{inline-size:104px;block-size:104px;margin:-6px 0}
+ .arena-power-timer__digits{font-size:20px}
+ .arena-power-timer__caption{font-size:6px}
+ .arena-power-timer__indicator{font-size:5px}
+ .arena-power-timer--display{inline-size:170px;block-size:170px}
+ .arena-power-timer--display .arena-power-timer__digits{font-size:36px}
+ .arena-power-timer--play{inline-size:91px;block-size:91px}
+ .arena-power-timer--play .arena-power-timer__digits{font-size:17px}
+ .round-meta>.activity-label{max-width:calc(100% - 105px)}
+}
+@media(max-width:425px){
+ .arena-power-timer{inline-size:91px;block-size:91px}
+ .arena-power-timer--display{inline-size:145px;block-size:145px}
+ .arena-power-timer__digits{font-size:17px}
+ .arena-power-timer--display .arena-power-timer__digits{font-size:30px}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-power-timer,.arena-power-timer *{animation:none!important;transition:none!important}
+}
+.effects-off .arena-power-timer,.effects-off .arena-power-timer *{animation:none!important;transition:none!important}
+.effects-light .arena-power-timer,.effects-light .arena-power-timer *{animation-duration:.16s!important}
