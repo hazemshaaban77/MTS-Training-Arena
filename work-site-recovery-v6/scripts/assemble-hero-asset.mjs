@@ -14,7 +14,7 @@ for(const sha of blobs){
  if(!response.ok)throw Error('Missing image part: '+sha+' HTTP '+response.status);
  const value=await response.json();
  if(value.encoding!=='base64')throw Error('Unexpected blob encoding');
- encoded+=Buffer.from(value.content.replace(/\\s/g,''),'base64').toString('utf8');
+ encoded+=Buffer.from(value.content.split(String.fromCharCode(10)).join(''),'base64').toString('utf8');
 }
 if(encoded.length!==47136||!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))throw Error('Asset transport length or content mismatch');
 const file=Buffer.from(encoded,'base64');
