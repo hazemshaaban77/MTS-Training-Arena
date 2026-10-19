@@ -233,3 +233,23 @@ A task is DONE only after:
 | 20/80 real participant acceptance | Outstanding | — | No | Not performed |
 
 **Next priority after this checkpoint:** (1) Open the Box, (2) Flashcards, (3) Game Show and Escape Room, while continuing genuine trainer/trainee E2E and simulator fidelity verification; then Meta Plan, Order It, Scenario, Live Poll and Quiz fine-tuning, projector / reporting and security. Use the same `develop/v6-github-arena` branch and only the existing `/v6/` public route; preserve existing participant registration fields and all authoritative backend behavior.
+
+
+## Game upgrade checkpoint — Open the Box and Flashcards (2026-10-19)
+
+**Published successfully to the existing `/v6/` route**, not a separate product version. Validation with regression tests: [GitHub Actions 39292689320](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39292689320) PASS, source commit `8077996c6786a945ef7f3f994787905ddc8295d7`. V6 full Pages release re-ran tests/build and deployed: [GitHub Actions 39292912023](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39292912023) SUCCESS; release commit `5d98f04fd6ada9e0d75c2210804c7c60397651d9`.
+
+### Newly shipped improvements
+
+- **Open the Box (Signature game wave 2):** independently designed cinematic gold-toned 3D-look boxes with actual lid-opening animation, distinguish unplayed/open/used states, remaining-box counter, bright stage question/reveal panel, host player selector, Arabic/English mobile 2-column and projector-aware layout. All open events, used-box flags, selected player, mini-quiz answers and reward content remain server-controlled. Closed spectator boxes cannot be opened from the display.
+- **Flashcards (Signature game wave 2):** dramatic stack/deck visual with CSS 3D flip front/back, clearly labeled reveal action, card counter, progress meter, previous/next navigation, self-assessment Known/Review-later based on actual game state. No fictitious mastery score: counter explicitly uses learner's own markings. Projector is read-only; trainer retains server reveal control. Mobile responsive and reduced motion/effects-off support.
+- **Regression coverage:** rendering tests for authoritative box outcome versus unopened state, used/repeatable controls, participant quiz action, read-only projector, Flashcard hidden answer before flip, reveal and self-review, accessibility/animation preferences. Both the existing backend, original logos, original form and single QR session contract are unchanged.
+
+### Release status vs acceptance
+
+- **Source implementation:** done.
+- **GitHub CI + public Pages deployment:** done and independently recorded as success.
+- **Real Android/iOS learner, actual trainer, projection visual and physical interaction QA:** still pending; this is NOT a completed classroom acceptance.
+- **Remaining signature games:** Ultimate Game Show and Escape Room next; then Meta Plan, Order It, Scenario Challenge, Live Poll and Quiz final polish. Simulator multi-person fidelity, exact per-game reporting, PDF, upload security and realistic 20/80-client UAT remain incomplete.
+
+Only V6 source under `work-site-recovery-v6/` was changed, no merge to `main`, no legacy `/arena/` modifications, no Worker/D1/Firebase auth/data changes.
