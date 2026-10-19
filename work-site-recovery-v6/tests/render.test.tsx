@@ -1,5 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
 import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';
+import ArenaGameShow from '../components/arena/ArenaGameShow';
+import ArenaEscapeRoom from '../components/arena/ArenaEscapeRoom';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
@@ -657,4 +659,108 @@ test('premium Order It stage keeps revealed ordering server-authoritative and su
  assert.ok(css.includes('V6 Order It: accessible cinematic sequencing board'));
  assert.ok(css.includes('.arena-sequence__step-actions button'));
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});
+
+test('premium Game Show stage keeps authoritative casting, betting and lifelines',()=>{
+ for(const ar of [true,false]){
+  const activity=publicActivity(sample('Ultimate Game Show',ar?'ar':'en'));
+  const players=[{uid:'p1',name:'Learner One',approval:'approved',team:'Lightning'},
+   {uid:'p2',name:'Learner Two',approval:'approved',team:'Wave'}];
+  const make=(phase:string,actor:boolean,closed=false)=>({
+   activity,players,individual:[{uid:'p1',name:'Learner One',score:2500}],
+   mine:actor?{id:'p1',eligible:true,answered:false}:null,
+   runtime:{phase,targets:['p1']},paused:false,status:closed?'results':'question',
+   current:0,queue:[activity],game:{version:0,lifelines:[],bet:null,audienceRequested:false}
+  });
+  const cast=renderToStaticMarkup(<GamePlay s={make('casting',false)} ar={ar}
+   host={true} display={false} canAnswer={false} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(cast.includes('arena-tv-show--casting'));
+  assert.ok(cast.includes('Learner One'));
+  assert.ok(cast.includes('arena-tv-show__contestants'));
+  assert.ok(!cast.includes('answer-option'),'Never leak answer choices during casting');
+  const betting=renderToStaticMarkup(<GamePlay s={make('betting',true)} ar={ar}
+   host={false} display={false} canAnswer={true} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(betting.includes('arena-tv-show--betting'));
+  assert.ok(betting.includes('2500')||betting.includes('2,500'));
+  assert.ok(!betting.includes('answer-option'),'Never leak questions during staking');
+  const playing={...make('answering',true),game:{
+   version:0,lifelines:['fifty'],eliminated:[1,2],bet:null,
+   audienceRequested:true,audience:[2,1,0,0]}};
+  const answer=renderToStaticMarkup(<GamePlay s={playing} ar={ar}
+   host={false} display={false} canAnswer={true} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(answer.includes('arena-tv-show--answering'));
+  assert.ok(answer.includes('arena-tv-show__question-frame'));
+  assert.ok(answer.includes('arena-tv-show__powerups'));
+  assert.ok(answer.includes('arena-tv-show__audience-chart'));
+  assert.ok(answer.includes('50:50'));
+  assert.ok(answer.includes('disabled=""'),'Used lifelines and eliminated answers remain disabled');
+  const screen=renderToStaticMarkup(<GamePlay s={{...playing,mine:null}} ar={ar}
+   host={false} display={true} canAnswer={false} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(screen.includes('arena-tv-show__audience'));
+  assert.ok(!screen.includes('arena-tv-show__powerups'));
+  assert.ok(!screen.includes('arena-tv-show__audience-ballot'));
+ }
+ const source=readFileSync('components/arena/GamePlay.tsx','utf8');
+ const game=readFileSync('components/arena/ArenaGameShow.tsx','utf8');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(source.includes("import ArenaGameShow from './ArenaGameShow'"));
+ assert.ok(game.includes("send('lifeline',{kind})"));
+ assert.ok(game.includes("send('audience',{choice:i})"));
+ assert.ok(game.includes("onControl('lockbets')"));
+ assert.ok(game.includes("onControl('stagecast',undefined,{players:cast})"));
+ assert.ok(game.includes("maxStake=Math.min(10000"));
+ assert.ok(css.includes('V6 WAVE 3 — CINEMATIC ULTIMATE GAME SHOW'));
+ assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
+});
+test('premium Escape Room: actor-only puzzles, stage map and audited trainer overrides',()=>{
+ for(const ar of [true,false]){
+  const original=sample('Escape Room',ar?'ar':'en');
+  const a=publicActivity(original);
+  const players=[{uid:'p1',name:'Learner One',approval:'approved',team:'Lightning'}];
+  const state:any={activity:a,players,runtime:{phase:'answering'},current:0,
+   status:'question',game:{version:0,progress:[{actor:'p1',room:1,puzzle:0}],
+    escape:{room:0,puzzle:0,totalRooms:2,title:original.rooms[0].title,
+     narrative:original.rooms[0].narrative,
+     question:publicActivity(original.rooms[0].puzzles[0]),
+     hintAvailable:false,attempts:0,lastCorrect:null,escaped:false}},
+   mine:{id:'p1',eligible:true},paused:false,serverNow:Date.now()};
+  const learner=renderToStaticMarkup(<GamePlay s={state} ar={ar}
+   host={false} display={false} canAnswer={true} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(learner.includes('arena-escape-vault'));
+  assert.ok(learner.includes('arena-escape-vault__mission'));
+  assert.ok(learner.includes('arena-escape-vault__route'));
+  assert.ok(learner.includes('arena-escape-vault__puzzle'));
+  assert.ok(learner.includes('disabled=""'),'Hints unavailable before first attempt');
+  const viewer=renderToStaticMarkup(<GamePlay s={{...state,mine:null}} ar={ar}
+   host={false} display={true} canAnswer={false} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(viewer.includes('arena-escape-vault__spectator'));
+  assert.ok(!viewer.includes('arena-escape-vault__puzzle'));
+  assert.ok(!viewer.includes(original.rooms[0].puzzles[0].prompt));
+  const trainer=renderToStaticMarkup(<GamePlay s={{...state,mine:null}} ar={ar}
+   host={true} display={false} canAnswer={false} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(trainer.includes('Learner One'));
+  assert.ok(trainer.includes('arena-escape-vault__participants'));
+  assert.ok(trainer.includes(ar?'تجاوز موثّق':'Audited override'));
+  const final=renderToStaticMarkup(<GamePlay s={{...state,game:{version:3,escape:{
+   room:2,puzzle:0,totalRooms:2,escaped:true}}}} ar={ar}
+   host={false} display={false} canAnswer={false} busy={false}
+   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+  assert.ok(final.includes('arena-escape-vault--escaped'));
+  assert.ok(!final.includes('arena-escape-vault__puzzle'));
+ }
+ const source=readFileSync('components/arena/GamePlay.tsx','utf8');
+ const code=readFileSync('components/arena/ArenaEscapeRoom.tsx','utf8');
+ assert.ok(source.includes("import ArenaEscapeRoom from './ArenaEscapeRoom'"));
+ assert.ok(code.includes("send('puzzle',{answer})"));
+ assert.ok(code.includes("send('hint')"));
+ assert.ok(code.includes("onControl('override',undefined,{player:participant.uid||participant.id,reason:reason.trim()})"));
+ assert.ok(code.includes('const readyToOverride='));
+ assert.ok(!code.includes('a.rooms[e.room].puzzles['),'Never read hidden full room puzzle content on the client');
 });
