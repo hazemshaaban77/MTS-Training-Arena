@@ -2863,3 +2863,89 @@
  .arena-tv-show *,.arena-escape-vault *{animation:none!important;transition:none!important}
 }
 .effects-off .arena-tv-show *,.effects-off .arena-escape-vault *{animation:none!important;transition:none!important}
+
+
+/* V6 Order It: accessible cinematic sequencing board; server remains authority. */
+.arena-sequence{position:relative;isolation:isolate;max-width:1020px;margin:12px auto 24px;
+ padding:clamp(15px,3vw,33px);border-radius:25px;
+ background:radial-gradient(ellipse 80% 40% at 50% 2%,#195f817e,transparent),
+ linear-gradient(155deg,#0c2841ee,#071529f5 70%,#082e40e8);
+ border:1px solid #4d9cb581;box-shadow:0 22px 60px #0008,inset 0 1px 0 #b2ecff1c;color:#e8ffff}
+.arena-sequence__intro{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.arena-sequence__emblem{flex:none;width:76px;height:76px;border-radius:20px;display:grid;place-items:center;
+ position:relative;border:1px solid #6be6cf99;background:linear-gradient(140deg,#1c77919e,#113750);
+ box-shadow:0 0 24px #50c8df38,inset 0 2px 3px #dffafa2c;color:#abfff3}
+.arena-sequence__emblem span{position:absolute;inset-inline-end:7px;bottom:6px;
+ color:#9ed9ec;font-size:10px;font-weight:900;font-variant-numeric:tabular-nums}
+.arena-sequence__heading{flex:1;min-width:175px}
+.arena-sequence__heading .eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;
+ letter-spacing:.1em;color:#7df1db}
+.arena-sequence__heading h3{margin:8px 0;font-size:clamp(20px,2.7vw,36px);line-height:1.28;
+ font-weight:950;color:#effeff;text-shadow:0 3px 17px #01e2ce2e}
+.arena-sequence__heading p{font-size:clamp(12px,1.3vw,16px);line-height:1.6;color:#b7d1da;max-width:720px}
+.arena-sequence__count{display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:60px;
+ border:1px solid #60d5ca5d;background:#1a5c6960;color:#92f5e6;font-size:11px;font-weight:850}
+.arena-sequence__flow{display:flex;flex-direction:column;gap:19px}
+.arena-sequence__step{position:relative;display:flex;align-items:center;gap:14px;min-height:86px;
+ padding:14px 18px;border-radius:16px;
+ border:1px solid #4f93a77d;background:linear-gradient(100deg,#154b67d9,#0f304de0 65%,#102441ce);
+ box-shadow:inset 0 1px 0 #ebffff1a,0 8px 20px #0005;transition:transform .18s,border-color .18s}
+.arena-sequence__step[draggable="true"]{cursor:grab}
+.arena-sequence__step[draggable="true"]:hover{border-color:#78f6e4;transform:translateY(-2px)}
+.arena-sequence__step--revealed{border-color:#4ec8a8ae;background:linear-gradient(100deg,#1b6e696c,#104045c9)}
+.arena-sequence__index{display:grid;place-items:center;flex:none;width:50px;height:50px;
+ border-radius:15px;background:linear-gradient(130deg,#1e9cbd,#1f587f);border:1px solid #a5f6ea72;
+ color:#edffff;font-size:21px;font-weight:1000;font-variant-numeric:tabular-nums;
+ box-shadow:inset 0 2px 1px #ffffff36,0 0 17px #4beee229}
+.arena-sequence__step-text{flex:1;min-width:0;font-size:clamp(15px,1.7vw,22px);
+ line-height:1.5;font-weight:760;overflow-wrap:anywhere}
+.arena-sequence__step-actions{display:flex;align-items:center;gap:7px;flex:none}
+.arena-sequence__drag{display:grid;place-items:center;width:25px;color:#69a6bb;cursor:grab}
+.arena-sequence__step-actions button{width:46px;height:46px;display:grid;place-items:center;
+ border:1px solid #58b4c6ab;border-radius:13px;background:#1a4e68;color:#dbffff;
+ box-shadow:inset 0 1px 0 #fff2;cursor:pointer}
+.arena-sequence__step-actions button:hover:not(:disabled){background:#187e96;border-color:#71ffda}
+.arena-sequence__step-actions button:disabled{opacity:.26;cursor:not-allowed}
+.arena-sequence__step-actions button:focus-visible,.arena-sequence__submit:focus-visible{
+ outline:3px solid #befff0;outline-offset:3px}
+.arena-sequence__correct{color:#6ce8ba;flex:none}
+.arena-sequence__readonly{color:#84a6b6;flex:none}
+.arena-sequence__connector{position:absolute;z-index:0;height:20px;width:4px;border-radius:2px;
+ bottom:-20px;inset-inline-start:41px;background:linear-gradient(#70c6de,#49f5c869)}
+.arena-sequence__submit{width:min(100%,620px);margin:25px auto 0;
+ display:flex;align-items:center;justify-content:center;gap:10px;min-height:55px;
+ padding:13px 22px;border-radius:14px;border:1px solid #c5ffee80;color:#092a33;
+ background:linear-gradient(100deg,#51e0d2,#a4f9bb);font-size:clamp(14px,1.6vw,17px);
+ font-weight:930;box-shadow:0 10px 28px #30b7a657,inset 0 2px 1px #ffffff92}
+.arena-sequence__submit:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+.arena-sequence__submit:disabled{cursor:not-allowed;filter:grayscale(.65);opacity:.43}
+.arena-sequence__receipt,.arena-sequence__final{margin:22px 0 0;
+ display:flex;align-items:center;justify-content:center;gap:9px;
+ padding:14px;border-radius:12px;border:1px solid #48c5af69;background:#155a5780;
+ text-align:center;font-size:clamp(12px,1.4vw,17px);font-weight:740;line-height:1.6;color:#c3ffe7}
+.arena-sequence__footer{text-align:center;color:#99c4cb;margin:23px auto 0;
+ font-size:clamp(11px,1.2vw,13px);line-height:1.65}
+.projector .arena-sequence{max-width:1360px}
+.projector .arena-sequence__step{min-height:100px;padding:18px 26px}
+.projector .arena-sequence__step-text{font-size:clamp(24px,2.6vw,36px)}
+@media(max-width:720px){
+ .arena-sequence{padding:17px 11px;border-radius:18px}
+ .arena-sequence__intro{gap:10px;margin-bottom:18px}
+ .arena-sequence__emblem{width:49px;height:49px;border-radius:14px}
+ .arena-sequence__emblem svg{width:23px}
+ .arena-sequence__heading h3{font-size:20px}
+ .arena-sequence__count{width:100%;justify-content:center}
+ .arena-sequence__flow{gap:15px}
+ .arena-sequence__step{padding:11px 9px;min-height:76px;gap:8px}
+ .arena-sequence__index{height:39px;width:39px;flex:none;border-radius:10px;font-size:15px}
+ .arena-sequence__step-text{font-size:14px}
+ .arena-sequence__step-actions{gap:4px}
+ .arena-sequence__step-actions button{width:44px;height:44px;border-radius:10px}
+ .arena-sequence__drag{display:none}
+ .arena-sequence__connector{inset-inline-start:26px;height:17px;bottom:-16px}
+ .arena-sequence__submit{min-height:55px}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-sequence *, .arena-sequence__step{animation:none!important;transition:none!important}
+}
+.effects-off .arena-sequence *, .effects-off .arena-sequence__step{animation:none!important;transition:none!important}
