@@ -19,10 +19,21 @@ export function arenaLiveUrl(code:string):string|null{
 }
 export async function api(path:string,body?:any,token?:string){
  const firebaseToken=await trainerToken();
- let r:Response;
- try{
-  r=await fetch(apiOrigin()+'/api/'+path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(firebaseToken?{'X-Firebase-Token':firebaseToken}:{}),...(token?{'X-Player-Token':token}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store'});
- }catch{throw Error('API_UNREACHABLE');}
+ const url=apiOrigin()+'/api/'+path;
+ // Only retry safe GET requests. Retrying writes could duplicate answers or actions.
+ const attempts=body===undefined ? 3 : 1;
+ let r:Response|undefined;
+ for(let i=0;i<attempts;i++){
+  try{
+   r=await fetch(url,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(firebaseToken?{'X-Firebase-Token':firebaseToken}:{}),...(token?{'X-Player-Token':token}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store',...(body===undefined?{signal:AbortSignal.timeout(8500)}:{})});
+   break;
+  }catch{
+   if(i===attempts-1)throw Error('API_UNREACHABLE');
+   // A short pause lets the browser recover from brief Workers/DNS interruptions.
+   await new Promise(resolve=>setTimeout(resolve,400*(i+1)));
+  }
+ }
+ if(!r)throw Error('API_UNREACHABLE');
  let data:any;
  try{data=await r.json();}catch{throw Error('API_BAD_RESPONSE');}
  if(!r.ok){
