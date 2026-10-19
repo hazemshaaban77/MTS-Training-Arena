@@ -1,0 +1,43 @@
+name: V6 install approved cinematic art archive
+on:
+  push:
+    branches: ['develop/v6-github-arena']
+    paths:
+      - 'work-site-recovery-v6/asset-imports/MTS_Arena_3D_Activity_Artwork.zip'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - uses: pnpm/action-setup@v4
+        with: {version: '11.25.0'}
+      - name: Import the exact ten image-generated WebP graphics
+        id: source
+        run: |
+          file="work-site-recovery-v6/asset-imports/MTS_Arena_3D_Activity_Artwork.zip"
+          if test ! -f "$file"; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "present=true" >> "$GITHUB_OUTPUT"
+          python work-site-recovery-v6/scripts/install-cinematic-artwork.py "$file"
+      - name: Validate before committing asset changes
+        if: steps.source.outputs.present == 'true'
+        working-directory: work-site-recovery-v6
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm run build:github
+      - name: Commit reviewed image artifacts (no production release)
+        if: steps.source.outputs.present == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work-site-recovery-v6/public/activity-art/*.webp work-site-recovery-v6/components/arena/ActivityArt.tsx
+          git rm -f work-site-recovery-v6/asset-imports/MTS_Arena_3D_Activity_Artwork.zip
+          git commit -m "V6: import ten approved cinematic WebP illustrations"
+          git push origin HEAD:develop/v6-github-arena
