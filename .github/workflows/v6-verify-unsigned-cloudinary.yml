@@ -1,0 +1,49 @@
+name: V6 verify Cloudinary unsigned media uploads
+on:
+  push:
+    branches: ['develop/v6-github-arena']
+    paths:
+      - '.github/workflows/v6-verify-unsigned-cloudinary.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cloudinary-unsigned-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify image upload WITHOUT API key or secret
+        run: |
+          set -euo pipefail
+          url='https://api.cloudinary.com/v1_1/kzez0dlv/auto/upload'
+          status=$(curl -sS --max-time 90 -o /tmp/arena-image-result.json -w '%{http_code}' \
+            -X POST "$url" \
+            -F "file=@work-site-recovery-v6/public/arena-hero-final.webp;type=image/webp" \
+            -F "upload_preset=mtsarena_v6_u_7c94f2a1")
+          if [ "$status" != 200 ]; then
+            echo "Unsigned image upload failed with status $status"
+            jq -r '.error.message // .error // "unknown Cloudinary error"' /tmp/arena-image-result.json || true
+            exit 1
+          fi
+          jq -e '.resource_type=="image" and .format=="webp" and (.secure_url|startswith("https://res.cloudinary.com/kzez0dlv/image/upload/"))' /tmp/arena-image-result.json > /dev/null
+          jq '{asset_id, public_id, resource_type, bytes, secure_url}' /tmp/arena-image-result.json
+      - name: Generate tiny synthetic video to test MP4
+        run: |
+          set -euo pipefail
+          ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=blue:s=256x144:r=5:d=1 -c:v mpeg4 -q:v 12 -movflags +faststart -y /tmp/arena-sample.mp4
+          test -s /tmp/arena-sample.mp4
+      - name: Verify video upload WITHOUT API key or secret
+        run: |
+          set -euo pipefail
+          url='https://api.cloudinary.com/v1_1/kzez0dlv/auto/upload'
+          status=$(curl -sS --max-time 120 -o /tmp/arena-video-result.json -w '%{http_code}' \
+            -X POST "$url" \
+            -F "file=@/tmp/arena-sample.mp4;type=video/mp4" \
+            -F "upload_preset=mtsarena_v6_u_7c94f2a1")
+          if [ "$status" != 200 ]; then
+            echo "Unsigned MP4 upload failed with status $status"
+            jq -r '.error.message // .error // "unknown Cloudinary error"' /tmp/arena-video-result.json || true
+            exit 1
+          fi
+          jq -e '.resource_type=="video" and .format=="mp4" and (.secure_url|startswith("https://res.cloudinary.com/kzez0dlv/video/upload/"))' /tmp/arena-video-result.json > /dev/null
+          jq '{asset_id, public_id, resource_type, bytes, secure_url}' /tmp/arena-video-result.json
