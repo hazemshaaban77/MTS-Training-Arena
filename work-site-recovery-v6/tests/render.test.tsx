@@ -167,15 +167,15 @@ test('Live Poll results are chart ONLY with true shares, zero votes, English and
 });
 test('every Live Poll subtype charts its REAL aggregation rather than Quiz options',()=>{
  const a=sample('Live Poll','en'),base:any={activity:a,status:'results',submitted:4};
- const rating=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'rating'},pollSummary:{average:4.25,count:4}} ar={false}/>);
+ const rating=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'rating'},pollSummary:{average:4.25,count:4}}} ar={false}/>);
  assert.ok(rating.includes('4.3 / 5'));
  assert.ok(rating.includes('live-poll-chart--rating'));
- const words=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'word'},pollSummary:{words:{feedback:3,collaboration:1}}} ar={false}/>);
+ const words=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'word'},pollSummary:{words:{feedback:3,collaboration:1}}}} ar={false}/>);
  assert.ok(words.includes('feedback'));
  assert.ok(words.includes('75%'));
  assert.ok(words.includes('live-poll-chart--word'));
  assert.ok(!words.includes('word-cloud'));
- const ranking=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'priority'},pollSummary:{ranking:[{label:'Priority A',value:9},{label:'Priority B',value:5}]}} ar={false}/>);
+ const ranking=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'priority'},pollSummary:{ranking:[{label:'Priority A',value:9},{label:'Priority B',value:5}]}}} ar={false}/>);
  assert.ok(ranking.includes('Priority A'));
  assert.ok(ranking.includes('9'));
  assert.ok(ranking.includes('weighted ranking points'));
