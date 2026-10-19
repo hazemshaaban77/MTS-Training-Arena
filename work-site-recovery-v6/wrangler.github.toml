@@ -8,6 +8,7 @@ workers_dev = true
 
 [vars]
 ARENA_PUBLIC_ORIGIN = "https://hazemshaaban77.github.io"
+CLOUDINARY_CLOUD_NAME = "kzez0dlv"
 
 [[d1_databases]]
 binding = "DB"
