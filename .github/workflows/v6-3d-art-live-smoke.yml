@@ -1,0 +1,24 @@
+name: V6 verify live cinematic 3D assets
+on:
+  push:
+    branches: ['develop/v6-github-arena']
+    paths: ['.github/workflows/v6-3d-art-live-smoke.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify each of the ten live GitHub Pages WebP illustrations
+        run: |
+          set -euo pipefail
+          base='https://hazemshaaban77.github.io/MTS-Training-Arena/v6/activity-art'
+          for name in quiz wheel-of-fortune ultimate-game-show meta-plan escape-room live-poll order-it open-the-box flashcards scenario-challenge; do
+            out="/tmp/${name}.webp"
+            curl --retry 6 --retry-all-errors --retry-delay 3 --fail --silent --show-error --max-time 25 "${base}/${name}.webp" -o "$out"
+            test "$(wc -c < "$out")" -ge 18000
+            test "$(head -c 4 "$out")" = 'RIFF'
+            test "$(dd if="$out" bs=1 skip=8 count=4 status=none)" = 'WEBP'
+            echo "PASS ${name}.webp ($(wc -c < "$out") bytes)"
+          done
