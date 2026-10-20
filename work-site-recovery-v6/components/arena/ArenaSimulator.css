@@ -120,3 +120,21 @@
  .arena-simulator-dry-run__metrics span{padding:6px 9px}
  .arena-simulator-dry-run__metrics b{font-size:17px}
 }
+
+
+/* V6 championship local rehearsal controls stay independent of real sessions. */
+.arena-championship-practice{padding:10px;min-width:0;max-width:100%}
+.arena-championship-practice__toolbar{display:flex;align-items:center;flex-wrap:wrap;
+ gap:9px;padding:12px;margin-bottom:11px;border:1px solid #49889e;border-radius:12px;
+ background:#092b3e}
+.arena-championship-practice__toolbar strong{display:flex;align-items:center;gap:8px;
+ font-size:12px;color:#b6eadf;flex:1 1 260px}
+.arena-championship-practice__toolbar label{display:flex;align-items:center;gap:7px;
+ color:#e8faff;font-size:12px}
+.arena-championship-practice__toolbar select{min-height:44px;border:1px solid #62a7b3;
+ border-radius:8px;background:#102e4a;color:#e8fbff;padding:8px}
+.arena-championship-practice__toolbar .btn{min-height:44px;font-size:12px}
+.arena-championship-practice__note{font-size:12px;color:#ffdfb1;padding:10px}
+@media(max-width:760px){.arena-championship-practice{padding:5px}
+ .arena-championship-practice__toolbar label{width:100%;flex-wrap:wrap}
+ .arena-championship-practice__toolbar label select{max-width:100%}}
