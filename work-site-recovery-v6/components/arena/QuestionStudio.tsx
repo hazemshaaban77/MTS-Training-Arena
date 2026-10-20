@@ -45,7 +45,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  function save(){
   try{
    const copy=questions.map((x,i)=>{
-    const clean={...x,questions:undefined,mainType:undefined,type:x.type||'Quiz',
+    const clean:Activity={...x,questions:undefined,mainType:undefined,type:x.type||'Quiz',
      prompt:x.prompt?.trim()||'',options:(x.options||[]).map((v:string)=>v.trim()),
      correct:x.correct,timer:Number(x.timer),
      points:Number(x.points??1000),speed:mode==='ladder'?false:x.speed,
