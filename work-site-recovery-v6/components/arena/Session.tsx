@@ -10,6 +10,9 @@ import BrandHeader,{OfficialLogo} from './Brand';
 import GamePlay from './GamePlay';import Builder from './Builder';
 import StageMedia from './StageMedia';
 import StageSplash from './StageSplash';
+import ArenaMoment from './ArenaMoment';
+import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,type ArenaMomentKind} from '../../lib/arena-cinematics';
+import {ArenaSoundEngine,defaultArenaAudio,readArenaAudio,saveArenaAudio,type ArenaAudioPreferences} from '../../lib/arena-sound';
 import ArenaPowerTimer from './ArenaPowerTimer';
 import ArenaVictory from './ArenaVictory';
 import SessionEntryFeedback from './SessionEntryFeedback';
@@ -21,13 +24,17 @@ type Props={ar:boolean;view:string;code:string;navigate:(view:string,code?:strin
 export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  const t=(a:string,e:string)=>ar?a:e;const host=view==='host',display=view==='display';
  const [splash,setSplash]=useState<string|null>(null),[s,setS]=useState<any>(null),[error,setError]=useState(''),[connected,setConnected]=useState(true),[token,setToken]=useState<string|undefined>(),[name,setName]=useState(''),[team,setTeam]=useState('Lightning'),[joinCode,setJoinCode]=useState(code),[busy,setBusy]=useState(false),[now,setNow]=useState(Date.now()),[qr,setQr]=useState(''),[copied,setCopied]=useState(false),[sound,setSound]=useState(false),[endConfirm,setEndConfirm]=useState(false),[showQR,setShowQR]=useState(false),[editing,setEditing]=useState(false),[quiet,setQuiet]=useState(false),[intensity,setIntensity]=useState('full');
+ const [audioPrefs,setAudioPrefs]=useState<ArenaAudioPreferences>(defaultArenaAudio),[previewIntro,setPreviewIntro]=useState<{index:number;key:string}|null>(null),[moment,setMoment]=useState<ArenaMomentKind|null>(null);
+ const momentTimer=useRef<ReturnType<typeof setTimeout>|null>(null),previousSnapshot=useRef<any>(null),lastPreview=useRef(''),lastAnswerCue=useRef(''),lastSubmitCue=useRef('');
  const [liveConnection,setLiveConnection]=useState<'live'|'fallback'>('fallback');
  const [employeeId,setEmployeeId]=useState(''),[confirmed,setConfirmed]=useState(false),[recovering,setRecovering]=useState(false),[recoveryInput,setRecoveryInput]=useState(''),[recoveryNote,setRecoveryNote]=useState('');
  const [answerProgress,setAnswerProgress]=useState<{round:number;phase:'sending'|'verifying'|'confirmed'|'uncertain'}|null>(null);
  const answerSendLock=useRef(false);
- useEffect(()=>{const preference=localStorage.getItem('arena-effects');setIntensity(preference|| (window.matchMedia('(max-width:700px)').matches?'light':'full'));setQuiet(localStorage.getItem('arena-quiet')==='true');},[]);
+ useEffect(()=>{const preference=localStorage.getItem('arena-effects');setIntensity(preference|| (window.matchMedia('(max-width:700px)').matches?'light':'full'));setQuiet(localStorage.getItem('arena-quiet')==='true');setAudioPrefs(readArenaAudio());},[]);
  const routeKey=useRef('');routeKey.current=code+view+(token||'');
- const received=useRef(Date.now()),audio=useRef<AudioContext|null>(null),lastStatus=useRef(''),lastIntro=useRef(''),lastBeep=useRef(''),lastTraineeRound=useRef('');
+ const received=useRef(Date.now()),audio=useRef<ArenaSoundEngine|null>(null),lastStatus=useRef(''),lastIntro=useRef(''),lastBeep=useRef(''),lastTraineeRound=useRef('');
+ useEffect(()=>{audio.current??=new ArenaSoundEngine();return()=>{audio.current?.close();audio.current=null;if(momentTimer.current)clearTimeout(momentTimer.current);};},[]);
+ useEffect(()=>{audio.current?.update({...audioPrefs,enabled:sound});},[audioPrefs,sound]);
  const refreshLatest=useRef<()=>Promise<void>>(async()=>{});
  const refreshIssued=useRef(0),refreshApplied=useRef(0);
  const lastRefreshError=useRef<string|null>(null);
@@ -153,43 +160,56 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   return()=>window.cancelAnimationFrame(frame);
  },[host,display,s?.code,s?.current,s?.status,s?.mine?.id]);
  useEffect(()=>{if(!code)return;QRCode.toDataURL(siteUrl('join',code),{width:280,margin:2,errorCorrectionLevel:'M',color:{dark:'#091016',light:'#ffffff'}}).then(setQr).catch(()=>setQr(''));},[code]);
+ // All fanfares are opt-in, bounded Web Audio cues; never played on page load.
+ const remaining=s?.status==='question'?Math.max(0,s.paused?s.remaining:(s.deadline?s.deadline-(now+(s.serverNow-received.current)):0)):0,seconds=Math.ceil(remaining/1000);
  useEffect(()=>{
   if(!s)return;
-  const changed=lastStatus.current!==s.status;
-  if(changed&&sound&&!quiet&&!s.runtime?.quiet&&audio.current){
-   const ctx=audio.current;
-   if(s.status==='results'){
-    [523,659,784].forEach((frequency,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=frequency;g.gain.value=.035;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+i*.12);o.stop(ctx.currentTime+i*.12+.1);});
-   }else if(s.status==='completed'&&!s.surveyOnly){
-    // Optional victory fanfare, ONLY for the existing user-enabled sound toggle.
-    // No new audio files, network requests, autoplay or effect when quiet.
-    [392,523,659,784,1047,784,1047].forEach((frequency,i)=>{
-     const at=ctx.currentTime+[0,.19,.38,.57,.83,1.04,1.23][i];
-     const duration=i===6?.8:.29;
-     const o=ctx.createOscillator(),g=ctx.createGain();
-     o.type=i===6?'triangle':'sine';o.frequency.value=frequency;
-     g.gain.setValueAtTime(.0001,at);
-     g.gain.exponentialRampToValueAtTime(i===6?.038:.027,at+.025);
-     g.gain.exponentialRampToValueAtTime(.0001,at+duration);
-     o.connect(g);g.connect(ctx.destination);o.start(at);o.stop(at+duration+.01);
-    });
+  const prior=previousSnapshot.current;
+  const kind=eligibleMoment(prior,s,host?'host':display?'display':'play');
+  if(kind&&(host||display)){
+   setMoment(kind);
+   if(momentTimer.current)clearTimeout(momentTimer.current);
+   momentTimer.current=setTimeout(()=>setMoment(null),kind==='champion'?2900:1900);
+   audio.current?.play(kind==='champion'?'victory':kind==='lead'?'lead':'reveal',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+  }
+  if(s.status==='question'&&prior?.code===s.code&&prior.current!==s.current){
+   audio.current?.play('stage',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+  }
+  if(s.status==='question'&&s.mine?.answered){
+   const key=s.code+':'+s.current+':'+s.mine.id;
+   if(lastSubmitCue.current!==key){
+    lastSubmitCue.current=key;
+    audio.current?.play('lock',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+   }
+  }
+  if(s.status==='results'&&s.keyRevealed&&s.mine?.answered&&s.mine?.correct!==null){
+   const key=s.code+':'+s.current+':'+s.mine.id+':'+s.mine.correct;
+   if(lastAnswerCue.current!==key){
+    lastAnswerCue.current=key;
+    audio.current?.play(s.mine.correct?'correct':'incorrect',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
    }
   }
   lastStatus.current=s.status;
- },[s?.status,sound]);
- const remaining=s?.status==='question'?Math.max(0,s.paused?s.remaining:(s.deadline?s.deadline-(now+(s.serverNow-received.current)):0)):0,seconds=Math.ceil(remaining/1000);
+  previousSnapshot.current=s;
+ },[s?.revision,s?.current,s?.status,s?.keyRevealed,s?.mine?.answered,s?.mine?.correct,host,display]);
  useEffect(()=>{
-  if(!sound||quiet||s?.runtime?.quiet||s?.status!=='question'||s?.paused||!s?.deadline||seconds>5||seconds<1||!audio.current)return;
+  if(!s)return;
+  const scene=sceneFromHighlight(s.runtime?.highlight,s.status,s.current,s.queue?.length||0);
+  if(!scene||!display||intensity==='off'||s.runtime?.intensity==='off'){
+   setPreviewIntro(null);return;
+  }
+  if(lastPreview.current===scene.key)return;
+  lastPreview.current=scene.key;
+  setPreviewIntro(scene);
+  audio.current?.play('intro',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+ },[s?.runtime?.highlight,s?.status,s?.current,s?.code,display,intensity,s?.runtime?.intensity]);
+ useEffect(()=>{
+  if(!sound||quiet||s?.runtime?.quiet||s?.status!=='question'||s?.paused||!s?.deadline||seconds>5||seconds<1)return;
   const key=s.code+':'+s.current+':'+seconds;
   if(lastBeep.current===key)return;
   lastBeep.current=key;
-  const ctx=audio.current,o=ctx.createOscillator(),g=ctx.createGain(),at=ctx.currentTime;
-  o.type='sine';o.frequency.value=720+(5-seconds)*105;
-  g.gain.setValueAtTime(.0001,at);
-  g.gain.exponentialRampToValueAtTime(.045,at+.02);
-  g.gain.exponentialRampToValueAtTime(.0001,at+.14);
-  o.connect(g);g.connect(ctx.destination);o.start(at);o.stop(at+.16);
- },[seconds,sound,quiet,s?.status,s?.paused,s?.deadline,s?.current,s?.runtime?.quiet]);
+  audio.current?.play(seconds===1?'countdown':'tick',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+ },[seconds,sound,quiet,s?.status,s?.paused,s?.deadline,s?.current,s?.runtime?.quiet,intensity]);
  async function command(action:string,index?:number,extra:any={}){if(busy)return;setBusy(true);setError('');try{const result=await api('control',{code,revision:s.revision,action,index,...extra});if(result.code){navigate('host',result.code);return;}await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);setEndConfirm(false);}}
  function beginSession(){
   if(!s||busy)return;
@@ -251,13 +271,29 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  async function projection(change:any){await command('projection',undefined,{board:s.runtime.board,quiet:s.runtime.quiet,intensity:s.runtime.intensity,analytics:s.runtime.analytics,...change});}
  async function copy(){try{await navigator.clipboard.writeText(siteUrl('join',code));setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{setShowQR(true);}}
  function fullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.().catch(()=>{});else document.exitFullscreen?.();}
- function toggleSound(){if(!sound){audio.current??=new AudioContext();audio.current.resume();}setSound(!sound);}
+ async function toggleSound(){
+  if(sound){setSound(false);return;}
+  audio.current??=new ArenaSoundEngine();
+  audio.current.update({...audioPrefs,enabled:true});
+  const unlocked=await audio.current.unlock();
+  if(!unlocked){setError('AUDIO_BLOCKED');return;}
+  setSound(true);
+  audio.current.play('stage',{quiet,light:intensity!=='full'});
+ }
+ function audioSetting(change:Partial<ArenaAudioPreferences>){
+  setAudioPrefs(old=>{const next={...old,...change};saveArenaAudio(next);audio.current?.update({...next,enabled:sound});return next;});
+ }
  function exportResults(){const rows=[['Rank','Name','Employee ID','Team','Points'],...s.individual.map((p:any)=>[p.rank,p.name,s.players.find((x:any)=>x.uid===p.uid)?.employeeId||'',s.players.find((x:any)=>x.uid===p.uid)?.team||'',p.score])];const csv='\ufeff'+rows.map(r=>r.map((v:any)=>'"'+String(v).replace(/^[=+@-]/,"'"+'$&').replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`MTS-Arena-${code}.csv`;a.click();URL.revokeObjectURL(a.href);}
  const meta=['Meta Plan','Categorize'].includes(s?.activity?.type);
  const isJoined=!!s?.mine?.employeeId&&(view==='play'||view==='join'),closed=s&&['results','completed','survey','archived'].includes(s.status),label=s?.activity?activityLabel(s.activity,ar):'';
  const currentReceipt=answerProgress&&answerProgress.round===s?.current?answerProgress:null;
  return <div className={'session-shell '+(host?'host ':'')+(display?'projector':'')+(isJoined?' trainee':'')+' scene-'+(s?.activity?mainType(s.activity).toLowerCase().replaceAll(' ','-'):'lobby')+' effects-'+(quiet||s?.runtime?.quiet||intensity==='off'||s?.runtime?.intensity==='off'?'off':intensity==='light'||s?.runtime?.intensity==='light'?'light':'full')}>
   <BrandHeader className="session-brand-header"><span className="wordmark">MTS TRAINING ARENA</span><div className="session-header-actions">{host&&<button type="button" className="trainer-home-button" aria-label={t('الرجوع للصفحة الرئيسية','Back to home')} onClick={()=>navigate('home')}><Home size={17}/><span>{t('الصفحة الرئيسية','Home')}</span></button>}{code&&<span className="session-code"><ScanLine size={15}/><b dir="ltr">{code}</b></span>}{s&&<span className={'connection '+(!connected?'offline':'')}><i/>{connected?(liveConnection==='live'?t('مباشر لحظيًا','LIVE · INSTANT'):t('متصل · وضع احتياطي','Connected · fallback')):t('إعادة الاتصال…','Reconnecting…')}</span>}<button className="language" onClick={toggleLanguage}><Globe size={14}/>{ar?'EN':'عربي'}</button>{(host||display)&&<button className="icon-button" aria-label={t('ملء الشاشة','Fullscreen')} onClick={fullscreen}><Maximize size={18}/></button>}</div></BrandHeader>
+  {previewIntro&&display&&s?.queue?.[previewIntro.index]&&
+   <StageSplash key={previewIntro.key} preview type={mainType(s.queue[previewIntro.index])}
+    label={activityLabel(s.queue[previewIntro.index],ar)} ar={ar}
+    durationMs={intensity==='light'?2800:5200} onComplete={()=>setPreviewIntro(null)}/>}
+  {moment&&(host||display)&&<ArenaMoment kind={moment} ar={ar} light={intensity!=='full'}/>}
   {splash&&(host||display||isJoined)&&s?.status==='question'&&s?.activity&&<StageSplash key={splash} type={mainType(s.activity)} label={activityLabel(s.activity,ar)} ar={ar} durationMs={display?2300:host?1450:1100} onComplete={()=>{setSplash(null);if(isJoined)window.scrollTo({top:0,behavior:'auto'});}}/>}
   {error&&s&&<div className="error-banner live-error" role="alert">{errorText(error,ar)}<button onClick={()=>{setError('');refresh();}}><RefreshCw size={14}/>{t('إعادة المحاولة','Retry')}</button></div>}
   {!code?<main className="join-page"><div className="join-orbit"/><div className="join-card"><span className="big-zap"><Zap size={40} fill="currentColor"/></span><p className="join-brandline">{t('حيث يتحول التدريب إلى إبداع','Where training becomes creativity')}</p><span className="eyebrow">YOUR NEXT CHALLENGE AWAITS</span><h1>{t('مكانك في الساحة.','Your place in the arena.')}</h1><p className="muted">{t('ادخل بكود الجلسة أو امسح QR اللي على شاشة المدرب.','Enter a session code or scan the QR on your trainer’s screen.')}</p><form onSubmit={join}><label>{t('كود الجلسة','Session code')}<input className="code-input" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required placeholder="000000" dir="ltr" value={joinCode} onChange={e=>setJoinCode(e.target.value.replace(/\D/g,''))}/></label><button className="btn primary wide" type="submit"><ArrowLeft size={18}/>{t('دخول الساحة','Enter the arena')}</button></form><p className="private-note"><ShieldCheck size={14}/>{t('نسخة خاصة للتجربة بحسابك المصرّح له.','Private trial for your authorised account.')}</p></div></main>:!/^\d{6}$/.test(code)?<SessionEntryFeedback ar={ar} kind="invalid" onChangeCode={()=>navigate('join')}/>:!s?(error?<SessionEntryFeedback ar={ar} kind={['NOT_FOUND','CODE'].includes(error)?'not-found':'unavailable'} onRetry={()=>{setError('');refresh();}} onChangeCode={()=>navigate('join')}/>:<div className="waiting-load"><span className="loader"/>{t('بنوصل للساحة…','Connecting to the arena…')}</div>):(!host&&!display&&!isJoined)&&['ready','draft'].includes(s.status)?<SessionEntryFeedback ar={ar} kind="not-ready" title={s.title} onRetry={()=>refresh()} onChangeCode={()=>navigate('join')}/>:(!host&&!display&&!isJoined)?<main className="join-page"><div className="join-orbit"/><div className="join-card"><span className="status-pill lobby"><i className="live-dot"/>{t('ساحة جاهزة','ARENA READY')}</span><p className="join-brandline">{t('حيث يتحول التدريب إلى إبداع','Where training becomes creativity')}</p><h1>{s.title}</h1><p className="muted">{t('مسحة واحدة. تحدّيات كتير. أنت جاهز؟','One scan. Many challenges. Are you ready?')}</p>{s.status==='completed'?<><div className="info-banner">{t('الجلسة انتهت. تقدر تشوف النتائج.','The session has ended. You can view the results.')}</div><Leaderboard s={s} ar={ar}/></>:<form onSubmit={join}>{!recovering&&<label>{t('الاسم بالكامل','Full name')}<input maxLength={40} required autoComplete="name" placeholder={t('اكتب اسمك هنا','Enter your name')} value={name} onChange={e=>setName(e.target.value)}/></label>}<label>{t('لغة المشاركة','Participation language')}<select value={ar?'ar':'en'} onChange={e=>{if((e.target.value==='ar')!==ar)toggleLanguage();}}><option value="ar">العربية</option><option value="en">English</option></select></label><label>{t('الرقم الوظيفي','Employee ID')}<input required dir="ltr" maxLength={30} autoComplete="off" placeholder={t('اكتب الرقم الوظيفي','Enter your employee ID')} value={employeeId} onChange={e=>{setEmployeeId(e.target.value);setConfirmed(false);}}/></label>{recovering?<label>{t('كود استرجاع المشاركة','Participation recovery code')}<input required dir="ltr" autoComplete="off" value={recoveryInput} onChange={e=>setRecoveryInput(e.target.value)} placeholder="XXXXX-XXXXX-XXXXX-XXXXX"/></label>:s.teamMode&&<label>{t('اختار فريقك','Choose your team')}<select value={team} onChange={e=>setTeam(e.target.value)}>{s.teamNames.map((team:string)=><option key={team} value={team}>{team==='Lightning'?t('فريق البرق','Lightning'):team==='Wave'?t('فريق الموج','Wave'):team}</option>)}</select></label>}{!recovering&&<div className="identity-confirmation"><span className="identity-step">{t('تأكيد بيانات الدخول','CONFIRM YOUR DETAILS')}</span><p><b>{name||t('اسمك','Your name')}</b><span dir="ltr">{employeeId||'—'}</span></p><label className="checkbox-label"><input type="checkbox" checked={confirmed} required onChange={e=>setConfirmed(e.target.checked)}/><span>{t('أؤكد إن الاسم والرقم الوظيفي صحيحين.','I confirm my name and employee ID are correct.')}</span></label></div>}<button className="btn primary wide" disabled={busy||(!recovering&&!confirmed)}><ShieldCheck size={18}/>{recovering?t('استرجاع مشاركتي','Restore my participation'):t('تأكيد الدخول والانضمام','Confirm & join the arena')}</button><button type="button" className="text-button recovery-link" onClick={()=>{setRecovering(!recovering);setError('');}}>{recovering?t('أنا مشارك جديد','I am a new participant'):t('مسجل من جهاز تاني؟ استرجع مشاركتك','Registered on another device? Restore your place')}</button>{['question','results'].includes(s.status)&&<p className="small muted">{t('الجلسة بدأت. المدرب يراجع طلبك قبل المشاركة من النشاط القادم.','Session is live. Your trainer must approve your request before the next activity.')}</p>}</form>}<p className="private-note"><ShieldCheck size={14}/>{t('الجلسة خاصة، والدخول بالحساب المصرّح له.','Private session. Authorised account access required.')}</p></div></main>:<main className="live-workspace">
@@ -278,7 +314,11 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
     nextActivity={s.queue?.[0]?activityLabel(s.queue[0],ar):undefined}
     onRefresh={()=>refresh()}/>}
    <div className="session-progress"><span>{s.status==='completed'?t('اكتملت الرحلة','JOURNEY COMPLETE'):s.status==='lobby'?t('قبل الانطلاق','BEFORE TAKEOFF'):`${t('النشاط','ACTIVITY')} ${s.current+1} / ${s.queue.length}`}</span><div>{s.queue.map((a:any,i:number)=><i key={i} className={i<s.current||s.status==='completed'?'done':i===s.current?'current':''}/>)}</div><span><Users size={14}/>{s.players.length}/80</span></div>
-   {host&&<div className="director-bar">{!['completed','archived'].includes(s.status)&&<button className="btn secondary compact" onClick={()=>setEditing(true)}><Zap size={15}/>{t('تحرير القادم','Edit future')}</button>}<button className="btn secondary compact" onClick={()=>command('duplicate')}><Copy size={15}/>{t('نسخة جديدة','Duplicate')}</button>{s.status==='completed'&&<button className="btn secondary compact" onClick={()=>command('archive')}>{t('أرشفة','Archive')}</button>}{s.status==='completed'&&s.surveyOpen&&<button className="btn secondary compact" onClick={()=>command('closesurvey')}>{t('غلق الاستبيان','Close survey')}</button>}<button className="btn secondary compact" onClick={()=>projection({board:!s.runtime.board})}><Trophy size={15}/>{s.runtime.board?t('إخفاء الترتيب','Hide leaderboard'):t('إظهار الترتيب','Show leaderboard')}</button><button className="btn secondary compact" onClick={()=>projection({quiet:!s.runtime.quiet})}>{s.runtime.quiet?<VolumeX size={15}/>:<Volume2 size={15}/>} Quiet Mode</button><select aria-label="Effects intensity" value={s.runtime.intensity} onChange={e=>projection({intensity:e.target.value})}><option value="full">{t('حركة كاملة','Full effects')}</option><option value="light">{t('حركة خفيفة','Light effects')}</option><option value="off">{t('بدون حركة','No effects')}</option></select>{meta&&<button className="btn secondary compact" onClick={()=>projection({analytics:!s.runtime.analytics})}>{t('إحصاءات العرض','Project analytics')}</button>}</div>}{host&&s.players.some((p:any)=>p.approval==='pending')&&<div className="pending-requests"><h3>{t('طلبات انضمام متأخرة','Late join requests')}</h3>{s.players.filter((p:any)=>p.approval==='pending').map((p:any)=><div key={p.uid}><b>{p.name}</b><span>{p.employeeId}</span><button className="btn primary compact" onClick={()=>command('approve',undefined,{player:p.uid})}>{t('اعتماد من النشاط القادم','Approve for next activity')}</button><button className="text-button" onClick={()=>command('reject',undefined,{player:p.uid})}>{t('رفض','Decline')}</button></div>)}</div>}{isJoined&&s.mine.approval==='pending'&&<div className="info-banner">{t('أنت في انتظار موافقة المدرب. خليك هنا.','Waiting for trainer approval. Stay here.')}</div>}<div className="live-columns"><section className="main-stage">{s?.activity&&['question','results'].includes(s.status)&&<div className="stage-activity-identity"><ActivityArt activity={s.activity} label={label} className="stage-current-cover" eager/><div><small>{t('النشاط الحالي','NOW PLAYING')}</small><strong>{label}</strong></div></div>}{display&&s.runtime.board&&!meta&&s.activity?.type!=='Live Poll'&&<div className="projector-leaderboard"><Leaderboard s={s} ar={ar}/></div>}
+   {host&&<div className="director-bar">{canPreviewNext(s.status,s.current,s.queue?.length||0)&&
+    <button type="button" className="btn primary compact arena-pre-intro" disabled={busy}
+     onClick={()=>command('highlight',undefined,{index:introHighlight(s.current+1,Date.now())})}>
+     <Play size={17}/>{t('اعرض انترو التحدي التالي','Play next game intro')}</button>}
+    {!['completed','archived'].includes(s.status)&&<button className="btn secondary compact" onClick={()=>setEditing(true)}><Zap size={15}/>{t('تحرير القادم','Edit future')}</button>}<button className="btn secondary compact" onClick={()=>command('duplicate')}><Copy size={15}/>{t('نسخة جديدة','Duplicate')}</button>{s.status==='completed'&&<button className="btn secondary compact" onClick={()=>command('archive')}>{t('أرشفة','Archive')}</button>}{s.status==='completed'&&s.surveyOpen&&<button className="btn secondary compact" onClick={()=>command('closesurvey')}>{t('غلق الاستبيان','Close survey')}</button>}<button className="btn secondary compact" onClick={()=>projection({board:!s.runtime.board})}><Trophy size={15}/>{s.runtime.board?t('إخفاء الترتيب','Hide leaderboard'):t('إظهار الترتيب','Show leaderboard')}</button><button className="btn secondary compact" onClick={()=>projection({quiet:!s.runtime.quiet})}>{s.runtime.quiet?<VolumeX size={15}/>:<Volume2 size={15}/>} Quiet Mode</button><select aria-label="Effects intensity" value={s.runtime.intensity} onChange={e=>projection({intensity:e.target.value})}><option value="full">{t('حركة كاملة','Full effects')}</option><option value="light">{t('حركة خفيفة','Light effects')}</option><option value="off">{t('بدون حركة','No effects')}</option></select>{meta&&<button className="btn secondary compact" onClick={()=>projection({analytics:!s.runtime.analytics})}>{t('إحصاءات العرض','Project analytics')}</button>}</div>}{host&&s.players.some((p:any)=>p.approval==='pending')&&<div className="pending-requests"><h3>{t('طلبات انضمام متأخرة','Late join requests')}</h3>{s.players.filter((p:any)=>p.approval==='pending').map((p:any)=><div key={p.uid}><b>{p.name}</b><span>{p.employeeId}</span><button className="btn primary compact" onClick={()=>command('approve',undefined,{player:p.uid})}>{t('اعتماد من النشاط القادم','Approve for next activity')}</button><button className="text-button" onClick={()=>command('reject',undefined,{player:p.uid})}>{t('رفض','Decline')}</button></div>)}</div>}{isJoined&&s.mine.approval==='pending'&&<div className="info-banner">{t('أنت في انتظار موافقة المدرب. خليك هنا.','Waiting for trainer approval. Stay here.')}</div>}<div className="live-columns"><section className="main-stage">{s?.activity&&['question','results'].includes(s.status)&&<div className="stage-activity-identity"><ActivityArt activity={s.activity} label={label} className="stage-current-cover" eager/><div><small>{t('النشاط الحالي','NOW PLAYING')}</small><strong>{label}</strong></div></div>}{display&&s.runtime.board&&!meta&&s.activity?.type!=='Live Poll'&&<div className="projector-leaderboard"><Leaderboard s={s} ar={ar}/></div>}
     {['lobby','ready'].includes(s.status)?<div className="lobby-stage"><div className="lobby-beacon"><Radio size={47}/><span/><span/></div><span className="pill">{t('كلنا في نفس الساحة','ONE ROOM. ONE SHARED JOURNEY.')}</span><h2>{isJoined?t('مكانك في الأرينا محفوظ. استعد!','Your place in the arena is secured!'):t('اجمع الفريق. وابدأ الحكاية.','Bring everyone in. Start something great.')}</h2><p className="muted">{isJoined?t('المدرب هيبدأ أول تحدّي. خليك هنا، كل الأنشطة هتوصلك تلقائيًا.','Your trainer will launch the first challenge. Stay here; every activity comes to you.'):t('امسح QR واحد، واكمل كل الأنشطة من نفس المكان.','Scan one QR and play every activity from the same place.')}</p>{!isJoined&&qr&&s.status==='lobby'&&<div className="lobby-qr"><img src={qr} alt={t('QR دخول الجلسة','Session join QR')}/><div><span>{t('كود الدخول','JOIN CODE')}</span><b dir="ltr">{code}</b><button className="text-button" onClick={copy}>{copied?<Check size={16}/>:<Copy size={16}/>} {copied?t('اتنسخ','Copied'):t('نسخ رابط الدخول','Copy join link')}</button></div></div>}<div className="players-cloud">{s.players.map((p:any,i:number)=><span key={p.uid} style={{animationDelay:`${i*.05}s`}}><i className={'player-dot '+(p.team==='Wave'?'cyan':'lime')}>{p.name.charAt(0)}</i>{p.name}</span>)}{!s.players.length&&<span className="muted">{t('أول منافس لسه في الطريق…','Your first challenger is on the way…')}</span>}</div>{host&&<button className="btn primary large launch" disabled={busy} onClick={beginSession}><Play fill="currentColor" size={21}/>{s.status==='ready'?t('افتح استقبال المتدربين والـQR','Open participant lobby & QR'):t('ابدأ أول نشاط','Start first activity')}</button>}{isJoined&&<><div className="waiting-slogan" role="status"><span className="waiting-slogan-en">MTS TRAINING ARENA</span><strong>{t('حيث يتحول التدريب إلى إبداع','Where training becomes creativity')}</strong><small>{t('جهّز نفسك، التحدّي هيبدأ بمجرد إشارة المدرب.','Get ready. Your trainer will start the challenge shortly.')}</small></div><div className="waiting-pulse"><i/><i/><i/>{t('في انتظار المدرب','Waiting for your trainer')}</div></>}</div>:s.status==='survey'?<Survey s={s} ar={ar} host={host} display={display} token={token} command={command} refresh={refresh}/>:['completed','archived'].includes(s.status)?s.surveyOnly?<div className="survey-stage survey-thanks"><CheckCircle2 size={55}/><h2>{t('شكرًا لمشاركتك. رأيك يصنع الفرق.','Thank you. Your voice makes a difference.')}</h2>{isJoined&&<Survey s={s} ar={ar} host={false} display={false} token={token} command={command} refresh={refresh}/>}</div>:<div className="final-stage">{isJoined&&<TraineeFinish s={s} ar={ar}/>}<div className="final-brand-pair"><OfficialLogo kind="mts"/><OfficialLogo kind="training"/></div><ArenaVictory s={s} ar={ar}/><div className="arena-victory__leaderboard-heading"><Trophy size={20}/>{t('ترتيب الأبطال','CHAMPIONS LEADERBOARD')}</div><Leaderboard s={s} ar={ar} podium/>{isJoined&&s.survey&&!s.surveySubmitted&&s.surveyOpen&&<Survey s={s} ar={ar} host={false} display={false} token={token} command={command} refresh={refresh}/>} {host&&<button className="btn secondary" onClick={exportResults}><Download size={17}/>{t('تحميل النتائج CSV','Download results CSV')}</button>}</div>:<div className="round-stage" key={s.current}>
      <div className="round-meta"><span className={'activity-label '+colors[types.indexOf(mainType(s.activity))]||'cyan'}>{label}</span><ArenaPowerTimer seconds={seconds} remainingMs={remaining} totalSeconds={Number(s.activity.timer)||1} timed={!!s.deadline||!!s.paused&&Number(s.remaining)>0} paused={!!s.paused} closed={!!closed} ar={ar} mode={display?'display':host?'host':'play'}/></div><div className={'timer-track '+(!s.deadline?'no-timer':'')} aria-hidden="true"><i style={{width:closed?'100%':`${Math.max(0,Math.min(100,remaining/(Math.max(1,s.activity.timer)*1000)*100))}%`}}/></div>
      <h2 className="question-prompt">{s.activity.prompt}</h2><StageMedia media={s.activity.media}/>{s.activity.type==='Scenario Challenge'&&<div className="scenario-intro"><Target size={18}/>{t('فكّر في الموقف. اختار القرار اللي يفرق.','Read the situation. Choose the decision that matters.')}</div>}
@@ -301,7 +341,33 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   </main>}
   {recoveryNote&&<div className="modal-backdrop"><section className="small-modal modal recovery-welcome" role="dialog" aria-modal="true"><CheckCircle2 size={37}/><h2>{t('تم تأكيد مشاركتك','Your place is confirmed')}</h2><p className="muted">{t('احتفظ بالكود ده. هتحتاجه لو عايز تكمل مشاركتك ونقاطك من جهاز تاني.','Keep this code. Use it to continue your participation and scores on another device.')}</p><code className="recovery-code" dir="ltr">{recoveryNote}</code><button type="button" className="btn secondary wide recovery-copy-button" onClick={async()=>{try{await navigator.clipboard.writeText(recoveryNote);setCopied(true);}catch{setCopied(false);}}}>{copied?<Check size={17}/>:<Copy size={17}/>} {copied?t('تم نسخ الكود','Recovery code copied'):t('نسخ كود استرجاع المشاركة','Copy recovery code')}</button><p className="small muted">{t('هيظهر دلوقتي بس. ما تشاركوش مع حد.','Shown only now. Keep it private.')}</p><button className="btn primary wide" onClick={()=>setRecoveryNote('')}>{t('احتفظت بالكود — دخول الساحة','I saved my code — enter the arena')}</button></section></div>}
   {(showQR||endConfirm)&&<div className="modal-backdrop"><section className="small-modal modal" role="dialog" aria-modal="true"><h2>{endConfirm?t('ننهي المنافسة هنا؟','End the session here?'):t('دخول واحد لكل التحدّيات','One entry. Every challenge.')}</h2>{endConfirm?<><p className="muted">{t('النتائج الحالية هتتحفظ، والأنشطة المتبقية مش هتبدأ.','Current results will be saved. Remaining activities will not run.')}</p><div className="hero-actions"><button className="btn secondary" onClick={()=>setEndConfirm(false)}>{t('كمّل الجلسة','Keep playing')}</button><button className="btn primary" onClick={()=>command('finish')}>{t('اعرض النتائج النهائية','Show final results')}</button></div></>:<>{qr&&<img className="modal-qr" src={qr} alt="Session QR"/>}<b className="large-code" dir="ltr">{code}</b><input readOnly dir="ltr" value={typeof window!=='undefined'?siteUrl('join',code):''}/><button className="btn secondary wide" onClick={copy}>{copied?<Check size={17}/>:<Copy size={17}/>} {t('نسخ الرابط','Copy link')}</button><button className="text-button" onClick={()=>setShowQR(false)}>{t('رجوع للساحة','Back to the arena')}</button></>}</section></div>}
-  <div className="local-effects-controls"><button className="text-button" onClick={()=>{localStorage.setItem('arena-quiet',String(!quiet));setQuiet(!quiet);}}>{quiet?'Quiet ✓':'Quiet'}</button><select aria-label="Device effects" value={intensity} onChange={e=>{localStorage.setItem('arena-effects',e.target.value);setIntensity(e.target.value);}}><option value="full">{t('تأثيرات كاملة','Full effects')}</option><option value="light">{t('خفيفة','Light')}</option><option value="off">{t('إيقاف','Off')}</option></select></div>{(host||display||isJoined)&&<button className={'sound-toggle '+(sound?'enabled':'')} onClick={toggleSound} aria-label={t('تبديل الصوت','Toggle sound')}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}<span>{sound?t('الصوت مفعّل','Sound on'):t('الصوت مغلق','Sound off')}</span></button>}
+  <div className="local-effects-controls">
+   <button className="text-button" onClick={()=>{localStorage.setItem('arena-quiet',String(!quiet));setQuiet(!quiet);}}>{quiet?'Quiet ✓':'Quiet'}</button>
+   <select aria-label={t('شدة المؤثرات البصرية','Visual intensity')} value={intensity}
+    onChange={e=>{localStorage.setItem('arena-effects',e.target.value);setIntensity(e.target.value);}}>
+    <option value="full">{t('سينمائي كامل','Full cinematic')}</option>
+    <option value="light">{t('متوازن','Balanced')}</option>
+    <option value="off">{t('خفيف / بدون حركة','Lite / No motion')}</option>
+   </select>
+   {(host||display||isJoined)&&<details className="arena-sound-panel">
+    <summary><Volume2 size={15}/>{t('إعدادات الصوت','Sound settings')}</summary>
+    <div className="arena-sound-panel__inner">
+     <label>{t('مستوى الصوت','Volume')} <strong>{Math.round(audioPrefs.volume*100)}%</strong>
+      <input type="range" min={0} max={100} step={5} value={Math.round(audioPrefs.volume*100)}
+       onChange={e=>audioSetting({volume:Number(e.target.value)/100})}/></label>
+     <label><input type="checkbox" checked={audioPrefs.music} onChange={e=>audioSetting({music:e.target.checked})}/>
+      {t('الموسيقى الافتتاحية والفوز','Intro and victory music')}</label>
+     <label><input type="checkbox" checked={audioPrefs.effects} onChange={e=>audioSetting({effects:e.target.checked})}/>
+      {t('تفاعل الأسئلة والمؤقت','Question and timer effects')}</label>
+     <small>{t('الصوت اختياري ويتفعل فقط بعد ضغطة منك. خليه على شاشة العرض لتجنب ضوضاء الموبايلات.',
+      'Sound is opt-in after a user tap. Use projector sound to avoid phone noise.')}</small>
+    </div>
+   </details>}
+  </div>
+  {(host||display||isJoined)&&<button type="button" className={'sound-toggle '+(sound?'enabled':'')} onClick={toggleSound}
+   aria-label={t('تبديل الصوت','Toggle sound')} aria-pressed={sound}>
+   {sound?<Volume2 size={18}/>:<VolumeX size={18}/>}<span>{sound?t('الصوت مفعّل','Sound on'):t('الصوت مغلق','Sound off')}</span>
+  </button>}
  {editing&&<Builder ar={ar} owner={s.owner} initial="all" source={{title:s.title,language:s.language,teams:s.teamMode,activities:s.blueprint,settings:s.settings,survey:s.surveyDefinition}} live={s} onClose={()=>setEditing(false)} onCreated={()=>{setEditing(false);refresh();}} onGoHome={()=>navigate('home')}/>}
  </div>;
 }
