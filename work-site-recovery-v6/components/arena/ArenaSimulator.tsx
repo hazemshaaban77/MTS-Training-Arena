@@ -5,6 +5,7 @@ import {activityLabel,mainType,type Activity} from '../../lib/catalog';
 import {publicActivity,flattenDeck,evaluate} from '../../lib/domain.mjs';
 import {runSimulatedRoom,type SimulatorScenario} from '../../lib/simulator-dry-run';
 import ActivityArt from './ActivityArt';
+import StageSplash from './StageSplash';
 import GamePlay from './GamePlay';
 import ArenaChampionshipPractice from './ArenaChampionshipPractice';
 import StageMedia from './StageMedia';
@@ -202,11 +203,15 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
  const [index,setIndex]=useState(Math.min(Math.max(0,initialIndex),Math.max(0,flattened.length-1)));
  const [mode,setMode]=useState<Mode>('play'),[runId,setRunId]=useState(0);
  const [learnerCount,setLearnerCount]=useState(10),[scenario,setScenario]=useState<SimulatorScenario>('mixed');
- const go=(i:number)=>{if(i<0||i>=flattened.length)return;setIndex(i);setRunId(n=>n+1);};
+ const [cinematicPreview,setCinematicPreview]=useState(false);
+ const go=(i:number)=>{if(i<0||i>=flattened.length)return;setCinematicPreview(false);setIndex(i);setRunId(n=>n+1);};
  const a=flattened[index];
  const room=useMemo(()=>a?runSimulatedRoom(a,learnerCount,scenario):null,[a,learnerCount,scenario]);
  if(!a||!room)return null;
  return <div className="arena-simulator-overlay" role="dialog" aria-modal="true" aria-label={t('محاكي التدريب','Training simulator')} dir={ar?'rtl':'ltr'}>
+  {cinematicPreview&&<StageSplash key={index+'-'+runId+'-cinema'} preview
+    type={mainType(a)} label={activityLabel(a,ar)} ar={ar}
+    durationMs={4900} onComplete={()=>setCinematicPreview(false)}/>}
   <div className="arena-simulator-shell">
    <header className="arena-simulator-header">
     <div><span className="eyebrow"><Gamepad2 size={17}/> ARENA PRACTICE MODE</span>
@@ -222,6 +227,9 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
    <div className="arena-simulator-toolbar">
     <span><CheckCircle2 size={17}/>{t('وضع تجريبي، مفيش QR ولا متدربين ولا نقاط حقيقية','Practice only: no QR, real participants or live scores')}</span>
     <div className="arena-simulator-modes">
+     <button type="button" className="arena-simulator-cinema-btn"
+      onClick={()=>setCinematicPreview(true)}><Play size={16}/>
+      {t('شاهد انترو اللعبة','Preview cinematic intro')}</button>
      {([['play',Smartphone,t('المتدرب','Trainee')],['host',Users,t('المدرب','Trainer')],['display',Monitor,t('البروجيكتور','Projector')]] as const).map(([value,Icon,label])=>
       <button type="button" className={mode===value?'selected':''} key={value} onClick={()=>setMode(value)}
        aria-pressed={mode===value}><Icon size={16}/>{label}</button>)}
