@@ -4,6 +4,7 @@ import {Send,Check,CheckCircle2,ArrowUp,ArrowDown,RotateCw,Gift,Zap,Lightbulb,Do
 import LivePoll from './LivePoll';
 import ArenaQuizExperience from './ArenaQuizExperience';
 import ArenaGameShow from './ArenaGameShow';
+import ArenaChampionship from './ArenaChampionship';
 import ArenaEscapeRoom from './ArenaEscapeRoom';
 import ArenaOrderIt from './ArenaOrderIt';
 import ArenaMetaPlan from './ArenaMetaPlan';
@@ -14,6 +15,9 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
  const [word,setWord]=useState(''),[card,setCard]=useState(0),[bet,setBet]=useState(0),[cast,setCast]=useState<string[]>([]);
  const send=(action:string,extra:any={})=>onInteract(action,{version:action==='miniquiz'?g.mini?.version:g.version||0,turn:g.turn||0,...extra});
  const usable=actor&&mine.eligible&&!s.paused&&!closed&&!busy;
+ if(a.type==='Ultimate Game Show'&&a.showFormat==='championship')
+  return <ArenaChampionship s={s} ar={ar} host={host} display={display} busy={busy}
+   onControl={onControl} onInteract={onInteract}/>;
  if((s.runtime?.phase==='casting'||s.runtime?.phase==='betting')&&(a.mainType==='Ultimate Game Show'||a.type==='Ultimate Game Show'))
   return <ArenaGameShow s={s} ar={ar} host={host} display={display} actor={actor} usable={usable}
    busy={busy} closed={closed} g={g} bet={bet} setBet={setBet} cast={cast} setCast={setCast}
