@@ -10,6 +10,8 @@ import BrandHeader,{OfficialLogo} from './Brand';
 import GamePlay from './GamePlay';import Builder from './Builder';
 import StageMedia from './StageMedia';
 import StageSplash from './StageSplash';
+import ProjectorVideoIntro from './ProjectorVideoIntro';
+import './ProjectorVideoIntro.css';
 import ArenaMoment from './ArenaMoment';
 import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,type ArenaMomentKind} from '../../lib/arena-cinematics';
 import {ArenaSoundEngine,defaultArenaAudio,readArenaAudio,saveArenaAudio,type ArenaAudioPreferences} from '../../lib/arena-sound';
@@ -211,7 +213,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(lastPreview.current===scene.key)return;
   lastPreview.current=scene.key;
   setPreviewIntro(scene);
-  audio.current?.playGameIntro(mainType(s.queue[scene.index]),{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+  // The pre-rendered MP4 carries its own distinct soundtrack; do not double-play synthesized audio.
  },[s?.runtime?.highlight,s?.status,s?.current,s?.code,display,intensity,s?.runtime?.intensity]);
  useEffect(()=>{
   if(!sound||quiet||s?.runtime?.quiet||s?.status!=='question'||s?.paused||!s?.deadline||seconds>5||seconds<1)return;
@@ -309,9 +311,9 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  return <div className={'session-shell '+(host?'host ':'')+(display?'projector':'')+(isJoined?' trainee':'')+' scene-'+(s?.activity?mainType(s.activity).toLowerCase().replaceAll(' ','-'):'lobby')+' effects-'+(quiet||s?.runtime?.quiet||intensity==='off'||s?.runtime?.intensity==='off'?'off':intensity==='light'||s?.runtime?.intensity==='light'?'light':'full')}>
   <BrandHeader className="session-brand-header"><span className="wordmark">MTS TRAINING ARENA</span><div className="session-header-actions">{host&&<button type="button" className="trainer-home-button" aria-label={t('الرجوع للصفحة الرئيسية','Back to home')} onClick={()=>navigate('home')}><Home size={17}/><span>{t('الصفحة الرئيسية','Home')}</span></button>}{code&&<span className="session-code"><ScanLine size={15}/><b dir="ltr">{code}</b></span>}{s&&<span className={'connection '+(!connected?'offline':'')}><i/>{connected?(liveConnection==='live'?t('مباشر لحظيًا','LIVE · INSTANT'):t('متصل · وضع احتياطي','Connected · fallback')):t('إعادة الاتصال…','Reconnecting…')}</span>}<button className="language" onClick={toggleLanguage}><Globe size={14}/>{ar?'EN':'عربي'}</button>{(host||display)&&<button className="icon-button" aria-label={t('ملء الشاشة','Fullscreen')} onClick={fullscreen}><Maximize size={18}/></button>}</div></BrandHeader>
   {previewIntro&&display&&s?.queue?.[previewIntro.index]&&
-   <StageSplash key={previewIntro.key} preview type={mainType(s.queue[previewIntro.index])}
+   <ProjectorVideoIntro key={previewIntro.key} type={mainType(s.queue[previewIntro.index])}
     label={activityLabel(s.queue[previewIntro.index],ar)} ar={ar}
-    durationMs={intensity==='light'?8500:12000} onComplete={()=>setPreviewIntro(null)}/>}
+    muted={!sound||quiet||!!s.runtime?.quiet} onComplete={()=>setPreviewIntro(null)}/>}
   {moment&&(host||display)&&<ArenaMoment kind={moment} ar={ar} light={intensity!=='full'}/>}
   {splash&&(host||display||isJoined)&&s?.status==='question'&&s?.activity&&<StageSplash key={splash} type={mainType(s.activity)} label={activityLabel(s.activity,ar)} ar={ar} durationMs={s.deadline?display?2300:host?1450:1100:display?9000:host?6200:3600} onComplete={()=>{setSplash(null);if(isJoined)window.scrollTo({top:0,behavior:'auto'});}}/>}
   {error&&s&&<div className="error-banner live-error" role="alert">{errorText(error,ar)}<button onClick={()=>{setError('');refresh();}}><RefreshCw size={14}/>{t('إعادة المحاولة','Retry')}</button></div>}
