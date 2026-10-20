@@ -4926,3 +4926,122 @@ html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}
 .session-shell.projector .arena-stage-media.video iframe{
  height:min(28vh,310px)!important;max-height:min(28vh,310px)!important;
  width:min(56vw,600px)!important}
+
+
+/* V6 projector critical repair: NEVER shrink a complete live stage with CSS zoom.
+   The original measure->zoom->width compensation shrank entire competitions
+   to tiny text. Use native viewport bounds and intrinsic game layout instead. */
+.session-shell.projector{overflow:hidden!important;height:100dvh!important;max-height:100dvh!important;
+ display:grid!important;grid-template-rows:clamp(60px,9dvh,84px) minmax(0,1fr)!important}
+.session-shell.projector>.session-brand-header{
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ grid-row:1!important;align-self:stretch!important;position:relative!important;z-index:2!important}
+.session-shell.projector>.live-workspace{
+ grid-row:2!important;display:flex!important;flex-direction:column!important;
+ box-sizing:border-box!important;height:100%!important;min-height:0!important;
+ max-height:100%!important;width:100%!important;flex:1 1 auto!important;
+ zoom:1!important;overflow:hidden!important;padding:4px 10px 9px!important;
+ transform:none!important;align-self:stretch!important}
+.session-shell.projector .live-title{
+ flex:0 0 auto!important;min-height:0!important;max-height:52px!important;
+ margin:0 0 2px!important;padding:0 4px!important;
+ display:flex!important;align-items:center!important;justify-content:space-between!important}
+.session-shell.projector .live-title .eyebrow{display:none!important}
+.session-shell.projector .live-title h1{font-size:clamp(15px,1.55vw,23px)!important;
+ max-height:36px!important;line-height:1.25!important;overflow:hidden!important;
+ white-space:nowrap!important;text-overflow:ellipsis!important}
+.session-shell.projector .session-progress{
+ flex:0 0 auto!important;min-height:0!important;max-height:24px!important;
+ padding:2px!important;margin:0!important}
+.session-shell.projector .live-columns{
+ flex:1 1 auto!important;min-height:0!important;height:auto!important;
+ display:flex!important;flex-direction:column!important;gap:0!important;overflow:hidden!important}
+.session-shell.projector .main-stage{
+ flex:1 1 auto!important;display:flex!important;flex-direction:column!important;
+ height:auto!important;min-height:0!important;max-height:none!important;
+ overflow:hidden!important;padding:0!important}
+.session-shell.projector .main-stage>.stage-activity-identity{
+ flex:0 0 auto!important;margin:2px 5px!important;min-height:40px!important;
+ max-height:47px!important;padding:2px 10px!important}
+.session-shell.projector .main-stage>.stage-activity-identity .stage-current-cover{
+ height:34px!important;width:62px!important}
+.session-shell.projector .round-stage{
+ flex:1 1 auto!important;min-height:0!important;max-height:100%!important;
+ overflow:hidden!important;display:flex!important;flex-direction:column!important;
+ padding:6px clamp(9px,1.6vw,20px)!important;gap:clamp(4px,.7vh,10px)!important}
+.session-shell.projector .round-stage .question-prompt{
+ flex:0 1 auto!important;font-size:clamp(17px,2.35vw,33px)!important;
+ line-height:1.22!important;margin:4px auto!important}
+.session-shell.projector .round-stage .answer-grid{flex:0 1 auto!important;gap:6px!important}
+.session-shell.projector .round-stage .answer-option{
+ min-height:clamp(48px,9vh,76px)!important;font-size:clamp(14px,1.6vw,20px)!important;
+ padding:7px 12px!important}
+.session-shell.projector .round-stage .wheel-stage{
+ min-height:0!important;max-height:100%!important;overflow:hidden!important;
+ display:flex!important;flex-direction:column!important;gap:6px!important}
+.session-shell.projector .round-stage .wheel-wrap--grand{
+ width:min(32vh,35vw,310px)!important;height:min(32vh,35vw,310px)!important;
+ min-width:0!important;min-height:0!important;margin:3px auto!important;flex:none!important}
+.session-shell.projector .round-stage .wheel-wrap--grand .wheel{
+ width:100%!important;height:100%!important}
+.session-shell.projector .round-stage .sector-legend--grand{
+ max-height:min(18vh,115px)!important;overflow:hidden!important;
+ margin:3px auto!important;gap:4px!important}
+.session-shell.projector .round-stage .turn-entrance{margin:0!important;padding:5px!important}
+.session-shell.projector .round-stage .wheel-arena-banner{margin:0!important;padding:3px!important}
+.session-shell.projector .round-stage .arena-metaplan{
+ flex:1 1 auto!important;max-height:100%!important;min-height:0!important;
+ padding:5px!important;margin:0!important;overflow:hidden!important}
+.session-shell.projector .round-stage .arena-metaplan__header{
+ margin:0 0 5px!important;padding:0!important}
+.session-shell.projector .arena-metaplan__header h3{font-size:clamp(15px,1.6vw,22px)!important}
+.session-shell.projector .arena-metaplan__header p{display:none!important}
+.session-shell.projector .arena-metaplan__columns{
+ grid-template-columns:repeat(auto-fit,minmax(140px,1fr))!important;
+ gap:5px!important;margin:0!important}
+.session-shell.projector .arena-metaplan__column{min-height:0!important;max-height:100%!important}
+.session-shell.projector .arena-metaplan__column-head{padding:5px!important}
+.session-shell.projector .arena-metaplan__column-head h4{font-size:clamp(12px,1.3vw,18px)!important}
+.session-shell.projector .arena-metaplan__placed{font-size:clamp(12px,1.25vw,17px)!important;
+ padding:5px 8px!important;min-height:0!important}
+.session-shell.projector .round-stage .arena-tv-show,
+.session-shell.projector .round-stage .championship-stage{
+ flex:1 1 auto!important;min-height:0!important;max-height:100%!important;
+ display:flex!important;flex-direction:column!important;
+ margin:0!important;padding:4px 8px!important;overflow:hidden!important}
+.session-shell.projector .championship-stage__question{
+ flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}
+.session-shell.projector .championship-stage__question h3{
+ font-size:clamp(19px,2.2vw,31px)!important;line-height:1.2!important;
+ margin:6px 0!important}
+.session-shell.projector .championship-stage__options{gap:5px!important}
+.session-shell.projector .championship-stage__options button{
+ min-height:clamp(45px,8vh,70px)!important;padding:7px 11px!important}
+.session-shell.projector .championship-stage__ladder{
+ max-height:min(20vh,150px)!important;overflow:hidden!important}
+.session-shell.projector .round-stage .arena-escape-vault,
+.session-shell.projector .round-stage .flash-stage--academy,
+.session-shell.projector .round-stage .box-stage--vault,
+.session-shell.projector .round-stage .arena-scenario,
+.session-shell.projector .round-stage .arena-quiz-show{
+ flex:1 1 auto!important;min-height:0!important;max-height:100%!important;
+ margin:0 auto!important;overflow:hidden!important;
+ padding:clamp(5px,1vh,10px)!important}
+.session-shell.projector .display-bottom{
+ flex:0 0 auto!important;height:clamp(38px,6vh,52px)!important;
+ min-height:0!important;max-height:52px!important;overflow:hidden!important;
+ margin:2px 0 0!important;padding:4px 8px!important}
+.session-shell.projector .display-bottom>span{font-size:clamp(10px,1vw,14px)!important}
+.session-shell.projector .display-bottom>span strong{font-size:clamp(12px,1.2vw,17px)!important}
+.session-shell.projector .round-footer,
+.session-shell.projector .round-stage .arena-metaplan__hint,
+.session-shell.projector .round-stage .box-vault-instruction{display:none!important}
+.session-shell.projector .local-effects-controls{opacity:.36!important;transform:scale(.81)!important;transform-origin:left bottom!important}
+.session-shell.projector .local-effects-controls:focus-within,
+.session-shell.projector .local-effects-controls:hover{opacity:1!important}
+@media(max-height:650px){
+ .session-shell.projector{grid-template-rows:55px minmax(0,1fr)!important}
+ .session-shell.projector .live-title{max-height:32px!important}
+ .session-shell.projector .round-stage{padding:3px 7px!important;gap:3px!important}
+ .session-shell.projector .championship-stage__question h3{font-size:clamp(17px,1.9vw,26px)!important}
+}
