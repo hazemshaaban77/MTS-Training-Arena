@@ -4011,3 +4011,62 @@
 .session-shell.effects-light .arena-cinematic-intro .cinematic-lights,
 .session-shell.effects-light .arena-cinematic-intro .cinematic-particles,
 .session-shell.effects-light .arena-cinematic-intro .cinematic-orbits{display:none}
+
+
+/* V6 Cinematic Experience — milestone ribbons, accessible effects & trainer controls. */
+.arena-moment{--moment:#81f2d1;position:fixed;z-index:5900;inset-block-start:clamp(80px,12vh,145px);
+ inset-inline:clamp(10px,2vw,38px) auto;width:min(460px,94vw);
+ background:linear-gradient(125deg,#072137ed,#104166f7);color:#edfdff;
+ border:1px solid var(--moment);border-radius:20px;
+ box-shadow:0 18px 60px #0008,0 0 40px #70f9e02b;
+ padding:18px 20px;display:flex;align-items:center;gap:15px;
+ pointer-events:none;isolation:isolate;overflow:hidden;
+ animation:arena-moment-arrival .52s cubic-bezier(.1,.8,.2,1) both}
+.arena-moment-lead{--moment:#ffe5a4}
+.arena-moment-champion{--moment:#f9d88d}
+.arena-moment-reveal{--moment:#9edcff}
+.arena-moment__glow{position:absolute;z-index:-1;inset:-60%;background:conic-gradient(from 20deg,transparent 10%,#fff2 20%,transparent 30%,#ffffff0a 50%,transparent 70%);
+ animation:arena-moment-shine 3s linear infinite}
+.arena-moment__badge{flex:none;width:62px;height:62px;display:flex;align-items:center;
+ justify-content:center;position:relative;color:var(--moment);border-radius:50%;
+ border:1px solid var(--moment);background:#05243c;box-shadow:0 0 23px #89e2d644}
+.arena-moment__badge svg+svg{position:absolute;top:-6px;right:-7px;color:#ffe59f}
+.arena-moment>div:last-child{display:flex;flex-direction:column;gap:6px;min-width:0}
+.arena-moment strong{font-size:clamp(20px,2.5vw,30px);line-height:1.1;font-weight:950;overflow-wrap:anywhere}
+.arena-moment small{font-size:12px;line-height:1.5;color:#cbe7f5}
+.arena-moment-lite .arena-moment__glow{display:none}
+@keyframes arena-moment-arrival{0%{opacity:0;transform:translateX(60px) scale(.87)}
+ 70%{opacity:1;transform:translateX(-4px) scale(1.015)}100%{transform:none;opacity:1}}
+@keyframes arena-moment-shine{to{transform:rotate(360deg)}}
+.arena-pre-intro{border:1px solid #8fe7ce!important;
+ background:linear-gradient(110deg,#0d5e75,#0c897c)!important;
+ color:#fff!important;box-shadow:0 0 24px #69eac02a!important;min-height:48px!important}
+.arena-pre-intro:focus-visible{outline:3px solid #fff!important;outline-offset:3px}
+.arena-sound-panel{display:inline-flex;flex-direction:column;position:relative;color:#d8faff;min-width:0}
+.arena-sound-panel summary{cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+ padding:8px 10px;min-height:44px;border-radius:9px;border:1px solid #629db5;
+ background:#0a293d;font-size:11px;font-weight:700;list-style:none}
+.arena-sound-panel summary::-webkit-details-marker{display:none}
+.arena-sound-panel summary:focus-visible{outline:3px solid #91fbe1;outline-offset:2px}
+.arena-sound-panel__inner{position:absolute;z-index:1000;bottom:calc(100% + 10px);
+ inset-inline-end:0;width:min(310px,calc(100vw - 26px));
+ border:1px solid #6fc5bd;border-radius:12px;background:#0a2435;
+ box-shadow:0 14px 52px #000c;padding:16px;display:flex;flex-direction:column;gap:12px}
+.arena-sound-panel__inner label{display:flex;align-items:center;flex-wrap:wrap;
+ justify-content:space-between;gap:8px;font-size:12px;color:#e8fdff}
+.arena-sound-panel__inner label:has(input[type="range"]){display:grid;grid-template-columns:1fr auto}
+.arena-sound-panel__inner input[type="range"]{grid-column:1/-1;width:100%;accent-color:#7ee9d9;
+ min-height:26px;cursor:pointer}
+.arena-sound-panel__inner input[type="checkbox"]{width:21px;height:21px;accent-color:#6bdabb;flex:none}
+.arena-sound-panel__inner small{line-height:1.65;color:#b9d7e8;font-size:11px}
+@media(max-width:700px){
+ .arena-moment{inset-block-start:75px;inset-inline:9px;width:calc(100% - 18px);padding:12px}
+ .arena-moment__badge{width:48px;height:48px}
+ .arena-moment strong{font-size:20px}
+ .arena-sound-panel__inner{position:fixed;bottom:76px;inset-inline-end:12px}
+ .arena-pre-intro{width:100%;font-size:13px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-moment,.arena-moment__glow{animation:none!important}
+}
+.session-shell.effects-off .arena-moment,.session-shell.effects-off .arena-moment__glow{animation:none!important}
