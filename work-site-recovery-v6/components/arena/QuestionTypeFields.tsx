@@ -1,7 +1,6 @@
 'use client';
 import {ArrowDown,ArrowUp,Plus,Trash2} from 'lucide-react';
 import type {Activity} from '../../lib/catalog';
-import QuestionMediaPicker,{type QuestionMedia} from './QuestionMediaPicker';
 import {setMatchingPair,deleteMatchingPair} from '../../lib/question-authoring';
 
 type Props={ar:boolean;q:Activity;onPatch:(change:Record<string,unknown>)=>void;onError:(value:string)=>void};
@@ -12,9 +11,7 @@ export default function QuestionTypeFields({ar,q,onPatch,onError}:Props){
  const options:Array<string>=Array.isArray(q.options)?q.options:[];
  const setArray=(key:string,index:number,value:string)=>onPatch({
   [key]:(Array.isArray(q[key])?q[key]:[]).map((s:any,j:number)=>j===index?value:s)});
- const updateMedia=(media:QuestionMedia|undefined)=>{
-  onPatch(type==='Image Hotspot'&&media?.type==='image'?{media,image:media.url}:{media});
- };
+
  return <>
   {choice&&<fieldset className="question-studio__options">
    <legend>{t('حدّد الإجابة الصحيحة ثم اكتب الاختيارات','Mark the correct answer and edit each option')}</legend>
@@ -131,6 +128,6 @@ export default function QuestionTypeFields({ar,q,onPatch,onError}:Props){
    <p className="question-studio__hint">{t('ارفع صورة السؤال من جهازك في الجزء التالي، أو الصق رابطها هنا، ثم اضغط المكان الصحيح على الصورة.',
      'Upload the question image below or paste its URL here, then choose the correct spot.')}</p>
   </fieldset>}
-  <QuestionMediaPicker ar={ar} value={q.media} onError={onError} onChange={updateMedia}/>
+  
  </>;
 }
