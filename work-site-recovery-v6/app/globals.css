@@ -4166,7 +4166,7 @@
 .arena-cinematic-intro .intro-champ-stairs{position:absolute;bottom:0;display:flex;
  align-items:flex-end;gap:4px;width:80%;height:75%;opacity:.95}
 .arena-cinematic-intro .intro-champ-stairs i{display:grid;place-items:center;flex:1;
- height:calc(18% + (var(--level) * 14%));border:1px solid #ffe2a4;
+ height:30%;border:1px solid #ffe2a4;
  background:linear-gradient(180deg,#d2a14aef,#2d1c2cbb);
  box-shadow:0 0 18px #ffdb7673;color:white;font-weight:900;
  animation:arena-game-rise .65s both}
@@ -4432,3 +4432,10 @@ body:has(.session-shell.projector){height:100%;overflow:hidden!important}
  margin:4px auto 6px!important;padding:clamp(10px,1.4vw,18px)!important}
 .session-shell.projector .arena-quiz-show{margin:4px auto 6px!important;padding:12px!important}
 .session-shell.projector .arena-victory__content{padding:8px!important;gap:5px!important}
+
+/* Stable prize-ladder bars independent of newer CSS calc typed multiplication. */
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(1){height:28%}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(2){height:43%}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(3){height:58%}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(4){height:73%}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(5){height:90%}
