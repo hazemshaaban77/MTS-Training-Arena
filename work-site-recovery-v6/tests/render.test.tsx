@@ -6,7 +6,8 @@ import {projectorFitScale} from '../lib/projector-fit';
 import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,stageAtmosphere} from '../lib/arena-cinematics';
 import {ArenaSoundEngine,defaultArenaAudio} from '../lib/arena-sound';
 import ArenaMoment from '../components/arena/ArenaMoment';
-import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';
+import ProjectorVideoIntro,{videoIntroSrc,videoSlugs,VIDEO_INTRO_SECONDS} from '../components/arena/ProjectorVideoIntro';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
 import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';
 import ArenaGameShow from '../components/arena/ArenaGameShow';
 import ArenaEscapeRoom from '../components/arena/ArenaEscapeRoom';
@@ -150,7 +151,7 @@ test('cinematic WebP art appears in every activity intro, trainer and bilingual 
  }
  const session=readFileSync('components/arena/Session.tsx','utf8');
  assert.ok(session.includes('durationMs={s.deadline?display?2300:host?1450:1100:'), 'Timed rounds retain the short/safe intro while untimed shows may last longer');
- assert.ok(session.includes("durationMs={intensity==='light'?8500:12000}"), 'Pre-round projector intro is readable for up to 12 seconds without starting the timer');
+ assert.ok(session.includes('<ProjectorVideoIntro key={previewIntro.key}'), 'The projector alone uses a rendered MP4 pre-round; timed questions remain separate');
  assert.ok(session.includes('introHighlight(s.current+1'), 'Host can trigger a longer pre-round projection safely');
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('Approved cinematic 3D art'));
@@ -1371,7 +1372,7 @@ test('ten game openings have unique visual motifs, independent notes, rhythms an
  assert.equal(introIdentity('Spin Wheel').key,'wheel');
  assert.equal(introIdentity('Categorize').key,'plan');
  const session=readFileSync('components/arena/Session.tsx','utf8');
- assert.ok(session.includes('playGameIntro(mainType(s.queue[scene.index])'));
+ assert.ok(session.includes('muted={!sound||quiet||!!s.runtime?.quiet}'), 'Video soundtrack honors projector local and room quiet switches');
  const simulator=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
  assert.ok(simulator.includes('playGameIntro(mainType(a))'));
  const audio=readFileSync('lib/arena-sound.ts','utf8');
@@ -1721,4 +1722,34 @@ test('Flashcard Trainer-only permission is authorable, validated and enforced on
  const src=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
  assert.ok(src.includes("const hostOnly=a.flipPermission==='host'"));
  assert.ok(src.includes('actor?usable&&!hostOnly'));
+});
+
+test('projector-only prerecorded opening movies are distinct, skippable and safe if media is missing',()=>{
+ const gameMap=['Quiz','Ultimate Game Show','Wheel of Fortune','Meta Plan','Escape Room',
+  'Live Poll','Order It','Open the Box','Flashcards','Scenario Challenge'];
+ const files=new Set<string>();
+ for(const name of gameMap){
+  const path=videoIntroSrc(name);
+  assert.ok(path.includes('/cinematic-videos/'));
+  assert.ok(path.endsWith('.mp4'));
+  files.add(path);
+  const html=renderToStaticMarkup(<ProjectorVideoIntro type={name} label={name} ar muted
+   onComplete={()=>{}}/>);
+  assert.ok(html.includes('projector-video-intro'),name);
+  assert.ok(html.includes('<video'),name);
+  assert.ok(html.includes('Skip intro')||html.includes('تخطي المقدمة'));
+  assert.ok(html.includes('muted'),name);
+ }
+ assert.equal(files.size,10,'All activities must have a distinct video, not a shared clip');
+ assert.equal(videoSlugs['Spin Wheel'],'wheel');
+ assert.equal(videoSlugs['Categorize'],'meta');
+ assert.equal(VIDEO_INTRO_SECONDS,9.5);
+ const src=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(src.includes('previewIntro&&display'));
+ assert.ok(src.includes('ProjectorVideoIntro'));
+ assert.ok(src.includes("s?.status==='question'"));
+ assert.ok(!src.includes('previewIntro&&isJoined'));
+ const style=readFileSync('components/arena/ProjectorVideoIntro.css','utf8');
+ assert.ok(style.includes('height:100dvh'));
+ assert.ok(style.includes('object-fit:contain'));
 });
