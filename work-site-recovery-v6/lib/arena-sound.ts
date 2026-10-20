@@ -50,6 +50,7 @@ const patterns:Record<ArenaCue,Note[]>={
 export class ArenaSoundEngine{
  private ctx:AudioContext|null=null;
  private limiter:DynamicsCompressorNode|null=null;
+ private noiseBuffer:AudioBuffer|null=null;
  private master:GainNode|null=null;
  private unlocked=false;
  private prefs:ArenaAudioPreferences={...defaultArenaAudio};
@@ -67,6 +68,11 @@ export class ArenaSoundEngine{
     this.limiter.ratio.value=7;this.limiter.attack.value=.002;this.limiter.release.value=.17;
     this.master=this.ctx.createGain();
     this.master.connect(this.limiter);this.limiter.connect(this.ctx.destination);
+    // Tiny synthesized noise bed, not an external media asset: no network,
+    // licensing or first-play download delay.
+    this.noiseBuffer=this.ctx.createBuffer(1,Math.floor(this.ctx.sampleRate*.65),this.ctx.sampleRate);
+    const samples=this.noiseBuffer.getChannelData(0);
+    for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
    }
    await this.ctx.resume();
    this.unlocked=this.ctx.state==='running';
@@ -84,6 +90,20 @@ export class ArenaSoundEngine{
   const ctx=this.ctx,base=ctx.currentTime+.01;
   const notes=options.light?patterns[cue].slice(0,Math.min(3,patterns[cue].length)):patterns[cue];
   try{
+   if(p.effects&&this.noiseBuffer&&['intro','stage','reveal','wheel','mystery','victory','correct','lead'].includes(cue)){
+    const swish=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+    swish.buffer=this.noiseBuffer;filter.type='bandpass';
+    const start=base,peak=base+(cue==='wheel'?.13:.045),end=base+(cue==='intro'?.55:.23);
+    filter.frequency.setValueAtTime(cue==='mystery'?280:1250,start);
+    filter.frequency.exponentialRampToValueAtTime(cue==='mystery'?1100:3800,end);
+    filter.Q.value=.7;
+    gain.gain.setValueAtTime(.0001,start);
+    gain.gain.exponentialRampToValueAtTime(options.light?.018:.055,peak);
+    gain.gain.exponentialRampToValueAtTime(.0001,end);
+    swish.connect(filter);filter.connect(gain);gain.connect(this.master!);
+    swish.start(start);swish.stop(end+.01);
+    swish.onended=()=>{try{swish.disconnect();filter.disconnect();gain.disconnect();}catch{}};
+   }
    notes.forEach(note=>{
     const osc=ctx.createOscillator(),gain=ctx.createGain();
     const start=base+note.offset,finish=start+note.duration;
@@ -99,6 +119,6 @@ export class ArenaSoundEngine{
  close(){
   this.unlocked=false;
   if(this.ctx){void this.ctx.close().catch(()=>{});this.ctx=null;}
-  this.limiter=null;this.master=null;
+  this.limiter=null;this.master=null;this.noiseBuffer=null;
  }
 }
