@@ -4439,3 +4439,179 @@ body:has(.session-shell.projector){height:100%;overflow:hidden!important}
 .arena-cinematic-intro .intro-champ-stairs i:nth-child(3){height:58%}
 .arena-cinematic-intro .intro-champ-stairs i:nth-child(4){height:73%}
 .arena-cinematic-intro .intro-champ-stairs i:nth-child(5){height:90%}
+
+
+/* V6 Intro COMPOSITION FIX — clear separate image / signature vignette / title / actions.
+   All breakpoints use explicit row budgets. No decorative motif can cover an image or text. */
+.arena-cinematic-intro.cinematic-composed{position:fixed!important;inset:0!important;
+ width:100vw!important;height:100dvh!important;max-height:100dvh!important;
+ overflow:hidden!important;display:flex!important;align-items:center!important;
+ justify-content:center!important;box-sizing:border-box!important;padding:0!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-layout{
+ position:relative!important;z-index:5!important;width:min(1220px,96vw)!important;
+ height:min(100dvh,800px)!important;min-height:0!important;max-height:100dvh!important;
+ box-sizing:border-box!important;display:grid!important;
+ grid-template-rows:minmax(24px,auto) minmax(0,1fr) minmax(48px,auto)!important;
+ gap:clamp(7px,1.7vh,15px)!important;
+ align-items:center!important;justify-items:stretch!important;
+ padding:clamp(10px,2vh,22px) clamp(12px,2vw,22px)!important;
+ animation:arena-cine-stage-in .5s both!important;overflow:hidden!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-kicker{
+ flex:none!important;justify-self:center!important;position:relative!important;
+ z-index:4!important;font-size:clamp(10px,1vw,12px)!important;
+ line-height:1.3!important;letter-spacing:.2em!important;white-space:nowrap}
+.arena-cinematic-intro.cinematic-composed .cinematic-content-grid{
+ display:grid!important;grid-template-columns:minmax(0,1.17fr) minmax(0,.83fr)!important;
+ gap:clamp(18px,3vw,46px)!important;direction:ltr;
+ width:100%!important;min-width:0!important;min-height:0!important;
+ max-height:100%!important;align-items:center!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{
+ position:relative!important;display:grid!important;
+ grid-template-columns:minmax(0,3fr) minmax(95px,1fr)!important;
+ align-items:center!important;gap:clamp(7px,1vw,16px)!important;
+ min-width:0!important;min-height:0!important;width:100%!important;
+ height:min(56vh,400px)!important;max-height:100%!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-art-frame{
+ position:relative!important;z-index:1!important;width:100%!important;height:100%!important;
+ max-height:100%!important;min-width:0!important;min-height:0!important;
+ transform:none!important;filter:none!important;opacity:1!important;
+ display:flex!important;align-items:stretch!important;justify-content:center!important;
+ border-radius:18px!important;overflow:hidden!important;
+ background:#091d33!important;box-shadow:0 18px 46px #0008,0 0 19px var(--arena-cine-glow)!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-art-frame .activity-artwork{
+ display:block!important;position:static!important;width:100%!important;height:100%!important;
+ max-height:100%!important;object-fit:contain!important;filter:none!important;
+ transform:none!important;border-radius:0!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge{
+ position:relative!important;z-index:2!important;
+ display:block!important;width:100%!important;min-width:0!important;
+ height:clamp(120px,22vh,225px)!important;max-height:72%!important;
+ align-self:center!important;overflow:hidden!important;isolation:isolate!important;
+ background:linear-gradient(145deg,#112d49ed,#081429ed)!important;
+ border:1px solid var(--arena-cine-color)!important;border-radius:16px!important;
+ box-shadow:inset 0 0 24px var(--arena-cine-glow),0 0 22px var(--arena-cine-glow)!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-scene{
+ position:relative!important;inset:auto!important;
+ width:100%!important;height:100%!important;
+ overflow:hidden!important;transform:none!important;
+ padding:0!important;box-sizing:border-box!important;z-index:1!important}
+.arena-cinematic-intro.cinematic-composed .intro-scene-icon{
+ width:30%!important;height:30%!important;max-width:70px!important;max-height:70px!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-copy{
+ position:relative!important;display:flex!important;flex-direction:column!important;
+ align-items:flex-start!important;justify-content:center!important;
+ gap:clamp(9px,1.8vh,18px)!important;direction:rtl;
+ min-width:0!important;max-width:100%!important;max-height:100%!important;
+ text-align:start!important;overflow:hidden!important;animation:arena-cine-title-enter .55s .14s both!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-caption{
+ font-size:clamp(12px,1.4vw,17px)!important;line-height:1.3!important;
+ max-width:100%!important;overflow-wrap:anywhere!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-copy h2{
+ font-size:clamp(35px,4.8vw,74px)!important;line-height:1.1!important;
+ max-width:100%!important;overflow-wrap:anywhere!important;
+ margin:0!important;padding:0!important;text-align:start!important;
+ text-shadow:0 8px 38px #000a!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-copy p{
+ font-size:clamp(15px,1.65vw,22px)!important;line-height:1.55!important;
+ max-width:100%!important;letter-spacing:0!important;margin:0!important;
+ font-weight:650!important;overflow-wrap:anywhere!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-start-label{
+ display:flex!important;align-items:center!important;gap:8px!important;
+ padding:7px 10px!important;border-radius:9px!important;border:1px solid #ffffff3d!important;
+ font-size:clamp(10px,1.1vw,13px)!important;line-height:1.35!important;
+ color:#d3efff!important;background:#ffffff0b!important;max-width:100%!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-start-label svg{flex:none!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-action{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ flex-wrap:nowrap!important;gap:14px!important;direction:rtl;
+ width:100%!important;min-height:48px!important;
+ border-top:1px solid #ffffff2c!important;padding-top:8px!important;
+ color:#bddbe8!important;font-size:12px!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-action>span{
+ line-height:1.3!important;font-size:12px!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-skip{
+ flex:none!important;min-height:44px!important;
+ margin:0!important;padding:9px 16px!important;border-radius:12px!important;
+ color:#fff!important;background:#103953ee!important;border:1px solid var(--arena-cine-color)!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-orbits,
+.arena-cinematic-intro.cinematic-composed .cinematic-particles{display:none!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-lights{z-index:0!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-rule{z-index:1!important}
+.arena-cinematic-intro.cinematic-composed.intro-kind-wheel .cinematic-art-frame,
+.arena-cinematic-intro.cinematic-composed.intro-kind-cards .cinematic-art-frame,
+.arena-cinematic-intro.cinematic-composed.intro-kind-plan .cinematic-art-frame{
+ border-radius:18px!important;clip-path:none!important;transform:none!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-scene--quiz{
+ display:flex!important;align-items:flex-end!important;justify-content:center!important;
+ gap:3%!important;padding-bottom:6%!important;transform:none!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-quiz-choice{
+ height:26%!important;width:21%!important;font-size:clamp(15px,2vw,28px)!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-champ-stairs{
+ inset-inline:8%!important;width:84%!important;bottom:6%!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-wheel-disc{
+ width:75%!important;height:75%!important;border-width:5px!important;
+ box-shadow:0 0 17px #d3a0eb8c!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-wheel-marker{
+ border-left-width:9px!important;border-right-width:9px!important;border-top-width:19px!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-mystery-box{
+ width:28%!important;height:44%!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-poll-bars{
+ gap:6%!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge .intro-scenario-gate{
+ width:35%!important}
+@media(max-width:780px){
+ .arena-cinematic-intro.cinematic-composed .cinematic-layout{
+  width:100vw!important;height:100dvh!important;
+  grid-template-rows:20px minmax(0,1fr) 49px!important;
+  gap:7px!important;padding:10px 12px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-content-grid{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr) auto!important;
+  gap:10px!important;align-items:center!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{
+  max-width:min(96vw,550px)!important;
+  justify-self:center!important;height:min(41dvh,310px)!important;
+  grid-template-columns:minmax(0,3fr) minmax(75px,1fr)!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-scene-badge{
+  height:clamp(85px,18vh,155px)!important;border-radius:11px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy{
+  align-items:center!important;justify-content:center!important;
+  text-align:center!important;gap:7px!important;direction:rtl}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy h2{
+  font-size:clamp(26px,7vw,46px)!important;text-align:center!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy p{
+  font-size:clamp(12px,3.5vw,16px)!important;text-align:center!important;
+  line-height:1.4!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy .cinematic-start-label{
+  font-size:10px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-action>span{display:none!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-action{justify-content:center!important;
+  min-height:46px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-skip{width:min(280px,100%)!important;
+  justify-content:center!important}
+}
+@media(max-height:680px) and (min-width:781px){
+ .arena-cinematic-intro.cinematic-composed .cinematic-layout{
+  grid-template-rows:20px minmax(0,1fr) 49px!important;
+  gap:8px!important;padding:10px 17px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{height:min(57dvh,345px)!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy{gap:8px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy h2{
+  font-size:clamp(30px,4.4vw,63px)!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy p{
+  font-size:clamp(14px,1.5vw,20px)!important}
+}
+@media(max-height:500px){
+ .arena-cinematic-intro.cinematic-composed .cinematic-layout{
+  grid-template-rows:16px minmax(0,1fr) 43px!important;gap:5px!important;padding:7px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{height:min(47dvh,220px)!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-scene-badge{height:90px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy h2{font-size:clamp(25px,3vw,38px)!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy p{font-size:12px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-start-label{padding:3px 5px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-cinematic-intro.cinematic-composed .cinematic-layout,
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy,
+ .arena-cinematic-intro.cinematic-composed .cinematic-scene-badge *{animation:none!important}
+}
