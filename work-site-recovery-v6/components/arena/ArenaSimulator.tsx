@@ -6,6 +6,7 @@ import {publicActivity,flattenDeck,evaluate} from '../../lib/domain.mjs';
 import {runSimulatedRoom,type SimulatorScenario} from '../../lib/simulator-dry-run';
 import ActivityArt from './ActivityArt';
 import GamePlay from './GamePlay';
+import ArenaChampionshipPractice from './ArenaChampionshipPractice';
 import StageMedia from './StageMedia';
 import './ArenaSimulator.css';
 
@@ -273,7 +274,9 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
     </p>
    </section>
    <div className="arena-simulator-learning-tip"><BookOpen size={17}/><span>{(activityGuides[mainType(a)]||activityGuides[a.type]||['جرّب النشاط وراجع خطواته.','Explore and rehearse this activity.'])[ar?0:1]}</span></div>
-   <main className="arena-simulator-main"><PracticeStage key={index+'-'+runId} a={a} ar={ar} mode={mode} runId={runId}/></main>
+   <main className="arena-simulator-main">{a.showFormat==='championship'
+    ?<ArenaChampionshipPractice key={index+'-'+runId} a={a} ar={ar} mode={mode}/>
+    :<PracticeStage key={index+'-'+runId} a={a} ar={ar} mode={mode} runId={runId}/>}</main>
    <footer className="arena-simulator-footer">
     <button className="btn secondary" disabled={index===0} onClick={()=>go(index-1)}><ArrowRight size={17}/>{t('النشاط السابق','Previous activity')}</button>
     <span>{index+1} / {flattened.length} · {activityLabel(a,ar)}</span>
