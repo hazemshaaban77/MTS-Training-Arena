@@ -205,7 +205,11 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      {t('نوع السؤال الحالي','Current question type')}
      <select value={isKnowledgeQuestionType(q.type)?q.type:'Quiz'}
       disabled={game&&mode==='ladder'}
-      onChange={e=>patch(changeKnowledgeQuestionType(q,e.target.value as KnowledgeQuestionType,ar))}>
+      onChange={e=>{
+       const type=e.target.value as KnowledgeQuestionType;
+       setQuestions(old=>old.map((item,i)=>i===index?changeKnowledgeQuestionType(item,type,ar):item));
+       setError('');
+      }}>
       {knowledgeQuestionTypes.map(type=><option key={type} value={type}>{questionTypeLabel(type,ar)}</option>)}
      </select>
      {game&&mode==='ladder'&&<small>{t('البطولة تستخدم أربع اختيارات لكل مستوى، لكن تحدي المعرفة بيدعم كل الأنواع.',
