@@ -138,3 +138,15 @@
 @media(max-width:760px){.arena-championship-practice{padding:5px}
  .arena-championship-practice__toolbar label{width:100%;flex-wrap:wrap}
  .arena-championship-practice__toolbar label select{max-width:100%}}
+
+
+/* Cinema tester — audio only from an explicit user gesture, entirely offline. */
+.arena-simulator-modes .arena-simulator-cinema-btn{min-height:44px;display:inline-flex;
+ justify-content:center;align-items:center;gap:7px;
+ padding:10px 14px;border:1px solid #70b3d3;border-radius:9px;
+ background:linear-gradient(115deg,#102d52,#173a61);color:#e9faff;font-size:12px}
+.arena-simulator-modes .arena-simulator-cinema-btn.with-audio{
+ border-color:#77e3cd;background:linear-gradient(115deg,#154c5a,#105e68)}
+.arena-simulator-modes .arena-simulator-cinema-btn:focus-visible{
+ outline:3px solid #a1ffea;outline-offset:3px}
+@media(max-width:700px){.arena-simulator-modes .arena-simulator-cinema-btn{flex:1 1 155px;min-height:46px}}
