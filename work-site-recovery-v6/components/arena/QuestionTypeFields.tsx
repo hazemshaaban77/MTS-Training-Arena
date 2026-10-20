@@ -3,8 +3,8 @@ import {ArrowDown,ArrowUp,Plus,Trash2} from 'lucide-react';
 import type {Activity} from '../../lib/catalog';
 import {setMatchingPair,deleteMatchingPair} from '../../lib/question-authoring';
 
-type Props={ar:boolean;q:Activity;onPatch:(change:Record<string,unknown>)=>void;onError:(value:string)=>void};
-export default function QuestionTypeFields({ar,q,onPatch,onError}:Props){
+type Props={ar:boolean;q:Activity;onPatch:(change:Record<string,unknown>)=>void};
+export default function QuestionTypeFields({ar,q,onPatch}:Props){
  const t=(a:string,e:string)=>ar?a:e;
  const type=q.type;
  const choice=['Quiz','True/False','Dropdown'].includes(type);
