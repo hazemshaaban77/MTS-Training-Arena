@@ -3875,3 +3875,139 @@
  .championship-stage__history>div{grid-template-columns:minmax(0,1fr)}
  .championship-stage__contestant>span:nth-last-child(2){margin-inline-start:0}
 }
+
+
+/* V6 Cinematic Experience — pre-round theatre, always outside the timed answer window.
+   Full effects on projector, minimal GPU load in Lite/reduced-motion devices. */
+.arena-cinematic-intro{
+ --arena-cine-color:#77cfff;--arena-cine-glow:#37bdff55;
+ background:radial-gradient(ellipse 50% 48% at 50% 42%,var(--arena-cine-glow),transparent 85%),
+ linear-gradient(145deg,#050b1c,#09152e 58%,#030a18);
+}
+.arena-cinematic-intro.cinematic-gold{--arena-cine-color:#ffdf92;--arena-cine-glow:#a8864555}
+.arena-cinematic-intro.cinematic-violet{--arena-cine-color:#e0b1ff;--arena-cine-glow:#8452c45c}
+.arena-cinematic-intro.cinematic-teal{--arena-cine-color:#91f9df;--arena-cine-glow:#347e7860}
+.arena-cinematic-intro.cinematic-rose{--arena-cine-color:#ffd2ea;--arena-cine-glow:#ae428055}
+.arena-cinematic-intro.cinematic-emerald{--arena-cine-color:#8af3b7;--arena-cine-glow:#2c98665e}
+.arena-cinematic-intro.cinematic-cyan{--arena-cine-color:#7deaff;--arena-cine-glow:#1b98bb55}
+.arena-cinematic-intro.cinematic-blue{--arena-cine-color:#afd8ff;--arena-cine-glow:#336ca955}
+.arena-cinematic-intro.cinematic-indigo{--arena-cine-color:#b2bdff;--arena-cine-glow:#554fb655}
+.arena-cinematic-intro.cinematic-amber{--arena-cine-color:#ffd59f;--arena-cine-glow:#a17a365a}
+.arena-cinematic-intro .cinematic-center{gap:clamp(7px,1.5vh,17px);
+ width:min(95vw,1080px);max-height:100dvh;padding:clamp(16px,3vh,36px) 14px;
+ z-index:4;animation:arena-cine-stage-in .65s both}
+.arena-cinematic-intro .cinematic-kicker{display:flex;align-items:center;justify-content:center;
+ gap:12px;letter-spacing:.22em;font-size:clamp(9px,1.25vw,13px);
+ font-weight:850;color:var(--arena-cine-color);text-shadow:0 0 20px var(--arena-cine-glow);
+ animation:arena-cine-title-enter .55s both}
+.arena-cinematic-intro .cinematic-main-art{position:relative;width:min(37vh,38vw,320px);
+ height:min(37vh,38vw,320px);min-height:clamp(120px,23vh,250px);
+ min-width:clamp(120px,23vh,250px);display:grid;place-items:center;
+ isolation:isolate;animation:arena-cine-art-arrive .75s cubic-bezier(.17,.82,.12,1) both}
+.arena-cinematic-intro .cinematic-art-frame{position:relative;z-index:3;
+ width:83%;height:83%;overflow:hidden;border-radius:26px;
+ border:2px solid var(--arena-cine-color);background:#0b2036;
+ box-shadow:0 0 14px var(--arena-cine-color),0 0 85px var(--arena-cine-glow),
+ inset 0 0 22px #fff4;transform:perspective(750px) rotateY(-7deg) rotateX(4deg)}
+.arena-cinematic-intro .cinematic-art-frame>img{display:block;width:100%;height:100%;
+ object-fit:cover;filter:contrast(1.04) saturate(1.18)}
+.arena-cinematic-intro .cinematic-art-ring{position:absolute;inset:0;border-radius:50%;
+ border:1px solid var(--arena-cine-color);z-index:1;box-shadow:0 0 35px var(--arena-cine-glow)}
+.arena-cinematic-intro .cinematic-art-ring--outer{animation:arena-cine-ring-spin 11s linear infinite;
+ border-style:dashed;opacity:.7}
+.arena-cinematic-intro .cinematic-art-ring--inner{inset:8%;border-width:2px;
+ opacity:.62;animation:arena-cine-ring-spin 8s linear infinite reverse}
+.arena-cinematic-intro .cinematic-art-flare{position:absolute;z-index:5;right:0;bottom:10%;
+ background:#0c2235;width:48px;height:48px;border-radius:14px;display:grid;
+ place-items:center;border:1px solid var(--arena-cine-color);color:var(--arena-cine-color);
+ box-shadow:0 0 28px var(--arena-cine-glow);animation:arena-cine-icon-glow 2.1s ease-in-out infinite}
+.arena-cinematic-intro .cinematic-copy{display:flex;flex-direction:column;align-items:center;
+ gap:6px;max-width:95%;animation:arena-cine-title-enter .7s .19s both}
+.arena-cinematic-intro .cinematic-caption{font-weight:850;font-size:clamp(11px,2vw,18px);
+ color:var(--arena-cine-color);letter-spacing:.12em}
+.arena-cinematic-intro .cinematic-copy h2{font-size:clamp(31px,7vw,85px);
+ text-wrap:balance;line-height:1.13;font-weight:950;letter-spacing:-.03em;
+ text-shadow:0 0 50px var(--arena-cine-glow),0 8px 35px #000b}
+.arena-cinematic-intro .cinematic-copy p{font-size:clamp(12px,2vw,21px);line-height:1.4;
+ color:#e1f2ff;letter-spacing:.03em}
+.arena-cinematic-intro .cinematic-action{display:flex;align-items:center;gap:12px;
+ flex-wrap:wrap;justify-content:center;color:#d6e8f1}
+.arena-cinematic-intro .cinematic-start-label{display:flex;gap:8px;align-items:center;
+ font-size:clamp(10px,1.4vw,13px)}
+.arena-cinematic-intro .cinematic-skip{display:flex;align-items:center;gap:9px;
+ justify-content:center;min-height:44px;padding:10px 16px;
+ background:#ffffff14;color:#fff;border-color:var(--arena-cine-color);
+ font-size:12px;font-weight:800}
+.arena-cinematic-intro .cinematic-skip:focus-visible{outline:3px solid #fff;outline-offset:4px}
+.arena-cinematic-intro .cinematic-orbits{filter:drop-shadow(0 0 19px var(--arena-cine-glow))}
+.arena-cinematic-intro .cinematic-orbits i{border-color:var(--arena-cine-color);opacity:.28}
+.arena-cinematic-intro .cinematic-lights{position:absolute;inset:0;overflow:hidden;
+ pointer-events:none;z-index:1}
+.arena-cinematic-intro .cinematic-lights i{position:absolute;top:-24%;width:clamp(110px,22vw,360px);
+ height:118%;opacity:.19;filter:blur(20px);
+ background:linear-gradient(180deg,var(--arena-cine-color),transparent 72%);
+ clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);
+ transform-origin:50% 0;animation:arena-cine-spotlight 5.3s ease-in-out infinite alternate}
+.arena-cinematic-intro .cinematic-lights i:nth-child(1){left:-13%;rotate:-27deg}
+.arena-cinematic-intro .cinematic-lights i:nth-child(2){left:15%;rotate:15deg;animation-delay:-2s}
+.arena-cinematic-intro .cinematic-lights i:nth-child(3){right:12%;rotate:-13deg;animation-delay:-1s}
+.arena-cinematic-intro .cinematic-lights i:nth-child(4){right:-15%;rotate:25deg;animation-delay:-3s}
+.arena-cinematic-intro .cinematic-lights i:nth-child(5){left:40%;rotate:3deg;animation-delay:-4s}
+.arena-cinematic-intro .cinematic-lights i:nth-child(6){right:37%;rotate:-6deg;animation-delay:-.8s}
+.arena-cinematic-intro .cinematic-particles{position:absolute;inset:0;pointer-events:none;z-index:1}
+.arena-cinematic-intro .cinematic-particles i{position:absolute;display:block;width:4px;height:4px;
+ border-radius:50%;background:var(--arena-cine-color);box-shadow:0 0 12px var(--arena-cine-color);
+ top:calc(14% + mod(var(--i,0),6)*11%);opacity:.7;animation:arena-cine-particle 3.8s ease-in-out infinite}
+.arena-cinematic-intro .cinematic-particles i:nth-child(1){top:12%;left:8%}
+.arena-cinematic-intro .cinematic-particles i:nth-child(2){top:25%;left:80%;animation-delay:-1.1s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(3){top:55%;left:13%;animation-delay:-2.3s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(4){top:72%;left:90%;animation-delay:-.8s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(5){top:86%;left:30%;animation-delay:-1.8s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(6){top:11%;left:52%;animation-delay:-3s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(7){top:41%;left:95%;animation-delay:-.6s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(8){top:32%;left:6%;animation-delay:-2.7s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(9){top:79%;left:70%;animation-delay:-2.1s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(10){top:65%;left:59%;animation-delay:-1.5s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(11){top:9%;left:70%;animation-delay:-.9s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(12){top:94%;left:15%;animation-delay:-3.5s}
+.arena-cinematic-intro .cinematic-particles i:nth-child(13){top:26%;left:35%;animation-delay:-2.8s}
+.arena-cinematic-intro .cinematic-rule{position:absolute;inset-inline:3%;height:1px;
+ background:linear-gradient(90deg,transparent,var(--arena-cine-color),transparent);opacity:.6}
+.arena-cinematic-intro .cinematic-rule--top{top:5%}
+.arena-cinematic-intro .cinematic-rule--bottom{bottom:6%}
+.arena-cinematic-intro .cinematic-progress{height:5px;animation-duration:var(--intro-duration)!important;
+ background:linear-gradient(90deg,transparent,var(--arena-cine-color),#fff)}
+@keyframes arena-cine-stage-in{from{opacity:0;transform:translateY(22px) scale(.93)}
+ to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes arena-cine-art-arrive{0%{opacity:0;transform:scale(.56) rotate(-13deg)}
+ 75%{opacity:1;transform:scale(1.035) rotate(2deg)}100%{transform:scale(1)}}
+@keyframes arena-cine-title-enter{from{opacity:0;transform:translateY(24px)}
+ to{opacity:1;transform:translateY(0)}}
+@keyframes arena-cine-ring-spin{to{transform:rotate(360deg)}}
+@keyframes arena-cine-icon-glow{50%{box-shadow:0 0 45px var(--arena-cine-color);transform:scale(1.06)}}
+@keyframes arena-cine-spotlight{to{transform:rotate(12deg) scale(1.1);opacity:.31}}
+@keyframes arena-cine-particle{50%{opacity:1;transform:translate(8px,-15px) scale(1.6)}}
+@media(max-width:700px){
+ .arena-cinematic-intro .cinematic-main-art{width:min(29vh,56vw,210px);
+  height:min(29vh,56vw,210px);min-width:110px;min-height:110px}
+ .arena-cinematic-intro .cinematic-center{gap:11px;padding:14px 12px}
+ .arena-cinematic-intro .cinematic-copy h2{font-size:clamp(29px,8vw,54px)}
+ .arena-cinematic-intro .cinematic-lights i{filter:blur(9px);opacity:.14}
+ .arena-cinematic-intro .cinematic-kicker{letter-spacing:.12em}
+ .arena-cinematic-intro .cinematic-art-flare{width:36px;height:36px}
+}
+@media(max-height:580px){
+ .arena-cinematic-intro .cinematic-main-art{width:110px;height:110px;min-width:110px;min-height:110px}
+ .arena-cinematic-intro .cinematic-center{gap:6px;padding:8px}
+ .arena-cinematic-intro .cinematic-copy h2{font-size:clamp(25px,5vw,44px)}
+ .arena-cinematic-intro .cinematic-copy p{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-cinematic-intro *, .arena-cinematic-intro::before{
+  animation:none!important;transition:none!important;filter:none!important}
+}
+.session-shell.effects-off .arena-cinematic-intro *,.session-shell.effects-off .arena-cinematic-intro::before{
+ animation:none!important;transition:none!important}
+.session-shell.effects-light .arena-cinematic-intro .cinematic-lights,
+.session-shell.effects-light .arena-cinematic-intro .cinematic-particles,
+.session-shell.effects-light .arena-cinematic-intro .cinematic-orbits{display:none}
