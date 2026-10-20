@@ -4301,3 +4301,106 @@
 }
 .session-shell.effects-off .intro-scene *,
 .session-shell.effects-light .intro-scene *{animation:none!important}
+
+
+/* V6 PROJECTOR STAGE: single viewport, zero document scrolling and adaptive auto-fit.
+   All content stays in the DOM; the fit hook computes height after real game render. */
+html:has(.session-shell.projector),
+body:has(.session-shell.projector){height:100%;overflow:hidden!important}
+.session-shell.projector{position:fixed!important;inset:0!important;
+ width:100vw!important;height:100dvh!important;min-height:0!important;
+ max-height:100dvh!important;overflow:hidden!important;
+ display:flex!important;flex-direction:column!important;isolation:isolate}
+.session-shell.projector>.session-brand-header{flex:0 0 auto!important;
+ min-height:64px!important;height:64px!important;
+ padding:5px clamp(12px,2vw,30px)!important;gap:12px!important;
+ grid-template-columns:minmax(90px,150px) minmax(0,1fr) minmax(100px,150px)!important}
+.session-shell.projector .brand-header-center{min-height:46px!important}
+.session-shell.projector .brand-logo-frame{min-height:48px!important;
+ max-height:50px!important;padding:2px!important;border-radius:9px!important}
+.session-shell.projector .brand-logo-frame .official-logo{max-height:45px!important;
+ object-fit:contain!important}
+.session-shell.projector .session-header-actions{gap:9px!important}
+.session-shell.projector .session-header-actions .language,
+.session-shell.projector .session-header-actions button{min-height:39px!important}
+.session-shell.projector>.live-workspace{
+ box-sizing:border-box!important;display:block!important;
+ position:relative!important;flex:0 0 auto!important;
+ max-width:none!important;min-width:0!important;min-height:0!important;
+ height:auto!important;max-height:none!important;
+ overflow:visible!important;margin:0!important;
+ padding:8px 13px 15px!important;transform-origin:top left!important}
+.session-shell.projector .live-title{margin:0 0 5px!important;gap:10px!important}
+.session-shell.projector .live-title h1{font-size:clamp(17px,1.6vw,26px)!important;
+ margin-top:1px!important;line-height:1.2!important}
+.session-shell.projector .live-title .eyebrow{font-size:9px!important}
+.session-shell.projector .session-progress{padding:3px 0 6px!important;
+ font-size:10px!important;gap:10px!important}
+.session-shell.projector .live-columns{display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;gap:0!important;min-width:0!important}
+.session-shell.projector .main-stage{min-height:0!important;height:auto!important;
+ max-height:none!important;overflow:visible!important;
+ border-radius:13px!important}
+.session-shell.projector .lobby-stage{min-height:0!important;padding:12px 20px!important}
+.session-shell.projector .lobby-beacon{width:60px!important;height:60px!important;
+ margin:3px auto 8px!important}
+.session-shell.projector .lobby-stage h2{font-size:clamp(23px,2.65vw,42px)!important;
+ line-height:1.25!important;margin:6px auto!important}
+.session-shell.projector .lobby-stage p{margin:4px auto!important}
+.session-shell.projector .lobby-qr img{width:min(18vh,165px)!important;
+ height:auto!important;max-height:19vh!important}
+.session-shell.projector .lobby-qr b{font-size:clamp(26px,2.8vw,42px)!important}
+.session-shell.projector .stage-activity-identity{min-height:51px!important;
+ gap:10px!important;margin:5px 8px 0!important;padding:4px 10px!important}
+.session-shell.projector .stage-activity-identity .stage-current-cover{
+ width:76px!important;height:44px!important}
+.session-shell.projector .stage-activity-identity strong{font-size:clamp(15px,2vw,28px)!important}
+.session-shell.projector .round-stage{height:auto!important;min-height:0!important;
+ overflow:visible!important;padding:12px clamp(14px,2.4vw,34px)!important}
+.session-shell.projector .round-meta{gap:12px!important}
+.session-shell.projector .round-meta .activity-label{padding:5px 10px!important;
+ font-size:11px!important}
+.session-shell.projector .question-prompt{font-size:clamp(22px,2.5vw,39px)!important;
+ line-height:1.28!important;max-width:94%!important;margin:11px auto!important;
+ overflow-wrap:anywhere!important}
+.session-shell.projector .timer-track{margin:5px 0!important}
+.session-shell.projector .round-footer{margin:9px 0 0!important;
+ padding:7px 0!important}
+.session-shell.projector .answer-grid{gap:9px!important}
+.session-shell.projector .answer-option{min-height:66px!important;
+ padding:10px 15px!important;font-size:clamp(14px,1.55vw,22px)!important}
+.session-shell.projector .answer-letter{width:35px!important;height:35px!important}
+.session-shell.projector .display-bottom{display:flex!important;flex-wrap:nowrap!important;
+ min-height:0!important;max-height:none!important;
+ gap:8px!important;margin:6px 0 0!important;padding:8px 10px!important}
+.session-shell.projector .display-bottom>div{width:auto!important;flex:none!important;
+ font-size:10px!important}
+.session-shell.projector .display-bottom>span{font-size:12px!important;
+ min-width:0!important;white-space:nowrap!important;padding:5px 9px!important}
+.session-shell.projector .display-bottom>span strong{font-size:16px!important}
+.session-shell.projector .final-stage{overflow:visible!important;
+ height:auto!important;min-height:0!important;padding:10px 15px!important}
+.session-shell.projector .arena-victory{min-height:0!important;
+ padding:12px!important}
+.session-shell.projector .arena-victory__trophy{width:min(22vh,190px)!important;
+ height:min(22vh,190px)!important}
+.session-shell.projector .arena-victory__headline h2{font-size:clamp(32px,4.2vw,65px)!important}
+.session-shell.projector .podium{margin:7px auto!important;gap:8px!important}
+.session-shell.projector .rank-list{max-height:none!important;overflow:visible!important}
+.session-shell.projector .live-rail{display:none!important}
+.session-shell.projector .local-effects-controls{
+ position:fixed!important;bottom:6px!important;left:8px!important;z-index:70!important;
+ padding:3px 6px!important;border-radius:10px!important;
+ background:#041629df!important;font-size:9px!important}
+.session-shell.projector .sound-toggle{bottom:6px!important;
+ inset-inline-end:8px!important;z-index:72!important;min-height:34px!important}
+.session-shell.projector .stage-media img,.session-shell.projector .stage-media video{
+ max-height:25vh!important;object-fit:contain!important}
+@media(max-height:750px){
+ .session-shell.projector>.session-brand-header{height:55px!important;min-height:55px!important}
+ .session-shell.projector .lobby-stage{padding:7px!important}
+ .session-shell.projector .round-stage{padding:8px 13px!important}
+ .session-shell.projector .answer-option{min-height:56px!important}
+ .session-shell.projector .question-prompt{margin:6px auto!important}
+ .session-shell.projector .arena-victory{padding:5px!important}
+}
