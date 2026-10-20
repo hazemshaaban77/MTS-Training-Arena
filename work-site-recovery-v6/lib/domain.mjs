@@ -14,6 +14,7 @@ export function validateActivity(a,depth=0){
  if(type==='Ultimate Game Show'&&a.showFormat==='championship'){
   if(!Array.isArray(a.questions)||a.questions.length<2||a.questions.length>20)throw Error('DECK');
   for(const q of a.questions)validateActivity(q,depth+1);
+  ok(a.questions.every(q=>q.type==='Quiz'&&Number.isInteger(q.timer)&&q.timer>=5&&q.timer<=300&&Array.isArray(q.options)&&q.options.length===4));
   const amounts=a.questions.map(q=>q.points);
   ok(amounts.every((p,i)=>Number.isInteger(p)&&p>0&&p<=10000&&(i===0||p>amounts[i-1])));
   ok(Array.isArray(a.safeLevels)&&a.safeLevels.length<=3&&new Set(a.safeLevels).size===a.safeLevels.length&&a.safeLevels.every(x=>Number.isInteger(x)&&x>=1&&x<=a.questions.length));
