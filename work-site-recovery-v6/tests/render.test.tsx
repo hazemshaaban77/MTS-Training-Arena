@@ -1,4 +1,4 @@
-import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel} from '../lib/question-authoring';
+import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel,setMatchingPair,deleteMatchingPair} from '../lib/question-authoring';
 import {gameIntroBeats} from '../lib/arena-intro-beats';
 import {introIdentity,introIdentities} from '../lib/arena-game-identity';
 import {projectorFitScale} from '../lib/projector-fit';
@@ -1578,4 +1578,30 @@ test('each of ten game intros has a unique three-act cinematic sequence and dist
  }
  assert.ok(css.includes('NEXT-LEVEL GAME IDENTITIES'));
  assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
+});
+
+
+test('matching question edit keeps one-to-one answer permutation through changes and deletion',()=>{
+ const p=[2,0,3,1];
+ assert.deepEqual(setMatchingPair(p,0,1),[1,0,3,2]);
+ assert.deepEqual(setMatchingPair(p,1,3),[2,3,0,1]);
+ assert.deepEqual(p,[2,0,3,1],'source pair choices must remain immutable');
+ assert.deepEqual(deleteMatchingPair([0,1,2],1),[0,1]);
+ assert.deepEqual(deleteMatchingPair([2,0,1],1),[1,0]);
+ assert.deepEqual(deleteMatchingPair([1,2,0],0),[1,0]);
+ assert.deepEqual(deleteMatchingPair([0,1],0),[0,1],'do not remove below two');
+ for(const pair of [[0,1,2,3],[3,2,1,0],[2,0,3,1],[1,3,0,2]]){
+  for(let i=0;i<4;i++){
+   const result=deleteMatchingPair(pair,i);
+   assert.deepEqual([...result].sort((a,b)=>a-b),[0,1,2]);
+   for(let j=0;j<4;j++){
+    const swapped=setMatchingPair(pair,i,j);
+    assert.equal(swapped[i],j);
+    assert.deepEqual([...swapped].sort((a,b)=>a-b),[0,1,2,3]);
+   }
+  }
+ }
+ const src=readFileSync('components/arena/QuestionTypeFields.tsx','utf8');
+ assert.ok(src.includes('setMatchingPair(q.pairs||q.left.map'));
+ assert.ok(src.includes('deleteMatchingPair(q.pairs||q.left.map'));
 });
