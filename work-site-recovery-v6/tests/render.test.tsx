@@ -413,7 +413,9 @@ test('trainer launch readiness distinguishes actual state from manual checks',()
  const source=readFileSync('components/arena/Session.tsx','utf8');
  assert.ok(source.includes("import TrainerReadiness from './TrainerReadiness'"));
  assert.ok(source.includes("onClick={beginSession}"));
- assert.ok(source.includes("s.status==='ready'?t('افتح استقبال المتدربين','Open participant lobby'):t('ابدأ أول نشاط','Start first activity')"));
+ const directorSource=readFileSync('components/arena/TrainerDirectorDashboard.tsx','utf8');
+ assert.ok(directorSource.includes("s.status==='ready'?t('افتح استقبال المتدربين'"));
+ assert.ok(directorSource.includes("s.status==='lobby'?t('ابدأ أول نشاط'"));
  assert.ok(source.includes("s.status==='ready'){command('launch');return;"));
  assert.ok(source.includes("if(ready===0&&!window.confirm"),'Warn before running empty session');
  const css=readFileSync('app/globals.css','utf8');
