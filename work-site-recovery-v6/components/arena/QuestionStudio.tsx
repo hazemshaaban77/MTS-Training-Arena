@@ -223,7 +223,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      onChange={(media:QuestionMedia|undefined)=>patch(
       q.type==='Image Hotspot'&&media?.type==='image'?{media,image:media.url}:{media}
      )}/>
-    <QuestionTypeFields ar={ar} q={q} onPatch={patch} onError={setError}/>
+    <QuestionTypeFields ar={ar} q={q} onPatch={patch}/>
     <div className="question-studio__fields">
      <label>{t('زمن الإجابة بالثواني','Time limit (seconds)')}
       <input type="number" min={5} max={3600} value={q.timer} onChange={e=>patch({timer:Number(e.target.value)})}/></label>
