@@ -4717,3 +4717,201 @@ html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}
  .question-media-picker__file{width:100%;justify-content:center}
  .question-studio__type-selector{padding:10px}
 }
+
+
+/* V6 NEXT-LEVEL GAME IDENTITIES — animated three-act cues, scene choreography
+   and DIFFERENT cinematic reveal behavior for each title. No copy overlapping art. */
+.arena-cinematic-intro.cinematic-composed{
+ --intro-pulse:#8cd9ff;--intro-atmosphere:#123f64aa;
+ background:
+  radial-gradient(ellipse 50% 70% at 24% 40%,var(--intro-atmosphere),transparent 80%),
+  radial-gradient(ellipse 38% 55% at 80% 75%,var(--arena-cine-glow),transparent 88%),
+  linear-gradient(155deg,#030a1e,#081b37 59%,#020816)!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-visual-zone:before{
+ content:"";position:absolute;inset:-6%;border-radius:38%;pointer-events:none;
+ background:radial-gradient(ellipse at 50% 50%,var(--arena-cine-glow),transparent 70%);
+ filter:blur(22px);opacity:.8;z-index:0;animation:arena-intro-aura 3.8s ease-in-out infinite}
+.arena-cinematic-intro.cinematic-composed .cinematic-art-frame{
+ animation:arena-intro-art-arrive .78s cubic-bezier(.16,.9,.22,1) both!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-art-frame:after{
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+ background:linear-gradient(98deg,#091c39ee,#123c6480);
+ transform-origin:top center;animation:arena-intro-curtain-out .65s .3s ease-in forwards}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge{
+ flex:none;border:2px solid var(--arena-cine-color)!important;
+ animation:arena-intro-scene-arrival .8s .5s cubic-bezier(.18,.85,.16,1) both}
+.arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{
+ grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)!important;gap:14px!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-scene-badge{
+ height:min(40vh,320px)!important;max-height:88%!important;
+ box-shadow:inset 0 0 40px var(--arena-cine-glow),0 0 30px var(--arena-cine-glow)!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-copy{
+ gap:clamp(7px,1.25vh,13px)!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-caption{
+ font-weight:950!important;letter-spacing:.13em!important;
+ text-shadow:0 0 22px var(--arena-cine-glow)}
+.arena-cinematic-intro.cinematic-composed .cinematic-copy h2{
+ font-size:clamp(38px,5vw,78px)!important;letter-spacing:-.045em!important;
+ background:linear-gradient(180deg,#fff 10%,#d9f9ff 80%);
+ -webkit-background-clip:text;background-clip:text;color:transparent!important;
+ animation:arena-intro-wordmark .7s .42s both}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-sequence{
+ width:100%;display:flex;flex-direction:column;gap:9px;margin:4px 0;
+ padding:13px 0 9px;border-top:1px solid var(--arena-cine-glow);
+ border-bottom:1px solid var(--arena-cine-glow);min-width:0}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-overline{
+ font-size:clamp(9px,1vw,12px);color:var(--arena-cine-color);
+ font-weight:950;letter-spacing:.22em;text-align:start;direction:ltr}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-track{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat{
+ position:relative;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:5px;min-width:0;min-height:65px;padding:7px 5px;
+ text-align:center;color:#fff;font-weight:800;font-size:clamp(9px,1vw,12px);
+ line-height:1.35;border:1px solid #ffffff47;border-radius:9px;
+ background:linear-gradient(140deg,#163950cf,#04152bcf);
+ box-shadow:inset 0 0 12px var(--arena-cine-glow);
+ animation:arena-intro-beat .42s ease-out both}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat b{
+ color:var(--arena-cine-color);font-size:10px}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-0{animation-delay:.42s}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-1{animation-delay:1.05s}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-2{animation-delay:1.75s}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat:after{
+ content:"";position:absolute;inset:0 0 auto;height:3px;border-radius:9px;
+ background:var(--arena-cine-color);transform:scaleX(0);transform-origin:0 50%;
+ animation:arena-intro-beat-light .45s ease-out forwards}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-0:after{animation-delay:.45s}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-1:after{animation-delay:1.1s}
+.arena-cinematic-intro.cinematic-composed .cinematic-beat-2:after{animation-delay:1.8s}
+@keyframes arena-intro-art-arrive{
+ from{opacity:.16;clip-path:inset(48% 0 48% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes arena-intro-curtain-out{
+ 0%{opacity:1;clip-path:inset(0 0 0 0)}
+ 100%{opacity:0;clip-path:inset(0 100% 0 0)}}
+@keyframes arena-intro-aura{50%{opacity:1;transform:scale(1.13)}}
+@keyframes arena-intro-scene-arrival{
+ from{opacity:0;clip-path:inset(20% 40% 20% 40%)}
+ to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes arena-intro-wordmark{
+ from{opacity:0;clip-path:inset(100% 0 0 0);transform:translateY(10px)}
+ to{opacity:1;clip-path:inset(0);transform:translateY(0)}}
+@keyframes arena-intro-beat{from{opacity:0;transform:translateY(28px) scale(.92)}
+ to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes arena-intro-beat-light{to{transform:scaleX(1)}}
+/* QUIZ: cyber-blue speed tunnel, hard-cut glitch reveal, electric answers. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-quiz{
+ --intro-atmosphere:#077fb357;--intro-pulse:#7cf5ff}
+.arena-cinematic-intro.cinematic-composed.intro-kind-quiz .cinematic-art-frame{
+ animation:arena-intro-quiz-glitch .7s steps(3,end) both!important}
+.arena-cinematic-intro.cinematic-composed.intro-kind-quiz .cinematic-lights i{
+ animation-duration:1.1s!important}
+@keyframes arena-intro-quiz-glitch{
+ 0%{opacity:0;clip-path:inset(0 100% 0 0)}
+ 35%{opacity:.6;clip-path:inset(20% 0 30% 0)}
+ 70%{opacity:.95;clip-path:inset(0 0 10% 0)}
+ 100%{opacity:1;clip-path:inset(0)}}
+/* CHAMPIONSHIP: golden velvet theatre, slow royal spotlight and prize rise. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-championship{
+ --intro-atmosphere:#b68f3b69;--intro-pulse:#ffdf9c;
+ background:radial-gradient(ellipse at 25% 10%,#b78d4366,transparent 65%),
+  linear-gradient(135deg,#130d25,#151432 52%,#09091c)!important}
+.arena-cinematic-intro.cinematic-composed.intro-kind-championship .cinematic-art-frame{
+ animation:arena-intro-royal-zoom 1.4s cubic-bezier(.2,.74,.14,1) both!important}
+.arena-cinematic-intro.cinematic-composed.intro-kind-championship .cinematic-lights i{
+ background:linear-gradient(180deg,#ffe5a8,transparent 80%)!important;opacity:.4}
+.arena-cinematic-intro.cinematic-composed.intro-kind-championship .cinematic-beat{
+ border-color:#efcc9d8c;background:linear-gradient(145deg,#66462cbb,#130f24bb)}
+@keyframes arena-intro-royal-zoom{
+ from{opacity:0;clip-path:inset(0 50% 0 50%)}to{opacity:1;clip-path:inset(0)}}
+/* WHEEL: carnival spotlights, roulette orbit, bright dramatic radial wipe. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-wheel{--intro-atmosphere:#7234ab69;
+ --intro-pulse:#f5b5ff;
+ background:radial-gradient(circle at 30% 50%,#a03bf050,transparent 55%),
+  repeating-conic-gradient(from 0deg at 40% 50%,#080b26 0deg 25deg,#141239 26deg 45deg)!important}
+.arena-cinematic-intro.cinematic-composed.intro-kind-wheel .cinematic-art-frame{
+ animation:arena-intro-wheel-wipe .95s ease-out both!important}
+.arena-cinematic-intro.cinematic-composed.intro-kind-wheel .cinematic-scene-badge{
+ box-shadow:0 0 44px #c075fb77!important}
+@keyframes arena-intro-wheel-wipe{
+ from{opacity:0;clip-path:circle(3% at 50% 50%)}to{opacity:1;clip-path:circle(75% at 50% 50%)}}
+/* ESCAPE ROOM: alarm red, vault shadow, vertical keyhole reveal. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-escape{
+ --intro-atmosphere:#095d546b;--intro-pulse:#a2ffe7;
+ background:repeating-linear-gradient(0deg,transparent 0 61px,#57dbd508 62px 64px),
+  radial-gradient(ellipse at 42% 50%,#1156576b,#040e19 70%)!important}
+.arena-cinematic-intro.cinematic-composed.intro-kind-escape .cinematic-art-frame{
+ animation:arena-intro-vault-open 1.25s cubic-bezier(.1,.8,.2,1) both!important}
+@keyframes arena-intro-vault-open{
+ from{opacity:0;clip-path:inset(0 48% 0 48%)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+/* OPEN BOX: mystery rose stage, package unfolds as three-act gift. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-box{--intro-atmosphere:#a3448e66;
+ --intro-pulse:#ffd0e8}
+.arena-cinematic-intro.cinematic-composed.intro-kind-box .cinematic-art-frame{
+ animation:arena-intro-box-unfold 1.05s cubic-bezier(.1,.8,.2,1) both!important}
+@keyframes arena-intro-box-unfold{
+ from{opacity:0;clip-path:polygon(15% 45%,85% 45%,85% 55%,15% 55%)}
+ to{opacity:1;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}}
+/* LIVE POLL: crowd energy, five bands sweep across the image. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-poll{--intro-atmosphere:#067c9991}
+.arena-cinematic-intro.cinematic-composed.intro-kind-poll .cinematic-art-frame{
+ animation:arena-intro-poll-wave .8s ease-out both!important}
+@keyframes arena-intro-poll-wave{
+ from{opacity:.2;clip-path:inset(100% 0 0 0)}to{opacity:1;clip-path:inset(0)}}
+/* META PLAN: connecting a lattice of thought; directional sweep. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-plan{--intro-atmosphere:#136a5081}
+.arena-cinematic-intro.cinematic-composed.intro-kind-plan .cinematic-art-frame{
+ animation:arena-intro-plan-unfold 1s both!important}
+@keyframes arena-intro-plan-unfold{
+ from{opacity:0;clip-path:polygon(50% 0,50% 0,50% 100%,50% 100%)}
+ to{opacity:1;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}}
+/* ORDER: steps enter top to bottom like a scoreboard. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-order{--intro-atmosphere:#1768a06c}
+.arena-cinematic-intro.cinematic-composed.intro-kind-order .cinematic-art-frame{
+ animation:arena-intro-order-scan .85s steps(5,end) both!important}
+@keyframes arena-intro-order-scan{
+ from{opacity:0;clip-path:inset(100% 0 0 0)}to{opacity:1;clip-path:inset(0)}}
+/* CARDS: page-turn reveal while floating learning cards flip. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-cards{--intro-atmosphere:#5148a880}
+.arena-cinematic-intro.cinematic-composed.intro-kind-cards .cinematic-art-frame{
+ animation:arena-intro-card-flip .9s ease-out both!important}
+@keyframes arena-intro-card-flip{
+ from{opacity:0;clip-path:inset(0 48% 0 48%)}to{opacity:1;clip-path:inset(0)}}
+/* SCENARIO: a branching amber path reveals the story. */
+.arena-cinematic-intro.cinematic-composed.intro-kind-scenario{--intro-atmosphere:#93601e85}
+.arena-cinematic-intro.cinematic-composed.intro-kind-scenario .cinematic-art-frame{
+ animation:arena-intro-scenario-branch .92s ease-out both!important}
+@keyframes arena-intro-scenario-branch{
+ from{opacity:0;clip-path:polygon(50% 50%,50% 50%,50% 50%)}
+ to{opacity:1;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}}
+@media(max-width:780px){
+ .arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{
+  grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)!important;gap:8px!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-scene-badge{
+  height:min(30vh,175px)!important;max-height:100%!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat-sequence{gap:5px;padding:5px 0}
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat-track{gap:4px}
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat{
+  padding:5px 2px;min-height:46px;font-size:9px}
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy h2{
+  font-size:clamp(26px,7vw,44px)!important}
+}
+@media(max-height:700px) and (min-width:781px){
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat-sequence{padding:6px 0;gap:5px}
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat{min-height:43px;padding:5px 3px;font-size:10px}
+ .arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{height:min(52dvh,325px)!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-scene-badge{height:min(31vh,200px)!important}
+}
+@media(max-height:520px){
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat-sequence{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-cinematic-intro.cinematic-composed .cinematic-art-frame,
+ .arena-cinematic-intro.cinematic-composed .cinematic-art-frame:after,
+ .arena-cinematic-intro.cinematic-composed .cinematic-scene-badge,
+ .arena-cinematic-intro.cinematic-composed .cinematic-copy h2,
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat,
+ .arena-cinematic-intro.cinematic-composed .cinematic-beat:after{
+  animation:none!important;clip-path:none!important;opacity:1!important}
+ .arena-cinematic-intro.cinematic-composed .cinematic-art-frame:after{display:none!important}
+}
