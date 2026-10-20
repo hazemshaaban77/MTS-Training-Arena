@@ -1,5 +1,6 @@
 import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel,setMatchingPair,deleteMatchingPair} from '../lib/question-authoring';
 import {gameIntroBeats} from '../lib/arena-intro-beats';
+import {safeYouTubeEmbed} from '../lib/media-url';
 import {introIdentity,introIdentities} from '../lib/arena-game-identity';
 import {projectorFitScale} from '../lib/projector-fit';
 import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,stageAtmosphere} from '../lib/arena-cinematics';
@@ -1495,7 +1496,7 @@ test('Quiz Studio supports seven different question types with real fields and m
   assert.ok(html.includes('New question type'),type);
   assert.ok(html.includes('Media type'),type);
   assert.ok(html.includes('Upload image or video from device'),type);
-  assert.ok(html.includes('Direct HTTPS link'),type);
+  assert.ok(html.includes('Image, video or YouTube link'),type);
   assert.ok(html.includes('type="file"'),type);
   switch(type){
    case 'Quiz':case 'True/False':case 'Dropdown':
@@ -1604,4 +1605,28 @@ test('matching question edit keeps one-to-one answer permutation through changes
  const src=readFileSync('components/arena/QuestionTypeFields.tsx','utf8');
  assert.ok(src.includes('setMatchingPair(q.pairs||q.left.map'));
  assert.ok(src.includes('deleteMatchingPair(q.pairs||q.left.map'));
+});
+
+
+test('question media URLs support safe YouTube embeds and native direct video clips',()=>{
+ const id='QwErTy123_9';
+ const expected='https://www.youtube-nocookie.com/embed/'+id+'?rel=0';
+ for(const url of [
+  'https://www.youtube.com/watch?v='+id,
+  'https://youtu.be/'+id,
+  'https://www.youtube.com/shorts/'+id,
+  'https://m.youtube.com/embed/'+id
+ ])assert.equal(safeYouTubeEmbed(url),expected,url);
+ for(const rejected of ['http://youtu.be/'+id,'javascript:alert(1)',
+  'https://notyoutube.com/watch?v='+id,'https://youtu.be/wrong',
+  'https://www.youtube.com/watch?v='+id+'extra']){
+  assert.equal(safeYouTubeEmbed(rejected),null);
+ }
+ const h=renderToStaticMarkup(<StageMedia media={{type:'video',url:'https://youtu.be/'+id,alt:'Public training video'}}/>);
+ assert.ok(h.includes('<iframe'));
+ assert.ok(h.includes('youtube-nocookie.com/embed/'+id));
+ assert.ok(h.includes('title="Public training video"'));
+ const direct=renderToStaticMarkup(<StageMedia media={{type:'video',url:'https://example.org/video.mp4'}}/>);
+ assert.ok(direct.includes('<video'));
+ assert.ok(!direct.includes('<iframe'));
 });
