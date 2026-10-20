@@ -1,3 +1,5 @@
+import {introIdentity,introIdentities} from '../lib/arena-game-identity';
+import {projectorFitScale} from '../lib/projector-fit';
 import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,stageAtmosphere} from '../lib/arena-cinematics';
 import {ArenaSoundEngine,defaultArenaAudio} from '../lib/arena-sound';
 import ArenaMoment from '../components/arena/ArenaMoment';
@@ -1335,4 +1337,96 @@ test('champion, lead, and result banners use confirmed server transitions and ar
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('V6 Cinematic Experience — milestone ribbons'));
  assert.ok(css.includes('.session-shell.effects-off .arena-moment'));
+});
+
+
+test('ten game openings have unique visual motifs, independent notes, rhythms and noise identities',()=>{
+ const all=['Quiz','Ultimate Game Show','Wheel of Fortune','Escape Room','Open the Box',
+  'Live Poll','Meta Plan','Order It','Flashcards','Scenario Challenge'];
+ const keys=new Set(),songs=new Set(),texts=new Set(),visuals=new Set();
+ for(const type of all){
+  const identity=introIdentity(type);
+  keys.add(identity.key);
+  const signature=identity.notes.map(n=>[n.pitch,n.at,n.hold,n.wave].join(':')).join('|')+identity.noise;
+  songs.add(signature);
+  texts.add(identity.introEn);
+  const h=renderToStaticMarkup(<StageSplash type={type} label={type} ar={false}
+   durationMs={3600} preview onComplete={()=>{}}/>);
+  assert.ok(h.includes('intro-kind-'+identity.key),type);
+  assert.ok(h.includes('intro-scene--'+identity.key),type);
+  assert.ok(h.includes(identity.introEn),type);
+  assert.ok(h.includes(identity.tagEn),type);
+  assert.ok(h.includes('splash-activity-cover'),type);
+  visuals.add('intro-scene--'+identity.key);
+ }
+ assert.equal(keys.size,10);
+ assert.equal(songs.size,10,'No two game titles share the same soundtrack');
+ assert.equal(texts.size,10);
+ assert.equal(visuals.size,10);
+ assert.equal(Object.keys(introIdentities).length,10);
+ assert.equal(introIdentity('Spin Wheel').key,'wheel');
+ assert.equal(introIdentity('Categorize').key,'plan');
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes('playGameIntro(mainType(s.queue[scene.index])'));
+ const simulator=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.ok(simulator.includes('playGameIntro(mainType(a))'));
+ const audio=readFileSync('lib/arena-sound.ts','utf8');
+ assert.ok(audio.includes("playGameIntro(type:string"));
+ assert.ok(audio.includes("if(!p.enabled||p.muted||!p.music||options.quiet"));
+ const css=readFileSync('app/globals.css','utf8');
+ for(const word of ['intro-quiz-choice','intro-champ-stairs','intro-wheel-disc',
+  'intro-escape-door','intro-mystery-box','intro-poll-bars','intro-plan-node',
+  'intro-order-steps','intro-card-stack','intro-scenario-fork'])
+  assert.ok(css.includes(word),'Missing unique intro choreography for '+word);
+});
+
+test('simulation stage is the main viewport; advanced settings collapse without losing scenarios',()=>{
+ const sim=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.ok(sim.includes('arena-simulator-shell--stage-first'));
+ assert.ok(sim.includes('<details className="arena-simulator-dry-run"'));
+ assert.ok(sim.includes('<summary className="arena-simulator-dry-run__toggle">'));
+ assert.ok(!sim.includes('<details className="arena-simulator-dry-run" open'));
+ assert.ok(sim.includes('setLearnerCount(Number(e.target.value))'));
+ assert.ok(sim.includes("value=\"late_join\""));
+ assert.ok(sim.includes("value=\"offline\""));
+ const css=readFileSync('components/arena/ArenaSimulator.css','utf8');
+ for(const marker of [
+  '.arena-simulator-shell--stage-first .arena-simulator-main',
+  '.arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle',
+  '.arena-simulator-shell--stage-first .arena-simulator-dry-run__expanded',
+  '.arena-simulator-shell--stage-first .arena-simulator-modes',
+  'height:100dvh',
+  'max-height:26dvh',
+  'min-height:0'
+ ]) assert.ok(css.includes(marker),marker);
+ const html=renderToStaticMarkup(<ArenaSimulator ar={false} activities={[sample('Quiz','en')]}
+   onClose={()=>{}}/>);
+ assert.ok(html.includes('arena-simulator-shell--stage-first'));
+ assert.ok(html.includes('Practice setup &amp; scenarios')||html.includes('Practice setup & scenarios'));
+ assert.ok(html.includes('arena-simulator-main'));
+});
+
+test('projector content fits in one viewport independent of scrolling and never mutates session state',()=>{
+ assert.equal(projectorFitScale(550,800,768,1366,70),1);
+ assert.equal(projectorFitScale(1400,1366,768,1366,64),696/1400);
+ assert.equal(projectorFitScale(500,1920,1080,1280,64),1280/1920);
+ assert.ok(projectorFitScale(3500,1800,600,1280,55)>0);
+ assert.equal(projectorFitScale(100,200,0,1280,60),1);
+ const hook=readFileSync('components/arena/useProjectorFit.ts','utf8');
+ assert.ok(hook.includes('MutationObserver'));
+ assert.ok(hook.includes('ResizeObserver'));
+ assert.ok(hook.includes('projectorFitScale(naturalHeight,naturalWidth'));
+ assert.ok(hook.includes("el.style.zoom=String(scale)"));
+ assert.ok(hook.includes("el.style.width=(100/scale)+'%'"));
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes('const projectorFitRef=useProjectorFit(display'));
+ assert.ok(session.includes('<main ref={projectorFitRef} className="live-workspace">'));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 PROJECTOR STAGE: single viewport'));
+ assert.ok(css.includes('.session-shell.projector{position:fixed!important;inset:0!important'));
+ assert.ok(css.includes('height:100dvh!important'));
+ assert.ok(css.includes('overflow:hidden!important'));
+ assert.ok(css.includes('.session-shell.projector .main-stage{min-height:0!important'));
+ assert.ok(css.includes('.session-shell.projector .display-bottom{display:flex!important'));
+ assert.ok(css.includes('.session-shell.projector .arena-victory{min-height:0!important'));
 });
