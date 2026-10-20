@@ -87,3 +87,91 @@ test('an existing pre-identity participant can add their ID without losing their
  const upgraded:any=await call(db,'join',{code,name:'Existing',employeeId:'LEGACY-1',confirmed:true},p.token);
  assert.equal(upgraded.id,p.id);assert.equal(upgraded.token,p.token);const s=await state(db,code,p.token);assert.equal(s.players.length,1);assert.equal(s.individual[0].score,1000);assert.equal(s.mine.employeeId,'LEGACY-1');db.sql.close();
 });
+
+
+test('championship: independent attempts, lifelines, audience, safe prizes and server ledger',async()=>{
+ const db=database();
+ const a:any={...sample('Ultimate Game Show','en'),showFormat:'championship',
+  participation:'individual',betEnabled:false,safeLevels:[2],
+  questions:[100,200,500].map((points,i)=>({...sample('Quiz','en'),type:'Quiz',prompt:'Championship question '+(i+1),
+   options:['True','False','Maybe','None'],correct:0,timer:30,points,speed:false}))};
+ const code=await room(db,[a]);
+ const p:any=await enroll(db,{code,name:'First'}),q:any=await enroll(db,{code,name:'Second'}),
+  z:any=await enroll(db,{code,name:'Champion'});
+ await control(db,code,'start');
+ const current=await state(db,code,p.token);
+ assert.equal(current.status,'question');
+ assert.equal(current.queue.length,1,'Entire contest is one activity');
+ assert.equal(current.show.phase,'casting');
+ assert.equal(current.show.question,null);
+ assert.equal(current.activity.questions,undefined,'No answer key leaks');
+ async function cast(id:string){const s=await state(db,code,undefined,true);
+  return call(db,'control',{code,revision:s.revision,action:'showcast',player:id});}
+ const answer=(token:string,value:number)=>call(db,'interact',{code,round:0,action:'showanswer',answer:value},token);
+ const interact=(token:string,action:string,extra:any={})=>call(db,'interact',{code,round:0,action,...extra},token);
+ await cast(p.id);
+ let playerState=await state(db,code,p.token);
+ assert.equal(playerState.show.level,0);
+ assert.equal(playerState.show.canAnswer,true);
+ assert.equal((await state(db,code,q.token)).show.canAnswer,false);
+ await assert.rejects(()=>answer(q.token,0),{message:'SHOW_CONTESTANT'});
+ await interact(p.token,'showlifeline',{kind:'fifty'});
+ await assert.rejects(()=>interact(p.token,'showlifeline',{kind:'fifty'}),{message:'SHOW_LIFELINE'});
+ playerState=await state(db,code,p.token);assert.equal(playerState.show.eliminatedChoices.length,2);
+ assert.equal((await state(db,code,q.token)).show.eliminatedChoices.length,0,'Private elimination never leaks');
+ await interact(p.token,'showlifeline',{kind:'audience'});
+ await interact(q.token,'showaudience',{choice:1});
+ assert.equal((await state(db,code,z.token)).show.audienceVotes[1],1);
+ await assert.rejects(()=>interact(q.token,'showaudience',{choice:0}),{message:'SHOW_AUDIENCE'});
+ await answer(p.token,0);await answer(p.token,0);await answer(p.token,1);
+ const first=await state(db,code,undefined,true);
+ assert.equal(first.show.phase,'casting');
+ assert.equal(first.show.lastCompleted.earned,200,'Last safe checkpoint only');
+ assert.equal(first.individual.find((r:any)=>r.uid===p.id).score,200);
+ await assert.rejects(()=>cast(p.id),{message:'SHOW_CAST'});
+ await cast(q.id);
+ await answer(q.token,0);
+ await interact(q.token,'showwithdraw');
+ const second=await state(db,code,q.token);
+ assert.equal(second.show.lastCompleted.status,'withdrawn');
+ assert.equal(second.show.lastCompleted.earned,100);
+ await cast(z.id);
+ await answer(z.token,0);await answer(z.token,0);await answer(z.token,0);
+ const won=await state(db,code,z.token);
+ assert.equal(won.show.phase,'completed');
+ assert.equal(won.show.winner,z.id);
+ assert.equal(won.show.lastCompleted.earned,500);
+ assert.equal(won.individual.find((r:any)=>r.uid===z.id).score,500);
+ const hostState=await state(db,code,undefined,true);
+ await call(db,'control',{code,revision:hostState.revision,action:'showfinish'});
+ const completed=await state(db,code);
+ assert.equal(completed.status,'results');
+ const all=await db.sql.prepare("SELECT player,points,kind FROM events WHERE session=? AND kind='show-championship'").all(code);
+ assert.equal(all.length,3,'Each contestant receives precisely one final award');
+ assert.equal(all.reduce((sum:any,x:any)=>sum+x.points,0),800);
+ db.sql.close();
+});
+
+test('championship: expired round ends only the attempt and never double-pays',async()=>{
+ const db=database();
+ const a:any={...sample('Ultimate Game Show'),showFormat:'championship',
+  participation:'individual',betEnabled:false,safeLevels:[1],
+  questions:[100,250].map((points,i)=>({...sample('Quiz'),type:'Quiz',timer:30,
+   prompt:'Question '+i,options:['A','B','C','D'],correct:0,points,speed:false}))};
+ const code=await room(db,[a]),p:any=await enroll(db,{code,name:'Timed'});
+ await control(db,code,'start');
+ const before=await state(db,code,undefined,true);
+ await call(db,'control',{code,revision:before.revision,action:'showcast',player:p.id});
+ await call(db,'interact',{code,round:0,action:'showanswer',answer:0},p.token);
+ db.sql.prepare('UPDATE sessions SET deadline=? WHERE code=?').run(Date.now()-150,code);
+ const settled=await state(db,code);
+ assert.equal(settled.status,'question','Timeout must not close the whole event');
+ assert.equal(settled.show.phase,'casting');
+ assert.equal(settled.show.lastCompleted.status,'timed-out');
+ assert.equal(settled.show.lastCompleted.earned,100);
+ await state(db,code);await state(db,code);
+ const paid=db.sql.prepare("SELECT COUNT(*) AS n,SUM(points) AS points FROM events WHERE session=? AND kind='show-championship'").get(code) as any;
+ assert.equal(paid.n,1);assert.equal(paid.points,100);
+ await assert.rejects(()=>call(db,'interact',{code,round:0,action:'showanswer',answer:0},p.token),{message:'SHOW_CONTESTANT'});
+ db.sql.close();
+});
