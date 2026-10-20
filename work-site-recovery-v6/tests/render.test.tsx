@@ -537,12 +537,12 @@ test('Fortune Wheel stage artwork follows server selected sector and keeps game 
  assert.ok(html.includes('Participation star'),'Real server outcome label is displayed');
  assert.ok(html.includes('+200'),'Real server assigned points are displayed');
  assert.ok(html.includes('--wheel-stop'),'Wheel stop angle follows server index');
- assert.ok(html.includes('SPIN THE WHEEL'),'Original trainer control remains');
+ assert.ok(html.includes('wheel-tap-surface'),'Wheel itself is the accessible trainer and player Spin control');
  const untouched=renderToStaticMarkup(<GamePlay s={{
   ...base,game:{...base.game,spin:null,outcome:null,turn:0,used:[]}
  }} ar={true} host={true} display={false} canAnswer={false} busy={false}
  onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(untouched.includes('لف العجلة'));
+ assert.ok(untouched.includes('اضغط على العجلة لبدء اللف'));
  assert.ok(!untouched.includes('wheel-legend-winner'));
  const source=readFileSync('components/arena/GamePlay.tsx','utf8');
  assert.ok(source.includes("spin?.revealed&&spin.index===i"),'Winners must come from server spin, never client randomness');
@@ -810,8 +810,8 @@ test('Meta Plan notes never leak hidden answers across roles',()=>{
    ar={ar} host={false} display={false} actor canAnswer busy={false}
    onSubmit={()=>{}} onControl={()=>{}}/>);
   assert.ok(learner.includes('arena-metaplan__learner'));
-  assert.ok(learner.includes('arena-metaplan__choose'));
-  assert.ok(learner.includes('aria-expanded="false"'));
+  assert.ok(learner.includes('meta-drag-board'),'Learner sees tactile drag/drop classification board');
+  assert.ok(learner.includes('data-meta-category'),'Drag-target categories are present');
   assert.ok(learner.includes('arena-metaplan__submit'));
   assert.ok(learner.includes('disabled=""'),'Submit stays disabled until every item is assigned');
   assert.ok(!learner.includes('arena-metaplan__correct'));
@@ -1416,11 +1416,11 @@ test('projector content fits in one viewport independent of scrolling and never 
  assert.ok(projectorFitScale(3500,1800,600,1280,55)>0);
  assert.equal(projectorFitScale(100,200,0,1280,60),1);
  const hook=readFileSync('components/arena/useProjectorFit.ts','utf8');
- assert.ok(hook.includes('MutationObserver'));
- assert.ok(hook.includes('ResizeObserver'));
- assert.ok(hook.includes('projectorFitScale(naturalHeight,naturalWidth'));
- assert.ok(hook.includes("el.style.zoom=String(scale)"));
- assert.ok(hook.includes("el.style.width=(100/scale)+'%'"));
+ assert.ok(!hook.includes('MutationObserver'),'Do not resize projector based on dynamic oversized game content');
+ assert.ok(hook.includes('window.addEventListener(\'resize\''));
+ assert.ok(hook.includes("shell.dataset.projectorFit='native'"),'Native readable layout replaces unbounded scaling');
+ assert.ok(!hook.includes('el.style.zoom=String(scale)'),'No dangerously small CSS zoom');
+ assert.ok(hook.includes("ref.current.style.zoom=''"),'Old zoom is cleared');
  const session=readFileSync('components/arena/Session.tsx','utf8');
  assert.ok(session.includes('const projectorFitRef=useProjectorFit(display'));
  assert.ok(session.includes('<main ref={projectorFitRef} className="live-workspace">'));
