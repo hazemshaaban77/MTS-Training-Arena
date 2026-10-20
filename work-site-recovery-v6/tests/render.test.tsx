@@ -1645,3 +1645,80 @@ test('question media link picker identifies safe YouTube and mp4 but rejects imp
  assert.ok(html.includes('youtube-nocookie.com/embed/dQw4w9WgXcQ'));
  assert.ok(!html.includes('<script'));
 });
+
+
+test('championship confirmation is in-game, and the native GitHub-site dialog never appears',()=>{
+ const src=readFileSync('components/arena/ArenaChampionship.tsx','utf8');
+ assert.ok(!src.includes('window.confirm'), 'No browser-origin alert about github.io on final answer');
+ assert.ok(src.includes('championship-answer-confirm'));
+ assert.ok(src.includes('setConfirmAnswer(true)'));
+ assert.ok(src.includes("onInteract('showanswer',{answer:selected})"));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('.championship-answer-confirm'));
+});
+
+test('practical Wheel award cannot be automatic and only host-authorized score event is recorded',()=>{
+ const a:any=sample('Wheel of Fortune','en');
+ a.sectors=[{kind:'challenge',label:'Complete loading task',points:500,detail:'Work through the mock manifest',repeatable:true},...a.sectors];
+ assert.doesNotThrow(()=>validateActivity(structuredClone(a)));
+ const now=Date.now(),session:any={
+  activity:a,code:'497722',status:'question',current:0,serverNow:now,clockNow:now,
+  players:[{uid:'p1',name:'Candidate'}],mine:null,paused:false,
+  game:{turn:1,rounds:5,used:[],target:'p1',spinTarget:'p1',
+   spin:{id:'demo-spin',index:0,startsAt:now-10000,stopsAt:now-200,revealed:true},
+   outcome:{kind:'challenge',label:'Complete loading task',detail:'Practical activity',points:500}}
+ };
+ const host=renderToStaticMarkup(<GamePlay s={session} ar host display={false}
+  canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(host.includes('wheel-tap-surface'),'Entire wheel is the tap target');
+ assert.ok(host.includes('wheel-judge'),'Only host sees scoring controls');
+ assert.ok(host.includes('Candidate'),'Current player comes from server');
+ assert.ok(host.includes('wheel-judge__direction'),'Trainer can award or deduct points');
+ const guest=renderToStaticMarkup(<GamePlay s={session} ar host={false} display
+  canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(!guest.includes('wheel-judge__direction'),'Projector never has scoring controls');
+ const game=readFileSync('lib/session-games.ts','utf8');
+ assert.ok(game.includes("b.action==='wheelaward'"));
+ assert.ok(game.includes("'wheel-judge'"));
+ assert.ok(game.includes("['question','challenge'].includes(sector?.kind)?0"));
+ assert.ok(game.includes('revealAt:now+3000+duration+150'),'No 2-second reveal gap');
+ const service=readFileSync('lib/service.ts','utf8');
+ assert.ok(service.includes("'wheelaward'"));
+});
+
+test('Meta Plan supports direct mobile drag and tap category assignment without revealing answer key',()=>{
+ const src=readFileSync('components/arena/MetaPlanDragBoard.tsx','utf8');
+ assert.ok(src.includes('onPointerDown={e=>begin(e,i)}'));
+ assert.ok(src.includes('onPointerMove={track} onPointerUp={finish}'));
+ assert.ok(src.includes('setPointerCapture(e.pointerId)'));
+ assert.ok(src.includes('document.elementFromPoint(e.clientX,e.clientY)'));
+ assert.ok(src.includes('data-meta-category={j}'));
+ assert.ok(src.includes('e.dataTransfer.setData('));
+ const board=readFileSync('components/arena/ArenaMetaPlan.tsx','utf8');
+ assert.ok(board.includes('<MetaPlanDragBoard ar={ar}'));
+ assert.ok(board.includes('closed&&s.keyRevealed&&Array.isArray(a.assignments)'),
+   'The correct sorting stays server-controlled and hidden before reveal');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('arena-meta-cinematic-reveal'));
+ assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
+});
+
+test('Flashcard Trainer-only permission is authorable, validated and enforced on Worker',()=>{
+ const builder=readFileSync('components/arena/Builder.tsx','utf8');
+ assert.ok(builder.includes("put('flipPermission','host')"));
+ assert.ok(builder.includes("put('flipPermission','learner')"));
+ const worker=readFileSync('lib/session-games.ts','utf8');
+ assert.ok(worker.includes("a.flipPermission==='host'&&['flip','card'].includes(b.action)"));
+ assert.ok(worker.includes("fail('FORBIDDEN',403)"));
+ assert.ok(readFileSync('lib/domain.mjs','utf8').includes("['host','learner',undefined].includes(a.flipPermission)"));
+ const a:any=sample('Flashcards','en');a.flipPermission='host';
+ assert.doesNotThrow(()=>validateActivity(structuredClone(a)));
+ const s:any={activity:a,status:'question',current:0,mine:{id:'learner',eligible:true},
+  game:{card:0,flipped:false},reveal:null,paused:false};
+ const markup=renderToStaticMarkup(<GamePlay s={s} ar={false} host={false} display={false}
+  canAnswer busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
+ assert.ok(markup.includes('Trainer controls the reveal'));
+ const src=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
+ assert.ok(src.includes("const hostOnly=a.flipPermission==='host'"));
+ assert.ok(src.includes('actor?usable&&!hostOnly'));
+});
