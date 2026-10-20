@@ -43,3 +43,29 @@ Specific regressions in `tests/render.test.tsx` check:
 ## Limits
 
 Successful CI and public-page browser tests **do not** prove classroom acceptance with a real authenticated trainer, 20 actual learner devices, projector speaker setup, Safari/Android differences or artificial network interruption. Complete the manual scenarios before marking classroom UAT as accepted.
+
+
+## 2026-10-20 — game identities + stage-first simulator + projector no-scroll hardening
+
+### Identity acceptance
+
+- Ten intros are now **different sequences** (not just a color swap): Quiz four-choice tiles/lightning, championship prize podium/crown, Wheel roulette spin, Escape Room locked vault opening, Open the Box lid reveals, Poll vote columns, Meta Plan connected knowledge nodes, Order It reordering tiles, Flashcards flip stack and Scenario branching story paths. All retain their original artwork and bilingual headings.
+- Each has its **own rhythmic score and timbre/noise envelope** in `lib/arena-game-identity.ts`, used by both the projector's pre-round cue and the simulator's explicit `Preview with sound` button. Unlocked audio, volume, Quiet and reduced motion rules remain enforced.
+- New unit regressions assert ten unique sound signatures, distinct intro markup/scene classes, no answer timing impact and no external sound assets.
+
+### Simulator acceptance
+
+- The 1–20 learner scenario settings, practice point summaries and detailed demo leaderboard are available in a **collapsed details region** with a summary showing configured learner count. They are not deleted or mistaken for live session results.
+- Practice stage uses remaining vertical space by default. Activity list, role switches and cinema preview actions are compact; only the *game itself* is normally scrollable if necessary.
+- Verify on 320×640, 375×812, 430×932 and 1366×768 that pressing **Start practice** exposes substantial interactive room without forcing scroll past the entire scenario settings form.
+
+### Projector acceptance
+
+- The projector shell is fixed to `100dvh` with **no document/body scrollbar**; header, QR/intro/round/victory/game and bottom standings use a compact live-presentation layout.
+- `useProjectorFit` measures actual rendered stage height/width and uses calculated CSS zoom plus width compensation to fit all available **vertical** room and horizontal dimension on screen. Watches resize/orientation, DOM contents, fonts and media loading. Does not affect the trainer or learner layout, never modifies timers, scoring or hidden answer data.
+- Fit helper has pure tests for 1366×768, 1920×1080, wide content and very tall content. **Physical projector UAT remains unverified:** extremely long question prose or overcrowded stages may scale so small that manual font-size/readability decisions are needed, even when no scroll occurs.
+- Manual gate: test 1920×1080, 1366×768, 1280×720, 1024×768; lobby with QR, Quiz with four choices, 10-level championship, wheel, 8-box grid, Escape Room, Meta Plan, Scenario and final leaderboard. Confirm all interactive state and the complete bottom line are visible without scrolling. If the auto-fit yields tiny typography on a given game, shorten the content/layout rather than silently cutting it off.
+
+### Safety
+
+No backend/Cloudflare D1 updates, new tracked accounts, Firebase/secret edits, employee field/QR changes, data deletions or old `/arena/` changes.
