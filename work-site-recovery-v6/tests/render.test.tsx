@@ -5,6 +5,8 @@ import ArenaEscapeRoom from '../components/arena/ArenaEscapeRoom';
 import ArenaMetaPlan from '../components/arena/ArenaMetaPlan';
 import ArenaScenario from '../components/arena/ArenaScenario';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
+import ReportActivityInsights from '../components/arena/ReportActivityInsights';
+import {analyzeReportActivities,reportInsightsCsv} from '../lib/report-insights';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
 import {estimateSessionAgenda} from '../lib/session-planning';
@@ -957,4 +959,81 @@ test('V6 final Quiz spotlight and Poll charts are backend-authoritative',()=>{
  assert.ok(css.includes('V6 LIVE POLL + KNOWLEDGE QUIZ'));
  assert.ok(css.includes('.projector .arena-quiz-show'));
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});
+
+test('trainer activity learning reports preserve real grades and anonymous voting without fake accuracy',()=>{
+ const report:any={
+  code:'123456',title:'Communication workshop',
+  activities:[
+   {type:'Quiz',prompt:'Knowledge check'},
+   {type:'Live Poll',pollKind:'choice',prompt:'Preferences',options:['A','B']},
+   {type:'Live Poll',pollKind:'rating',prompt:'Rating'},
+   {type:'Live Poll',pollKind:'word',prompt:'Word cloud'},
+   {type:'Live Poll',pollKind:'priority',prompt:'Priorities',options:['X','Y','Z']},
+   {type:'Flashcards',prompt:'Recall'},
+   {type:'Meta Plan',prompt:'Sort tasks',scored:false},
+   {type:'Escape Room',prompt:'Escape task'},
+   {type:'Live Poll',pollKind:'rating',prompt:'No ratings'},
+   {type:'Live Poll',pollKind:'choice',prompt:'=EVIL() CSV challenge',options:['safe','other']}
+  ],
+  answers:[
+   {round:0,player:'a',answer:'0',correct:1,points:1000},
+   {round:0,player:'b',answer:'1',correct:0,points:0},
+   {round:1,player:'a',answer:'0',correct:null,points:0},
+   {round:5,player:'a',answer:'0',correct:null,points:0},
+   {round:6,player:'b',answer:'[0,1]',correct:1,points:0}
+  ],
+  anonymous:[
+   {round:1,answer:'0'},{round:1,answer:'1'},
+   {round:2,answer:'5'},{round:2,answer:'3'},
+   {round:3,answer:'"Team"'},{round:3,answer:'"TEAM"'},
+   {round:4,answer:'[2,0,1]'},
+   {round:-1,answer:'[5,"unrelated survey"]'}
+  ],
+  events:[{round:7,kind:'escape',points:1000,player:'a'}],
+  players:[{id:'a',name:'A'},{id:'b',name:'B'}]
+ };
+ const rows=analyzeReportActivities(report);
+ assert.equal(rows.length,10);
+ assert.equal(rows[0].accuracy,50);
+ assert.equal(rows[0].gradedCount,2);
+ assert.equal(rows[0].correctCount,1);
+ assert.equal(rows[1].kind,'poll');
+ assert.equal(rows[1].responseCount,3);
+ assert.equal(rows[1].anonymousCount,2);
+ assert.equal(rows[1].accuracy,null);
+ assert.deepEqual(rows[1].pollBars?.map(x=>x.count),[2,1]);
+ assert.deepEqual(rows[1].pollBars?.map(x=>x.percent),[67,33]);
+ assert.equal(rows[2].averageRating,4);
+ assert.deepEqual(rows[3].pollBars,[{label:'team',count:2,percent:100}]);
+ assert.deepEqual(rows[4].ranking?.map(x=>x.points),[3,2,1]);
+ assert.equal(rows[5].kind,'review');
+ assert.equal(rows[5].accuracy,null);
+ assert.equal(rows[6].gradedCount,0,'Unscored Meta Plan must never report incorrect or correct answers');
+ assert.equal(rows[7].events,1);
+ assert.equal(rows[7].eventPoints,1000);
+ assert.equal(rows[7].accuracy,null,'Escape game event is not a graded answer');
+ assert.equal(rows[8].averageRating,null,'No votes must not fake a zero-star rating');
+ assert.equal(rows[8].responseCount,0);
+ const csv=reportInsightsCsv(rows);
+ assert.ok(csv.startsWith('\ufeff'));
+ assert.ok(csv.includes('"\'=EVIL() CSV challenge"'),'Neutralize spreadsheet formulas in authored prompts');
+ assert.ok(csv.includes('"67%"')===false,'CSV percentages are in a single chart cell and must be quoted safely');
+ for(const ar of [true,false]){
+  const html=renderToStaticMarkup(<ReportActivityInsights report={report} ar={ar}/>);
+  assert.ok(html.includes('Knowledge check'));
+  assert.ok(html.includes('50%'));
+  assert.ok(html.includes('Preferences'));
+  assert.ok(html.includes('67%'));
+  assert.ok(html.includes('4 / 5'));
+  assert.ok(html.includes('No ratings'));
+  assert.ok(html.includes('report-insights__poll-chart'));
+  assert.ok(html.includes(ar?'رد مجهول منفصل':'anonymous submissions'));
+  assert.ok(!html.includes('unrelated survey'), 'Never mix anonymous survey with activity report');
+ }
+ const source=readFileSync('components/arena/WorkspaceTools.tsx','utf8');
+ assert.ok(source.includes('<ReportActivityInsights report={report} ar={ar}/>'));
+ assert.ok(source.includes('reportInsightsCsv(analyzeReportActivities(report))'));
+ assert.ok(!source.includes("rows.filter((x:any)=>x.correct===1).length/count*100"),
+  'Remove misleading accuracy from non-graded activities');
 });
