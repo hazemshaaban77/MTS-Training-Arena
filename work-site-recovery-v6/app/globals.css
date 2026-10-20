@@ -3774,3 +3774,104 @@
 .question-studio__bank select{background:#0b2945;color:#dff7ff;border:1px solid #519cb0;
  font-size:12px;min-height:44px;padding:8px;border-radius:9px;max-width:100%}
 @media(max-width:760px){.question-studio__bank{min-width:190px;max-width:220px}}
+
+
+/* Ultimate Game Show V6: authoritative multi-contestant championship */
+.championship-stage{--show-gold:#f9d18b;color:#f3faff;border:1px solid #b6ae756e;border-radius:19px;
+ background:linear-gradient(130deg,#111a39 0%,#0c2950 51%,#082d42 100%);padding:20px;min-width:0;overflow-wrap:anywhere}
+.championship-stage__intro{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:8px 0 18px}
+.championship-stage__intro h2{display:flex;align-items:center;gap:9px;color:var(--show-gold);font-size:clamp(19px,2.5vw,27px);margin:9px 0}
+.championship-stage__intro p{font-size:12px;color:#afcedf}
+.championship-stage__phase{border:1px solid #cda9688c;color:var(--show-gold);border-radius:25px;padding:10px 14px;
+ font-size:11px;letter-spacing:.08em;font-weight:800;background:#40321c65}
+.championship-stage__layout{display:grid;grid-template-columns:minmax(155px,230px) minmax(0,1fr);gap:19px}
+.championship-stage__ladder{background:#091c3eaa;border:1px solid #536d9a73;border-radius:15px;padding:14px}
+.championship-stage__ladder h3{display:flex;align-items:center;gap:7px;color:#f7ddb2;font-size:15px;margin-bottom:13px}
+.championship-stage__ladder ol{list-style:none;padding:0;margin:0;display:flex;flex-direction:column-reverse;gap:6px}
+.championship-stage__ladder li{display:flex;align-items:center;gap:8px;min-height:37px;border-radius:9px;
+ border:1px solid #596c9c4d;padding:6px 10px;color:#a4bddc;background:#10274d6e}
+.championship-stage__ladder li>span{font-size:11px;opacity:.8}
+.championship-stage__ladder li>b{font-size:15px;margin-inline-start:auto;font-variant-numeric:tabular-nums}
+.championship-stage__ladder li.safe{border-color:#5dc2ab;background:#0d635459}
+.championship-stage__ladder li.active{background:#806028a1;border-color:#ffe199;
+ box-shadow:0 0 21px #f9c2724c;color:#fff2ca}
+.championship-stage__ladder li.won{color:#c7ffef}
+.championship-stage__ladder>p{font-size:10px;color:#a3bdcf;margin-top:13px;line-height:1.6}
+.championship-stage__center{min-width:0;display:flex;flex-direction:column;gap:15px}
+.championship-stage__casting,.championship-stage__winner{display:flex;flex-direction:column;gap:15px;
+ align-items:center;text-align:center;padding:28px 18px;background:#071d3a91;border:1px solid #41699b88;border-radius:16px}
+.championship-stage__casting h3,.championship-stage__winner h3{font-size:22px;color:#ffe3a8}
+.championship-stage__casting p{font-size:13px;line-height:1.75;color:#bcddf5;max-width:560px}
+.championship-stage__casting label{display:flex;flex-direction:column;gap:8px;text-align:start;width:min(100%,460px)}
+.championship-stage__casting select{width:100%;min-height:48px;border-radius:10px;
+ border:1px solid #7eabd7;background:#08213f;color:#f2faff;padding:12px}
+.championship-stage__casting>.btn{min-height:48px;white-space:normal;max-width:100%}
+.championship-stage__last{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;
+ background:#124263a3;padding:11px;border-radius:11px;width:100%;font-size:12px}
+.championship-stage__last strong{color:#a9e9d9}
+.championship-stage__winner>svg{color:var(--show-gold);filter:drop-shadow(0 0 14px #ffc06e)}
+.championship-stage__winner>strong{font-size:24px;color:#fff}
+.championship-stage__contestant{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+ min-height:55px;padding:13px;border-radius:13px;background:#123b58b9;border:1px solid #3c9aac6d}
+.championship-stage__contestant>svg{color:var(--show-gold)}
+.championship-stage__contestant>span{font-size:12px;color:#cfdeed}
+.championship-stage__contestant>span:nth-last-child(2){margin-inline-start:auto}
+.championship-stage__contestant .championship-stage__clock{font-size:19px;font-weight:850;color:#fce2a3}
+.championship-stage__question{background:#0b1f40a8;border:1px solid #537bb485;padding:20px;border-radius:16px}
+.championship-stage__question>small{color:#efcf95;font-weight:750;font-size:11px;letter-spacing:.08em}
+.championship-stage__question>h3{font-size:clamp(18px,2.4vw,25px);line-height:1.6;margin:10px 0 20px}
+.championship-stage__options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.championship-stage__options>button{display:flex;align-items:center;gap:10px;padding:13px;
+ min-height:62px;text-align:start;color:#f3fbff;background:linear-gradient(120deg,#143264,#174a78);
+ border:1px solid #509bc5a3;border-radius:11px;font-size:14px}
+.championship-stage__options>button>b{color:#f7da99;font-size:16px;flex:none}
+.championship-stage__options>button>span{min-width:0}
+.championship-stage__options>button.selected{border-color:#fce0a8;background:#39518f;box-shadow:0 0 16px #efcc7270}
+.championship-stage__options>button:disabled:not(.selected){opacity:.68;cursor:not-allowed}
+.championship-stage__submit{width:100%;margin-top:18px;min-height:49px!important}
+.championship-stage__spectator{font-size:12px;color:#a7d1eb;margin-top:13px}
+.championship-stage__lifelines{display:flex;flex-direction:column;gap:10px;background:#081f39b6;
+ border:1px solid #52749a6f;border-radius:13px;padding:16px}
+.championship-stage__lifelines>h4,.championship-stage__audience>h4{font-size:14px;color:#dce8fa}
+.championship-stage__lifelines>div:first-of-type{display:flex;flex-wrap:wrap;gap:8px}
+.championship-stage__lifelines>div:first-of-type button{display:flex;align-items:center;gap:7px;padding:8px 13px;
+ min-height:44px;color:#f3eeff;background:#243561;border:1px solid #657fb7;border-radius:9px}
+.championship-stage__lifelines button.used{opacity:.45}
+.championship-stage__lifelines>small{color:#f2d7a2;font-size:11px}
+.championship-stage__withdraw{align-self:flex-start;min-height:44px}
+.championship-stage__audience{border-radius:11px;border:1px solid #55899d;padding:12px;background:#1342535e;display:flex;flex-direction:column;gap:10px}
+.championship-stage__audience>p{font-size:12px;color:#d8e9f1}
+.championship-stage__audience>div:not(.championship-stage__audience-actions){display:flex;gap:11px;flex-wrap:wrap;font-size:13px}
+.championship-stage__audience-actions{display:flex;gap:8px;flex-wrap:wrap}
+.championship-stage__audience-actions button{min-width:48px;min-height:46px}
+.championship-stage__history{margin-top:20px;border-top:1px solid #547f9c;padding-top:17px}
+.championship-stage__history h3{display:flex;align-items:center;gap:9px;color:#fae0a3;font-size:15px;margin-bottom:12px}
+.championship-stage__history>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.championship-stage__history>div>div{display:flex;gap:9px;align-items:center;flex-wrap:wrap;
+ border:1px solid #527597;padding:10px;border-radius:10px;background:#102c4c;font-size:12px}
+.championship-stage__history strong{color:#fff}
+.championship-stage__history span{color:#b2c9e6}
+.championship-stage__history b{margin-inline-start:auto;color:#ffe3aa}
+.championship-stage__footer{display:flex;align-items:center;gap:8px;margin-top:15px;font-size:11px;color:#b7d9ec}
+.championship-stage button:focus-visible,.championship-stage select:focus-visible{outline:3px solid #8ffce3;outline-offset:3px}
+.question-studio__safety{padding:13px;border-radius:12px;border:1px solid #88b99d;min-width:0}
+.question-studio__safety legend{font-size:13px;color:#9eebcf;padding:0 5px}
+.question-studio__safety>div{display:flex;flex-wrap:wrap;gap:8px}
+.question-studio__safety label{display:flex;flex-direction:row;align-items:center;gap:6px;
+ padding:9px;min-height:44px;background:#0c3d48;border-radius:9px}
+.question-studio__safety input{width:19px!important;min-width:19px!important;height:19px;accent-color:#6be0b4}
+.question-studio__safety small{display:block;margin-top:9px;font-size:11px;color:#bfe0ed}
+@media(max-width:760px){
+ .championship-stage{padding:12px;border-radius:12px}
+ .championship-stage__layout{grid-template-columns:minmax(0,1fr)}
+ .championship-stage__ladder{padding:10px}
+ .championship-stage__ladder ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .championship-stage__ladder li{padding:5px 7px;min-height:40px;min-width:0}
+ .championship-stage__ladder li b{font-size:12px}
+ .championship-stage__intro h2{font-size:18px}
+ .championship-stage__question{padding:14px}
+ .championship-stage__options{grid-template-columns:minmax(0,1fr)}
+ .championship-stage__options>button{min-height:52px;font-size:13px}
+ .championship-stage__history>div{grid-template-columns:minmax(0,1fr)}
+ .championship-stage__contestant>span:nth-last-child(2){margin-inline-start:0}
+}
