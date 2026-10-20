@@ -7,8 +7,8 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
  onInteract:(action:string,extra?:any)=>void;
 }){
  const t=(a:string,e:string)=>ar?a:e,show=s.show||{},q=show.question;
- const [selected,setSelected]=useState<number|null>(null),[candidate,setCandidate]=useState(''),[confirmAnswer,setConfirmAnswer]=useState(false);
- useEffect(()=>{setSelected(null);setConfirmAnswer(false);},[show.level,show.contestant,show.phase]);
+ const [selected,setSelected]=useState<number|null>(null),[candidate,setCandidate]=useState(''),[confirmAnswer,setConfirmAnswer]=useState(false),[confirmWithdraw,setConfirmWithdraw]=useState(false);
+ useEffect(()=>{setSelected(null);setConfirmAnswer(false);setConfirmWithdraw(false);},[show.level,show.contestant,show.phase]);
  const contestant=(s.players||[]).find((p:any)=>p.uid===show.contestant);
  const isActor=!!s.mine&&s.mine.id===show.contestant&&!host&&!display;
  const audience=!!s.mine&&!host&&!display&&!isActor;
@@ -120,10 +120,19 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
         {(q?.options||[]).map((x:string,i:number)=><button key={i} className="btn secondary" disabled={busy}
          onClick={()=>onInteract('showaudience',{choice:i})}>{String.fromCharCode(65+i)}</button>)}</div>}
       </div>}
-      {isActor&&show.canWithdraw&&<button className="btn secondary championship-stage__withdraw" disabled={busy}
-       onClick={()=>{if(window.confirm(t('تنسحب وتحتفظ بجائزتك الحالية؟','Walk away with your current prize?')))
-        onInteract('showwithdraw');}}><LogOut size={17}/>
-       {t('انسحب واحتفظ بـ','Walk away with')} {remaining.toLocaleString()} {t('نقطة','points')}</button>}
+      {isActor&&show.canWithdraw&&(confirmWithdraw
+       ?<div className="championship-answer-confirm" role="group" aria-label={t('تأكيد الانسحاب','Confirm withdrawal')}>
+        <p>{t('تنسحب وتحتفظ بجائزتك الحالية؟','Walk away with your current prize?')}
+         <strong>{remaining.toLocaleString()} {t('نقطة','points')}</strong></p>
+        <div><button className="btn secondary" type="button" disabled={busy} onClick={()=>setConfirmWithdraw(false)}>
+          {t('كمّل اللعب','Keep playing')}</button>
+         <button className="btn primary" type="button" disabled={busy}
+          onClick={()=>{setConfirmWithdraw(false);onInteract('showwithdraw');}}>
+          {t('تأكيد الانسحاب','Confirm withdrawal')}</button></div>
+       </div>
+       :<button type="button" className="btn secondary championship-stage__withdraw" disabled={busy}
+        onClick={()=>setConfirmWithdraw(true)}><LogOut size={17}/>
+        {t('انسحب واحتفظ بـ','Walk away with')} {remaining.toLocaleString()} {t('نقطة','points')}</button>)}
       <small>{t('في حالة الخطأ تضمن جائزة آخر مستوى أمان: ','Wrong answer guarantees: ')}
        {safeValue.toLocaleString()} {t('نقطة','points')}</small>
      </section>
