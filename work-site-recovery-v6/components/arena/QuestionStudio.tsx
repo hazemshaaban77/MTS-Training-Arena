@@ -7,7 +7,7 @@ import {validateActivity} from '../../lib/domain.mjs';
 import {api} from '../../lib/client';
 
 type Props={ar:boolean;activity:Activity;onCancel:()=>void;onSave:(a:Activity)=>void};
-const prizes=[100,250,500,1000,2000,3000,5000,7500,10000,10000];
+const prizes=[100,250,500,1000,2000,3000,5000,7500,9000,10000];
 function initialQuestions(a:Activity):Activity[]{
  if(Array.isArray(a.questions)&&a.questions.length)return a.questions.map(q=>({...q,questions:undefined}));
  return [{...a,questions:undefined,mainType:undefined}];
@@ -15,16 +15,17 @@ function initialQuestions(a:Activity):Activity[]{
 export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  const t=(a:string,e:string)=>ar?a:e;
  const game=activity.type==='Ultimate Game Show';
- const [mode,setMode]=useState<'ladder'|'classic'>(game&&activity.showFormat==='ladder'?'ladder':'classic');
+ const [mode,setMode]=useState<'ladder'|'classic'>(game&&activity.showFormat==='championship'?'ladder':'classic');
  const [questions,setQuestions]=useState<Activity[]>(()=>initialQuestions(activity));
  const [active,setActive]=useState(0);
+ const [safety,setSafety]=useState<number[]>(()=>Array.isArray(activity.safeLevels)?activity.safeLevels:[3]);
  const [title,setTitle]=useState(activity.prompt);
  const [error,setError]=useState('');
  const [ladderAvailable,setLadderAvailable]=useState(false);
  const [bank,setBank]=useState<any[]>([]),formRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{api('drafts?kind=question').then((r:any)=>setBank(Array.isArray(r?.items)?r.items:[])).catch(()=>{});},[]);
  useEffect(()=>{formRef.current?.scrollTo({top:0});},[active]);
- useEffect(()=>{let active=true;api('branding').then((value:any)=>{if(active)setLadderAvailable(value?.showRulesVersion===1);}).catch(()=>{if(active)setLadderAvailable(false);});return()=>{active=false;};},[]);
+ useEffect(()=>{let active=true;api('branding').then((value:any)=>{if(active)setLadderAvailable(value?.showRulesVersion===2);}).catch(()=>{if(active)setLadderAvailable(false);});return()=>{active=false;};},[]);
  const index=Math.min(active,Math.max(0,questions.length-1)),q=questions[index];
  const patch=(changes:Record<string,unknown>)=>{
   setQuestions(prev=>prev.map((item,i)=>i===index?{...item,...changes}:item));setError('');
@@ -33,12 +34,12 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   prompt:'',options:['','','',''],correct:0,timer:game?30:30,
   points:game?prizes[Math.min(number,prizes.length-1)]:1000,
   speed:!game,section:game?t('المستوى ','Level ')+(number+1):''});
- function add(){setQuestions(old=>[...old,makeQuestion(old.length)]);setActive(questions.length);setError('');}
+ function add(){if(game&&mode==='ladder'&&questions.length>=10){setError(t('الحد الأقصى 10 مستويات للبطولة.','Maximum ten championship levels.'));return;}setQuestions(old=>[...old,makeQuestion(old.length)]);setActive(questions.length);setError('');}
  function loadFiveLevels(){
   if(questions.length&&typeof window!=='undefined'&&!window.confirm(t(
    'ده هيستبدل الأسئلة الموجودة بخمس مستويات. احفظ نسخة لو محتاجها. تكمل؟',
    'This replaces the existing questions with five levels. Save a copy first if needed. Continue?')))return;
-  setMode('ladder');setQuestions(Array.from({length:5},(_,i)=>makeQuestion(i)));
+  setMode('ladder');setSafety([3]);setQuestions(Array.from({length:5},(_,i)=>makeQuestion(i)));
   setActive(0);setError('');
  }
  function importFromBank(id:string){
@@ -67,14 +68,14 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  function save(){
   if(game&&mode==='ladder'&&!ladderAvailable){setError(t('محرر سلّم الجوائز جاهز، لكن خدمة قواعد المسابقة على السيرفر لسه ما اتنشرتش. مش هنسمح بإطلاق نظام مسابقة غير متحقق منه.','Prize-ladder editor is ready, but the live game rules service is not yet deployed. Publishing unsupported competition rules is blocked.'));return;}
   try{
+   if(game&&mode==='ladder'&&(questions.length<2||questions.length>10)){setError(t('البطولة تحتاج من مستويين إلى عشرة.','A championship needs 2–10 levels.'));return;}
    const copy=questions.map((x,i)=>{
     const clean:Activity={...x,questions:undefined,mainType:undefined,type:x.type||'Quiz',
      prompt:x.prompt?.trim()||'',options:(x.options||[]).map((v:string)=>v.trim()),
      correct:x.correct,timer:Number(x.timer),
      points:Number(x.points??1000),speed:mode==='ladder'?false:x.speed,
      section:mode==='ladder'?t('المستوى ','Level ')+(i+1):x.section};
-    if(mode==='ladder'&&game)return {...clean,showFormat:'ladder',showRound:i+1,
-     showTotal:questions.length,showLadder:questions.map(x=>Number(x.points||0)),
+    if(mode==='ladder'&&game)return {...clean,type:'Quiz',
      participation:'individual',betEnabled:false,wrongPenalty:0};
     const {showFormat,showRound,showTotal,showLadder,...standard}=clean;
     return standard;
@@ -83,7 +84,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
     catch{setActive(i);setError(t('راجع السؤال '+(i+1)+': لازم تكتب السؤال و2–4 اختيارات غير فاضية وتحدد الإجابة الصحيحة.',
     'Check question '+(i+1)+': provide a prompt, 2–4 nonempty choices and the correct answer.'));return;}}
    const final={...activity,prompt:title.trim()||copy[0].prompt,questions:copy,
-    showFormat:game&&mode==='ladder'?'ladder':undefined,
+    showFormat:game&&mode==='ladder'?'championship':undefined,
+    safeLevels:game&&mode==='ladder'?safety.filter(x=>x<=copy.length).sort((a,b)=>a-b):undefined,
     participation:game&&mode==='ladder'?'individual':activity.participation,
     betEnabled:game&&mode==='ladder'?false:activity.betEnabled};
    validateActivity(structuredClone(final));
@@ -130,14 +132,22 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      <h3>{t('نظام المسابقة','Competition format')}</h3>
      <div className="question-studio__mode">
       <button type="button" className={mode==='ladder'?'chosen':''} aria-pressed={mode==='ladder'} onClick={()=>chooseMode('ladder')}>
-       {t('سلّم الجوائز · خروج عند الخطأ','Prize ladder · knockout')}</button>
+       {t('طريق البطولة · محاولات مستقلة','Championship · independent attempts')}</button>
       <button type="button" className={mode==='classic'?'chosen':''} aria-pressed={mode==='classic'} onClick={()=>chooseMode('classic')}>
        {t('جولات حرة · نفس النظام السابق','Open rounds · legacy rules')}</button>
      </div>
      {mode==='ladder'&&!ladderAvailable&&<p role="status">{t('جاري التحقق من دعم قواعد المسابقة على السيرفر. هيتفعل الحفظ بعد تفعيل الخدمة.','Checking server support: saving this mode requires versioned competition rules on the backend.')}</p>}
-    {mode==='ladder'&&<p>{t('متسابق واحد على المسرح؛ كل سؤال مستوى أعلى وجائزة متصاعدة. الخاطئ يخرج من المنافسة، والصحيح يستكمل. وسائل المساعدة تُستخدم مرة واحدة في المسابقة. السيرفر هو الحكم.',
-       'One contestant, rising prize levels, wrong answer eliminates that contestant, correct answer advances them. Lifelines are single-use across this competition, enforced by the server.')}</p>}
+    {mode==='ladder'&&<p>{t('كل متسابق يبدأ من أول مستوى. الفوز ينقله للمستوى التالي، والخطأ يخرجه مع الاحتفاظ بجائزة آخر مستوى أمان. يقدر ينسحب بجائزته الحالية، ومساعداته مرة واحدة في محاولته. السيرفر هو الحكم.',
+       'Every contestant starts at level one. Correct answers advance; wrong answers exit with the last guaranteed milestone, or they may withdraw with their current prize. Lifelines are single-use per attempt, enforced by the server.')}</p>}
     </div>}
+    {game&&mode==='ladder'&&<fieldset className="question-studio__safety">
+     <legend>{t('مستويات الأمان · النقاط المحمية عند الخسارة','Guaranteed milestones on a wrong answer')}</legend>
+     <div>{questions.map((_,i)=><label key={i}><input type="checkbox" checked={safety.includes(i+1)}
+      onChange={e=>setSafety(old=>e.target.checked?[...old,i+1].sort((a,b)=>a-b):old.filter(v=>v!==i+1))}
+      disabled={!safety.includes(i+1)&&safety.length>=3}/>{t('مستوى','Level')} {i+1}</label>)}</div>
+     <small>{t('حدد حتى 3 مستويات. الانسحاب يحتفظ بآخر جائزة وصل لها المتسابق.',
+      'Choose up to 3 safe levels. Withdrawal keeps the last prize won.')}</small>
+    </fieldset>}
     <div className="question-studio__question-head">
      <h3>{game&&mode==='ladder'?t('المستوى','Level')+' '+(index+1):t('السؤال','Question')+' '+(index+1)}</h3>
      <div className="question-studio__question-actions">
