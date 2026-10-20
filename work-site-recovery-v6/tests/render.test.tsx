@@ -1,6 +1,6 @@
 import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel,setMatchingPair,deleteMatchingPair} from '../lib/question-authoring';
 import {gameIntroBeats} from '../lib/arena-intro-beats';
-import {safeYouTubeEmbed} from '../lib/media-url';
+import {safeYouTubeEmbed,classifyMediaLink} from '../lib/media-url';
 import {introIdentity,introIdentities} from '../lib/arena-game-identity';
 import {projectorFitScale} from '../lib/projector-fit';
 import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,stageAtmosphere} from '../lib/arena-cinematics';
@@ -1629,4 +1629,18 @@ test('question media URLs support safe YouTube embeds and native direct video cl
  const direct=renderToStaticMarkup(<StageMedia media={{type:'video',url:'https://example.org/video.mp4'}}/>);
  assert.ok(direct.includes('<video'));
  assert.ok(!direct.includes('<iframe'));
+});
+
+test('question media link picker identifies safe YouTube and mp4 but rejects imprecise classification',()=>{
+ assert.equal(classifyMediaLink('https://youtu.be/dQw4w9WgXcQ'),'video');
+ assert.equal(classifyMediaLink('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),'video');
+ assert.equal(classifyMediaLink('https://cdn.example.com/lesson.mp4?x=1'),'video');
+ assert.equal(classifyMediaLink('https://cdn.example.com/chart.webp'),'image');
+ assert.equal(classifyMediaLink('https://cdn.example.com/unknown'),null);
+ assert.equal(classifyMediaLink('javascript:alert(1)'),null);
+ const picker=readFileSync('components/arena/QuestionMediaPicker.tsx','utf8');
+ assert.ok(picker.includes('classifyMediaLink(e.target.value)||mediaType'));
+ const html=renderToStaticMarkup(<StageMedia media={{type:'video',url:'https://youtu.be/dQw4w9WgXcQ'}}/>);
+ assert.ok(html.includes('youtube-nocookie.com/embed/dQw4w9WgXcQ'));
+ assert.ok(!html.includes('<script'));
 });
