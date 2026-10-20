@@ -13,13 +13,43 @@ export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,li
  const t=(a:string,e:string)=>ar?a:e,seed=source||{};
  const [title,setTitle]=useState(seed.title||t('رحلة الاستيراد | ساحة التعلّم','Import journey | Learning arena')),[lang,setLang]=useState(seed.language||(ar?'ar':'en')),[teams,setTeams]=useState(!!seed.teams),[deck,setDeck]=useState<Activity[]>(seed.activities|| (initial==='all'?types.map(type=>sample(type,ar?'ar':'en')):[sample(initial,ar?'ar':'en')])),[settings,setSettings]=useState(seed.settings||{tie:'shared',progression:'manual',reveal:'auto',teamNames:['Lightning','Wave'],teamScoring:'sum'}),[survey,setSurvey]=useState<any>(seed.survey||null);
  const [surveyEditor,setSurveyEditor]=useState(false),[surveyDraft,setSurveyDraft]=useState<any>({title:ar?'تقييم الجلسة':'Session feedback',purpose:'feedback',anonymous:true,stage:'after-ceremony',questions:[{prompt:ar?'إزاي تقيّم الجلسة؟':'How would you rate the session?',kind:'rating'}]}),[edit,setEdit]=useState<number|null>(null),[adding,setAdding]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[layout,setLayout]=useState('timeline'),[review,setReview]=useState(false),[saved,setSaved]=useState(''),[preview,setPreview]=useState(false),[simulate,setSimulate]=useState<{activities:Activity[];index:number}|null>(null),[banks,setBanks]=useState<any[]>([]);
- const draft=useRef<{id?:string;version?:number}>({id:seed.draftId,version:seed.version}),saving=useRef(false),payload=useRef<any>(null),dirty=useRef(false),drag=useRef<number|null>(null),mounted=useRef(false);
+ const draft=useRef<{id?:string;version?:number}>({id:seed.draftId,version:seed.version}),saveFlight=useRef<Promise<void>|null>(null),payload=useRef<any>(null),dirty=useRef(false),drag=useRef<number|null>(null),mounted=useRef(false);
  const recoveryKey='arena-draft-recovery:'+(owner||'trainer');
  payload.current={title,language:lang,teams,activities:deck,settings,survey};
  useEffect(()=>{api('drafts?kind=survey').then(r=>setBanks(r.items)).catch(()=>{});},[]);
  useEffect(()=>{if(mounted.current){dirty.current=true;localStorage.setItem(recoveryKey,JSON.stringify(payload.current));}mounted.current=true;const timer=setTimeout(()=>{if(dirty.current&&!live)save();},1400);return()=>clearTimeout(timer);},[title,lang,teams,deck,settings,survey]);
  async function saveTemplate(){setError('');try{await api('drafts',{title,kind:'template',visibility:'shared',payload:payload.current});setSaved(t('تم حفظ القالب المشترك','Shared template saved'));}catch(e:any){setError(e.message);}}
- async function save(kind='session',visibility='personal'){if(saving.current||live)return;const snapshot=payload.current;saving.current=true;setSaved(t('جارٍ الحفظ…','Saving…'));try{const r=await api('drafts',{...draft.current,title,kind,visibility,payload:snapshot});draft.current={id:r.id,version:r.version};dirty.current=JSON.stringify(payload.current)!==JSON.stringify(snapshot);setSaved(t('تم الحفظ','Saved')+' · '+new Date().toLocaleTimeString(ar?'ar-EG':'en-GB'));}catch(e:any){setSaved(errorText(e.message,ar));}finally{saving.current=false;}}
+ // All changes during an in-flight request are saved in a following pass.
+ // A manual create waits for the queue; never report Saved for an old snapshot.
+ async function save(kind='session',visibility='personal',required=false){
+  if(live)return;
+  if(saveFlight.current){
+   await saveFlight.current;
+   if(dirty.current||required)return save(kind,visibility,required);
+   return;
+  }
+  const run=async()=>{
+   let first=required;
+   do{
+    if(!first&&!dirty.current)break;
+    first=false;
+    const snapshot=structuredClone(payload.current);
+    setSaved(t('جارٍ الحفظ…','Saving…'));
+    const r=await api('drafts',{...draft.current,title:snapshot.title,kind,visibility,payload:snapshot});
+    draft.current={id:r.id,version:r.version};
+    dirty.current=JSON.stringify(payload.current)!==JSON.stringify(snapshot);
+   }while(dirty.current);
+   setSaved(t('تم الحفظ','Saved')+' · '+new Date().toLocaleTimeString(ar?'ar-EG':'en-GB'));
+  };
+  const flight=run();
+  saveFlight.current=flight;
+  try{await flight;}
+  catch(e:any){
+   dirty.current=true; // Keep the newest draft locally for a later retry.
+   setSaved(errorText(e.message,ar));
+   if(required)throw e;
+  }finally{if(saveFlight.current===flight)saveFlight.current=null;}
+ }
  async function saveInlineSurvey(){
   setBusy(true);setError('');
   try{
@@ -35,7 +65,7 @@ export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,li
   finally{setBusy(false);}
  }
  function move(i:number,to:number){if(to<0||to>=deck.length)return;const n=[...deck];const [a]=n.splice(i,1);n.splice(to,0,a);setDeck(n);}
- async function create(){setBusy(true);setError('');try{validateDeck(deck);if(live){await api('control',{code:live.code,revision:live.revision,action:'editfuture',activities:deck});onCreated(live.code);return;}await save();const r=await api('sessions',{...payload.current,title,review:true});localStorage.removeItem(recoveryKey);onCreated(r.code);}catch(e:any){setError(e.message);}finally{setBusy(false);}}
+ async function create(){setBusy(true);setError('');try{validateDeck(deck);if(live){await api('control',{code:live.code,revision:live.revision,action:'editfuture',activities:deck});onCreated(live.code);return;}await save('session','personal',true);const r=await api('sessions',{...payload.current,title,review:true});localStorage.removeItem(recoveryKey);onCreated(r.code);}catch(e:any){setError(e.message);}finally{setBusy(false);}}
  function simulateSession(){if(!deck.length)return;setPreview(false);setSimulate({activities:structuredClone(deck),index:0});}
  function simulateActivity(i:number){if(!deck[i])return;setSimulate({activities:[structuredClone(deck[i])],index:0});}
  function changeStarterDeck(blank:boolean){
@@ -57,17 +87,21 @@ export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,li
     'Starting template loaded. Review and edit all content and timings before creating the session.'));
  }
  const agenda=estimateSessionAgenda(deck);
- function leaveForHome(){
-  if(!onGoHome||busy)return;
-  // A live session edit is not applied until the trainer explicitly saves it.
-  if(live&&dirty.current&&!window.confirm(t('عندك تعديلات على الجلسة لسه ما اتطبقتش. ترجع للرئيسية من غير تطبيقها؟','You have unapplied session edits. Return home without applying them?')))return;
-  // Preserve offline recovery of an unsaved session draft, without changing the
-  // currently running session or invoking any backend control action.
-  if(!live)localStorage.setItem(recoveryKey,JSON.stringify(payload.current));
-  onGoHome();
+ function leaveEditor(goHome:boolean){
+  if(busy)return;
+  // Both X and Home must protect unapplied changes to a live session.
+  if(live&&dirty.current&&!window.confirm(t(
+   'عندك تعديلات على الجلسة لسه ما اتطبقتش. تخرج من غير تطبيقها؟',
+   'You have unapplied session edits. Leave without applying them?')))return;
+  if(!live){
+   // Recovery is independent of server saving and never modifies the live room.
+   try{localStorage.setItem(recoveryKey,JSON.stringify(payload.current));}catch{}
+  }
+  if(goHome&&onGoHome)onGoHome();else onClose();
  }
+ function leaveForHome(){if(onGoHome)leaveEditor(true);}
  function restore(){try{const x=JSON.parse(localStorage.getItem(recoveryKey)||'null');if(x){setTitle(x.title);setDeck(x.activities);setLang(x.language);setTeams(x.teams);setSettings(x.settings);setSurvey(x.survey);}}catch{}}
- return <div className="modal-backdrop"><section className="builder modal builder-v2" role="dialog" aria-modal="true" aria-labelledby="builder-title"><header className="modal-header"><div><span className="eyebrow">{live?'LIVE · FUTURE ACTIVITIES':'DIRECT YOUR NEXT EXPERIENCE'}</span><h2 id="builder-title">{review?t('راجع الرحلة قبل فتح الساحة','Review your journey'):t('استوديو تصميم الجلسة','Session studio')}</h2><small className="muted" role="status">{saved}</small></div><div className="trainer-builder-header-actions">{onGoHome&&<button type="button" className="trainer-home-button" onClick={leaveForHome} disabled={busy} aria-label={t('الرجوع للصفحة الرئيسية','Back to home')}><Home size={17}/><span>{t('الصفحة الرئيسية','Home')}</span></button>}<button className="icon-button" onClick={onClose} aria-label={t('إغلاق','Close')}><X/></button></div></header>
+ return <div className="modal-backdrop"><section className="builder modal builder-v2" role="dialog" aria-modal="true" aria-labelledby="builder-title"><header className="modal-header"><div><span className="eyebrow">{live?'LIVE · FUTURE ACTIVITIES':'DIRECT YOUR NEXT EXPERIENCE'}</span><h2 id="builder-title">{review?t('راجع الرحلة قبل فتح الساحة','Review your journey'):t('استوديو تصميم الجلسة','Session studio')}</h2><small className="muted" role="status">{saved}</small></div><div className="trainer-builder-header-actions">{onGoHome&&<button type="button" className="trainer-home-button" onClick={leaveForHome} disabled={busy} aria-label={t('الرجوع للصفحة الرئيسية','Back to home')}><Home size={17}/><span>{t('الصفحة الرئيسية','Home')}</span></button>}<button className="icon-button" onClick={()=>leaveEditor(false)} aria-label={t('إغلاق','Close')}><X/></button></div></header>
  {review?<div className="review-session"><span className="review-symbol"><Layers size={50}/></span><h2>{title}</h2><p>{deck.length} {t('أنشطة · QR واحد · حتى 80 مشارك','activities · One QR · Up to 80 participants')}</p><p className="builder-plan-forecast">{t('زمن الأسئلة المؤقتة والانتقالات التقريبي: ','Approx. timed questions & transitions: ')}<b>{Math.ceil(agenda.totalSeconds/60)} {t('دقيقة','min')}</b>{agenda.untimedSteps>0&&<small> · {agenda.untimedSteps} {t('خطوة بإيقاع المدرب غير محسوبة','trainer-paced steps not timed')}</small>}</p><div className="review-metrics"><b>{teams?t('فرق','Teams'):t('أفراد','Individual')}</b><b>{settings.tie==='shared'?t('ترتيب مشترك عند التعادل','Shared ranks'):settings.tie==='correct'?t('الأكثر صحة أولًا','Most correct first'):t('الأسرع أولًا','Fastest first')}</b><b>{survey?t('استبيان ختامي مرتبط','End survey attached'):t('بدون استبيان','No end survey')}</b></div><ol>{deck.map((a,i)=><li key={i}><b>{activityLabel(a,ar)}</b><span>{a.prompt}</span><small>{a.questions?.length||a.rooms?.length||1} {t('خطوات','steps')}</small></li>)}</ol><div className="arena-simulator-review-actions"><button className="btn secondary" onClick={()=>setReview(false)}><ChevronLeft size={18}/>{t('ارجع للتحرير','Back to editing')}</button><button className="btn primary" onClick={simulateSession}><Play size={17}/>{t('محاكاة الجلسة كاملة','Simulate full session')}</button></div></div>:<div className="builder-body"><div className="builder-settings"><label>{t('اسم الجلسة','Session name')}<input maxLength={100} value={title} onChange={e=>setTitle(e.target.value)} disabled={!!live}/></label><div className="form-columns"><label>{t('اللغة الافتراضية','Default language')}<select value={lang} onChange={e=>setLang(e.target.value)} disabled={!!live}><option value="ar">العربية</option><option value="en">English</option></select></label><label>{t('المشاركة','Participation')}<select value={teams?'teams':'solo'} onChange={e=>setTeams(e.target.value==='teams')} disabled={!!live}><option value="solo">{t('أفراد','Individual')}</option><option value="teams">{t('فرق','Teams')}</option></select></label></div>{teams&&<label>{t('أسماء الفرق، كل فريق في سطر','Team names, one per line')}<textarea rows={3} disabled={!!live} value={settings.teamNames?.join('\n')} onChange={e=>setSettings({...settings,teamNames:e.target.value.split('\n')})}/></label>}
  <label>{t('حسم التعادل، يُثبَّت قبل الانطلاق','Tie rule, locked before launch')}<select disabled={!!live} value={settings.tie} onChange={e=>setSettings({...settings,tie:e.target.value})}><option value="shared">{t('نفس المركز للنقاط المتساوية','Share rank for equal scores')}</option><option value="correct">{t('الأكثر إجابات صحيحة','Most correct answers')}</option><option value="speed">{t('أقل زمن إجابة إجمالي','Lowest total response time')}</option></select></label><label>{t('تقدم الجلسة','Session progression')}<select disabled={!!live} value={settings.progression} onChange={e=>setSettings({...settings,progression:e.target.value})}><option value="manual">{t('بقرار المدرب','Trainer controlled')}</option><option value="auto">{t('تلقائي بعد النتيجة مع تدخل المدرب','Automatic after results, trainer can intervene')}</option></select></label><label>{t('كشف الإجابات','Answer reveal')}<select disabled={!!live} value={settings.reveal} onChange={e=>setSettings({...settings,reveal:e.target.value})}><option value="auto">{t('بعد غلق الإجابات','After answers close')}</option><option value="manual">{t('عندما يختار المدرب','When trainer chooses')}</option></select></label>{teams&&<label>{t('تجميع نقاط الفرق','Team aggregation')}<select disabled={!!live} value={settings.teamScoring} onChange={e=>setSettings({...settings,teamScoring:e.target.value})}><option value="sum">{t('المجموع','Sum')}</option><option value="average">{t('المتوسط لكل عضو','Average per member')}</option></select></label>}
  <label>{t('الاستبيان الختامي','End-of-session survey')}<select disabled={!!live} value={survey?.id||''} onChange={e=>{const x=banks.find(x=>x.id===e.target.value);setSurvey(x?{...x.payload,id:x.id}:null);}}><option value="">{t('بدون استبيان','No survey')}</option>{banks.map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>{!live&&<button type="button" className="btn secondary" onClick={()=>setSurveyEditor(!surveyEditor)}><Plus size={16}/>{surveyEditor?t('إغلاق محرر الاستبيان','Close survey editor'):t('إنشاء استبيان جديد من هنا','Create a survey here')}</button>}
