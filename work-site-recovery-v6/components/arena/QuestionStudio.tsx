@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {ArrowDown,ArrowUp,Check,Copy,Plus,ShieldCheck,Trash2,X} from 'lucide-react';
 import QuestionTypeFields from './QuestionTypeFields';
+import QuestionMediaPicker,{type QuestionMedia} from './QuestionMediaPicker';
 import {changeKnowledgeQuestionType,isKnowledgeQuestionType,knowledgeQuestionTypes,newKnowledgeQuestion,normalizeKnowledgeQuestion,questionTypeLabel,type KnowledgeQuestionType} from '../../lib/question-authoring';
 import type {Activity} from '../../lib/catalog';
 import {sample} from '../../lib/catalog';
@@ -218,6 +219,10 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
     <label>{t('اكتب نص السؤال','Question text')}
      <textarea rows={3} maxLength={2000} placeholder={t('السؤال اللي هيظهر للمتدرب…','What the learner will see…')}
       value={q.prompt} onChange={e=>patch({prompt:e.target.value})}/></label>
+    <QuestionMediaPicker ar={ar} value={q.media} onError={setError}
+     onChange={(media:QuestionMedia|undefined)=>patch(
+      q.type==='Image Hotspot'&&media?.type==='image'?{media,image:media.url}:{media}
+     )}/>
     <QuestionTypeFields ar={ar} q={q} onPatch={patch} onError={setError}/>
     <div className="question-studio__fields">
      <label>{t('زمن الإجابة بالثواني','Time limit (seconds)')}
