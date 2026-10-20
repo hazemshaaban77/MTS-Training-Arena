@@ -175,6 +175,14 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(s.status==='question'&&prior?.code===s.code&&prior.current!==s.current){
    audio.current?.play('stage',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
   }
+  if(s.status==='question'&&s.activity?.showFormat==='championship'&&prior?.code===s.code&&
+   prior.current===s.current&&s.show?.contestant&&prior.show?.contestant===s.show.contestant&&
+   Number.isInteger(s.show?.level)&&s.show.level>Number(prior.show?.level??0)){
+   setMoment('streak');
+   if(momentTimer.current)clearTimeout(momentTimer.current);
+   momentTimer.current=setTimeout(()=>setMoment(null),2000);
+   audio.current?.play('level',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+  }
   if(s.status==='question'&&s.mine?.answered){
    const key=s.code+':'+s.current+':'+s.mine.id;
    if(lastSubmitCue.current!==key){
@@ -210,7 +218,12 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   lastBeep.current=key;
   audio.current?.play(seconds===1?'countdown':'tick',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
  },[seconds,sound,quiet,s?.status,s?.paused,s?.deadline,s?.current,s?.runtime?.quiet,intensity]);
- async function command(action:string,index?:number,extra:any={}){if(busy)return;setBusy(true);setError('');try{const result=await api('control',{code,revision:s.revision,action,index,...extra});if(result.code){navigate('host',result.code);return;}await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);setEndConfirm(false);}}
+ async function command(action:string,index?:number,extra:any={}){if(busy)return;setBusy(true);setError('');try{const result=await api('control',{code,revision:s.revision,action,index,...extra});
+  if(result.code){navigate('host',result.code);return;}
+  if(['spin','respin','reveal','box','selectturn','showcast'].includes(action))
+   audio.current?.play(action==='spin'||action==='respin'?'wheel':action==='box'?'mystery':'stage',
+    {quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+  await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);setEndConfirm(false);}}
  function beginSession(){
   if(!s||busy)return;
   if(s.status==='ready'){command('launch');return;}
@@ -267,7 +280,11 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
    setAnswerProgress(null);
   else setAnswerProgress({round,phase:'uncertain'});
  }
- async function interact(action:string,extra:any={}){if(busy)return;setBusy(true);setError('');try{await api('interact',{code,round:s.current,action,...extra},token);await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);}}
+ async function interact(action:string,extra:any={}){if(busy)return;setBusy(true);setError('');try{await api('interact',{code,round:s.current,action,...extra},token);
+   if(['showanswer','answer','miniquiz','lifeline','showlifeline','showwithdraw','box'].includes(action))
+    audio.current?.play(action==='showlifeline'||action==='lifeline'||action==='box'?'mystery':action==='showwithdraw'?'reveal':'lock',
+     {quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+   await refresh();}catch(e:any){setError(e.message);await refresh();}finally{setBusy(false);}}
  async function projection(change:any){await command('projection',undefined,{board:s.runtime.board,quiet:s.runtime.quiet,intensity:s.runtime.intensity,analytics:s.runtime.analytics,...change});}
  async function copy(){try{await navigator.clipboard.writeText(siteUrl('join',code));setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{setShowQR(true);}}
  function fullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.().catch(()=>{});else document.exitFullscreen?.();}
@@ -375,7 +392,7 @@ function Leaderboard({s,ar,podium=false}:{s:any;ar:boolean;podium?:boolean}){
  const [teamView,setTeamView]=useState(!!s.teamMode),t=(a:string,e:string)=>ar?a:e;
  const teamRows=Array.isArray(s.teams)?s.teams:[];
  const actual=teamView?teamRows:s.individual;
- return <div className={'leaderboard '+(podium?'with-podium':'')}>{teamRows.length>0&&<div className="segment"><button className={!teamView?'selected':''} onClick={()=>setTeamView(false)}>{t('الأفراد','Players')}</button><button className={teamView?'selected':''} onClick={()=>setTeamView(true)}>{t('الفرق','Teams')}</button></div>}{!actual.length?<div className="leaderboard-empty"><Trophy size={25}/><p>{t('الصدارة مستنية أصحابها.','The top spot is waiting.')}</p></div>:<>{podium&&<div className="podium">{actual.slice(0,3).map((p:any,i:number)=><div key={p.uid||p.team} className={'podium-player podium-'+i}><span className="podium-medal">{i===0?<Trophy size={29}/>:<b>#{p.rank}</b>}</span><b>{p.name||teamName(p.team,ar)}</b><strong>{p.score.toLocaleString()}</strong><span className="podium-block">{String(p.rank).padStart(2,'0')}</span></div>)}</div>}<div className="rank-list">{actual.slice(podium?3:0,podium?80:8).map((p:any)=><div className={'rank-row '+(p.uid===s.mine?.id?'me':'')} key={p.uid||p.team}><b className="rank">{p.rank===1?<Trophy size={15}/>:String(p.rank).padStart(2,'0')}</b><span className="rank-avatar">{(p.name||p.team).charAt(0)}</span><span className="rank-name">{p.name||teamName(p.team,ar)}{p.uid===s.mine?.id&&<small>{t('أنت','YOU')}</small>}</span><strong>{p.score.toLocaleString()}</strong></div>)}</div></>}</div>;
+ return <div className={'leaderboard '+(podium?'with-podium':'')}>{teamRows.length>0&&<div className="segment"><button className={!teamView?'selected':''} onClick={()=>setTeamView(false)}>{t('الأفراد','Players')}</button><button className={teamView?'selected':''} onClick={()=>setTeamView(true)}>{t('الفرق','Teams')}</button></div>}{!actual.length?<div className="leaderboard-empty"><Trophy size={25}/><p>{t('الصدارة مستنية أصحابها.','The top spot is waiting.')}</p></div>:<>{podium&&<div className="podium">{actual.slice(0,3).map((p:any,i:number)=><div key={p.uid||p.team} className={'podium-player podium-'+i}><span className="podium-medal">{i===0?<Trophy size={29}/>:<b>#{p.rank}</b>}</span><b>{p.name||teamName(p.team,ar)}</b><strong>{p.score.toLocaleString()}</strong><span className="podium-block">{String(p.rank).padStart(2,'0')}</span></div>)}</div>}<div className="rank-list">{actual.slice(podium?3:0,podium?80:8).map((p:any)=><div className={'rank-row arena-rank-live '+(p.uid===s.mine?.id?'me':'')} key={(p.uid||p.team)+':'+p.rank}><b className="rank">{p.rank===1?<Trophy size={15}/>:String(p.rank).padStart(2,'0')}</b><span className="rank-avatar">{(p.name||p.team).charAt(0)}</span><span className="rank-name">{p.name||teamName(p.team,ar)}{p.uid===s.mine?.id&&<small>{t('أنت','YOU')}</small>}</span><strong>{p.score.toLocaleString()}</strong></div>)}</div></>}</div>;
 }
 function teamName(team:string,ar:boolean){return ar?(team==='Lightning'?'فريق البرق':'فريق الموج'):team;}
 function Confetti(){return <div className="confetti" aria-hidden="true">{Array.from({length:24},(_,i)=><i key={i} style={{left:`${i*4.3}%`,animationDelay:`${i%6*.11}s`,background:['#67c59c','#176aa4','#218e5b','#8799a6'][i%4],transform:`rotate(${i*31}deg)`}}/>)}</div>;}
