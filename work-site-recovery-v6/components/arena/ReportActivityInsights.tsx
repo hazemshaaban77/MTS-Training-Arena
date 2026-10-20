@@ -32,9 +32,9 @@ export default function ReportActivityInsights({report,ar}:{report:any;ar:boolea
     </div>
     {item.kind==='poll'&&<div className="report-insights__poll-chart" role="group" aria-label={t('رسم بياني للتصويت','Poll chart')}>
      {item.pollMode==='rating'?<div className="report-insights__rating">
-      <strong>{item.averageRating===null?t('لا توجد تقييمات','No ratings'):item.averageRating+' / 5'}</strong>
-      {item.averageRating!==null&&<div className="report-insights__track" role="meter" aria-valuemin={0} aria-valuemax={5} aria-valuenow={item.averageRating} aria-label={t('متوسط التقييم','Average rating')}>
-       <i style={{width:item.averageRating/5*100+'%'}}/></div>}
+      <strong>{item.averageRating==null?t('لا توجد تقييمات','No ratings'):item.averageRating+' / 5'}</strong>
+      {item.averageRating!=null&&<div className="report-insights__track" role="meter" aria-valuemin={0} aria-valuemax={5} aria-valuenow={item.averageRating} aria-label={t('متوسط التقييم','Average rating')}>
+       <i style={{width:(item.averageRating??0)/5*100+'%'}}/></div>}
       <small>{t('متوسط تقييم المشاركين، وليس نسبة نجاح','Average participant rating, not an accuracy percentage')}</small>
      </div>:item.pollMode==='priority'?
        (item.ranking?.length?<div>{item.ranking.map((row,i)=><div className="report-insights__bar-row" key={i}>
