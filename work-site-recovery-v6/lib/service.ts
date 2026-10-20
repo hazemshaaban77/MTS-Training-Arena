@@ -109,7 +109,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
     n.started_at=now;n.deadline=deck[s.current+1].timer?now+deck[s.current+1].timer*1000:null;
    }
   }
-  if(b.action==='close'{n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
+  if(b.action==='close'){n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
   if(b.action==='finish')n.runtime=JSON.stringify(rt);
   const r=await writeSession(db,s,n);if(!r.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,{round:s.current});return {ok:true};
  }
