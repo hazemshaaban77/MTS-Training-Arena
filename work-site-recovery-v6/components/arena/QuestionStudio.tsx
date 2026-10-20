@@ -51,8 +51,9 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      points:Number(x.points??1000),speed:mode==='ladder'?false:x.speed,
      section:mode==='ladder'?t('المستوى ','Level ')+(i+1):x.section};
     if(mode==='ladder'&&game)return {...clean,showFormat:'ladder',showRound:i+1,
-     showTotal:questions.length,participation:'individual',betEnabled:false,wrongPenalty:0};
-    const {showFormat,showRound,showTotal,...standard}=clean;
+     showTotal:questions.length,showLadder:questions.map(x=>Number(x.points||0)),
+     participation:'individual',betEnabled:false,wrongPenalty:0};
+    const {showFormat,showRound,showTotal,showLadder,...standard}=clean;
     return standard;
    });
    for(let i=0;i<copy.length;i++){try{validateActivity(structuredClone(copy[i]));}
