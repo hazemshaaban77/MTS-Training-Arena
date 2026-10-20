@@ -4070,3 +4070,25 @@
  .arena-moment,.arena-moment__glow{animation:none!important}
 }
 .session-shell.effects-off .arena-moment,.session-shell.effects-off .arena-moment__glow{animation:none!important}
+
+
+/* Event-driven visual polish — animation restarts only for a confirmed rank/round transition. */
+.session-shell.effects-full .rank-list .arena-rank-live{
+ animation:arena-rank-arrival .42s cubic-bezier(.18,.82,.21,1) both;
+ background-image:linear-gradient(95deg,#4fd7c80c,transparent 65%);
+ transition:background-color .22s ease,transform .22s ease}
+.session-shell.effects-full .rank-list .arena-rank-live:first-child{
+ box-shadow:inset 3px 0 #7dedc8;border-radius:8px;
+ background-image:linear-gradient(95deg,#42d6bd2e,transparent 75%)}
+@keyframes arena-rank-arrival{
+ 0%{transform:translateY(9px);opacity:.45;filter:brightness(1.45)}
+ 80%{transform:translateY(-2px);opacity:1}
+ 100%{transform:translateY(0);opacity:1;filter:brightness(1)}}
+.session-shell.effects-full .arena-quiz-show__reveal,
+.session-shell.effects-full .answer-result.correct{animation:arena-reveal-rise .55s ease both}
+.session-shell.effects-full.scene-wheel-of-fortune .cinematic-copy,
+.session-shell.effects-full.scene-ultimate-game-show .cinematic-copy{
+ text-shadow:0 0 20px #ffd98f55}
+.session-shell.effects-light .rank-list .arena-rank-live,
+.session-shell.effects-off .rank-list .arena-rank-live{animation:none!important}
+@media(prefers-reduced-motion:reduce){.rank-list .arena-rank-live{animation:none!important}}
