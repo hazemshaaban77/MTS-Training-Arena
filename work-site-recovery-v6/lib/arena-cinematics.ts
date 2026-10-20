@@ -5,13 +5,15 @@
  */
 export const ARENA_SCENE_OFFSET=100000;
 export type ArenaSceneCue={index:number;key:string}|null;
-export function introHighlight(index:number):number{
+export function introHighlight(index:number,nonce=0):number{
  if(!Number.isInteger(index)||index<0||index>=500)return NaN;
- return -ARENA_SCENE_OFFSET-index;
+ return -(ARENA_SCENE_OFFSET+index*100000+Math.abs(Math.floor(nonce))%100000);
 }
 export function sceneFromHighlight(highlight:unknown,status:string,current:number,total:number):ArenaSceneCue{
  if(!['lobby','results'].includes(status)||!Number.isInteger(highlight)||typeof highlight!=='number')return null;
- const index=-ARENA_SCENE_OFFSET-highlight;
+ const raw=-highlight-ARENA_SCENE_OFFSET;
+ if(raw<0)return null;
+ const index=Math.floor(raw/100000);
  if(!Number.isInteger(index)||index<0||index>=total||index!==current+1)return null;
  return {index,key:'scene:'+index+':'+highlight+':'+status};
 }
