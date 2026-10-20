@@ -10,7 +10,7 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl}:{
  const [points,setPoints]=useState(100),[direction,setDirection]=useState<1|-1>(1),[reason,setReason]=useState('');
  const [pending,setPending]=useState(false);
  const spin=game?.spin,sector=spin?.revealed?activity.sectors?.[spin.index]:null;
- const target=(session.players||[]).find((x:any)=>x.uid===spin?.target);
+ const target=(session.players||[]).find((x:any)=>x.uid===game?.spinTarget);
  useEffect(()=>{setPending(false);setReason('');},[spin?.id]);
  if(!sector||sector.kind!=='challenge')return null;
  const value=direction*points,valid=Number.isInteger(points)&&points>=1&&points<=10000&&reason.trim().length>=5;
