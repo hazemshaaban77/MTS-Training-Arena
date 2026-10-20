@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {ArrowDown,ArrowUp,Check,Copy,Plus,ShieldCheck,Trash2,X} from 'lucide-react';
 import type {Activity} from '../../lib/catalog';
 import {sample} from '../../lib/catalog';
@@ -21,6 +21,9 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  const [title,setTitle]=useState(activity.prompt);
  const [error,setError]=useState('');
  const [ladderAvailable,setLadderAvailable]=useState(false);
+ const [bank,setBank]=useState<any[]>([]),formRef=useRef<HTMLDivElement|null>(null);
+ useEffect(()=>{api('drafts?kind=question').then((r:any)=>setBank(Array.isArray(r?.items)?r.items:[])).catch(()=>{});},[]);
+ useEffect(()=>{formRef.current?.scrollTo({top:0});},[active]);
  useEffect(()=>{let active=true;api('branding').then((value:any)=>{if(active)setLadderAvailable(value?.showRulesVersion===1);}).catch(()=>{if(active)setLadderAvailable(false);});return()=>{active=false;};},[]);
  const index=Math.min(active,Math.max(0,questions.length-1)),q=questions[index];
  const patch=(changes:Record<string,unknown>)=>{
@@ -31,6 +34,23 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   points:game?prizes[Math.min(number,prizes.length-1)]:1000,
   speed:!game,section:game?t('المستوى ','Level ')+(number+1):''});
  function add(){setQuestions(old=>[...old,makeQuestion(old.length)]);setActive(questions.length);setError('');}
+ function loadFiveLevels(){
+  if(questions.length&&typeof window!=='undefined'&&!window.confirm(t(
+   'ده هيستبدل الأسئلة الموجودة بخمس مستويات. احفظ نسخة لو محتاجها. تكمل؟',
+   'This replaces the existing questions with five levels. Save a copy first if needed. Continue?')))return;
+  setMode('ladder');setQuestions(Array.from({length:5},(_,i)=>makeQuestion(i)));
+  setActive(0);setError('');
+ }
+ function importFromBank(id:string){
+  const item=bank.find(x=>x.id===id),source=item?.payload;
+  if(!source||!['Quiz','True/False','Dropdown','Ultimate Game Show'].includes(source.type)||
+    !Array.isArray(source.options)||source.options.length<2||source.options.length>4||
+    !Number.isInteger(source.correct)){setError(t(
+      'السؤال ده مش اختيار من متعدد (2–4 اختيارات)، ومش مناسب لقالب الكويز ده.',
+      'This is not a 2–4 option multiple-choice item; use a compatible question.'));return;}
+  const {questions:unused,...copy}=structuredClone(source);
+  setQuestions(old=>[...old,{...copy,type:'Quiz'}]);setActive(questions.length);setError('');
+ }
  function duplicate(){if(!q)return;setQuestions(old=>[...old.slice(0,index+1),structuredClone(q),...old.slice(index+1)]);setActive(index+1);setError('');}
  function move(delta:number){const to=index+delta;if(to<0||to>=questions.length)return;const next=[...questions];[next[index],next[to]]=[next[to],next[index]];setQuestions(next);setActive(to);}
  function remove(){if(questions.length===1){setError(t('لازم تسيب سؤال واحد على الأقل.','At least one question is required.'));return;}
@@ -85,6 +105,16 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
    <aside className="question-studio__list" aria-label={t('قائمة الأسئلة','Question list')}>
     <div className="question-studio__list-head"><b>{t('الأسئلة','Questions')} ({questions.length})</b>
      <button type="button" className="btn primary" onClick={add}><Plus size={16}/>{t('سؤال جديد','New')}</button></div>
+    {game&&<button type="button" className="question-studio__preset" onClick={loadFiveLevels}>
+      {t('جهّز مسابقة من 5 مستويات','Start a 5-level show')}</button>}
+    {bank.length>0&&<label className="question-studio__bank">
+     {t('أضف من بنك الأسئلة','Import from question bank')}
+     <select aria-label={t('اختر سؤالًا من البنك','Pick a bank question')} value=""
+      onChange={e=>{if(e.target.value)importFromBank(e.target.value);}}>
+      <option value="">{t('اختار سؤال','Select question')}</option>
+      {bank.map(x=><option key={x.id} value={x.id}>{x.title}</option>)}
+     </select>
+    </label>}
     {questions.map((item,i)=><button type="button" key={i}
       className={'question-studio__item '+(index===i?'selected':'')}
       aria-current={index===i?'step':undefined} onClick={()=>{setActive(i);setError('');}}>
@@ -93,7 +123,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      <small>{game&&mode==='ladder'?(item.points||0).toLocaleString()+' '+t('نقطة','points'):(item.timer||30)+'s'}</small>
     </button>)}
    </aside>
-   <div className="question-studio__form">
+   <div className="question-studio__form" ref={formRef}>
     <label className="question-studio__title">{t('عنوان النشاط','Activity title')}
      <input maxLength={2000} value={title} onChange={e=>setTitle(e.target.value)}/></label>
     {game&&<div className="question-studio__rules">
