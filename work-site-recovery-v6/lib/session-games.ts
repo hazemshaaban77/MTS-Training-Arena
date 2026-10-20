@@ -49,6 +49,28 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   }
   const r=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!r.meta.changes)fail('STALE',409);return {ok:true};
  }
+ if(b.action==='wheelaward'){
+  // Only authenticated host may judge a completed PRACTICAL CHALLENGE.
+  // Award/penalty is a distinct immutable event, never a client-side score.
+  if(!host||!['Wheel of Fortune','Spin Wheel'].includes(a.type))fail('FORBIDDEN',403);
+  const spin=rt.spin,sector=spin&&a.sectors?.[spin.index];
+  if(!spin?.revealed||sector?.kind!=='challenge'||!spin.target)fail('STATE',409);
+  const delta=b.delta,reason=String(b.reason||'').trim(),awardId=b.adjustmentId;
+  if(!Number.isInteger(delta)||delta===0||Math.abs(delta)>10000||
+    reason.length<5||reason.length>280||
+    typeof awardId!=='string'||!/^[0-9a-fA-F-]{36}$/.test(awardId))fail('AWARD');
+  const target=await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'")
+   .bind(s.code,spin.target).first();
+  if(!target)fail('PLAYER');
+  const eventId='wheel-judge:'+spin.id+':'+awardId;
+  const details=JSON.stringify({sector:spin.index,spin:spin.id,reason,delta,actor:s.owner});
+  const inserted=await db.prepare(
+   "INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')"
+  ).bind(s.code,eventId,spin.target,s.current,'wheel-judge',delta,details,now,s.code,s.revision).run();
+  if(!inserted.meta.changes)fail('STALE',409);
+  await audit(db,s.owner,s.code,'wheel-manual-score',{player:spin.target,delta,reason,spin:spin.id});
+  return {ok:true};
+ }
  if(host&&['override','hint'].includes(b.action)){
   if(a.type!=='Escape Room'||!b.player||typeof b.reason!=='string'||b.reason.trim().length<5)fail('REASON');
   const target:any=await db.prepare('SELECT id,team FROM players WHERE session=? AND id=?').bind(s.code,b.player).first();if(!target)fail('PLAYER');const actor=groupActor(a,target),old=await read(db,s,actor),d={...old.data};
