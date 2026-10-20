@@ -3764,3 +3764,13 @@
  .arena-tv-show__ladder li{min-width:0;padding:7px 5px;gap:4px}
  .arena-tv-show__ladder-header b{font-size:13px}
 }
+
+/* Single-screen Question Studio — reusable templates and question bank. */
+.question-studio__preset{display:flex;align-items:center;justify-content:center;
+ border:1px solid #bca272;background:#534319;color:#fff0cb;min-height:48px;
+ border-radius:10px;font-weight:750;font-size:12px;padding:10px}
+.question-studio__bank{display:flex;flex-direction:column;flex:none;gap:5px;
+ margin:0;min-width:170px;font-size:11px;color:#bce5f2}
+.question-studio__bank select{background:#0b2945;color:#dff7ff;border:1px solid #519cb0;
+ font-size:12px;min-height:44px;padding:8px;border-radius:9px;max-width:100%}
+@media(max-width:760px){.question-studio__bank{min-width:190px;max-width:220px}}
