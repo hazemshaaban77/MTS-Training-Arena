@@ -4915,3 +4915,14 @@ html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}
   animation:none!important;clip-path:none!important;opacity:1!important}
  .arena-cinematic-intro.cinematic-composed .cinematic-art-frame:after{display:none!important}
 }
+
+
+/* Safe YouTube video player, same visual footprint as an uploaded training clip. */
+.arena-stage-media.video iframe{
+ display:block;width:min(100%,980px);height:auto;aspect-ratio:16/9;
+ border:0;border-radius:12px;background:#061322;max-height:460px;margin-inline:auto}
+.question-media-picker .arena-stage-media.video iframe{
+ max-width:620px;max-height:260px;aspect-ratio:16/9}
+.session-shell.projector .arena-stage-media.video iframe{
+ height:min(28vh,310px)!important;max-height:min(28vh,310px)!important;
+ width:min(56vw,600px)!important}
