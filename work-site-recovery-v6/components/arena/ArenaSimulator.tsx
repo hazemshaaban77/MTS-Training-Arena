@@ -212,7 +212,7 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
   if(!withSound)return;
   simulatorAudio.current??=new ArenaSoundEngine();
   simulatorAudio.current.update({...defaultArenaAudio,enabled:true});
-  if(await simulatorAudio.current.unlock())simulatorAudio.current.play('intro');
+  if(await simulatorAudio.current.unlock())simulatorAudio.current.playGameIntro(mainType(a));
  }
  const go=(i:number)=>{if(i<0||i>=flattened.length)return;setCinematicPreview(false);setIndex(i);setRunId(n=>n+1);};
  const a=flattened[index];
