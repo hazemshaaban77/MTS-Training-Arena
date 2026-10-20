@@ -5,6 +5,8 @@ import ArenaEscapeRoom from '../components/arena/ArenaEscapeRoom';
 import ArenaMetaPlan from '../components/arena/ArenaMetaPlan';
 import ArenaScenario from '../components/arena/ArenaScenario';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
+import QuestionStudio from '../components/arena/QuestionStudio';
+import {contestantKnockouts,previouslyUsedLifelines,shouldContinueContestant} from '../lib/show-rules.mjs';
 import TrainerDirectorDashboard,{trainerDirectorStats} from '../components/arena/TrainerDirectorDashboard';
 import {runSimulatedRoom} from '../lib/simulator-dry-run';
 import ReportActivityInsights from '../components/arena/ReportActivityInsights';
@@ -1155,4 +1157,59 @@ test('trainer live director uses server-confirmed counts and truthful presence l
  assert.ok(css.includes('.builder .deck-controls button{min-width:44px'));
  assert.ok(css.includes('.session-shell.host .director-bar{display:grid'));
  assert.ok(css.includes('trainer-director-dashboard__metrics'));
+});
+
+
+test('quiz question studio exposes non-nested authoring, choice keys and safe mobile actions',()=>{
+ for(const ar of [true,false]){
+  const html=renderToStaticMarkup(<QuestionStudio ar={ar} activity={sample('Quiz',ar?'ar':'en')}
+   onCancel={()=>{}} onSave={()=>{}}/>);
+  assert.ok(html.includes(ar?'أسئلة واضحة، خطوة بخطوة':'Build your knowledge quiz'));
+  assert.ok(html.includes(ar?'سؤال جديد':'New'));
+  assert.ok(html.includes('type="radio"'));
+  assert.ok(html.includes(ar?'أضف اختيار':'Add option')===false, 'Sample starts with four options');
+  assert.ok(html.includes(ar?'زمن الإجابة بالثواني':'Time limit (seconds)'));
+  assert.ok(html.includes(ar?'انسخ السؤال':'Duplicate'));
+  const show=renderToStaticMarkup(<QuestionStudio ar={ar} activity={sample('Ultimate Game Show',ar?'ar':'en')}
+   onCancel={()=>{}} onSave={()=>{}}/>);
+  assert.ok(show.includes(ar?'سلّم الجوائز':'Prize ladder'));
+  assert.ok(show.includes(ar?'جولات حرة':'Open rounds'));
+ }
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 dedicated question studio'));
+ assert.ok(css.includes('.question-studio__list'));
+ assert.ok(css.includes('.question-studio__radio'));
+ const src=readFileSync('components/arena/Builder.tsx','utf8');
+ assert.ok(src.includes("onSimulate&&['Quiz','Ultimate Game Show'].includes(d.type)"),
+   'Single question bank should retain its original plain question editor');
+});
+
+test('prize ladder has truthful server-owned casting, elimination and single-use lifelines',()=>{
+ const stage=(group:number,level:number)=>({type:'Quiz',mainType:'Ultimate Game Show',showFormat:'ladder',group,showRound:level,
+   prompt:'Question',timer:30,options:['A','B'],correct:0});
+ const deck=[stage(0,1),stage(0,2),stage(0,3),stage(1,1)];
+ const cast=[{detail:JSON.stringify({round:0,players:['a']})},
+  {detail:JSON.stringify({round:1,players:['b']})},
+  {detail:JSON.stringify({round:3,players:['other']})}];
+ const answers=[{round:0,player:'a',correct:0},{round:1,player:'b',correct:1}];
+ assert.deepEqual(contestantKnockouts(deck,2,cast,answers),['a']);
+ assert.deepEqual(contestantKnockouts(deck,3,cast,answers),[]);
+ assert.equal(shouldContinueContestant(deck[1],deck[2],[{player:'b',correct:1}],'b'),true);
+ assert.equal(shouldContinueContestant(deck[1],deck[2],[{player:'b',correct:0}],'b'),false);
+ assert.equal(shouldContinueContestant(deck[2],deck[3],[{player:'b',correct:1}],'b'),false);
+ const previous=[
+  {round:0,data:JSON.stringify({lifelines:['fifty','audience']})},
+  {round:1,data:JSON.stringify({lifelines:['time']})},
+  {round:3,data:JSON.stringify({lifelines:['fifty']})}];
+ assert.deepEqual(previouslyUsedLifelines(deck,2,previous),['fifty','audience','time']);
+ assert.deepEqual(previouslyUsedLifelines(deck,3,previous),[]);
+ const service=readFileSync('lib/service.ts','utf8');
+ assert.ok(service.includes("fail('SHOW_ELIMINATED',409)"));
+ assert.ok(service.includes('shouldContinueContestant(active(),deck[s.current+1]'));
+ const backend=readFileSync('lib/session-games.ts','utf8');
+ assert.ok(backend.includes('previouslyUsedLifelines(JSON.parse(s.activities),s.current,history)'));
+ assert.ok(backend.includes('contestantKnockouts(JSON.parse(s.activities),s.current,casts,previousAnswers)'));
+ const showSrc=readFileSync('components/arena/ArenaGameShow.tsx','utf8');
+ assert.ok(showSrc.includes("showFormat==='ladder'"));
+ assert.ok(showSrc.includes('disabled={busy||eliminated}'));
 });
