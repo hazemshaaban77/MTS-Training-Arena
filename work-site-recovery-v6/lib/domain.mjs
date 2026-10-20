@@ -89,6 +89,9 @@ export function nextState(s,action,now,index){
  const n={...s,revision:s.revision+1},deck=JSON.parse(s.activities);
  if(action==='start'||action==='next'){
   if(action==='start'?!['lobby','ready'].includes(s.status):s.status!=='results')throw Error('STATE');const current=s.current+1;if(current>=deck.length)throw Error('STATE');const a=deck[current];
+  if(a.type==='Ultimate Game Show'&&a.showFormat==='championship')
+   return {...n,current,status:'question',started_at:now,deadline:null,paused:0,remaining:0,reveal:null,
+    runtime:JSON.stringify({...JSON.parse(s.runtime||'{}'),show:{phase:'casting',current:null,attempts:[],usedContestants:[],audienceVotes:{},lastCompleted:null},phase:'casting',targets:[],spin:undefined,box:undefined})};
   return {...n,current,status:'question',started_at:now,deadline:a.participation&&a.participation!=='all'||a.betEnabled?null:a.timer?now+a.timer*1000:null,paused:0,remaining:0,reveal:null,runtime:JSON.stringify({...JSON.parse(s.runtime||'{}'),spin:undefined,box:undefined,metaCount:undefined,addedTime:0,keyRevealed:false,targets:[],phase:a.participation&&a.participation!=='all'?'casting':a.betEnabled?'betting':'answering',used:[],turn:0,target:null})};
  }
  if(action==='close'){if(s.status!=='question')throw Error('STATE');return {...n,status:'results',paused:0};}
