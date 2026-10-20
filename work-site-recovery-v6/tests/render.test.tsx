@@ -1037,3 +1037,33 @@ test('trainer activity learning reports preserve real grades and anonymous votin
  assert.ok(!source.includes("rows.filter((x:any)=>x.correct===1).length/count*100"),
   'Remove misleading accuracy from non-graded activities');
 });
+
+
+test('phase-one reliability safeguards keep trainer edits and timed learner rounds safe',()=>{
+ const builder=readFileSync('components/arena/Builder.tsx','utf8');
+ assert.ok(builder.includes('while(dirty.current)'), 'Drafts edited during a pending save must be flushed');
+ assert.ok(builder.includes("await save('session','personal',true)"), 'Session creation must wait for the complete draft');
+ assert.ok(builder.includes('onClick={()=>leaveEditor(false)}'), 'X must use the same exit guard as Home');
+ assert.ok(builder.includes('if(live&&dirty.current&&!window.confirm'), 'Unapplied live changes require confirmation');
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes('if(s.deadline){setSplash(null);return;}'),
+  'Already-counting timed rounds cannot be hidden by a forced intro');
+ assert.ok(session.includes("lastRefreshError.current=null;setError(current=>current===stale?'':current)"),
+  'Connection recovery must clear stale polling errors without clearing host action failures');
+ assert.ok(session.includes("kind={['NOT_FOUND','CODE'].includes(error)?'not-found':'unavailable'"),
+  'Invalid session codes must be distinguished from outages');
+ for(const ar of [true,false]){
+  const html=renderToStaticMarkup(<SessionEntryFeedback ar={ar} kind="not-found" onChangeCode={()=>{}}/>);
+  assert.ok(html.includes(ar?'الجلسة دي مش موجودة':'Session not found'));
+  assert.ok(!html.includes(ar?'إعادة المحاولة':'Try again'),
+   'Retrying a confirmed unknown code cannot fix the code');
+  assert.ok(html.includes(ar?'أدخل كود مختلف':'Use a different session code'));
+ }
+ const sim=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.ok(sim.includes('evaluate(question,payload.answer).evaluation===1'),
+  'Escape dry-run must use authoritative pure answer validation');
+ assert.ok(sim.includes("room.wrongPolicy==='restart-room'"));
+ assert.ok(sim.includes("room.unlockAfter||room.puzzles.length"));
+ assert.ok(sim.includes('assessment:{...(g.assessment||{}),[payload.index]:payload.known===true}'),
+  'Flashcard practice should preserve stable personal Known/Review answers');
+});
