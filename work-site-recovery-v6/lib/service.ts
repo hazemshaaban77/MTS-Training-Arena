@@ -4,6 +4,7 @@ import {normalizeEmployeeId,normalizeRecoveryCode} from './identity.mjs';
 import {workspace,audit,validateSurvey,type TrainerContext} from './workspace';
 import {readJson} from './request-security';
 import {gameInteract,gameSnapshot,settleWheel} from './session-games';
+import {isPrizeLadder,contestantKnockouts,shouldContinueContestant} from './show-rules.mjs';
 export class ApiError extends Error{constructor(public code:string,public status=400){super(code);}}
 export const fail=(code:string,status=400):never=>{throw new ApiError(code,status);};
 export const hash=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -44,7 +45,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
   await db.prepare("UPDATE sessions SET status='results',paused=0,revision=revision+1 WHERE code=? AND revision=? AND status='question' AND paused=0 AND deadline<=?").bind(code,s.revision,now).run();s=await db.prepare('SELECT * FROM sessions WHERE code=?').bind(code).first();
  }
  if(s.status==='question'&&!s.paused&&rt.spin?.revealAt<=now){await settleWheel(db,s,active(),rt,now);s=await db.prepare('SELECT * FROM sessions WHERE code=?').bind(code).first();rt=JSON.parse(s.runtime||'{}');}
- if(s.status==='results'&&settings.progression==='auto'&&(settings.reveal!=='manual'||rt.keyRevealed)&&active()?.type!=='Meta Plan'&&active()?.type!=='Categorize'&&s.current+1<deck.length&&now-(s.deadline||now)>6000){const n=nextState(s,'next',now);await writeSession(db,s,n);s=await db.prepare('SELECT * FROM sessions WHERE code=?').bind(code).first();rt=JSON.parse(s.runtime||'{}');}
+ if(s.status==='results'&&active()?.showFormat!=='ladder'&&settings.progression==='auto'&&(settings.reveal!=='manual'||rt.keyRevealed)&&active()?.type!=='Meta Plan'&&active()?.type!=='Categorize'&&s.current+1<deck.length&&now-(s.deadline||now)>6000){const n=nextState(s,'next',now);await writeSession(db,s,n);s=await db.prepare('SELECT * FROM sessions WHERE code=?').bind(code).first();rt=JSON.parse(s.runtime||'{}');}
  const token=req.headers.get('X-Player-Token'),player:any=token?await db.prepare('SELECT * FROM players WHERE session=? AND token=?').bind(code,await hash(token)).first():null;
  if(url.pathname==='/api/recover'&&method==='POST'){
   let employeeId;try{employeeId=normalizeEmployeeId(b.employeeId);}catch{fail('EMPLOYEE_ID');}
@@ -80,16 +81,35 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
    if(b.action==='highlight')rt.highlight=b.index;
    if(b.action==='notes')rt.notes=String(b.notes||'').slice(0,3000);
    if(b.action==='closesurvey'){if(!['survey','completed'].includes(s.status))fail('STATE');rt.surveyOpen=false;rt.surveyFinished=true;if(s.status==='survey')s.status='completed';}
-   if(b.action==='stagecast'){if(rt.phase!=='casting'||!Array.isArray(b.players)||!b.players.length)fail('STATE');const eligible:any[]=(await db.prepare("SELECT id,team FROM players WHERE session=? AND approval='approved' AND eligible_from<=?").bind(code,s.current).all()).results;if(b.players.some((id:string)=>!eligible.some(x=>x.id===id))||active().participation==='individual'&&b.players.length!==1||active().participation==='head-to-head'&&b.players.length!==2)fail('PLAYER');rt.targets=[...new Set(b.players)];rt.phase=active().betEnabled?'betting':'answering';s.started_at=now;s.deadline=active().betEnabled?null:now+active().timer*1000;}
+   if(b.action==='stagecast'){if(rt.phase!=='casting'||!Array.isArray(b.players)||!b.players.length)fail('STATE');const eligible:any[]=(await db.prepare("SELECT id,team FROM players WHERE session=? AND approval='approved' AND eligible_from<=?").bind(code,s.current).all()).results;if(b.players.some((id:string)=>!eligible.some(x=>x.id===id))||active().participation==='individual'&&b.players.length!==1||active().participation==='head-to-head'&&b.players.length!==2)fail('PLAYER');
+   if(isPrizeLadder(active())){
+    const casts:any[]=(await db.prepare("SELECT detail FROM audits WHERE session=? AND action='stagecast'").bind(code).all()).results;
+    const past:any[]=(await db.prepare('SELECT round,player,correct FROM answers WHERE session=? AND round<?').bind(code,s.current).all()).results;
+    const eliminated=contestantKnockouts(deck,s.current,casts,past);
+    if(b.players.some((id:string)=>eliminated.includes(id)))fail('SHOW_ELIMINATED',409);
+   }
+   rt.targets=[...new Set(b.players)];rt.phase=active().betEnabled?'betting':'answering';s.started_at=now;s.deadline=active().betEnabled?null:now+active().timer*1000;}
    if(b.action==='lockbets'){if(rt.phase!=='betting'||s.status!=='question')fail('STATE');rt.phase='answering';s.deadline=now+active().timer*1000;s.started_at=now;}
    if(b.action==='survey'){if(!s.survey||!['lobby','results','completed'].includes(s.status))fail('STATE');s.status='survey';rt.surveyOpen=true;}
    if(b.action==='ceremony'){if(s.status!=='survey')fail('STATE');s.status='completed';rt.surveyFinished=true;rt.surveyOpen=false;}
-   const written=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!written.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,b.action==='notes'?{notes:rt.notes}:{round:s.current});return {ok:true};
+   const written=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!written.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,b.action==='notes'?{notes:rt.notes}:b.action==='stagecast'?{round:s.current,players:rt.targets}:{round:s.current});return {ok:true};
   }
   if(['selectturn','spin','respin','box','override','hint'].includes(b.action))return gameInteract(db,s,active(),rt,null,b,now,true);
   if(b.action==='finish'&&s.survey&&!rt.surveyFinished){const survey=JSON.parse(s.survey);if(survey.stage==='before-ceremony'){await writeSession(db,s,{...s,status:'survey',runtime:JSON.stringify({...rt,surveyOpen:true}),revision:s.revision+1});return {ok:true};}rt.surveyAvailable=true;rt.surveyOpen=true;}
   let index=b.index;if(b.action==='reveal'&&active()?.type==='Spin Wheel')index=fairIndex(active().items.length);
-  let n:any;try{n=nextState(s,b.action,now,index);}catch{fail('STATE',409);}if(b.action==='close'){n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
+  let n:any;try{n=nextState(s,b.action,now,index);}catch{fail('STATE',409);}
+  // A correct contestant advances automatically to the next prize-ladder level.
+  // An incorrect or missing response ends their run; the host casts someone else.
+  if(b.action==='next'&&isPrizeLadder(active())&&isPrizeLadder(deck[s.current+1])){
+   const target=(rt.targets||[]).length===1?rt.targets[0]:null;
+   const previousAnswers:any[]=target?(await db.prepare('SELECT player,correct FROM answers WHERE session=? AND round=? AND player=?').bind(code,s.current,target).all()).results:[];
+   if(shouldContinueContestant(active(),deck[s.current+1],previousAnswers,target)){
+    const nextRuntime=JSON.parse(n.runtime||'{}');
+    n.runtime=JSON.stringify({...nextRuntime,phase:'answering',targets:[target]});
+    n.started_at=now;n.deadline=deck[s.current+1].timer?now+deck[s.current+1].timer*1000:null;
+   }
+  }
+  if(b.action==='close'{n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
   if(b.action==='finish')n.runtime=JSON.stringify(rt);
   const r=await writeSession(db,s,n);if(!r.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,{round:s.current});return {ok:true};
  }
