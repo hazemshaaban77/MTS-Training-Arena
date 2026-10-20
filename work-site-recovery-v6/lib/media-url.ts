@@ -16,3 +16,15 @@ export function safeYouTubeEmbed(url:string):string|null{
   return id?'https://www.youtube-nocookie.com/embed/'+id+'?rel=0':null;
  }catch{return null;}
 }
+
+/** Infer a reasonable media kind from a pasted link; ambiguous HTTPS links stay manual. */
+export function classifyMediaLink(url:string):'image'|'video'|null{
+ if(!/^https:\/\//i.test(url))return null;
+ if(safeYouTubeEmbed(url))return 'video';
+ try{
+  const u=new URL(url);
+  if(/\.(?:mp4|webm)$/i.test(u.pathname))return 'video';
+  if(/\.(?:png|jpe?g|webp|gif)$/i.test(u.pathname))return 'image';
+ }catch{}
+ return null;
+}
