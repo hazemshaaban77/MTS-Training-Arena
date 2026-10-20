@@ -1270,7 +1270,7 @@ test('cinematic scene is replayable only BEFORE next question and cannot consume
  const session=readFileSync('components/arena/Session.tsx','utf8');
  assert.ok(session.includes("onClick={()=>command('highlight',undefined,{index:introHighlight(s.current+1,Date.now())})"));
  assert.ok(session.includes("s.deadline){setSplash(null)"), 'no blocking intro over a timed round');
- assert.ok(session.includes("s.status==='question'&&s?.activity"));
+ assert.ok(session.includes("s?.status==='question'&&s?.activity"), "Only untimed stages can use optional short in-round intro");
  assert.ok(session.includes("preview type={mainType(s.queue[previewIntro.index])}"));
  const background=readFileSync('app/globals.css','utf8');
  assert.ok(background.includes('V6 Cinematic Experience — pre-round theatre'));
