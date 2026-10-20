@@ -31,7 +31,6 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
   <div className="cinematic-lights" aria-hidden="true"><i/><i/><i/><i/><i/><i/></div>
   <div className="cinematic-particles" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
   <div className="cinematic-rule cinematic-rule--top" aria-hidden="true"/>
-  <IntroScene kind={identity.key}/>
   <div className="splash-center cinematic-center">
    <div className="cinematic-kicker"><Sparkles size={17}/><span>MTS TRAINING ARENA</span><Sparkles size={17}/></div>
    <div className="cinematic-main-art">
@@ -39,6 +38,7 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
     <span className="cinematic-art-ring cinematic-art-ring--inner" aria-hidden="true"/>
     <div className="cinematic-art-frame splash-activity-cover"><ActivityArt activity={base} label={label} eager/></div>
     <span className="cinematic-art-flare" aria-hidden="true"><Zap size={26}/></span>
+    <IntroScene kind={identity.key}/>
    </div>
    <div className="cinematic-copy">
     <span className="cinematic-caption">{ar?identity.tagAr:identity.tagEn}</span>
