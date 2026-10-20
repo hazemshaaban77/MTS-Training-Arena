@@ -229,11 +229,6 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
      <p>{t('جرّب قبل الانطلاق وارجع عدّل تصميمك في أي وقت','Rehearse first, then return and improve your design anytime')}</p></div>
     <button className="btn secondary" onClick={onClose}><X size={17}/>{t('الرجوع للتعديل','Return to editing')}</button>
    </header>
-   <nav className="arena-simulator-progress" aria-label={t('مراحل محاكاة الجلسة','Session simulation steps')}>
-    {flattened.map((item:any,i:number)=><button type="button" key={i}
-      className={i===index?'selected':''} title={item.prompt} onClick={()=>go(i)}
-      aria-current={i===index?'step':undefined}>{String(i+1).padStart(2,'0')} · {activityLabel(item,ar)}</button>)}
-   </nav>
    <div className="arena-simulator-toolbar">
     <span><CheckCircle2 size={17}/>{t('وضع تجريبي، مفيش QR ولا متدربين ولا نقاط حقيقية','Practice only: no QR, real participants or live scores')}</span>
     <div className="arena-simulator-modes">
@@ -247,7 +242,16 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
       <button type="button" className={mode===value?'selected':''} key={value} onClick={()=>setMode(value)}
        aria-pressed={mode===value}><Icon size={16}/>{label}</button>)}
     </div>
-   </div>
+   <details className="arena-simulator-tools" aria-label={t('قائمة إعدادات المحاكاة','Practice options')}>
+    <summary className="arena-simulator-tools__trigger">
+     <BookOpen size={17}/>{t('الأنشطة والإعدادات','Activities & settings')}
+    </summary>
+    <div className="arena-simulator-tools__panel">
+   <nav className="arena-simulator-progress" aria-label={t('مراحل محاكاة الجلسة','Session simulation steps')}>
+    {flattened.map((item:any,i:number)=><button type="button" key={i}
+      className={i===index?'selected':''} title={item.prompt} onClick={()=>go(i)}
+      aria-current={i===index?'step':undefined}>{String(i+1).padStart(2,'0')} · {activityLabel(item,ar)}</button>)}
+   </nav>
    <details className="arena-simulator-dry-run" aria-label={t('إعدادات المحاكاة المتقدمة','Advanced practice settings')}>
     <summary className="arena-simulator-dry-run__toggle">
      <span><Users size={17}/><strong>{t('الإعدادات والسيناريوهات','Practice setup & scenarios')}</strong></span>
@@ -301,6 +305,9 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
     </div>
    </details>
    <div className="arena-simulator-learning-tip"><BookOpen size={17}/><span>{(activityGuides[mainType(a)]||activityGuides[a.type]||['جرّب النشاط وراجع خطواته.','Explore and rehearse this activity.'])[ar?0:1]}</span></div>
+    </div>
+   </details>
+   </div>
    <main className="arena-simulator-main">{a.showFormat==='championship'
     ?<ArenaChampionshipPractice key={index+'-'+runId} a={a} ar={ar} mode={mode}/>
     :<PracticeStage key={index+'-'+runId} a={a} ar={ar} mode={mode} runId={runId}/>}</main>
