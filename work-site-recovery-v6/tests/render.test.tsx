@@ -1107,10 +1107,12 @@ test('20 learner dry runs share authoritative scoring, without inventing timeout
  assert.equal(poll.graded,0);
  assert.equal(poll.ungraded,5);
  assert.equal(poll.learners.reduce((n,p)=>n+p.points,0),0);
+ assert.ok(poll.learners.every(p=>p.rank===null), 'Polls have no invented learner ranks');
  const cards=runSimulatedRoom(sample('Flashcards','en'),5,'correct');
  assert.equal(cards.graded,0);
  assert.equal(cards.learners.reduce((n,p)=>n+p.points,0),0);
  assert.ok(cards.unsupported,'No fake game event scoring');
+ assert.ok(cards.learners.every(p=>p.rank===null), 'Flashcards cannot fabricate a leaderboard');
  const source=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
  assert.ok(source.includes('setLearnerCount(Number(e.target.value))'));
  assert.ok(source.includes("value=\"late_join\""));
