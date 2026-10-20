@@ -17,6 +17,7 @@ export default function MetaPlanDragBoard({ar,categories,items,selected,correct,
  function begin(e:React.PointerEvent,item:number){
   if(!ready)return;
   dragRef.current={item,x:e.clientX,y:e.clientY};
+  try{e.currentTarget.setPointerCapture(e.pointerId);}catch{}
   setPoint(null);setChosen(item);
  }
  function track(e:React.PointerEvent){
@@ -28,6 +29,7 @@ export default function MetaPlanDragBoard({ar,categories,items,selected,correct,
  }
  function finish(e:React.PointerEvent){
   const item=dragRef.current?.item;dragRef.current=null;
+  try{e.currentTarget.releasePointerCapture(e.pointerId);}catch{}
   setPoint(null);setDragged(null);
   if(item==null||!ready)return;
   // Touch pointer events are captured by the starting element on iOS/Android.
