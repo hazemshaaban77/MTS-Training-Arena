@@ -64,10 +64,13 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   if(!target)fail('PLAYER');
   const eventId='wheel-judge:'+spin.id+':'+awardId;
   const details=JSON.stringify({sector:spin.index,spin:spin.id,reason,delta,actor:s.owner});
-  const inserted=await db.prepare(
-   "INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')"
-  ).bind(s.code,eventId,spin.target,s.current,'wheel-judge',delta,details,now,s.code,s.revision).run();
-  if(!inserted.meta.changes)fail('STALE',409);
+  const result=await batch(db,[
+   db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')")
+    .bind(s.code,eventId,spin.target,s.current,'wheel-judge',delta,details,now,s.code,s.revision),
+   db.prepare("UPDATE sessions SET revision=revision+1 WHERE code=? AND revision=? AND status='question'")
+    .bind(s.code,s.revision)
+  ]);
+  if(!result[0]?.meta.changes||!result[1]?.meta.changes)fail('STALE',409);
   await audit(db,s.owner,s.code,'wheel-manual-score',{player:spin.target,delta,reason,spin:spin.id});
   return {ok:true};
  }
