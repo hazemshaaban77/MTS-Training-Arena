@@ -150,3 +150,90 @@
 .arena-simulator-modes .arena-simulator-cinema-btn:focus-visible{
  outline:3px solid #a1ffea;outline-offset:3px}
 @media(max-width:700px){.arena-simulator-modes .arena-simulator-cinema-btn{flex:1 1 155px;min-height:46px}}
+
+
+/* Stage-first practice UX — preview is the PRIMARY surface, options are secondary. */
+.arena-simulator-shell--stage-first{height:min(96dvh,1200px);max-height:96dvh}
+.arena-simulator-shell--stage-first .arena-simulator-header{flex:none;
+ padding:9px 17px;min-height:65px;gap:10px}
+.arena-simulator-shell--stage-first .arena-simulator-header h2{font-size:clamp(18px,1.7vw,24px);
+ margin:2px 0;line-height:1.2}
+.arena-simulator-shell--stage-first .arena-simulator-header p{display:none}
+.arena-simulator-shell--stage-first .arena-simulator-progress{flex:none;
+ padding:7px 15px;gap:6px;min-height:45px}
+.arena-simulator-shell--stage-first .arena-simulator-progress button{min-height:36px;
+ padding:7px 10px;border-radius:8px}
+.arena-simulator-shell--stage-first .arena-simulator-toolbar{flex:none;
+ padding:6px 15px;gap:9px;min-height:50px;flex-wrap:wrap}
+.arena-simulator-shell--stage-first .arena-simulator-toolbar>span{
+ font-size:10px;flex:1 1 150px;line-height:1.25}
+.arena-simulator-shell--stage-first .arena-simulator-modes{
+ flex:0 1 auto;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;
+ background:transparent;border:0;padding:0}
+.arena-simulator-shell--stage-first .arena-simulator-modes button{min-height:40px;
+ padding:7px 11px}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run{flex:none;
+ background:#08273b;padding:0;border-bottom:1px solid #52c6d65c}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle{
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ gap:10px;min-height:42px;padding:7px 16px;cursor:pointer;list-style:none;
+ border:0;background:linear-gradient(110deg,#0b3a57,#092036);color:#e5fbff}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle::-webkit-details-marker{display:none}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle>span{display:flex;
+ align-items:center;gap:9px;font-size:12px}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle small{font-size:10px;
+ color:#a9d9df}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle:after{
+ content:'⌄';font-size:24px;line-height:1;color:#87f4e3;transition:transform .15s}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run[open]>.arena-simulator-dry-run__toggle:after{transform:rotate(180deg)}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__expanded{padding:10px 17px;
+ max-height:min(33dvh,310px);overflow-y:auto;scrollbar-width:thin}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__metrics{margin:7px 0}
+.arena-simulator-shell--stage-first .arena-simulator-dry-run__notice{line-height:1.4}
+.arena-simulator-shell--stage-first .arena-simulator-learning-tip{flex:none;
+ font-size:10px;padding:5px 15px;line-height:1.25;min-height:30px}
+.arena-simulator-shell--stage-first .arena-simulator-main{flex:1 1 auto;
+ min-height:0;min-width:0;overflow:auto;display:flex;flex-direction:column;
+ padding:10px 13px;scrollbar-width:thin}
+.arena-simulator-shell--stage-first .arena-simulator-main>.arena-sim-stage,
+.arena-simulator-shell--stage-first .arena-simulator-main>.arena-championship-practice{
+ flex:1 0 auto;min-height:400px}
+.arena-simulator-shell--stage-first .arena-sim-stage{padding:15px;gap:10px}
+.arena-simulator-shell--stage-first .arena-sim-intro{min-height:min(48dvh,440px)}
+.arena-simulator-shell--stage-first .arena-simulator-footer{flex:none;
+ padding:7px 15px;min-height:49px}
+.arena-simulator-shell--stage-first .arena-simulator-footer button{min-height:38px}
+@media(max-width:850px){
+ .arena-simulator-shell--stage-first{height:100dvh;max-height:100dvh}
+ .arena-simulator-shell--stage-first .arena-simulator-header{padding:7px 10px;min-height:57px}
+ .arena-simulator-shell--stage-first .arena-simulator-header h2{font-size:17px}
+ .arena-simulator-shell--stage-first .arena-simulator-header .eyebrow{font-size:9px}
+ .arena-simulator-shell--stage-first .arena-simulator-progress{padding:4px 9px;min-height:39px}
+ .arena-simulator-shell--stage-first .arena-simulator-progress button{min-height:35px}
+ .arena-simulator-shell--stage-first .arena-simulator-toolbar{padding:5px 9px;gap:4px;
+  min-height:48px;display:block}
+ .arena-simulator-shell--stage-first .arena-simulator-toolbar>span{display:none}
+ .arena-simulator-shell--stage-first .arena-simulator-modes{display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+ .arena-simulator-shell--stage-first .arena-simulator-modes button{min-width:0;
+  min-height:44px;padding:6px 3px;font-size:10px;white-space:normal;line-height:1.2;gap:4px}
+ .arena-simulator-shell--stage-first .arena-simulator-modes button svg{width:14px;flex:none}
+ .arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle{padding:7px 9px;
+  min-height:44px;gap:7px}
+ .arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle small{font-size:9px}
+ .arena-simulator-shell--stage-first .arena-simulator-dry-run__expanded{max-height:26dvh;padding:10px}
+ .arena-simulator-shell--stage-first .arena-simulator-learning-tip{display:none}
+ .arena-simulator-shell--stage-first .arena-simulator-main{padding:7px 8px}
+ .arena-simulator-shell--stage-first .arena-simulator-main>.arena-sim-stage{min-height:330px;
+  padding:12px}
+ .arena-simulator-shell--stage-first .arena-sim-intro{min-height:300px}
+ .arena-simulator-shell--stage-first .arena-simulator-footer{padding:5px 8px;
+  min-height:50px}
+ .arena-simulator-shell--stage-first .arena-simulator-footer>span{font-size:9px}
+}
+@media(max-width:430px){
+ .arena-simulator-shell--stage-first .arena-simulator-modes button{font-size:9px;flex-direction:column;gap:2px}
+ .arena-simulator-shell--stage-first .arena-simulator-modes button svg{width:14px;height:14px}
+ .arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle>span{font-size:11px}
+ .arena-simulator-shell--stage-first .arena-simulator-dry-run__toggle small{max-width:115px;text-align:end}
+}
