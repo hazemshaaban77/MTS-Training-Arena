@@ -11,6 +11,14 @@ export function validateActivity(a,depth=0){
  // Optional learning media; never allow HTML/data/javascript URLs in participant views.
  if(a.media!=null){ok(a.media&&typeof a.media==='object'&&['image','video'].includes(a.media.type)&&str(a.media.url,2048)&&/^https:\/\/[^\s]+$/i.test(a.media.url)&&(!a.media.alt||typeof a.media.alt==='string'&&a.media.alt.length<=200));}
  const type=a.type;
+ if(type==='Ultimate Game Show'&&a.showFormat==='championship'){
+  if(!Array.isArray(a.questions)||a.questions.length<2||a.questions.length>20)throw Error('DECK');
+  for(const q of a.questions)validateActivity(q,depth+1);
+  const amounts=a.questions.map(q=>q.points);
+  ok(amounts.every((p,i)=>Number.isInteger(p)&&p>0&&p<=10000&&(i===0||p>amounts[i-1])));
+  ok(Array.isArray(a.safeLevels)&&a.safeLevels.length<=3&&new Set(a.safeLevels).size===a.safeLevels.length&&a.safeLevels.every(x=>Number.isInteger(x)&&x>=1&&x<=a.questions.length));
+  ok(a.participation==='individual'&&a.betEnabled!==true);return a;
+ }
  if(['Quiz','Ultimate Game Show'].includes(type)&&a.questions){ok(Array.isArray(a.questions)&&a.questions.length&&a.questions.length<=500);a.questions.forEach(q=>validateActivity({...q,timer:q.timer??a.timer},depth+1));return a;}
  if(['Quiz','Dropdown','True/False','Ultimate Game Show'].includes(type)){ok(list(a.options,2,4)&&idx(a.correct,a.options.length));if(type==='True/False')ok(a.options.length===2);}
  else if(type==='Fill Blank')ok(list(a.accepted,1,20));
@@ -39,7 +47,7 @@ export function flattenDeck(activities){
  const flat=[];
  activities.forEach((root,group)=>{let step=0;function visit(a,parent=null){
   const merged=parent?{...a,timer:a.timer??parent.timer,weight:a.weight??parent.weight??1,points:a.points??parent.points??1000,wrongPenalty:a.wrongPenalty??parent.wrongPenalty??0,speed:a.speed??parent.speed??true,section:a.section||parent.section||parent.prompt,betEnabled:a.betEnabled??parent.betEnabled??false,participation:a.participation??parent.participation??'all',stageTheme:a.stageTheme??parent.stageTheme??'orbital',progression:a.progression||parent.progression||'manual'}:{...a};
-  if(a.questions){for(const q of a.questions)visit(q,merged);}else flat.push({...merged,mainType:root.type,group,step:step++,revealDelay:root.type==='Ultimate Game Show'?2000:0});
+  if(a.questions&&!(a.type==='Ultimate Game Show'&&a.showFormat==='championship')){for(const q of a.questions)visit(q,merged);}else flat.push({...merged,mainType:root.type,group,step:step++,revealDelay:root.type==='Ultimate Game Show'?2000:0});
  }visit(root);});return flat;
 }
 export function publicActivity(a,{closed=false,reveal=null,host=false}={}){
