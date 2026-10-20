@@ -390,7 +390,7 @@ async function workspace(db, url, method, b, owner, ctx) {
   if (path === "/api/branding") {
     if (method === "GET") {
       const row = await db.prepare("SELECT payload FROM settings WHERE id='branding'").first();
-      return row ? JSON.parse(row.payload) : { mts: "/mts-transparent.png", training: "/training-transparent.png", primary: "#218e5b", blue: "#176aa4", navy: "#0c2545" };
+      return { ...row ? JSON.parse(row.payload) : { mts: "/mts-transparent.png", training: "/training-transparent.png", primary: "#218e5b", blue: "#176aa4", navy: "#0c2545" }, showRulesVersion: 1 };
     }
     if (!admin) fail("ADMIN_ONLY", 403);
     for (const key of ["mts", "training"]) if (typeof b[key] !== "string" || !/^https:\/\/|^\/[^/]/.test(b[key])) fail("MEDIA");
