@@ -221,7 +221,7 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
  return <div className="arena-simulator-overlay" role="dialog" aria-modal="true" aria-label={t('محاكي التدريب','Training simulator')} dir={ar?'rtl':'ltr'}>
   {cinematicPreview&&<StageSplash key={index+'-'+runId+'-cinema'} preview
     type={mainType(a)} label={activityLabel(a,ar)} ar={ar}
-    durationMs={4900} onComplete={()=>setCinematicPreview(false)}/>}
+    durationMs={9500} onComplete={()=>setCinematicPreview(false)}/>}
   <div className="arena-simulator-shell arena-simulator-shell--stage-first">
    <header className="arena-simulator-header">
     <div><span className="eyebrow"><Gamepad2 size={17}/> ARENA PRACTICE MODE</span>
