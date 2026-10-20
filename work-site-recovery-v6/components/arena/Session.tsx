@@ -209,7 +209,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(lastPreview.current===scene.key)return;
   lastPreview.current=scene.key;
   setPreviewIntro(scene);
-  audio.current?.play('intro',{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
+  audio.current?.playGameIntro(mainType(s.queue[scene.index]),{quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
  },[s?.runtime?.highlight,s?.status,s?.current,s?.code,display,intensity,s?.runtime?.intensity]);
  useEffect(()=>{
   if(!sound||quiet||s?.runtime?.quiet||s?.status!=='question'||s?.paused||!s?.deadline||seconds>5||seconds<1)return;
