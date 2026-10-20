@@ -69,7 +69,7 @@ export function FlashcardExperience({a,ar,actor,host,usable,closed,busy,g,s,card
  const fronts:Array<string>=Array.isArray(a.fronts)?a.fronts:[];
  const count=fronts.length;
  const hostOnly=a.flipPermission==='host';
- const index=actor&&!hostOnly?Math.min(Math.max(0,g.card||0),Math.max(0,count-1)):Math.min(Math.max(0,hostOnly?(s.reveal??0):card),Math.max(0,count-1));
+ const index=Math.min(Math.max(0,host?card:hostOnly?(s.reveal??0):actor?(g.card||0):card),Math.max(0,count-1));
  const revealed=hostOnly?s.reveal===index:actor?!!g.flipped:s.reveal===index;
  const reviewed=Array.isArray(g.reviewed)?g.reviewed:[];
  const uniqueReviewed=new Map<number,boolean>();
