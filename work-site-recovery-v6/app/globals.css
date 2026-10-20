@@ -5045,3 +5045,70 @@ html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}
  .session-shell.projector .round-stage{padding:3px 7px!important;gap:3px!important}
  .session-shell.projector .championship-stage__question h3{font-size:clamp(17px,1.9vw,26px)!important}
 }
+
+
+/* Wheel V6: direct-touch 3D tilted wheel with distinct metal rim and depth.
+   The timer is controlled by server startsAt; UI can't pre-spin.
+   Pointer lives OUTSIDE rotating wheel; the disc is the only spin control. */
+.wheel-wrap--3d{
+ perspective:1100px!important;transform-style:preserve-3d!important;
+ isolation:isolate!important;filter:drop-shadow(0 26px 22px #020916cc)}
+.wheel-wrap--3d .wheel-tap-surface{
+ position:absolute!important;inset:0!important;z-index:3!important;
+ width:100%!important;height:100%!important;border:none!important;padding:0!important;
+ margin:0!important;border-radius:50%!important;background:none!important;
+ cursor:pointer!important;display:grid!important;place-items:center!important;
+ transform:rotateX(14deg)!important;transform-style:preserve-3d!important;
+ box-shadow:0 12px 0 #ad8550,0 16px 0 #56452e,0 20px 19px #0009,
+ 0 0 0 8px #f3d99b,0 0 0 12px #725630!important;
+ transition:filter .17s,box-shadow .17s!important}
+.wheel-wrap--3d .wheel-tap-surface:not(:disabled):hover{
+ filter:brightness(1.18)!important;box-shadow:0 12px 0 #ad8550,
+ 0 16px 0 #56452e,0 20px 19px #0009,0 0 0 8px #fff2c2,
+ 0 0 0 14px #9b7042,0 0 47px #ffe29177!important}
+.wheel-wrap--3d .wheel-tap-surface:focus-visible{
+ outline:5px solid #fff!important;outline-offset:17px!important}
+.wheel-wrap--3d .wheel-tap-surface:disabled{cursor:default!important}
+.wheel-wrap--3d .wheel.cinematic-wheel{
+ width:100%!important;height:100%!important;inset:0!important;
+ border:12px solid #f8d99a!important;
+ outline:2px solid #fff4bb!important;
+ box-shadow:inset 0 0 25px #0007,inset 0 0 0 5px #bb8e39,
+ 0 0 28px #f9d77e6b!important;
+ backface-visibility:visible!important;
+ transform-style:preserve-3d!important;overflow:hidden!important}
+.wheel-wrap--3d .wheel.cinematic-wheel:before{
+ content:'';position:absolute;inset:0;border-radius:50%;
+ background:conic-gradient(from 30deg,#ffffff3e,transparent 35%,#ffffff25 53%,transparent 75%);
+ pointer-events:none;z-index:1}
+.wheel-wrap--3d .wheel.cinematic-wheel .wheel-center{
+ z-index:2!important;background:radial-gradient(circle at 35% 25%,#fff3cd,#c18d33 70%,#544027)!important;
+ color:#1e3550!important;border:4px solid #fff2c6!important;
+ box-shadow:inset 0 0 11px #5e471e,0 4px 10px #0008!important}
+.wheel-wrap--3d .wheel-pointer{z-index:8!important;filter:drop-shadow(0 5px 4px #020916)!important}
+.wheel-wrap--3d .spin-countdown{z-index:9!important;pointer-events:none!important;
+ background:#081b3dea!important;box-shadow:0 0 35px #77ebf5aa!important}
+.wheel-wrap--3d .wheel-tap-hint{position:absolute;z-index:10;
+ pointer-events:none;bottom:-43px;left:0;right:0;
+ color:#f9ecba;text-align:center;font-size:clamp(10px,1.15vw,14px);
+ letter-spacing:.09em;font-weight:900;text-shadow:0 0 20px #ead19894;
+ animation:arena-intro-beat 1s both}
+.wheel-wrap--3d .wheel.in-spin{animation:wheel-wait-spin var(--spin-duration) cubic-bezier(.14,.68,.1,1) var(--spin-delay) both!important}
+.wheel-wrap--3d .wheel.finished-spin{animation:none!important;
+ transform:rotate(var(--wheel-stop))!important;
+ transition:none!important}
+@media(prefers-reduced-motion:reduce){
+ .wheel-wrap--3d .wheel.in-spin{animation:none!important}
+ .wheel-wrap--3d .wheel-tap-hint{animation:none!important}
+}
+
+/* Championship final confirmation is inside the app, never a browser-origin dialog. */
+.championship-answer-confirm{margin:12px 0;padding:12px;
+ border:2px solid #f4d38b;border-radius:13px;
+ background:linear-gradient(120deg,#392c36,#102a45);color:#fff;
+ box-shadow:0 10px 30px #0007}
+.championship-answer-confirm p{font-size:clamp(14px,1.7vw,20px);
+ font-weight:750;line-height:1.5;margin:0 0 12px}
+.championship-answer-confirm p strong{color:#ffdc93}
+.championship-answer-confirm>div{display:flex;gap:10px;flex-wrap:wrap}
+.championship-answer-confirm button{flex:1 1 125px;min-height:46px}
