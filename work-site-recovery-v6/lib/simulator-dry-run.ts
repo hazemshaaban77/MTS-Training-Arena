@@ -18,6 +18,12 @@ export type SimulatedRoom={
  * For server-owned special games, it explicitly refuses to invent a score.
  */
 function supported(a:Activity){
+ // Betting, targeting, wheel spins and story choices use server-owned transitions
+ // and rewards beyond generic grade(); never claim simulated server parity there.
+ if(['Ultimate Game Show','Escape Room','Wheel of Fortune','Open the Box','Scenario Challenge'].includes(a.mainType||a.type)||
+    a.betEnabled||a.participation&&a.participation!=='all')return false;
+ if(a.type==='Live Poll')return ['rating','word'].includes(a.pollKind)||
+  Array.isArray(a.options)&&a.options.length>0;
  return !!(a.options?.length||a.order?.length||a.pairs?.length||
   a.assignments?.length||a.type==='Fill Blank'||a.type==='Image Hotspot');
 }
