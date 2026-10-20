@@ -68,22 +68,23 @@ export function FlashcardExperience({a,ar,actor,host,usable,closed,busy,g,s,card
  const t=(arText:string,enText:string)=>ar?arText:enText;
  const fronts:Array<string>=Array.isArray(a.fronts)?a.fronts:[];
  const count=fronts.length;
- const index=actor?Math.min(Math.max(0,g.card||0),Math.max(0,count-1)):Math.min(Math.max(0,card),Math.max(0,count-1));
- const revealed=actor?!!g.flipped:s.reveal===index;
+ const hostOnly=a.flipPermission==='host';
+ const index=actor&&!hostOnly?Math.min(Math.max(0,g.card||0),Math.max(0,count-1)):Math.min(Math.max(0,hostOnly?(s.reveal??0):card),Math.max(0,count-1));
+ const revealed=hostOnly?s.reveal===index:actor?!!g.flipped:s.reveal===index;
  const reviewed=Array.isArray(g.reviewed)?g.reviewed:[];
  const uniqueReviewed=new Map<number,boolean>();
  for(const r of reviewed){if(Number.isInteger(r?.index)&&r.index>=0&&r.index<count)uniqueReviewed.set(r.index,!!r.known);}
  const mastered=[...uniqueReviewed.values()].filter(Boolean).length;
  const progress=count?(actor?uniqueReviewed.size:index+1)/count*100:0;
- const back=actor?g.back:a.revealed?.back;
- const canFlip=!busy&&!closed&&(actor?usable:host&&!revealed);
+ const back=hostOnly?a.revealed?.back:actor?g.back:a.revealed?.back;
+ const canFlip=!busy&&!closed&&(actor?usable&&!hostOnly:host&&!revealed);
  const flip=()=>{
   if(!canFlip)return;
   if(actor)send(revealed?'card':'flip',{index});
   else onControl('reveal',index);
  };
  const move=(next:number)=>{
-  if(next<0||next>=count||busy||(!host&&!actor))return;
+  if(next<0||next>=count||busy||(!host&&!actor)||actor&&hostOnly)return;
   if(actor)send('card',{index:next});else setCard(next);
  };
  return <section className="flash-stage flash-stage--academy"
@@ -97,6 +98,9 @@ export function FlashcardExperience({a,ar,actor,host,usable,closed,busy,g,s,card
    aria-label={t('تقدم مراجعة البطاقات','Flashcard review progress')}>
    <span style={{width:Math.max(0,Math.min(100,progress))+'%'}}/>
   </div>
+  {hostOnly&&actor&&<p className="flashcard-trainer-only" role="status">
+    {t('المدرب هو اللي بيقلب الكروت. تابع شاشة العرض عشان تشوف الإجابة.',
+      'Trainer controls the reveal. Follow the presentation to see the answer.')}</p>}
   <div className="flash-academy-deck">
    <span className="flash-academy-stack flash-academy-stack--back" aria-hidden="true"/>
    <span className="flash-academy-stack flash-academy-stack--middle" aria-hidden="true"/>
@@ -118,11 +122,11 @@ export function FlashcardExperience({a,ar,actor,host,usable,closed,busy,g,s,card
    </button>
   </div>
   <nav className="flash-academy-controls" aria-label={t('أدوات التنقل بين البطاقات','Card navigation')}>
-   <button className="btn secondary" disabled={index===0||busy||(!host&&!actor)}
+   <button className="btn secondary" disabled={index===0||busy||(!host&&!actor)||actor&&hostOnly}
     onClick={()=>move(index-1)}><ChevronRight size={18}/>{t('السابقة','Previous')}</button>
    <button className="btn primary" disabled={!canFlip||count===0}
     onClick={flip}><RotateCcw size={18}/>{revealed?t('ارجع للسؤال','Show question'):t('اكشف الإجابة','Reveal answer')}</button>
-   <button className="btn secondary" disabled={index===count-1||busy||(!host&&!actor)}
+   <button className="btn secondary" disabled={index===count-1||busy||(!host&&!actor)||actor&&hostOnly}
     onClick={()=>move(index+1)}>{t('التالية','Next')}<ChevronLeft size={18}/></button>
   </nav>
   {actor&&revealed&&<div className="flash-academy-selfassess" role="group"
