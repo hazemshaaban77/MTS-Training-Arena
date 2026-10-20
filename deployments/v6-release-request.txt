@@ -164,3 +164,12 @@ Game cinematics:
 
 Release ONLY same existing GitHub Pages /v6/ using repository's full guarded Pages release workflow, which repeats Worker branding version 2, gateway CORS, tests, TypeScript, build and preserves old /arena/.
 No updates to Cloudflare Worker/D1/Firebase, participant identity/QR/recovery, live game data, original branding/logos, active sessions, branch main or legacy /arena/. Physical logged-in Trainer authoring and Cloudinary real file upload and projector audio UAT are pending manual verification and MUST NOT be labeled successful.
+
+
+2026-10-20 V6 CINEMATIC FOUR-PHASE RELEASE REQUEST
+Four-phase delivery from validated develop/v6-github-arena frontend sources.
+Phase 1: Ten distinct cinematic intros with custom narrative visual beats, thematic stage motifs, 9-12s optional pre-round projection, skip action. Current in-question intros never cover an active server-timed answer window.
+Phase 2: Opt-in browser-unlocked Web Audio sound engine, separate music/effects/volume controls, distinct signatures for the ten games, lock/correct/wrong/countdown/reveal/leader/victory/wheel and level sound cues. Safe muted default and quiet/reduced-motion fallbacks. No autoplay or external unlicensed files.
+Phase 3: Distinct winner/leader/reveal/level ArenaMoment overlays, animated round visuals, game-themed visuals and explicit trainer Director "Play next game intro" control on lobby/results using safe existing highlight API without backend state writes or altered scoring.
+Phase 4: Responsive phone/projector layout, CSS respects prefers-reduced-motion, intro skip, animation intensity light/off, existing full CI typecheck render/business rules/auth tests and production Worker compatibility must pass before deploying. Latest CI success: https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/39437356600.
+Release only existing /v6/ GitHub Pages frontend, not main, original /arena/, Cloudflare Worker, D1/Firebase or any stored sessions. Keep original brand assets, single QR, player registration, trainer auth, Game Show score invariants. Do not claim authenticated physical-device audio/projector acceptance; Cloudflare browser smoke was throttled and must remain an explicitly pending manual check. Trigger standard guarded V6 Pages workflow, never direct worker deployment or merge.
