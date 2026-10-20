@@ -45,7 +45,7 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
      <h3>{t('مين المتسابق الجاي؟','Who takes the hot seat?')}</h3>
      <p>{t('كل متسابق جديد يبدأ من السؤال الأول ومساعداته بتتجدد. اللي خرج ما بيرجعش لنفس المسابقة.',
       'Each new contestant starts at question one with fresh lifelines. Completed attempts cannot re-enter.')}</p>
-     {host&&<><label>{t('اختار متسابق معتمد','Pick an approved contestant')}
+     {host&&s.status==='question'&&<><label>{t('اختار متسابق معتمد','Pick an approved contestant')}
       <select value={candidate} onChange={e=>setCandidate(e.target.value)}>
        <option value="">{t('اختار المتسابق','Select contestant')}</option>
        {available.map((p:any)=><option key={p.uid} value={p.uid}>{p.name}</option>)}
@@ -62,13 +62,13 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
       <span>{show.lastCompleted.earned.toLocaleString()} {t('نقطة','points')} · {
        show.lastCompleted.status==='eliminated'?t('خرج بعد إجابة خطأ','Eliminated'):
        show.lastCompleted.status==='withdrawn'?t('انسحب بالجائزة','Walked away'):t('انتهى الوقت','Timed out')}</span></div>}
-     {host&&<button className="btn secondary" disabled={busy} onClick={()=>onControl('showfinish')}>
+     {host&&s.status==='question'&&<button className="btn secondary" disabled={busy} onClick={()=>onControl('showfinish')}>
       <Trophy size={16}/>{t('إنهاء البرنامج وإعلان الترتيب','Finish show & reveal standings')}</button>}
     </div>:show.phase==='completed'?<div className="championship-stage__winner">
      <Trophy size={56}/><h3>{t('عندنا بطل!','We have a champion!')}</h3>
      <strong>{(s.players||[]).find((p:any)=>p.uid===show.winner)?.name||t('المتسابق الفائز','Winning contestant')}</strong>
      <p>{show.lastCompleted?.earned?.toLocaleString()||0} {t('نقطة','points')}</p>
-     {host&&<button className="btn primary" disabled={busy} onClick={()=>onControl('showfinish')}>
+     {host&&s.status==='question'&&<button className="btn primary" disabled={busy} onClick={()=>onControl('showfinish')}>
       {t('اعرض النتيجة النهائية','Reveal final standings')}</button>}
     </div>:<>
      <div className="championship-stage__contestant"><Mic2 size={18}/>
