@@ -69,7 +69,7 @@ export function analyzeReportActivities(report:any):ReportInsight[]{
    result.ranking=options.map((name:string,i:number)=>({
     label:String(name),
     points:complete.reduce((n:number,order:number[])=>n+options.length-order.indexOf(i),0)
-   })).sort((x,y)=>y.points-x.points);
+   })).sort((x:{label:string;points:number},y:{label:string;points:number})=>y.points-x.points);
    if(!complete.length)result.ranking=[];
   }else if(mode==='word'){
    const counts=new Map<string,number>();
