@@ -149,7 +149,8 @@ test('cinematic WebP art appears in every activity intro, trainer and bilingual 
   assert.ok(tile.includes(expected),type);
  }
  const session=readFileSync('components/arena/Session.tsx','utf8');
- assert.ok(session.includes('durationMs={display?2300:host?1450:1100}'), 'Timed questions never sit behind longer blocking overlays');
+ assert.ok(session.includes('durationMs={s.deadline?display?2300:host?1450:1100:'), 'Timed rounds retain the short/safe intro while untimed shows may last longer');
+ assert.ok(session.includes("durationMs={intensity==='light'?8500:12000}"), 'Pre-round projector intro is readable for up to 12 seconds without starting the timer');
  assert.ok(session.includes('introHighlight(s.current+1'), 'Host can trigger a longer pre-round projection safely');
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('Approved cinematic 3D art'));
