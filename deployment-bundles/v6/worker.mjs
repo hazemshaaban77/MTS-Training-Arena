@@ -96,6 +96,16 @@ function validateActivity2(a, depth = 0) {
     ok(a.media && typeof a.media === "object" && ["image", "video"].includes(a.media.type) && str2(a.media.url, 2048) && /^https:\/\/[^\s]+$/i.test(a.media.url) && (!a.media.alt || typeof a.media.alt === "string" && a.media.alt.length <= 200));
   }
   const type = a.type;
+  if (type === "Ultimate Game Show" && a.showFormat === "championship") {
+    if (!Array.isArray(a.questions) || a.questions.length < 2 || a.questions.length > 20) throw Error("DECK");
+    for (const q of a.questions) validateActivity2(q, depth + 1);
+    ok(a.questions.every((q) => q.type === "Quiz" && Number.isInteger(q.timer) && q.timer >= 5 && q.timer <= 300 && Array.isArray(q.options) && q.options.length === 4));
+    const amounts = a.questions.map((q) => q.points);
+    ok(amounts.every((p, i) => Number.isInteger(p) && p > 0 && p <= 1e4 && (i === 0 || p > amounts[i - 1])));
+    ok(Array.isArray(a.safeLevels) && a.safeLevels.length <= 3 && new Set(a.safeLevels).size === a.safeLevels.length && a.safeLevels.every((x) => Number.isInteger(x) && x >= 1 && x <= a.questions.length));
+    ok(a.participation === "individual" && a.betEnabled !== true);
+    return a;
+  }
   if (["Quiz", "Ultimate Game Show"].includes(type) && a.questions) {
     ok(Array.isArray(a.questions) && a.questions.length && a.questions.length <= 500);
     a.questions.forEach((q) => validateActivity2({ ...q, timer: q.timer ?? a.timer }, depth + 1));
@@ -196,7 +206,7 @@ function flattenDeck(activities) {
     let step = 0;
     function visit(a, parent = null) {
       const merged = parent ? { ...a, timer: a.timer ?? parent.timer, weight: a.weight ?? parent.weight ?? 1, points: a.points ?? parent.points ?? 1e3, wrongPenalty: a.wrongPenalty ?? parent.wrongPenalty ?? 0, speed: a.speed ?? parent.speed ?? true, section: a.section || parent.section || parent.prompt, betEnabled: a.betEnabled ?? parent.betEnabled ?? false, participation: a.participation ?? parent.participation ?? "all", stageTheme: a.stageTheme ?? parent.stageTheme ?? "orbital", progression: a.progression || parent.progression || "manual" } : { ...a };
-      if (a.questions) {
+      if (a.questions && !(a.type === "Ultimate Game Show" && a.showFormat === "championship")) {
         for (const q of a.questions) visit(q, merged);
       } else flat.push({ ...merged, mainType: root.type, group, step: step++, revealDelay: root.type === "Ultimate Game Show" ? 2e3 : 0 });
     }
@@ -280,6 +290,18 @@ function nextState(s, action, now, index) {
     const current = s.current + 1;
     if (current >= deck.length) throw Error("STATE");
     const a = deck[current];
+    if (a.type === "Ultimate Game Show" && a.showFormat === "championship")
+      return {
+        ...n,
+        current,
+        status: "question",
+        started_at: now,
+        deadline: null,
+        paused: 0,
+        remaining: 0,
+        reveal: null,
+        runtime: JSON.stringify({ ...JSON.parse(s.runtime || "{}"), show: { phase: "casting", current: null, attempts: [], usedContestants: [], audienceVotes: {}, lastCompleted: null }, phase: "casting", targets: [], spin: void 0, box: void 0 })
+      };
     return { ...n, current, status: "question", started_at: now, deadline: a.participation && a.participation !== "all" || a.betEnabled ? null : a.timer ? now + a.timer * 1e3 : null, paused: 0, remaining: 0, reveal: null, runtime: JSON.stringify({ ...JSON.parse(s.runtime || "{}"), spin: void 0, box: void 0, metaCount: void 0, addedTime: 0, keyRevealed: false, targets: [], phase: a.participation && a.participation !== "all" ? "casting" : a.betEnabled ? "betting" : "answering", used: [], turn: 0, target: null }) };
   }
   if (action === "close") {
@@ -390,7 +412,7 @@ async function workspace(db, url, method, b, owner, ctx) {
   if (path === "/api/branding") {
     if (method === "GET") {
       const row = await db.prepare("SELECT payload FROM settings WHERE id='branding'").first();
-      return { ...row ? JSON.parse(row.payload) : { mts: "/mts-transparent.png", training: "/training-transparent.png", primary: "#218e5b", blue: "#176aa4", navy: "#0c2545" }, showRulesVersion: 1 };
+      return { ...row ? JSON.parse(row.payload) : { mts: "/mts-transparent.png", training: "/training-transparent.png", primary: "#218e5b", blue: "#176aa4", navy: "#0c2545" }, showRulesVersion: 2 };
     }
     if (!admin) fail("ADMIN_ONLY", 403);
     for (const key of ["mts", "training"]) if (typeof b[key] !== "string" || !/^https:\/\/|^\/[^/]/.test(b[key])) fail("MEDIA");
@@ -776,6 +798,196 @@ async function gameSnapshot(db, s, a, rt, p, host, now) {
   return { game };
 }
 
+// lib/championship.mjs
+var isChampionship = (a) => a?.type === "Ultimate Game Show" && a.showFormat === "championship";
+function validateChampionship(a) {
+  if (!isChampionship(a) || !Array.isArray(a.questions) || a.questions.length < 2 || a.questions.length > 20) throw Error("DECK");
+  const prizes = a.questions.map((q) => q.points);
+  if (prizes.some((x, i) => !Number.isInteger(x) || x <= 0 || x > 1e4 || i > 0 && x <= prizes[i - 1])) throw Error("DECK");
+  const safe = a.safeLevels || [];
+  if (!Array.isArray(safe) || safe.length > 3 || safe.some((x) => !Number.isInteger(x) || x < 1 || x > a.questions.length) || new Set(safe).size !== safe.length) throw Error("DECK");
+  return a;
+}
+function showStart() {
+  return { phase: "casting", current: null, attempts: [], usedContestants: [], audienceVotes: {}, lastCompleted: null };
+}
+function safePayout(a, cleared) {
+  const level = (a.safeLevels || []).filter((x) => x <= cleared).sort((x, y) => y - x)[0];
+  return level ? a.questions[level - 1].points : 0;
+}
+function activeQuestion(a, show) {
+  return show.current && a.questions[show.current.level] || null;
+}
+function showCommand(a, show, action, extra, now, deadline) {
+  validateChampionship(a);
+  const current = show.current, attempts = show.attempts || [], used = show.usedContestants || [];
+  if (action === "cast") {
+    const id = extra.player;
+    if (show.phase !== "casting" || !id || typeof id !== "string" || used.includes(id)) throw Error("SHOW_CAST");
+    const attempt = { id: extra.attemptId, player: id, level: 0, cleared: 0, usedLifelines: [], history: [], status: "playing", earned: 0 };
+    if (!attempt.id) throw Error("STATE");
+    return { show: { ...show, phase: "answering", current: attempt, audienceVotes: {}, usedContestants: [...used, id], lastCompleted: show.lastCompleted }, deadline: now + a.questions[0].timer * 1e3 };
+  }
+  if (!current || show.phase !== "answering") throw Error("SHOW_STATE");
+  if (action === "lifeline") {
+    const kind = extra.kind;
+    if (!["fifty", "audience", "time"].includes(kind) || current.usedLifelines.includes(kind)) throw Error("SHOW_LIFELINE");
+    if (kind === "time" && (!deadline || deadline <= now)) throw Error("SHOW_TIMEOUT");
+    const usedLifelines = [...current.usedLifelines, kind];
+    const update = { ...current, usedLifelines };
+    return {
+      show: { ...show, current: update, audienceVotes: kind === "audience" ? {} : show.audienceVotes },
+      deadline: kind === "time" ? deadline + 3e4 : deadline
+    };
+  }
+  if (action === "audience") {
+    if (!current.usedLifelines.includes("audience") || extra.player === current.player || show.audienceVotes?.[extra.player] !== void 0 || !Number.isInteger(extra.choice) || extra.choice < 0 || extra.choice >= a.questions[current.level].options.length) throw Error("SHOW_AUDIENCE");
+    return { show: { ...show, audienceVotes: { ...show.audienceVotes, [extra.player]: extra.choice } }, deadline };
+  }
+  const question = a.questions[current.level];
+  if (action === "answer") {
+    if (extra.player !== current.player || !Number.isInteger(extra.answer) || extra.answer < 0 || extra.answer >= question.options.length) throw Error("SHOW_ANSWER");
+    if (!deadline || deadline <= now) throw Error("SHOW_TIMEOUT");
+    const correct = extra.answer === question.correct;
+    const history = [...current.history, { level: current.level, choice: extra.answer, correct }];
+    if (correct && current.level + 1 < a.questions.length) {
+      const advanced = { ...current, history, level: current.level + 1, cleared: current.level + 1 };
+      return { show: { ...show, current: advanced, audienceVotes: {} }, deadline: now + a.questions[advanced.level].timer * 1e3 };
+    }
+    const cleared = current.cleared + Number(correct), amount = correct ? question.points : safePayout(a, cleared);
+    const status = correct ? "champion" : "eliminated";
+    return settle(show, current, { ...current, history, cleared, status, earned: amount }, now);
+  }
+  if (action === "withdraw") {
+    if (extra.player !== current.player || current.cleared < 1) throw Error("SHOW_WITHDRAW");
+    const amount = a.questions[current.cleared - 1].points;
+    return settle(show, current, { ...current, status: "withdrawn", earned: amount }, now);
+  }
+  if (action === "timeout") {
+    if (!deadline || deadline > now) throw Error("SHOW_TIMEOUT");
+    return settle(show, current, { ...current, status: "timed-out", earned: safePayout(a, current.cleared) }, now);
+  }
+  throw Error("SHOW_ACTION");
+}
+function settle(show, prior, result, now) {
+  const finished = { ...result, finishedAt: now };
+  return {
+    show: {
+      ...show,
+      phase: finished.status === "champion" ? "completed" : "casting",
+      current: null,
+      lastCompleted: finished,
+      attempts: [...show.attempts, finished],
+      audienceVotes: {}
+    },
+    deadline: null,
+    payout: {
+      id: finished.id,
+      player: finished.player,
+      points: finished.earned,
+      kind: "show-championship",
+      detail: { status: finished.status, cleared: finished.cleared, attempt: finished.id }
+    }
+  };
+}
+function showPublic(a, show, viewer, host = false) {
+  const q = activeQuestion(a, show), current = show.current;
+  const audienceCount = q ? Array.from({ length: q.options.length }, (_, i) => Object.values(show.audienceVotes || {}).filter((x) => x === i).length) : [];
+  const mine = !!current && viewer === current.player;
+  const eliminated = current?.usedLifelines.includes("fifty") ? q.options.map((_, i) => i).filter((i) => i !== q.correct).slice(0, 2) : [];
+  return {
+    phase: show.phase,
+    level: current?.level ?? 0,
+    total: a.questions.length,
+    ladder: a.questions.map((x) => x.points),
+    safeLevels: a.safeLevels || [],
+    contestant: current?.player || null,
+    usedContestants: show.usedContestants || [],
+    attempts: (show.attempts || []).map((x) => ({
+      id: x.id,
+      player: x.player,
+      cleared: x.cleared,
+      status: x.status,
+      earned: x.earned
+    })),
+    lastCompleted: show.lastCompleted ? {
+      player: show.lastCompleted.player,
+      cleared: show.lastCompleted.cleared,
+      status: show.lastCompleted.status,
+      earned: show.lastCompleted.earned
+    } : null,
+    question: q ? { type: q.type, prompt: q.prompt, options: q.options, timer: q.timer } : null,
+    lifelines: mine ? current.usedLifelines : [],
+    eliminatedChoices: mine ? eliminated : [],
+    audienceOpen: !!current?.usedLifelines.includes("audience"),
+    audienceVotes: audienceCount,
+    voted: viewer ? show.audienceVotes?.[viewer] !== void 0 : false,
+    canAnswer: mine,
+    canWithdraw: mine && current.cleared > 0,
+    winner: show.phase === "completed" ? show.lastCompleted?.player : null,
+    audienceCount: audienceCount.reduce((x, y) => x + y, 0)
+  };
+}
+
+// lib/championship-service.ts
+async function mutateChampionship(db, s, activity, rt, body, now, player, host) {
+  if (!isChampionship(activity) || s.status !== "question" || s.paused) fail2("SHOW_STATE", 409);
+  const action = body.action;
+  if (action === "showcast") {
+    if (!host) fail2("FORBIDDEN", 403);
+    const candidate = await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved' AND eligible_from<=?").bind(s.code, body.player, s.current).first();
+    if (!candidate) fail2("SHOW_CAST", 409);
+  } else if (action === "showanswer" || action === "showwithdraw" || action === "showlifeline") {
+    if (!player || player.id !== rt.show?.current?.player) fail2("SHOW_CONTESTANT", 403);
+  } else if (action === "showaudience") {
+    if (!player || player.approval !== "approved" || player.eligible_from > s.current) fail2("PLAYER", 403);
+  } else fail2("SHOW_ACTION", 409);
+  const mapped = { showcast: "cast", showanswer: "answer", showwithdraw: "withdraw", showlifeline: "lifeline", showaudience: "audience" };
+  const extra = { ...body, player: action === "showcast" ? body.player : player?.id, attemptId: action === "showcast" ? crypto.randomUUID() : void 0 };
+  let result;
+  try {
+    result = showCommand(activity, rt.show || showStart(), mapped[action], extra, now, s.deadline);
+  } catch (e) {
+    fail2(e.message?.startsWith("SHOW_") ? e.message : "SHOW_STATE", 409);
+  }
+  const runtime = JSON.stringify({
+    ...rt,
+    show: result.show,
+    phase: result.show.phase,
+    targets: result.show.current ? [result.show.current.player] : []
+  });
+  const updated = db.prepare("UPDATE sessions SET runtime=?,deadline=?,revision=revision+1 WHERE code=? AND revision=? AND current=? AND status='question' AND paused=0").bind(runtime, result.deadline ?? null, s.code, s.revision, s.current);
+  const statements = [updated];
+  if (result.payout) {
+    const event = result.payout;
+    statements.push(db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND current=? AND revision=? AND json_extract(runtime,'$.show.lastCompleted.id')=?)").bind(s.code, "championship:" + s.current + ":" + event.id, event.player, s.current, event.kind, event.points, JSON.stringify(event.detail), now, s.code, s.current, s.revision + 1, event.id));
+  }
+  try {
+    const batch2 = await db.batch(statements);
+    if (!batch2[0]?.meta.changes) fail2("STALE", 409);
+    if (result.payout && !batch2[1]?.meta.changes) fail2("STALE", 409);
+  } catch (e) {
+    if (e?.code) throw e;
+    fail2("STALE", 409);
+  }
+  return { ok: true };
+}
+async function settleChampionshipTimeout(db, s, activity, rt, now) {
+  if (!isChampionship(activity) || s.status !== "question" || s.paused || !s.deadline || s.deadline > now || rt.show?.phase !== "answering") return false;
+  const result = showCommand(activity, rt.show, "timeout", {}, now, s.deadline), event = result.payout;
+  const runtime = JSON.stringify({ ...rt, show: result.show, phase: result.show.phase, targets: [] });
+  const statements = [
+    db.prepare("UPDATE sessions SET runtime=?,deadline=NULL,revision=revision+1 WHERE code=? AND revision=? AND current=? AND status='question' AND paused=0 AND deadline<=?").bind(runtime, s.code, s.revision, s.current, now),
+    db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND current=? AND revision=? AND json_extract(runtime,'$.show.lastCompleted.id')=?)").bind(s.code, "championship:" + s.current + ":" + event.id, event.player, s.current, event.kind, event.points, JSON.stringify(event.detail), now, s.code, s.current, s.revision + 1, event.id)
+  ];
+  try {
+    const result2 = await db.batch(statements);
+    return !!result2[0]?.meta.changes;
+  } catch {
+    return false;
+  }
+}
+
 // lib/service.ts
 var ApiError = class extends Error {
   constructor(code, status = 400) {
@@ -841,7 +1053,12 @@ async function service(db, req, owner, ctx = {}) {
   };
   const settings = JSON.parse(s.settings || "{}"), deck = JSON.parse(s.activities), active = () => deck[s.current];
   let rt = JSON.parse(s.runtime || "{}");
-  if (s.status === "question" && !s.paused && s.deadline && s.deadline <= now && rt.phase !== "betting") {
+  if (isChampionship(active()) && s.status === "question" && s.deadline && s.deadline <= now) {
+    await settleChampionshipTimeout(db, s, active(), rt, now);
+    s = await db.prepare("SELECT * FROM sessions WHERE code=?").bind(code).first();
+    rt = JSON.parse(s.runtime || "{}");
+  }
+  if (s.status === "question" && !s.paused && s.deadline && s.deadline <= now && rt.phase !== "betting" && !isChampionship(active())) {
     await db.prepare("UPDATE sessions SET status='results',paused=0,revision=revision+1 WHERE code=? AND revision=? AND status='question' AND paused=0 AND deadline<=?").bind(code, s.revision, now).run();
     s = await db.prepare("SELECT * FROM sessions WHERE code=?").bind(code).first();
   }
@@ -850,7 +1067,7 @@ async function service(db, req, owner, ctx = {}) {
     s = await db.prepare("SELECT * FROM sessions WHERE code=?").bind(code).first();
     rt = JSON.parse(s.runtime || "{}");
   }
-  if (s.status === "results" && active()?.showFormat !== "ladder" && settings.progression === "auto" && (settings.reveal !== "manual" || rt.keyRevealed) && active()?.type !== "Meta Plan" && active()?.type !== "Categorize" && s.current + 1 < deck.length && now - (s.deadline || now) > 6e3) {
+  if (s.status === "results" && !["ladder", "championship"].includes(active()?.showFormat) && settings.progression === "auto" && (settings.reveal !== "manual" || rt.keyRevealed) && active()?.type !== "Meta Plan" && active()?.type !== "Categorize" && s.current + 1 < deck.length && now - (s.deadline || now) > 6e3) {
     const n = nextState(s, "next", now);
     await writeSession(db, s, n);
     s = await db.prepare("SELECT * FROM sessions WHERE code=?").bind(code).first();
@@ -902,6 +1119,18 @@ async function service(db, req, owner, ctx = {}) {
   if (url.pathname === "/api/control" && method === "POST") {
     requireHost();
     if (b.revision !== s.revision) fail2("STALE", 409);
+    if (["showcast", "showfinish"].includes(b.action) && isChampionship(active())) {
+      if (b.action === "showfinish") {
+        if (s.status !== "question" || rt.show?.phase === "answering") fail2("SHOW_STATE", 409);
+        const n2 = nextState(s, "close", now);
+        n2.deadline = null;
+        const written = await writeSession(db, s, { ...n2, runtime: JSON.stringify(rt) });
+        if (!written.meta.changes) fail2("STALE", 409);
+        await audit(db, owner, code, "show-finished", { attempts: rt.show?.attempts?.length || 0 });
+        return { ok: true };
+      }
+      return mutateChampionship(db, s, active(), rt, b, now, null, true);
+    }
     if (["approve", "reject"].includes(b.action)) {
       const r2 = await db.prepare("UPDATE players SET approval=?,eligible_from=? WHERE session=? AND id=? AND approval='pending'").bind(b.action === "approve" ? "approved" : "rejected", s.current + 1, code, b.player).run();
       if (!r2.meta.changes) fail2("STATE", 409);
@@ -1039,6 +1268,10 @@ async function service(db, req, owner, ctx = {}) {
   if (url.pathname === "/api/interact" && method === "POST") {
     if (!player) fail2("PLAYER", 401);
     if (player.approval !== "approved") fail2("PENDING", 403);
+    if (isChampionship(active()) && ["showanswer", "showwithdraw", "showlifeline", "showaudience"].includes(b.action)) {
+      if (player.eligible_from > s.current || b.round !== s.current) fail2("CLOSED", 409);
+      return mutateChampionship(db, s, active(), rt, b, now, player, false);
+    }
     if (s.status !== "question" || s.paused || player.eligible_from > s.current || s.deadline && s.deadline <= now || b.round !== s.current) fail2("CLOSED", 409);
     return gameInteract(db, s, active(), rt, player, b, now, false);
   }
@@ -1047,7 +1280,7 @@ async function service(db, req, owner, ctx = {}) {
     if (player.approval !== "approved") fail2("PENDING", 403);
     if (s.status !== "question" || s.paused || s.deadline && s.deadline <= now || b.round !== s.current || player.eligible_from > s.current || ["betting", "casting"].includes(rt.phase) || rt.targets?.length && !rt.targets.includes(player.id)) fail2("CLOSED", 409);
     const a2 = active();
-    if (presentation(a2.type) || a2.rooms || a2.nodes) fail2("PRESENTATION");
+    if (isChampionship(a2) || presentation(a2.type) || a2.rooms || a2.nodes) fail2("PRESENTATION");
     let scored;
     try {
       scored = grade(a2, b.answer, { remaining: s.deadline ? s.deadline - now : 1, duration: a2.timer * 1e3 + (rt.addedTime || 0) || 1 });
@@ -1149,7 +1382,7 @@ async function service(db, req, owner, ctx = {}) {
   if (["betting", "casting"].includes(rt.phase) && pub) {
     pub = { ...pub, prompt: a.section || a.mainType, options: [], correct: void 0 };
   }
-  return { code: s.code, title: s.title, language: s.language, teamMode: !!s.teams, surveyOnly: !!settings.surveyOnly, teamNames: settings.teamNames || ["Lightning", "Wave"], settings: host ? settings : void 0, status: s.status, current: s.current, revision: s.revision, deadline: s.deadline, paused: !!s.paused, remaining: s.remaining, reveal: s.reveal, serverNow: now, queue: deck.map((x, i) => ({ type: x.type, mainType: x.mainType, prompt: host || i < s.current || i === s.current && !["betting", "casting"].includes(rt.phase) ? x.prompt : x.mainType || x.type, timer: x.timer, group: x.group, step: x.step })), activity: pub, players: all.filter((p) => host || p.approval === "approved").map(({ eligible_from, employee_id, ...p }) => host ? { ...p, employeeId: employee_id } : p), ...boards, submitted: responses.length, tally: revealed || a?.type === "Live Poll" && a.liveResults ? tally : null, pollSummary: a?.type === "Live Poll" && (revealed || a.liveResults) ? summarizePoll(a, responses.map((x) => JSON.parse(x.answer))) : null, metaSummary: a?.assignments && (host || rt.analytics) ? a.items.map((_, i) => a.categories.map((_2, j) => roundAnswers.filter((x) => JSON.parse(x.answer)[i] === j).length)) : null, keyRevealed: revealed, runtime: { phase: rt.phase, targets: rt.targets || [], board: !!rt.board, quiet: !!rt.quiet, intensity: rt.intensity || "full", analytics: !!rt.analytics, highlight: rt.highlight, notes: host ? rt.notes : void 0 }, mine: player ? { id: player.id, name: player.name, employeeId: player.employee_id, approval: player.approval, language: player.language, eligible: player.approval === "approved" && player.eligible_from <= s.current && (!rt.targets?.length || rt.targets.includes(player.id)), answered: !!(mine || ownAnon), answer: mine ? JSON.parse(mine.answer) : ownAnon ? JSON.parse(ownAnon.answer) : null, points: revealed && mine ? mine.points : null, correct: revealed && mine ? mine.correct : null } : null, survey: closed && s.survey ? JSON.parse(s.survey) : null, surveySubmitted, surveyOpen: !!rt.surveyOpen, surveyCount: s.survey ? Number((await db.prepare("SELECT (SELECT COUNT(*) FROM answers WHERE session=? AND round=-1)+(SELECT COUNT(*) FROM anonymous_responses WHERE session=? AND round=-1) AS n").bind(code, code).first()).n) : 0, ...await gameSnapshot(db, s, a, rt, player, host, now), ...host ? { owner: s.owner, activities: deck, blueprint: JSON.parse(s.blueprint || s.activities), surveyDefinition: s.survey ? JSON.parse(s.survey) : null, metaAnalytics: a?.assignments ? roundAnswers.map((x) => ({ player: x.player, answer: JSON.parse(x.answer) })) : null } : {} };
+  return { code: s.code, title: s.title, language: s.language, teamMode: !!s.teams, surveyOnly: !!settings.surveyOnly, teamNames: settings.teamNames || ["Lightning", "Wave"], settings: host ? settings : void 0, status: s.status, current: s.current, revision: s.revision, deadline: s.deadline, paused: !!s.paused, remaining: s.remaining, reveal: s.reveal, serverNow: now, queue: deck.map((x, i) => ({ type: x.type, mainType: x.mainType, prompt: host || i < s.current || i === s.current && !["betting", "casting"].includes(rt.phase) ? x.prompt : x.mainType || x.type, timer: x.timer, group: x.group, step: x.step })), activity: pub, players: all.filter((p) => host || p.approval === "approved").map(({ eligible_from, employee_id, ...p }) => host ? { ...p, employeeId: employee_id } : p), ...boards, submitted: responses.length, tally: revealed || a?.type === "Live Poll" && a.liveResults ? tally : null, pollSummary: a?.type === "Live Poll" && (revealed || a.liveResults) ? summarizePoll(a, responses.map((x) => JSON.parse(x.answer))) : null, metaSummary: a?.assignments && (host || rt.analytics) ? a.items.map((_, i) => a.categories.map((_2, j) => roundAnswers.filter((x) => JSON.parse(x.answer)[i] === j).length)) : null, keyRevealed: revealed, runtime: { phase: rt.phase, targets: rt.targets || [], board: !!rt.board, quiet: !!rt.quiet, intensity: rt.intensity || "full", analytics: !!rt.analytics, highlight: rt.highlight, notes: host ? rt.notes : void 0 }, mine: player ? { id: player.id, name: player.name, employeeId: player.employee_id, approval: player.approval, language: player.language, eligible: player.approval === "approved" && player.eligible_from <= s.current && (!rt.targets?.length || rt.targets.includes(player.id)), answered: !!(mine || ownAnon), answer: mine ? JSON.parse(mine.answer) : ownAnon ? JSON.parse(ownAnon.answer) : null, points: revealed && mine ? mine.points : null, correct: revealed && mine ? mine.correct : null } : null, survey: closed && s.survey ? JSON.parse(s.survey) : null, surveySubmitted, surveyOpen: !!rt.surveyOpen, surveyCount: s.survey ? Number((await db.prepare("SELECT (SELECT COUNT(*) FROM answers WHERE session=? AND round=-1)+(SELECT COUNT(*) FROM anonymous_responses WHERE session=? AND round=-1) AS n").bind(code, code).first()).n) : 0, ...await gameSnapshot(db, s, a, rt, player, host, now), ...isChampionship(a) ? { show: showPublic(a, rt.show || showStart(), player?.id, host) } : {}, ...host ? { owner: s.owner, activities: deck, blueprint: JSON.parse(s.blueprint || s.activities), surveyDefinition: s.survey ? JSON.parse(s.survey) : null, metaAnalytics: a?.assignments ? roundAnswers.map((x) => ({ player: x.player, answer: JSON.parse(x.answer) })) : null } : {} };
 }
 async function writeSession(db, s, n) {
   return db.prepare("UPDATE sessions SET status=?,current=?,revision=?,started_at=?,deadline=?,paused=?,remaining=?,reveal=?,runtime=? WHERE code=? AND revision=?").bind(n.status, n.current, n.revision, n.started_at ?? null, n.deadline ?? null, n.paused, n.remaining, n.reveal ?? null, n.runtime || s.runtime || "{}", s.code, s.revision).run();
