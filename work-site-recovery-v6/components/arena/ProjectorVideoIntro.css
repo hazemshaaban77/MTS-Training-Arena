@@ -1,0 +1,17 @@
+/* Isolated projector-only true 16:9 MP4 pre-roll, not a web-page animation.
+   No document scroll; text comes from the rendered video, so it never overlaps. */
+.projector-video-intro{position:fixed;inset:0;z-index:9000;width:100vw;height:100dvh;
+ background:#020714;overflow:hidden;display:flex;justify-content:center;align-items:center}
+.projector-video-intro video{display:block;width:100%;height:100%;object-fit:contain;
+ background:#020714}
+.projector-video-intro__controls{position:absolute;z-index:3;right:clamp(15px,3vw,50px);
+ bottom:clamp(15px,3vh,34px);display:flex;gap:12px;align-items:center;
+ opacity:.12;transition:opacity .2s ease}
+.projector-video-intro__controls:hover,.projector-video-intro__controls:focus-within{opacity:1}
+.projector-video-intro__controls button{display:flex;align-items:center;gap:9px;
+ background:#061c2fdd;color:#dffbff;border:1px solid #7de6eb;
+ border-radius:10px;padding:11px 16px;min-height:44px;cursor:pointer;
+ font-size:13px;font-weight:750}
+.projector-video-intro__controls button:focus-visible{outline:3px solid white;
+ outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.projector-video-intro__controls{transition:none;opacity:1}}
