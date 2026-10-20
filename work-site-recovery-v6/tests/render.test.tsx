@@ -5,6 +5,8 @@ import ArenaEscapeRoom from '../components/arena/ArenaEscapeRoom';
 import ArenaMetaPlan from '../components/arena/ArenaMetaPlan';
 import ArenaScenario from '../components/arena/ArenaScenario';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
+import TrainerDirectorDashboard,{trainerDirectorStats} from '../components/arena/TrainerDirectorDashboard';
+import {runSimulatedRoom} from '../lib/simulator-dry-run';
 import ReportActivityInsights from '../components/arena/ReportActivityInsights';
 import {analyzeReportActivities,reportInsightsCsv} from '../lib/report-insights';
 import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
@@ -1066,4 +1068,76 @@ test('phase-one reliability safeguards keep trainer edits and timed learner roun
  assert.ok(sim.includes("room.unlockAfter||room.puzzles.length"));
  assert.ok(sim.includes('assessment:{...(g.assessment||{}),[payload.index]:payload.known===true}'),
   'Flashcard practice should preserve stable personal Known/Review answers');
+});
+
+
+test('20 learner dry runs share authoritative scoring, without inventing timeout or game events',()=>{
+ const quiz=sample('Quiz','en');
+ for(const count of [1,2,10,20]){
+  const full=runSimulatedRoom(quiz,count,'correct');
+  assert.equal(full.registered,count);
+  assert.equal(full.submissions,count);
+  assert.equal(full.correct,count);
+  assert.equal(full.graded,count);
+  assert.equal(full.learners.length,count);
+  assert.ok(full.learners.every(x=>x.points>0&&x.status==='graded'));
+  const zero=runSimulatedRoom(quiz,count,'no_response');
+  assert.equal(zero.submissions,0);
+  assert.equal(zero.missed,count);
+  assert.equal(zero.correct,0);
+ }
+ const wrong=runSimulatedRoom(quiz,20,'incorrect');
+ assert.equal(wrong.graded,20);
+ assert.equal(wrong.correct,0);
+ assert.ok(wrong.learners.every(x=>x.points<=0));
+ const mixed=runSimulatedRoom(quiz,20,'mixed');
+ assert.ok(mixed.submissions<20&&mixed.submissions>0);
+ assert.ok(mixed.correct>0&&mixed.correct<20);
+ const late=runSimulatedRoom(quiz,20,'late_join');
+ assert.equal(late.learners.filter(x=>x.status==='late').length,4);
+ assert.equal(late.submissions,16);
+ const offline=runSimulatedRoom(quiz,20,'offline');
+ assert.equal(offline.learners.filter(x=>x.status==='disconnected').length,7);
+ assert.equal(offline.submissions,13);
+ assert.throws(()=>runSimulatedRoom(quiz,21,'correct'),/SIMULATOR_COUNT/);
+ assert.throws(()=>runSimulatedRoom(quiz,0,'mixed'),/SIMULATOR_COUNT/);
+ const poll=runSimulatedRoom(sample('Live Poll','en'),5,'correct');
+ assert.equal(poll.graded,0);
+ assert.equal(poll.ungraded,5);
+ assert.equal(poll.learners.reduce((n,p)=>n+p.points,0),0);
+ const cards=runSimulatedRoom(sample('Flashcards','en'),5,'correct');
+ assert.equal(cards.graded,0);
+ assert.equal(cards.learners.reduce((n,p)=>n+p.points,0),0);
+ assert.ok(cards.unsupported,'No fake game event scoring');
+ const source=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.ok(source.includes('setLearnerCount(Number(e.target.value))'));
+ assert.ok(source.includes("value=\"late_join\""));
+ assert.ok(source.includes("value=\"offline\""));
+});
+
+test('trainer live director uses server-confirmed counts and truthful presence labels',()=>{
+ const state={status:'question',current:2,submitted:7,queue:[{},{},{},{}],deadline:15000,
+  players:[{uid:'one',approval:'approved'},{uid:'two',approval:'approved'},
+   {uid:'three',approval:'pending'},{uid:'four',approval:'rejected'}]};
+ const stats=trainerDirectorStats(state);
+ assert.deepEqual(stats,{registered:4,approved:2,pending:1,rejected:1,submissions:7,totalActivities:4,activityNumber:3});
+ const html=renderToStaticMarkup(<TrainerDirectorDashboard ar={true} state={state}
+  seconds={18} connected={true} transport="live" busy={false}
+  onJoinQR={()=>{}} onProjector={()=>{}} onPrimary={()=>{}} onRefresh={()=>{}}/>);
+ assert.ok(html.includes('لوحة قيادة المدرب'));
+ assert.ok(html.includes('QR الجلسة'));
+ assert.ok(html.includes('فتح البروجيكتور'));
+ assert.ok(html.includes('ردود النشاط الحالي'));
+ assert.ok(html.includes('مش معناه متصل حاليًا'));
+ const appSource=readFileSync('components/arena/App.tsx','utf8');
+ assert.ok(appSource.includes('trainer-mobile-nav-backdrop'));
+ assert.ok(appSource.includes('aria-expanded={menu}'));
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes('<TrainerDirectorDashboard'));
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 trainer mobile hardening'));
+ assert.ok(css.includes('.workspace-brand-header .account-exit{display:inline-flex!important}'));
+ assert.ok(css.includes('.builder .deck-controls button{min-width:44px'));
+ assert.ok(css.includes('.session-shell.host .director-bar{display:grid'));
+ assert.ok(css.includes('trainer-director-dashboard__metrics'));
 });
