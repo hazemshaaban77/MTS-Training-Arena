@@ -135,13 +135,14 @@ test('cinematic WebP art appears in every activity intro, trainer and bilingual 
    assert.ok(html.includes(expected),type);
    assert.ok(html.includes('splash-activity-cover'),type);
    assert.ok(html.includes('<h2>'+type+'</h2>'),type);
-   assert.ok(html.includes(ar?'التحدّي التالي':'YOUR NEXT CHALLENGE'),type);
+   assert.ok(html.includes(ar?'لحظة انطلاق التحدّي':'THE CHALLENGE BEGINS'),type);
   }
   const tile=renderToStaticMarkup(<ActivityArt activity={type} label={type}/>);
   assert.ok(tile.includes(expected),type);
  }
  const session=readFileSync('components/arena/Session.tsx','utf8');
- assert.ok(session.includes('durationMs={display?2300:host?1450:1100}'));
+ assert.ok(session.includes('durationMs={display?2300:host?1450:1100}'), 'Timed questions never sit behind longer blocking overlays');
+ assert.ok(session.includes('introHighlight(s.current+1'), 'Host can trigger a longer pre-round projection safely');
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('Approved cinematic 3D art'));
 });
