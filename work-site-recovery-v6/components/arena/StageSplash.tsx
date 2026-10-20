@@ -4,6 +4,7 @@ import {ArrowRight,Clapperboard,FastForward,Sparkles} from 'lucide-react';
 import ActivityArt from './ActivityArt';
 import IntroScene from './IntroScene';
 import {introIdentity} from '../../lib/arena-game-identity';
+import {gameIntroBeats} from '../../lib/arena-intro-beats';
 import {stageAtmosphere} from '../../lib/arena-cinematics';
 
 const normalized=(type:string)=>type==='Spin Wheel'?'Wheel of Fortune':type==='Categorize'?'Meta Plan':type;
@@ -12,6 +13,7 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
  const finishRef=useRef(onComplete);finishRef.current=onComplete;
  useEffect(()=>{const id=window.setTimeout(()=>finishRef.current(),durationMs);return()=>window.clearTimeout(id);},[type,durationMs]);
  const base=normalized(type),theme=stageAtmosphere(base),identity=introIdentity(base);
+ const beats=gameIntroBeats[identity.key];
  return <div className={'stage-splash arena-cinematic-intro cinematic-composed stage-splash-'+base.toLowerCase().replace(/[^a-z0-9]+/g,'-')+' cinematic-'+theme+' intro-kind-'+identity.key}
   role="dialog" aria-label={ar?'مقدمة اللعبة':'Game introduction'} aria-modal="false"
   style={{'--intro-duration':durationMs+'ms'} as React.CSSProperties}>
@@ -30,6 +32,13 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
      <span className="cinematic-caption">{ar?identity.tagAr:identity.tagEn}</span>
      <h2>{label}</h2>
      <p>{ar?identity.introAr:identity.introEn}</p>
+     <div className="cinematic-beat-sequence" aria-hidden="true">
+      <span className="cinematic-beat-overline">{beats.overline}</span>
+      <div className="cinematic-beat-track">
+       {(ar?beats.ar:beats.en).map((name,i)=><span key={i} className={'cinematic-beat cinematic-beat-'+i}>
+        <b>{String(i+1).padStart(2,'0')}</b>{name}</span>)}
+      </div>
+     </div>
      <span className="cinematic-start-label"><Clapperboard size={17}/>{preview?
        (ar?'عرض تمهيدي · العداد لم يبدأ':'PRE-ROUND SHOW · TIMER NOT STARTED'):
        (ar?'لحظة انطلاق التحدّي':'THE CHALLENGE BEGINS')}</span>
