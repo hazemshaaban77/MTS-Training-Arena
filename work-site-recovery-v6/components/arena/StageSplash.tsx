@@ -34,7 +34,7 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
    <div className="cinematic-main-art">
     <span className="cinematic-art-ring cinematic-art-ring--outer" aria-hidden="true"/>
     <span className="cinematic-art-ring cinematic-art-ring--inner" aria-hidden="true"/>
-    <div className="cinematic-art-frame"><ActivityArt activity={base} label={label} eager/></div>
+    <div className="cinematic-art-frame splash-activity-cover"><ActivityArt activity={base} label={label} eager/></div>
     <span className="cinematic-art-flare" aria-hidden="true"><Zap size={26}/></span>
    </div>
    <div className="cinematic-copy">
