@@ -32,8 +32,8 @@ export default function QuestionMediaPicker({ar,value,onChange,onError}:{
      <option value="image">{t('صورة','Image')}</option><option value="video">{t('فيديو','Video')}</option>
     </select>
    </label>
-   <label><span><Link2 size={15}/>{t('لينك مباشر HTTPS','Direct HTTPS link')}</span>
-    <input type="url" dir="ltr" placeholder="https://example.com/image.jpg"
+   <label><span><Link2 size={15}/>{t('رابط صورة أو فيديو أو YouTube','Image, video or YouTube link')}</span>
+    <input type="url" dir="ltr" placeholder="https://example.com/media.jpg or https://youtu.be/..."
      value={value?.url||''} onChange={e=>update({url:e.target.value})}/>
    </label>
   </div>
