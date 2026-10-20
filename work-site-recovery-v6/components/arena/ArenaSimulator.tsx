@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {ArrowLeft,ArrowRight,CheckCircle2,Eye,Gamepad2,BookOpen,Monitor,Play,RotateCcw,ShieldCheck,Smartphone,Users,X} from 'lucide-react';
 import {activityLabel,mainType,type Activity} from '../../lib/catalog';
-import {publicActivity,flattenDeck} from '../../lib/domain.mjs';
+import {publicActivity,flattenDeck,evaluate} from '../../lib/domain.mjs';
 import ActivityArt from './ActivityArt';
 import GamePlay from './GamePlay';
 import StageMedia from './StageMedia';
@@ -38,7 +38,7 @@ function initialGame(a:any):any{
   scenario:first?{text:first.text,choices:first.choices||[],ending:!!first.ending,
    discussion:first.discussion,path:[],node:first.id}:undefined,
   escape:room?{room:0,puzzle:0,totalRooms:a.rooms.length,question:room.puzzles?.[0],
-   title:room.title,narrative:room.narrative,attempts:0,hintAvailable:true}:undefined,
+   title:room.title,narrative:room.narrative,attempts:0,hintAvailable:(room.hintAfter??1)===0}:undefined,
   card:0,flipped:false,back:'',reviewed:[],bet:null
  };
 }
@@ -84,21 +84,35 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
      ending:!!next.ending,discussion:next.discussion,consequence:c.consequence,
      path:[...(s?.path||[]),{consequence:c.consequence||c.label}]}}));
   }else if(type==='puzzle'){
-   const e=game.escape,room=a.rooms?.[e.room],question=room?.puzzles?.[e.puzzle];
-   const correct=JSON.stringify(payload.answer)===JSON.stringify(question?.correct)
-    ||(question?.type==='Order It'&&JSON.stringify(payload.answer)===JSON.stringify(question?.order));
-   if(!correct){setGame((g:any)=>({...g,escape:{...g.escape,attempts:e.attempts+1,
-     lastCorrect:false,hint:room?.hint}}));return;}
+   const e=game.escape,room=a.rooms?.[e?.room],question=room?.puzzles?.[e?.puzzle];
+   if(!question)return;
+   // Rehearsal uses the SAME answer validator as the authoritative service
+   // (options, normalized text, matching, ordering, hotspots and assignments).
+   let correct=false;
+   try{correct=evaluate(question,payload.answer).evaluation===1;}catch{
+    setNote(t('الإجابة التجريبية غير صالحة. راجع طريقة السؤال.','Invalid practice response; check the question format.'));
+    return;
+   }
+   if(!correct){
+    const attempts=(e.attempts||0)+1;
+    const restart=room.wrongPolicy==='restart-room';
+    setGame((g:any)=>({...g,escape:{...g.escape,puzzle:restart?0:e.puzzle,
+     question:restart?room.puzzles?.[0]:question,attempts,
+     lastCorrect:false,hintAvailable:attempts>=(room.hintAfter??1),
+     hint:attempts>=(room.hintAfter??1)?room.hint:undefined}}));
+    return;
+   }
    let roomIndex=e.room,puzzleIndex=e.puzzle+1;
-   if(puzzleIndex>=room.puzzles.length){roomIndex++;puzzleIndex=0;}
+   if(puzzleIndex>=(room.unlockAfter||room.puzzles.length)){roomIndex++;puzzleIndex=0;}
    const nextRoom=a.rooms?.[roomIndex];
    setGame((g:any)=>({...g,escape:nextRoom?{room:roomIndex,puzzle:puzzleIndex,
     totalRooms:a.rooms.length,title:nextRoom.title,narrative:nextRoom.narrative,
-    question:nextRoom.puzzles?.[puzzleIndex],attempts:0,hintAvailable:true,lastCorrect:true}
+    question:nextRoom.puzzles?.[puzzleIndex],attempts:0,
+    hintAvailable:(nextRoom.hintAfter??1)===0,lastCorrect:true}
     :{...g.escape,escaped:true,lastCorrect:true}}));
-  }else if(type==='flip'){const i=payload.index??game.card;setGame((g:any)=>({...g,card:i,flipped:true,back:a.backs?.[i]||''}));}
-  else if(type==='card'){const i=payload.index??game.card;setGame((g:any)=>({...g,card:i,flipped:false,back:a.backs?.[i]||''}));}
-  else if(type==='selfassess'){setGame((g:any)=>({...g,reviewed:[...g.reviewed,{index:payload.index,known:payload.known}]}));}
+  }else if(type==='flip'){const i=payload.index??game.card;setGame((g:any)=>({...g,card:i,flipped:true,back:a.backs?.[i]||'',reviewed:[...new Set([...(g.reviewed||[]),i])]}));}
+  else if(type==='card'){const i=payload.index??game.card;setGame((g:any)=>({...g,card:i,flipped:false,back:a.backs?.[i]||'',reviewed:[...new Set([...(g.reviewed||[]),i])]}));}
+  else if(type==='selfassess'){setGame((g:any)=>({...g,reviewed:[...new Set([...(g.reviewed||[]),payload.index])],assessment:{...(g.assessment||{}),[payload.index]:payload.known===true}}));}
   else if(type==='bet'){setGame((g:any)=>({...g,bet:payload.amount}));}
   else if(type==='lifeline'){setGame((g:any)=>({...g,lifelines:[...(g.lifelines||[]),payload.kind]}));}
   else if(type==='miniquiz'||type==='boxquiz'){setGame((g:any)=>({...g,mini:{question:null},box:g.box?{...g.box,answered:true}:undefined}));}
