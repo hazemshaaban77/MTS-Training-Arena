@@ -35,7 +35,7 @@ export async function mutateChampionship(db:D1Database,s:any,activity:any,rt:any
 }
 export async function settleChampionshipTimeout(db:D1Database,s:any,activity:any,rt:any,now:number){
  if(!isChampionship(activity)||s.status!=='question'||s.paused||!s.deadline||s.deadline>now||rt.show?.phase!=='answering')return false;
- const result=showCommand(activity,rt.show,'timeout',{},now,s.deadline),event=result.payout;
+ const result:any=showCommand(activity,rt.show,'timeout',{},now,s.deadline),event=result.payout;
  const runtime=JSON.stringify({...rt,show:result.show,phase:result.show.phase,targets:[]});
  const statements=[
   db.prepare("UPDATE sessions SET runtime=?,deadline=NULL,revision=revision+1 WHERE code=? AND revision=? AND current=? AND status='question' AND paused=0 AND deadline<=?").bind(runtime,s.code,s.revision,s.current,now),
