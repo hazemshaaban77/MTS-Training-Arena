@@ -80,7 +80,8 @@ export function runSimulatedRoom(a:Activity,playerCount:number,scenario:Simulato
   }
   learners.push({uid,name,team,status,correct,points,rank:null,answer});
  }
- const players=learners.filter(p=>p.status!=='late').map(p=>({uid:p.uid,name:p.name,team:p.team,approval:'approved'}));
+ // No leaderboard from missing submissions, polls or server-event games.
+ const players=learners.filter(p=>p.status==='graded').map(p=>({uid:p.uid,name:p.name,team:p.team,approval:'approved'}));
  const totals=Object.fromEntries(learners.map(p=>[p.uid,p.points]));
  const board=scoreboards(players,totals,'shared',{},'sum');
  for(const p of learners)p.rank=board.individual.find((x:any)=>x.uid===p.uid)?.rank??null;
