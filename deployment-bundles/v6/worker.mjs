@@ -1237,6 +1237,7 @@ async function service(db, req, owner, ctx = {}) {
       rt.surveyAvailable = true;
       rt.surveyOpen = true;
     }
+    if (b.action === "close" && isChampionship(active())) fail2("SHOW_STATE", 409);
     let index = b.index;
     if (b.action === "reveal" && active()?.type === "Spin Wheel") index = fairIndex(active().items.length);
     let n;
