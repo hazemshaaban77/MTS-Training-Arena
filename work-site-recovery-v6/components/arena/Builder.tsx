@@ -7,6 +7,7 @@ import {api,errorText,uploadArenaMedia} from '../../lib/client';
 import StageMedia from './StageMedia';
 import ActivityArt from './ActivityArt';
 import ArenaSimulator from './ArenaSimulator';
+import QuestionStudio from './QuestionStudio';
 import {estimateSessionAgenda} from '../../lib/session-planning';
 import {makeSessionStarter,sessionTemplateOptions,type SessionTemplateId} from '../../lib/session-templates';
 export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,live,owner}:{ar:boolean;initial:string;onClose:()=>void;onCreated:(c:string)=>void;onGoHome?:()=>void;source?:any;live?:any;owner?:string}){
@@ -165,6 +166,7 @@ export function ActivityEditor({ar,activity,onCancel,onSave,onSimulate}:{ar:bool
   finally{setMediaBusy(false);event.currentTarget.value='';}
  }
  function save(){try{validateActivity(d);onSave(d);}catch{setError('DECK');}}
+ if(['Quiz','Ultimate Game Show'].includes(d.type))return <QuestionStudio ar={ar} activity={d} onCancel={onCancel} onSave={onSave}/>;
  return <div className="editor-backdrop"><section className="activity-editor modal" role="dialog" aria-modal="true" aria-labelledby="edit-title"><header className="modal-header"><div><span className="eyebrow">ACTIVITY DESIGNER</span><h2 id="edit-title">{activityLabel(d,ar)}</h2></div><button className="icon-button" onClick={onCancel} aria-label={t('إغلاق','Close')}><X/></button></header><div className="editor-body"><label>{t('العنوان أو التعليمات','Title or instructions')}<textarea rows={3} maxLength={2000} value={d.prompt} onChange={e=>put('prompt',e.target.value)}/></label>
  <div className="activity-media-editor"><h3>{t('وسائط النشاط — صورة أو فيديو','Activity media — image or video')}</h3>
  <p className="muted small">{t('ارفع من الجهاز عبر Cloudinary بعد تفعيل الـUnsigned Preset. استخدم وسائط تدريب غير سرية فقط. الصور حتى 10 ميجابايت والفيديو حتى 50 ميجابايت.','Use Cloudinary Unsigned Upload after preset setup or a direct HTTPS link. Public training media only. Images up to 10 MB; videos up to 50 MB.')}</p>
