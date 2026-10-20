@@ -6,6 +6,8 @@ import ArenaMetaPlan from '../components/arena/ArenaMetaPlan';
 import ArenaScenario from '../components/arena/ArenaScenario';
 import ArenaSimulator from '../components/arena/ArenaSimulator';
 import QuestionStudio from '../components/arena/QuestionStudio';
+import ArenaChampionshipPractice from '../components/arena/ArenaChampionshipPractice';
+import {showStart,showCommand,showPublic} from '../lib/championship.mjs';
 import {contestantKnockouts,previouslyUsedLifelines,shouldContinueContestant} from '../lib/show-rules.mjs';
 import TrainerDirectorDashboard,{trainerDirectorStats} from '../components/arena/TrainerDirectorDashboard';
 import {runSimulatedRoom} from '../lib/simulator-dry-run';
@@ -1212,4 +1214,36 @@ test('prize ladder has truthful server-owned casting, elimination and single-use
  const showSrc=readFileSync('components/arena/ArenaGameShow.tsx','utf8');
  assert.ok(showSrc.includes("showFormat==='ladder'"));
  assert.ok(showSrc.includes('disabled={busy||eliminated}'));
+});
+
+
+test('championship rehearsal uses pure Worker transitions in all three views without score writes',()=>{
+ const stage:any={...sample('Ultimate Game Show'),showFormat:'championship',participation:'individual',betEnabled:false,
+  safeLevels:[1],questions:[100,250].map((points,i)=>({...sample('Quiz'),type:'Quiz',
+   prompt:'Prize '+i,options:['A','B','C','D'],correct:0,timer:30,points,speed:false}))};
+ for(const mode of ['play','host','display'] as const){
+  const html=renderToStaticMarkup(<ArenaChampionshipPractice a={stage} ar={false} mode={mode}/>);
+  assert.ok(html.includes('CHAMPIONSHIP ARENA'));
+  assert.ok(html.includes('Offline rehearsal'));
+  assert.ok(html.includes('Prize ladder'));
+ }
+ const s=showStart();
+ const cast=showCommand(stage,s,'cast',{player:'test-player',attemptId:'practice-a'},1000,null);
+ const pub=showPublic(stage,cast.show,'test-player');
+ assert.equal(pub.question.correct,undefined,'Never expose correct answer in learner snapshot');
+ assert.equal(pub.canAnswer,true);
+ const spectator=showPublic(stage,cast.show,'spectator');
+ assert.equal(spectator.canAnswer,false);
+ assert.equal(spectator.question.correct,undefined);
+ assert.deepEqual(spectator.lifelines,[]);
+ assert.ok(pub.question.options.length===4);
+ const answer=showCommand(stage,cast.show,'answer',{player:'test-player',answer:0},1001,cast.deadline);
+ assert.equal(answer.show.current.level,1);
+ assert.equal(answer.show.attempts.length,0,'Do not award before attempt finishes');
+ const winner=showCommand(stage,answer.show,'answer',{player:'test-player',answer:0},1002,answer.deadline);
+ assert.equal(winner.show.phase,'completed');
+ assert.equal(winner.payout.points,250);
+ assert.equal(winner.show.attempts.length,1);
+ const src=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.ok(src.includes("a.showFormat==='championship'"));
 });
