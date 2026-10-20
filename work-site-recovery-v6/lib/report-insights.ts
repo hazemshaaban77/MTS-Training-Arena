@@ -91,7 +91,8 @@ export function analyzeReportActivities(report:any):ReportInsight[]{
    });
   }
   return result;
-});
+ });
+}
 
 /** Explicit export only. Spreadsheet formula prefixes are neutralized. */
 export function reportInsightsCsv(insights:ReportInsight[]){
