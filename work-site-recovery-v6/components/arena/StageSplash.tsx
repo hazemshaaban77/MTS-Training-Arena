@@ -2,6 +2,8 @@
 import {useEffect,useRef} from 'react';
 import {ArrowRight,Clapperboard,FastForward,Sparkles,Volume2,Zap} from 'lucide-react';
 import ActivityArt from './ActivityArt';
+import IntroScene from './IntroScene';
+import {introIdentity} from '../../lib/arena-game-identity';
 import {stageAtmosphere} from '../../lib/arena-cinematics';
 
 const captions:Record<string,[string,string,string,string]>={
@@ -21,14 +23,15 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
  type:string;label:string;ar:boolean;onComplete:()=>void;durationMs?:number;preview?:boolean}){
  const finishRef=useRef(onComplete);finishRef.current=onComplete;
  useEffect(()=>{const id=window.setTimeout(()=>finishRef.current(),durationMs);return()=>window.clearTimeout(id);},[type,durationMs]);
- const base=normalized(type),theme=stageAtmosphere(base),caption=captions[base]||captions.Quiz;
- return <div className={'stage-splash arena-cinematic-intro stage-splash-'+base.toLowerCase().replace(/[^a-z0-9]+/g,'-')+' cinematic-'+theme}
+ const base=normalized(type),theme=stageAtmosphere(base),caption=captions[base]||captions.Quiz,identity=introIdentity(base);
+ return <div className={'stage-splash arena-cinematic-intro stage-splash-'+base.toLowerCase().replace(/[^a-z0-9]+/g,'-')+' cinematic-'+theme+' intro-kind-'+identity.key}
   role="dialog" aria-label={ar?'مقدمة اللعبة': 'Game introduction'} aria-modal="false"
   style={{'--intro-duration':durationMs+'ms'} as React.CSSProperties}>
   <div className="splash-orbit cinematic-orbits" aria-hidden="true"><i/><i/><i/></div>
   <div className="cinematic-lights" aria-hidden="true"><i/><i/><i/><i/><i/><i/></div>
   <div className="cinematic-particles" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
   <div className="cinematic-rule cinematic-rule--top" aria-hidden="true"/>
+  <IntroScene kind={identity.key}/>
   <div className="splash-center cinematic-center">
    <div className="cinematic-kicker"><Sparkles size={17}/><span>MTS TRAINING ARENA</span><Sparkles size={17}/></div>
    <div className="cinematic-main-art">
@@ -38,9 +41,9 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
     <span className="cinematic-art-flare" aria-hidden="true"><Zap size={26}/></span>
    </div>
    <div className="cinematic-copy">
-    <span className="cinematic-caption">{ar?caption[2]:caption[3]}</span>
+    <span className="cinematic-caption">{ar?identity.tagAr:identity.tagEn}</span>
     <h2>{label}</h2>
-    <p>{ar?caption[0]:caption[1]}</p>
+    <p>{ar?identity.introAr:identity.introEn}</p>
    </div>
    <div className="cinematic-action">
     <span className="cinematic-start-label"><Clapperboard size={17}/>{preview?
