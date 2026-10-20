@@ -59,7 +59,7 @@ jobs:
           set -euo pipefail
           api="https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev"
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$api/api/me" | jq -e '.authenticated == false and .provider == "firebase"'
-          curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$api/api/branding" | jq -e '.mts and .training'
+          curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "$api/api/branding" | jq -e '.mts and .training and .showRulesVersion == 2'
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error -X OPTIONS -H "Origin: https://hazemshaaban77.github.io" -H "Access-Control-Request-Method: POST" "$api/api/join" > /dev/null
       - name: Probe deployed Firebase and Cloudflare dependencies
         run: |
