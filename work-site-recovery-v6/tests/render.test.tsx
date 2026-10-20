@@ -1229,10 +1229,10 @@ test('championship rehearsal uses pure Worker transitions in all three views wit
  }
  const s=showStart();
  const cast=showCommand(stage,s,'cast',{player:'test-player',attemptId:'practice-a'},1000,null);
- const pub=showPublic(stage,cast.show,'test-player');
+ const pub:any=showPublic(stage,cast.show,'test-player');
  assert.equal(pub.question.correct,undefined,'Never expose correct answer in learner snapshot');
  assert.equal(pub.canAnswer,true);
- const spectator=showPublic(stage,cast.show,'spectator');
+ const spectator:any=showPublic(stage,cast.show,'spectator');
  assert.equal(spectator.canAnswer,false);
  assert.equal(spectator.question.correct,undefined);
  assert.deepEqual(spectator.lifelines,[]);
@@ -1240,7 +1240,7 @@ test('championship rehearsal uses pure Worker transitions in all three views wit
  const answer=showCommand(stage,cast.show,'answer',{player:'test-player',answer:0},1001,cast.deadline);
  assert.equal(answer.show.current.level,1);
  assert.equal(answer.show.attempts.length,0,'Do not award before attempt finishes');
- const winner=showCommand(stage,answer.show,'answer',{player:'test-player',answer:0},1002,answer.deadline);
+ const winner:any=showCommand(stage,answer.show,'answer',{player:'test-player',answer:0},1002,answer.deadline);
  assert.equal(winner.show.phase,'completed');
  assert.equal(winner.payout.points,250);
  assert.equal(winner.show.attempts.length,1);
