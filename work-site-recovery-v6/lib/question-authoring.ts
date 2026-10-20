@@ -77,3 +77,23 @@ export function questionTypeLabel(type:string,ar:boolean):string{
  const key=isKnowledgeQuestionType(type)?type:'Quiz';
  return questionLabels[key][ar?0:1];
 }
+
+/** Matching answers must stay a permutation even when a trainer changes one pair. */
+export function setMatchingPair(pairs:number[],row:number,right:number):number[]{
+ const p=[...pairs],n=p.length;
+ if(row<0||row>=n||right<0||right>=n||!Number.isInteger(row)||!Number.isInteger(right))return p;
+ const other=p.indexOf(right);
+ if(other===row)return p;
+ if(other>=0)p[other]=p[row];
+ p[row]=right;
+ return p;
+}
+/** Remove one editable pair and keep the mapping valid for the remaining terms. */
+export function deleteMatchingPair(pairs:number[],row:number):number[]{
+ const n=pairs.length;
+ if(row<0||row>=n||n<=2)return [...pairs];
+ const keep=pairs.filter((_,j)=>j!==row).map(v=>v===row?-1:v>row?v-1:v);
+ const used=new Set(keep.filter(v=>v>=0));
+ const replacement=Array.from({length:n-1},(_,i)=>i).find(i=>!used.has(i));
+ return keep.map(v=>v<0?(replacement??0):v);
+}
