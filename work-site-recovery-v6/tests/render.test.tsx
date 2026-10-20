@@ -1,3 +1,5 @@
+import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel} from '../lib/question-authoring';
+import {gameIntroBeats} from '../lib/arena-intro-beats';
 import {introIdentity,introIdentities} from '../lib/arena-game-identity';
 import {projectorFitScale} from '../lib/projector-fit';
 import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,stageAtmosphere} from '../lib/arena-cinematics';
@@ -22,7 +24,7 @@ import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
 import {estimateSessionAgenda} from '../lib/session-planning';
 import {makeSessionStarter,sessionTemplateOptions} from '../lib/session-templates';
-import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity} from '../lib/domain.mjs';
+import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity,validateActivity} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -1476,4 +1478,104 @@ test('simulator no longer reserves vertical rows for navigation and scenario for
  assert.ok(css.includes('.arena-simulator-shell--stage-first>.arena-simulator-main'));
  assert.ok(css.includes('flex:1 1 auto!important'));
  assert.ok(css.includes('height:calc(100dvh - 12px)!important'));
+});
+
+
+test('Quiz Studio supports seven different question types with real fields and media upload',()=>{
+ const title='What does an ACID mean?';
+ for(const type of knowledgeQuestionTypes){
+  const q:any=newKnowledgeQuestion(type,false);
+  q.prompt=title;
+  assert.equal(q.type,type);
+  assert.equal(questionTypeLabel(type,true).length>0,true);
+  const activity:any={...sample('Quiz','en'),questions:[q]};
+  const html=renderToStaticMarkup(<QuestionStudio ar={false} activity={activity}
+   onCancel={()=>{}} onSave={()=>{}}/>);
+  assert.ok(html.includes('Current question type'),type);
+  assert.ok(html.includes('New question type'),type);
+  assert.ok(html.includes('Media type'),type);
+  assert.ok(html.includes('Upload image or video from device'),type);
+  assert.ok(html.includes('Direct HTTPS link'),type);
+  assert.ok(html.includes('type="file"'),type);
+  switch(type){
+   case 'Quiz':case 'True/False':case 'Dropdown':
+    assert.ok(html.includes('type="radio"'),type);break;
+   case 'Fill Blank':assert.ok(html.includes('Accepted text answers'),type);break;
+   case 'Match It':assert.ok(html.includes('Matching pairs'),type);break;
+   case 'Order It':assert.ok(html.includes('Correct order for grading'),type);break;
+   case 'Image Hotspot':assert.ok(html.includes('Target image HTTPS URL'),type);break;
+  }
+ }
+ const original=newKnowledgeQuestion('Quiz',true);
+ original.prompt='Preserve this prompt';original.media={type:'image',url:'https://example.org/training.png',alt:'Diagram'};
+ const swapped=changeKnowledgeQuestionType(original,'Match It',true);
+ assert.equal(swapped.prompt,original.prompt);
+ assert.deepEqual(swapped.media,original.media);
+ assert.equal(swapped.type,'Match It');
+ assert.ok(!swapped.options,'Old Quiz answer choices must not silently contaminate Match It');
+ assert.ok(original.options,'Original Quiz question must remain unchanged');
+ const builder=readFileSync('components/arena/Builder.tsx','utf8');
+ assert.ok(builder.includes('d.questions.every((q:Activity)=>isKnowledgeQuestionType(q.type)'));
+ assert.ok(builder.includes('<QuestionStudio ar={ar} activity={d}'));
+});
+
+test('seven Quiz question formats survive validation, while championship rules stay strict',()=>{
+ const media={type:'image',url:'https://example.org/freight.png',alt:'Cargo diagram'};
+ const cases:any[]=[
+  {...newKnowledgeQuestion('Quiz',false),prompt:'Pick the correct answer',options:['A','B','C','D'],correct:0},
+  {...newKnowledgeQuestion('True/False',false),prompt:'True or false',correct:1},
+  {...newKnowledgeQuestion('Dropdown',false),prompt:'Select item',options:['A','B'],correct:1},
+  {...newKnowledgeQuestion('Fill Blank',false),prompt:'Fill the missing term',accepted:['ACID','Acid']},
+  {...newKnowledgeQuestion('Match It',false),prompt:'Match terms to definitions',left:['ACID','BL'],right:['Bills','Shipment'],pairs:[1,0]},
+  {...newKnowledgeQuestion('Order It',false),prompt:'Sort shipment steps',items:['Submit','Ship','Release'],order:[1,0,2]},
+  {...newKnowledgeQuestion('Image Hotspot',false),prompt:'Select the correct area',image:'https://example.org/map.png',regions:[{x:.4,y:.6,r:.12}]}
+ ];
+ cases[0].media=media;
+ const normalized=cases.map(q=>normalizeKnowledgeQuestion(q));
+ assert.deepEqual(normalized.map(q=>q.type),[...knowledgeQuestionTypes]);
+ assert.deepEqual(normalized[0].media,media);
+ assert.equal(normalized[3].accepted[1],'Acid');
+ assert.deepEqual(normalized[4].pairs,[1,0]);
+ assert.deepEqual(normalized[5].order,[1,0,2]);
+ const root:any={...sample('Quiz','en'),questions:normalized};
+ assert.doesNotThrow(()=>validateActivity(structuredClone(root)));
+ assert.throws(()=>normalizeKnowledgeQuestion(cases[1],true));
+ assert.throws(()=>normalizeKnowledgeQuestion({...cases[0],options:['A','','C','D']}));
+ assert.throws(()=>normalizeKnowledgeQuestion({...cases[3],accepted:['']}));
+ const sampleChamp:any={...cases[0],options:['A','B','C','D'],timer:30};
+ assert.doesNotThrow(()=>normalizeKnowledgeQuestion(sampleChamp,true));
+ const mediaComponent=readFileSync('components/arena/QuestionMediaPicker.tsx','utf8');
+ assert.ok(mediaComponent.includes('await uploadArenaMedia(file)'));
+ assert.ok(mediaComponent.includes('onChange({...uploaded'));
+ assert.ok(mediaComponent.includes('type="url"'));
+ assert.ok(mediaComponent.includes('accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"'));
+ assert.ok(mediaComponent.includes('<StageMedia media={value}/>'));
+});
+
+test('each of ten game intros has a unique three-act cinematic sequence and distinct reveal',()=>{
+ const keys=['Quiz','Ultimate Game Show','Wheel of Fortune','Escape Room','Open the Box','Live Poll',
+ 'Meta Plan','Order It','Flashcards','Scenario Challenge'];
+ const sequenceSet=new Set<string>();
+ for(const type of keys){
+  const id=introIdentity(type);
+  const beats=gameIntroBeats[id.key];
+  assert.equal(beats.ar.length,3);
+  assert.equal(beats.en.length,3);
+  sequenceSet.add(beats.en.join('|'));
+  const intro=renderToStaticMarkup(<StageSplash type={type} label={type} ar={true}
+   preview durationMs={4800} onComplete={()=>{}}/>);
+  assert.ok(intro.includes('cinematic-beat-sequence'),type);
+  assert.ok(intro.includes('cinematic-beat-2'),type);
+  assert.ok(intro.includes(beats.ar[0]),type);
+  assert.ok(intro.includes(beats.ar[1]),type);
+  assert.ok(intro.includes(beats.ar[2]),type);
+  assert.ok(intro.includes('cinematic-visual-zone'),type);
+ }
+ assert.equal(sequenceSet.size,10);
+ const css=readFileSync('app/globals.css','utf8');
+ for(const kind of ['quiz','championship','wheel','escape','box','poll','plan','order','cards','scenario']){
+  assert.ok(css.includes('intro-kind-'+kind+' .cinematic-art-frame'),'Unique entrance missing: '+kind);
+ }
+ assert.ok(css.includes('NEXT-LEVEL GAME IDENTITIES'));
+ assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
 });
