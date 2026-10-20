@@ -42,6 +42,19 @@ export default function ArenaGameShow({s,ar,host,display,actor,usable,busy,close
      closed?t('لحظة إعلان النتائج','THE REVEAL'):t('المواجهة المباشرة','ON THE SPOTLIGHT')}</span>
    </div>
   </header>
+  {s.activity?.showFormat==='ladder'&&<section className="arena-tv-show__ladder"
+   aria-label={t('سلّم مستويات المسابقة','Competition prize ladder')}>
+   <div className="arena-tv-show__ladder-header"><Crown size={19}/>
+    <b>{t('سلّم الجائزة','THE PRIZE LADDER')}</b>
+    <span>{t('المستوى','Level')} {s.activity?.showRound||1} / {s.activity?.showTotal||1}</span>
+   </div>
+   <ol>{(s.activity?.showLadder||[]).map((points:number,i:number)=><li key={i}
+    className={i+1===s.activity?.showRound?'current':i+1<s.activity?.showRound?'passed':''}>
+    <span>{String(i+1).padStart(2,'0')}</span><strong>{Number(points).toLocaleString(ar?'ar-EG':'en-US')}</strong>
+    {i+1===s.activity?.showRound&&<Sparkles size={15}/>}</li>)}</ol>
+   <p><ShieldCheck size={16}/>{t('إجابة صحيحة = تكمل للمستوى التالي. إجابة خاطئة أو انتهاء الوقت = خروج المتسابق. الوسائل المساعدة مرة واحدة طوال المنافسة.',
+   'Correct advances. Wrong or timed-out ends the contestant run. Each lifeline is available once in the competition.')}</p>
+  </section>}
   {phase==='casting'?<div className="arena-tv-show__casting">
    <div className="arena-tv-show__central-emblem"><Mic2 size={59}/><span className="arena-tv-show__orbit"/></div>
    <h4>{t('مين هيطلع مسرح الأبطال؟','WHO TAKES THE SPOTLIGHT?')}</h4>
@@ -49,11 +62,11 @@ export default function ArenaGameShow({s,ar,host,display,actor,usable,busy,close
     'The trainer selects the contestants first. Questions stay hidden until selection is confirmed.')}</p>
    {host?<><div className="arena-tv-show__contestants">
     {(s.players||[]).filter((p:any)=>p.approval==='approved').map((p:any)=>{
-     const picked=cast.includes(p.uid);
-     return <button type="button" key={p.uid} aria-pressed={picked} className={picked?'picked':''} disabled={busy}
+     const picked=cast.includes(p.uid),eliminated=(g.eliminated||[]).includes(p.uid);
+     return <button type="button" key={p.uid} aria-pressed={picked} className={picked?'picked':''} disabled={busy||eliminated}
       onClick={()=>setCast(old=>picked?old.filter(id=>id!==p.uid):[...(castMax===1?[]:old.slice(-(castMax-1))),p.uid])}>
       <span className="arena-tv-show__avatar">{String(p.name||'?').charAt(0)}</span>
-      <b>{p.name}</b><small>{p.team||''}</small>{picked&&<CheckCircle2 size={18}/>}
+      <b>{p.name}</b><small>{eliminated?t('خرج من المنافسة','Eliminated'):p.team||''}</small>{picked&&<CheckCircle2 size={18}/>}
      </button>;
     })}
    </div><p className="arena-tv-show__selection-caption">
