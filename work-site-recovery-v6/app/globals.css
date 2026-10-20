@@ -4133,3 +4133,171 @@
  .session-shell .arena-sequence__correct,.session-shell .arena-scenario__consequence,
  .session-shell .arena-sequence__receipt{animation:none!important;transition:none!important}
 }
+
+
+/* GAME-IDENTITY OPENINGS v3: different choreography, staging and objects per game. */
+.arena-cinematic-intro .intro-scene{position:absolute;inset:-7%;pointer-events:none;z-index:5;
+ display:grid;place-items:center;isolation:isolate}
+.arena-cinematic-intro .intro-scene-icon{position:absolute;color:var(--arena-cine-color);
+ width:clamp(38px,6vw,65px);height:clamp(38px,6vw,65px);
+ filter:drop-shadow(0 0 19px var(--arena-cine-color));opacity:.98}
+.arena-cinematic-intro .cinematic-art-frame{opacity:.82}
+.arena-cinematic-intro.intro-kind-championship .cinematic-art-frame{
+ transform:perspective(700px) rotateX(8deg);border-radius:50% 50% 24px 24px}
+.arena-cinematic-intro.intro-kind-escape .cinematic-art-frame{filter:brightness(.6)}
+.arena-cinematic-intro.intro-kind-wheel .cinematic-art-frame{border-radius:50%}
+.arena-cinematic-intro.intro-kind-cards .cinematic-art-frame{border-radius:15px;transform:rotate(-7deg)}
+.arena-cinematic-intro.intro-kind-plan .cinematic-art-frame{clip-path:polygon(50% 0,100% 18%,100% 82%,50% 100%,0 82%,0 18%)}
+.arena-cinematic-intro.intro-kind-poll .cinematic-art-frame{opacity:.6}
+.arena-cinematic-intro.intro-kind-scenario .cinematic-art-frame{transform:perspective(650px) rotateY(11deg)}
+.arena-cinematic-intro .intro-scene--quiz{display:flex;align-items:flex-end;justify-content:center;
+ gap:4%;padding-block-end:0;transform:translateY(12%)}
+.arena-cinematic-intro .intro-quiz-choice{display:grid;place-items:center;width:19%;height:25%;
+ border:2px solid #b8ebff;border-radius:9px;color:#f0ffff;
+ font-size:clamp(19px,3vw,37px);font-weight:950;
+ background:#082d58eb;box-shadow:0 0 25px #58c5f4a3;
+ animation:arena-quiz-choices .42s cubic-bezier(.15,.8,.2,1) both}
+.arena-cinematic-intro .intro-quiz-choice:nth-child(2){animation-delay:.2s}
+.arena-cinematic-intro .intro-quiz-choice:nth-child(3){animation-delay:.4s}
+.arena-cinematic-intro .intro-quiz-choice:nth-child(4){animation-delay:.6s}
+.arena-cinematic-intro .intro-scene--quiz .intro-scene-icon{top:24%;color:#d5fcff;
+ width:26%;height:26%;animation:arena-game-electric .25s 3 alternate}
+.arena-cinematic-intro .intro-scene--championship{transform:translateY(6%)}
+.arena-cinematic-intro .intro-champ-stairs{position:absolute;bottom:0;display:flex;
+ align-items:flex-end;gap:4px;width:80%;height:75%;opacity:.95}
+.arena-cinematic-intro .intro-champ-stairs i{display:grid;place-items:center;flex:1;
+ height:calc(18% + (var(--level) * 14%));border:1px solid #ffe2a4;
+ background:linear-gradient(180deg,#d2a14aef,#2d1c2cbb);
+ box-shadow:0 0 18px #ffdb7673;color:white;font-weight:900;
+ animation:arena-game-rise .65s both}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(1){--level:1;animation-delay:.05s}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(2){--level:2;animation-delay:.19s}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(3){--level:3;animation-delay:.32s}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(4){--level:4;animation-delay:.45s}
+.arena-cinematic-intro .intro-champ-stairs i:nth-child(5){--level:5;animation-delay:.58s}
+.arena-cinematic-intro .intro-scene--championship .intro-scene-icon{top:9%;width:30%;height:30%;
+ animation:arena-game-crown 1s .45s both}
+.arena-cinematic-intro .intro-champ-trophy{position:absolute;right:-4%;bottom:-5%;
+ color:#fff0aa;width:24%;height:24%;filter:drop-shadow(0 0 18px #ffe0a1)}
+.arena-cinematic-intro .intro-wheel-disc{width:82%;height:82%;border-radius:50%;
+ background:conic-gradient(#00bebe 0 45deg,#783ec5 45deg 90deg,#f7aa57 90deg 135deg,
+ #32d99b 135deg 180deg,#4a79e8 180deg 225deg,#fc7394 225deg 270deg,
+ #ad9dfb 270deg 315deg,#ffdc7f 315deg 360deg);
+ border:8px solid #e6d0fb;box-shadow:0 0 0 7px #251445a1,0 0 55px #e8afffa8;
+ animation:arena-game-wheel-start 2.5s cubic-bezier(.14,.6,.1,1) both}
+.arena-cinematic-intro .intro-scene--wheel .intro-scene-icon{z-index:2;width:24%;height:24%;
+ padding:7px;background:#180c3de6;border-radius:50%}
+.arena-cinematic-intro .intro-wheel-marker{position:absolute;top:5%;
+ border-left:13px solid transparent;border-right:13px solid transparent;border-top:29px solid #fff3d0;
+ filter:drop-shadow(0 0 12px #fff3d0)}
+.arena-cinematic-intro .intro-escape-door{width:72%;height:83%;
+ display:grid;place-items:center;background:repeating-linear-gradient(90deg,#15383f 0 12%,#09202c 13% 24%);
+ border:7px ridge #79f9d9;border-radius:17px 17px 4px 4px;
+ box-shadow:0 0 50px #35d8c9aa, inset 0 0 20px #02060e;
+ transform-origin:left;animation:arena-game-vault-open 2.7s .4s both}
+.arena-cinematic-intro .intro-escape-door svg{width:37%;height:37%;color:#b9ffe7}
+.arena-cinematic-intro .intro-escape-door i{position:absolute;top:0;bottom:0;width:3px;
+ background:#9af8ea;opacity:.8}
+.arena-cinematic-intro .intro-escape-door i:nth-child(2){left:29%}
+.arena-cinematic-intro .intro-escape-door i:nth-child(3){right:29%}
+.arena-cinematic-intro .intro-scene--escape .intro-scene-icon{top:38%;
+ background:#091d27e8;border:2px solid #85ffdc;padding:8px;border-radius:10px;
+ animation:arena-game-unlock .7s .8s both}
+.arena-cinematic-intro .intro-escape-laser{position:absolute;inset-inline:5%;top:52%;
+ height:2px;background:#9cffe1;box-shadow:0 0 22px 8px #5ff4b377;
+ animation:arena-game-laser 2s ease-in-out 1 both}
+.arena-cinematic-intro .intro-scene--box{display:flex;align-items:center;justify-content:center;gap:5%}
+.arena-cinematic-intro .intro-mystery-box{width:28%;height:46%;position:relative;border:2px solid #ffe0fb;
+ background:linear-gradient(130deg,#dc469b,#5631ab);box-shadow:0 0 23px #f8a1e58c;
+ border-radius:7px 7px 12px 12px;display:grid;place-items:center}
+.arena-cinematic-intro .intro-mystery-box span{position:absolute;inset:-13% -7% auto;height:30%;
+ background:#fcbedb;border:2px solid #fff3fc;transform-origin:bottom center;
+ animation:arena-game-lid .68s .45s both}
+.arena-cinematic-intro .intro-mystery-box:nth-child(2) span{animation-delay:.8s}
+.arena-cinematic-intro .intro-mystery-box:nth-child(3) span{animation-delay:1.2s}
+.arena-cinematic-intro .intro-mystery-box svg{color:white;width:57%;height:57%}
+.arena-cinematic-intro .intro-scene--box .intro-scene-icon{top:8%;left:12%;animation:arena-game-flare 1.4s infinite}
+.arena-cinematic-intro .intro-scene--poll .intro-scene-icon{left:0;top:0;
+ background:#133e53;border-radius:20px;padding:10px}
+.arena-cinematic-intro .intro-poll-bars{position:absolute;bottom:6%;inset-inline:11%;
+ height:73%;display:flex;align-items:flex-end;gap:8%}
+.arena-cinematic-intro .intro-poll-bars i{flex:1;background:linear-gradient(#a1ffed,#008bba);
+ border-radius:9px 9px 0 0;box-shadow:0 0 13px #65ffddaa;
+ animation:arena-game-votes .76s both;transform-origin:bottom}
+.arena-cinematic-intro .intro-poll-bars i:nth-child(2){animation-delay:.19s}
+.arena-cinematic-intro .intro-poll-bars i:nth-child(3){animation-delay:.39s}
+.arena-cinematic-intro .intro-poll-bars i:nth-child(4){animation-delay:.59s}
+.arena-cinematic-intro .intro-poll-bars i:nth-child(5){animation-delay:.79s}
+.arena-cinematic-intro .intro-poll-bubble{position:absolute;right:2%;top:2%;
+ width:22%;height:22%;color:#adfff0;animation:arena-game-votes .9s both}
+.arena-cinematic-intro .intro-plan-path{position:absolute;inset:20%;
+ border:3px dashed #96ffcc;border-radius:28px;animation:arena-game-map 1.4s both}
+.arena-cinematic-intro .intro-plan-node{position:absolute;width:24%;height:24%;
+ color:#d4ffab;background:#154235;border:2px solid #a5ffe0;border-radius:12px;padding:7px;
+ animation:arena-game-plan-node .55s both}
+.arena-cinematic-intro .intro-plan-node--0{top:8%;left:8%}
+.arena-cinematic-intro .intro-plan-node--1{top:8%;right:8%;animation-delay:.2s}
+.arena-cinematic-intro .intro-plan-node--2{bottom:8%;left:8%;animation-delay:.4s}
+.arena-cinematic-intro .intro-plan-node--3{bottom:8%;right:8%;animation-delay:.6s}
+.arena-cinematic-intro .intro-scene--plan .intro-scene-icon{width:33%;height:33%;color:#e0ffb8}
+.arena-cinematic-intro .intro-order-steps{position:absolute;inset:18% 3% 10%;
+ display:flex;align-items:center;justify-content:space-around;gap:3%}
+.arena-cinematic-intro .intro-order-steps i{width:23%;height:35%;border:2px solid #b8ddff;
+ border-radius:12px;display:grid;place-items:center;background:#134b87d9;
+ color:#e5f7ff;font-weight:950;font-size:clamp(17px,3vw,34px);box-shadow:0 0 18px #8bc2ff94;
+ animation:arena-game-reorder 1.25s both}
+.arena-cinematic-intro .intro-order-steps i:nth-child(2){animation-delay:.25s}
+.arena-cinematic-intro .intro-order-steps i:nth-child(3){animation-delay:.5s}
+.arena-cinematic-intro .intro-order-steps i:nth-child(4){animation-delay:.75s}
+.arena-cinematic-intro .intro-scene--order .intro-scene-icon{top:-2%;left:38%}
+.arena-cinematic-intro .intro-card-stack{position:absolute;inset:4%;display:grid;place-items:center;perspective:700px}
+.arena-cinematic-intro .intro-card-stack div{position:absolute;width:59%;height:80%;border-radius:16px;
+ background:linear-gradient(130deg,#3c45b6,#7e5fc8);border:2px solid #dcd7ff;
+ display:grid;place-items:center;box-shadow:0 0 30px #989de99e}
+.arena-cinematic-intro .intro-card-stack div svg{width:44%;height:44%;color:white}
+.arena-cinematic-intro .intro-card-0{transform:rotate(-15deg) translateX(-14%)}
+.arena-cinematic-intro .intro-card-1{transform:rotate(13deg) translateX(16%)}
+.arena-cinematic-intro .intro-card-2{animation:arena-game-flip-card 1.15s .32s both}
+.arena-cinematic-intro .intro-scene--cards .intro-scene-icon{right:-1%;top:-4%;width:23%}
+.arena-cinematic-intro .intro-scenario-fork{position:absolute;inset:15%;
+ border-left:7px solid transparent;border-right:7px solid transparent}
+.arena-cinematic-intro .intro-scenario-fork i{position:absolute;left:49%;top:50%;
+ width:45%;height:8px;background:#ffd39c;border-radius:12px;transform-origin:left;
+ box-shadow:0 0 28px #ffd39c}
+.arena-cinematic-intro .intro-scenario-fork i:nth-child(1){transform:rotate(-45deg);animation:arena-game-path-left .9s .3s both}
+.arena-cinematic-intro .intro-scenario-fork i:nth-child(2){transform:rotate(45deg);animation:arena-game-path-right .9s .7s both}
+.arena-cinematic-intro .intro-scenario-fork i:nth-child(3){width:30%;transform:translateX(-100%);background:#f8a356}
+.arena-cinematic-intro .intro-scenario-gate{position:absolute;top:28%;width:29%;height:38%;
+ border:2px solid #ffe0b6;background:#6b401edb;box-shadow:0 0 30px #e9a75b66;
+ display:grid;place-items:center;color:#fff0b3;font-size:clamp(36px,5vw,64px);font-weight:950;
+ border-radius:16px;animation:arena-game-path-gate .9s .65s both}
+.arena-cinematic-intro .intro-scene--scenario .intro-scene-icon{bottom:-3%;width:26%;height:26%}
+@keyframes arena-quiz-choices{from{opacity:0;transform:translateY(80%) scale(.75)}to{opacity:1;transform:none}}
+@keyframes arena-game-electric{from{filter:brightness(.1);transform:scale(.88)}to{filter:brightness(2.1);transform:scale(1.08)}}
+@keyframes arena-game-rise{from{opacity:0;transform:scaleY(0);transform-origin:bottom}to{opacity:1;transform:scaleY(1)}}
+@keyframes arena-game-crown{from{opacity:0;transform:translateY(-55%) scale(.3)}to{opacity:1;transform:none}}
+@keyframes arena-game-wheel-start{0%{transform:rotate(-500deg) scale(.3);opacity:0}
+ 100%{transform:rotate(0deg) scale(1);opacity:1}}
+@keyframes arena-game-vault-open{0%,45%{transform:perspective(700px) rotateY(0)}
+ 100%{transform:perspective(700px) rotateY(-46deg)}}
+@keyframes arena-game-unlock{0%{opacity:0;transform:translateY(-25px)}100%{opacity:1;transform:none}}
+@keyframes arena-game-laser{from{opacity:0;transform:scaleX(0)}to{opacity:.8;transform:scaleX(1)}}
+@keyframes arena-game-lid{from{transform:rotateX(0)}to{transform:perspective(300px) rotateX(115deg)}}
+@keyframes arena-game-flare{50%{filter:drop-shadow(0 0 30px #fff);transform:scale(1.2)}}
+@keyframes arena-game-votes{from{opacity:0;transform:scaleY(.04)}to{opacity:1;transform:scaleY(1)}}
+@keyframes arena-game-map{from{opacity:0;transform:rotate(28deg) scale(.6)}to{opacity:1;transform:none}}
+@keyframes arena-game-plan-node{from{opacity:0;transform:scale(.1)}to{opacity:1;transform:none}}
+@keyframes arena-game-reorder{0%{opacity:0;transform:translateY(-110%) rotate(45deg)}100%{opacity:1;transform:none}}
+@keyframes arena-game-flip-card{0%{transform:rotateY(-145deg) translateY(55px);opacity:0}
+ 100%{transform:rotateY(0deg) translateY(0);opacity:1}}
+@keyframes arena-game-path-left{from{opacity:0;transform:rotate(-45deg) scaleX(0)}
+ to{opacity:1;transform:rotate(-45deg) scaleX(1)}}
+@keyframes arena-game-path-right{from{opacity:0;transform:rotate(45deg) scaleX(0)}
+ to{opacity:1;transform:rotate(45deg) scaleX(1)}}
+@keyframes arena-game-path-gate{from{opacity:0;transform:scale(.45)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+ .arena-cinematic-intro .intro-scene *,
+ .arena-cinematic-intro .intro-scene{animation:none!important}
+}
+.session-shell.effects-off .intro-scene *,
+.session-shell.effects-light .intro-scene *{animation:none!important}
