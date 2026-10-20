@@ -23,7 +23,6 @@ export type ReportInsight={
 };
 
 const finite=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)?v:0;
-const bounded=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)?Math.max(0,Math.round(v)):0;
 const parse=(x:unknown):any=>{if(typeof x!=='string')return x;try{return JSON.parse(x);}catch{return undefined;}};
 const typename=(a:any)=>a?.mainType||a?.type||'Activity';
 const isUnscored=(a:any,type:string)=>a?.scored===false||
