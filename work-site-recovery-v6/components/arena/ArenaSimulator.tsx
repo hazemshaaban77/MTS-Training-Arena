@@ -233,14 +233,14 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
     <span><CheckCircle2 size={17}/>{t('وضع تجريبي، مفيش QR ولا متدربين ولا نقاط حقيقية','Practice only: no QR, real participants or live scores')}</span>
     <div className="arena-simulator-modes">
      <button type="button" className="arena-simulator-cinema-btn"
-      onClick={()=>playCinematicPreview()}><Play size={16}/>
-      {t('شاهد انترو اللعبة','Preview cinematic intro')}</button>
+      onClick={()=>playCinematicPreview()} aria-label={t('شاهد انترو اللعبة','Preview cinematic intro')}><Play size={16}/>
+      <span>{t('شاهد انترو اللعبة','Preview cinematic intro')}</span></button>
      <button type="button" className="arena-simulator-cinema-btn with-audio"
-      onClick={()=>playCinematicPreview(true)}><Volume2 size={16}/>
-      {t('جرّب الانترو بالصوت','Preview with sound')}</button>
+      onClick={()=>playCinematicPreview(true)} aria-label={t('جرّب الانترو بالصوت','Preview with sound')}><Volume2 size={16}/>
+      <span>{t('جرّب الانترو بالصوت','Preview with sound')}</span></button>
      {([['play',Smartphone,t('المتدرب','Trainee')],['host',Users,t('المدرب','Trainer')],['display',Monitor,t('البروجيكتور','Projector')]] as const).map(([value,Icon,label])=>
       <button type="button" className={mode===value?'selected':''} key={value} onClick={()=>setMode(value)}
-       aria-pressed={mode===value}><Icon size={16}/>{label}</button>)}
+       aria-pressed={mode===value} aria-label={label}><Icon size={16}/><span>{label}</span></button>)}
     </div>
    <details className="arena-simulator-tools" aria-label={t('قائمة إعدادات المحاكاة','Practice options')}>
     <summary className="arena-simulator-tools__trigger">
