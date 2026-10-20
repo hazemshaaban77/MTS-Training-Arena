@@ -1,6 +1,7 @@
 'use client';
 import {useState} from 'react';
 import {ArrowRight,BarChart3,Check,CheckCircle2,ClipboardList,Layers3,Lightbulb,LockKeyhole,Send,StickyNote,Users} from 'lucide-react';
+import MetaPlanDragBoard from './MetaPlanDragBoard';
 
 const palette=['#30c9c9','#92a8ff','#f9c476','#ef9fbd','#85d9a4','#c9a5f0'];
 
@@ -55,37 +56,9 @@ export default function ArenaMetaPlan({
      <b>{completed} / {items.length}</b></div>
     <div className="arena-metaplan__progress-track"><i style={{width:items.length?completed/items.length*100+'%':'0%'}}/></div>
    </div>
-   <div className="arena-metaplan__notes" role="list" aria-label={t('بطاقات الأفكار','Idea notes')}>
-    {items.map((item,i)=>{
-     const current=selected[i],hasCategory=Number.isInteger(current)&&current>=0&&current<categories.length;
-     const revealedKey=correct&&Number.isInteger(correct[i])&&correct[i]>=0&&correct[i]<categories.length?correct[i]:null;
-     return <div className={'arena-metaplan__note'+(hasCategory?' is-assigned':'')+(active===i?' is-active':'')}
-      key={i} role="listitem">
-      <div className="arena-metaplan__note-main">
-       <span className="arena-metaplan__note-index">{String(i+1).padStart(2,'0')}</span>
-       <strong>{item}</strong>
-       {hasCategory&&<CheckCircle2 size={19} aria-hidden="true"/>}
-      </div>
-      {hasCategory&&<div className="arena-metaplan__chosen">{t('اختيارك: ','Your category: ')}
-       <b>{categories[current]}</b></div>}
-      {revealedKey!==null&&<div className="arena-metaplan__correct"><Check size={15}/>
-       {t('التصنيف المكشوف: ','Revealed category: ')}<b>{categories[revealedKey]}</b></div>}
-      {ready&&<div className="arena-metaplan__category-select">
-       <button type="button" className="arena-metaplan__choose" aria-expanded={active===i}
-        onClick={()=>setActive(x=>x===i?null:i)}>
-        {hasCategory?t('غيّر الفئة','Change category'):t('اختار الفئة','Choose category')}
-        <ArrowRight size={16}/></button>
-       {active===i&&<div className="arena-metaplan__chips" role="group"
-        aria-label={t('تصنيف ','Classify ')+item}>
-        {categories.map((cat,j)=><button type="button" key={j}
-         style={{'--meta-accent':palette[j%palette.length]} as React.CSSProperties}
-         aria-pressed={current===j} className={current===j?'selected':''}
-         onClick={()=>assign(i,j)}>{cat}</button>)}
-       </div>}
-      </div>}
-     </div>;
-    })}
-   </div>
+   <MetaPlanDragBoard ar={ar} categories={categories} items={items}
+    selected={selected} ready={ready} correct={correct}
+    onAssign={(i,j)=>assign(i,j)}/>
    {already&&!closed&&<div className="arena-metaplan__receipt" role="status">
     <CheckCircle2 size={20}/>{t('السيرفر سجّل تصنيفك. استنى كشف النتائج مع المدرب.',
       'Your classification was recorded. Wait for the trainer to reveal the board.')}</div>}
