@@ -67,7 +67,7 @@ export default function QuestionTypeFields({ar,q,onPatch,onError}:Props){
       onClick={()=>{
        const pairs=deleteMatchingPair(q.pairs||q.left.map((_:string,j:number)=>j),i);
        onPatch({left:q.left.filter((_:string,j:number)=>j!==i),
-        right:q.right.filter((_:string,j:number)=>j!==i),pairs:patched});
+        right:q.right.filter((_:string,j:number)=>j!==i),pairs});
       }}><Trash2 size={16}/></button>}
     </div>)}
    </div>
