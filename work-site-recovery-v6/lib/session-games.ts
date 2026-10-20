@@ -1,6 +1,7 @@
 import {publicActivity,evaluate,grade,fairIndex,unscored} from './domain.mjs';
 import {fail,batch,writeSession} from './service';
 import {audit} from './workspace';
+import {isPrizeLadder,previouslyUsedLifelines,contestantKnockouts} from './show-rules.mjs';
 const read=async(db:D1Database,s:any,actor:string)=>{const row:any=await db.prepare('SELECT data,version FROM progress WHERE session=? AND round=? AND actor=?').bind(s.code,s.current,actor).first();return {data:row?JSON.parse(row.data):{},version:row?.version??0};};
 const groupActor=(a:any,p:any)=>a.type==='Escape Room'&&a.mode==='collaborative'?'collaborative':a.type==='Escape Room'&&a.mode==='team'?'team:'+p.team:p.id;
 async function saveProgress(db:D1Database,s:any,actor:string,old:any,data:any,events:any[]=[],now=Date.now(),after:D1PreparedStatement[]=[]){
@@ -62,7 +63,11 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   if(rt.targets?.length&&!rt.targets.includes(p.id))fail('FORBIDDEN',403);if(rt.phase!=='betting'||!a.betEnabled||d.bet!=null||!Number.isInteger(b.amount)||b.amount<0||b.amount>10000)fail('STATE',409);
   const sums:any=await db.prepare('SELECT (SELECT COALESCE(SUM(points),0) FROM answers WHERE session=? AND player=?)+(SELECT COALESCE(SUM(points),0) FROM events WHERE session=? AND player=?) AS score').bind(s.code,p.id,s.code,p.id).first();if(b.amount>sums.score)fail('BET');d.bet=b.amount;events.push({id:`bet:${s.current}:${p.id}`,player:p.id,kind:'bet',points:-b.amount});
  }else if(b.action==='lifeline'){
-  if(a.mainType!=='Ultimate Game Show'||['betting','casting'].includes(rt.phase)||rt.targets?.length&&!rt.targets.includes(p.id))fail('STATE');d.lifelines=d.lifelines||[];if(!['fifty','audience','time'].includes(b.kind)||d.lifelines.includes(b.kind))fail('STATE');d.lifelines.push(b.kind);
+  if(a.mainType!=='Ultimate Game Show'||['betting','casting'].includes(rt.phase)||rt.targets?.length&&!rt.targets.includes(p.id))fail('STATE');d.lifelines=d.lifelines||[];
+  const history=isPrizeLadder(a)?(await db.prepare('SELECT round,data FROM progress WHERE session=? AND actor=? AND round<?').bind(s.code,p.id,s.current).all()).results:[];
+  const exhausted=previouslyUsedLifelines(JSON.parse(s.activities),s.current,history);
+  if(!['fifty','audience','time'].includes(b.kind)||d.lifelines.includes(b.kind)||exhausted.includes(b.kind))fail('STATE');
+  d.lifelines.push(b.kind);
   if(b.kind==='fifty'){if(!a.options||a.options.length<3)fail('STATE');d.eliminated=a.options.map((_:any,i:number)=>i).filter((i:number)=>i!==a.correct).slice(0,2);}
   if(b.kind==='audience')d.audience=true;
   if(b.kind==='time'){if(!s.deadline||s.deadline<=now)fail('STATE');d.mutation=crypto.randomUUID();after.push(db.prepare("UPDATE sessions SET deadline=deadline+30000,revision=revision+1 WHERE code=? AND revision=? AND EXISTS(SELECT 1 FROM progress WHERE session=? AND round=? AND actor=? AND json_extract(data,'$.mutation')=?)").bind(s.code,s.revision,s.code,s.current,actor,d.mutation));}
@@ -104,7 +109,15 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
  }
  if(a.nodes&&p){const node=a.nodes.find((n:any)=>n.id===(d.node||a.start));game.scenario={text:node.text,ending:!!node.ending,discussion:node.discussion,choices:node.choices?.map((c:any)=>({label:c.label})),consequence:d.consequence,path:d.path||[]};}
  if(a.mainType==='Ultimate Game Show'){
-  game.lifelines=d.lifelines||[];game.eliminated=d.eliminated||[];game.bet=d.bet??null;game.audienceRequested=!!d.audience;
+  game.lifelines=d.lifelines||[];game.eliminated=d.eliminated||[];
+  if(isPrizeLadder(a)){
+   const earlier=p?(await db.prepare('SELECT round,data FROM progress WHERE session=? AND actor=? AND round<?').bind(s.code,p.id,s.current).all()).results:[];
+   game.lifelines=[...new Set([...previouslyUsedLifelines(JSON.parse(s.activities),s.current,earlier),...game.lifelines])];
+   const casts:any[]=(await db.prepare("SELECT detail FROM audits WHERE session=? AND action='stagecast'").bind(s.code).all()).results;
+   const previousAnswers:any[]=(await db.prepare('SELECT round,player,correct FROM answers WHERE session=? AND round<?').bind(s.code,s.current).all()).results;
+   game.eliminated=contestantKnockouts(JSON.parse(s.activities),s.current,casts,previousAnswers);
+  }
+  game.bet=d.bet??null;game.audienceRequested=!!d.audience;
   const allProgress:any[]=(await db.prepare('SELECT data FROM progress WHERE session=? AND round=?').bind(s.code,s.current).all()).results.map((x:any)=>JSON.parse(x.data));game.audienceRequested=allProgress.some(x=>x.audience);const audience=allProgress.filter(x=>x.audienceVote!=null);game.audience=a.options?.map((_:any,i:number)=>audience.filter(x=>x.audienceVote===i).length)||[];
  }
  return {game};
