@@ -4,6 +4,7 @@ import {ArrowDown,ArrowUp,Check,Copy,Plus,ShieldCheck,Trash2,X} from 'lucide-rea
 import type {Activity} from '../../lib/catalog';
 import {sample} from '../../lib/catalog';
 import {validateActivity} from '../../lib/domain.mjs';
+import {api} from '../../lib/client';
 
 type Props={ar:boolean;activity:Activity;onCancel:()=>void;onSave:(a:Activity)=>void};
 const prizes=[100,250,500,1000,2000,3000,5000,7500,10000,10000];
@@ -19,7 +20,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  const [active,setActive]=useState(0);
  const [title,setTitle]=useState(activity.prompt);
  const [error,setError]=useState('');
- const [showRules,setShowRules]=useState(false);
+ const [ladderAvailable,setLadderAvailable]=useState(false);
+ useEffect(()=>{let active=true;api('branding').then((value:any)=>{if(active)setLadderAvailable(value?.showRulesVersion===1);}).catch(()=>{if(active)setLadderAvailable(false);});return()=>{active=false;};},[]);
  const index=Math.min(active,Math.max(0,questions.length-1)),q=questions[index];
  const patch=(changes:Record<string,unknown>)=>{
   setQuestions(prev=>prev.map((item,i)=>i===index?{...item,...changes}:item));setError('');
@@ -43,6 +45,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   setMode(value);setError('');
  }
  function save(){
+  if(game&&mode==='ladder'&&!ladderAvailable){setError(t('محرر سلّم الجوائز جاهز، لكن خدمة قواعد المسابقة على السيرفر لسه ما اتنشرتش. مش هنسمح بإطلاق نظام مسابقة غير متحقق منه.','Prize-ladder editor is ready, but the live game rules service is not yet deployed. Publishing unsupported competition rules is blocked.'));return;}
   try{
    const copy=questions.map((x,i)=>{
     const clean:Activity={...x,questions:undefined,mainType:undefined,type:x.type||'Quiz',
@@ -101,7 +104,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
       <button type="button" className={mode==='classic'?'chosen':''} aria-pressed={mode==='classic'} onClick={()=>chooseMode('classic')}>
        {t('جولات حرة · نفس النظام السابق','Open rounds · legacy rules')}</button>
      </div>
-     {mode==='ladder'&&<p>{t('متسابق واحد على المسرح؛ كل سؤال مستوى أعلى وجائزة متصاعدة. الخاطئ يخرج من المنافسة، والصحيح يستكمل. وسائل المساعدة تُستخدم مرة واحدة في المسابقة. السيرفر هو الحكم.',
+     {mode==='ladder'&&!ladderAvailable&&<p role="status">{t('جاري التحقق من دعم قواعد المسابقة على السيرفر. هيتفعل الحفظ بعد تفعيل الخدمة.','Checking server support: saving this mode requires versioned competition rules on the backend.')}</p>}
+    {mode==='ladder'&&<p>{t('متسابق واحد على المسرح؛ كل سؤال مستوى أعلى وجائزة متصاعدة. الخاطئ يخرج من المنافسة، والصحيح يستكمل. وسائل المساعدة تُستخدم مرة واحدة في المسابقة. السيرفر هو الحكم.',
        'One contestant, rising prize levels, wrong answer eliminates that contestant, correct answer advances them. Lifelines are single-use across this competition, enforced by the server.')}</p>}
     </div>}
     <div className="question-studio__question-head">
