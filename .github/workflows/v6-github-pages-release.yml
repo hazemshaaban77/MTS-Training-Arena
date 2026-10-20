@@ -26,7 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/me" | jq -e '.authenticated == false'
-          curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/branding" | jq -e '.mts and .training'
+          curl --retry 3 --retry-delay 2 --fail-with-body --silent --show-error "https://mts-training-arena-v6-api.hazem-mts-arena.workers.dev/api/branding" | jq -e '.mts and .training and .showRulesVersion == 2'
       - name: Verify alternate Pages gateway and browser CORS
         run: |
           set -euo pipefail
