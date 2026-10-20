@@ -3,6 +3,7 @@ import {useState,type ChangeEvent} from 'react';
 import {ImagePlus,Link2,Trash2,Upload,Video} from 'lucide-react';
 import {uploadArenaMedia,errorText} from '../../lib/client';
 import StageMedia from './StageMedia';
+import {classifyMediaLink} from '../../lib/media-url';
 export type QuestionMedia={type:'image'|'video';url:string;alt?:string};
 export default function QuestionMediaPicker({ar,value,onChange,onError}:{
  ar:boolean;value:QuestionMedia|undefined;onChange:(next:QuestionMedia|undefined)=>void;onError:(message:string)=>void
@@ -34,7 +35,7 @@ export default function QuestionMediaPicker({ar,value,onChange,onError}:{
    </label>
    <label><span><Link2 size={15}/>{t('رابط صورة أو فيديو أو YouTube','Image, video or YouTube link')}</span>
     <input type="url" dir="ltr" placeholder="https://example.com/media.jpg or https://youtu.be/..."
-     value={value?.url||''} onChange={e=>update({url:e.target.value})}/>
+     value={value?.url||''} onChange={e=>update({url:e.target.value,type:classifyMediaLink(e.target.value)||mediaType})}/>
    </label>
   </div>
   <div className="question-media-picker__upload">
