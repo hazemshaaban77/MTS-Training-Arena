@@ -354,7 +354,7 @@ test('QR entry states protect the unchanged participant registration form',()=>{
  assert.ok(source.includes('SessionEntryFeedback'));
  assert.ok(source.includes("kind=\"not-ready\" title={s.title}"));
  assert.ok(source.includes("kind=\"invalid\""));
- assert.ok(source.includes("kind=\"unavailable\""));
+ assert.ok(source.includes("'not-found':'unavailable'"), "Missing codes are distinguished from outages");
  assert.ok(source.includes("['ready','draft'].includes(s.status)"));
  assert.ok(source.includes("lastTraineeRound.current===key"));
  assert.ok(source.includes("window.scrollTo({top:0,behavior:'auto'})"));
