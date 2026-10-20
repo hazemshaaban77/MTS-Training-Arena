@@ -111,7 +111,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
    if(b.action==='ceremony'){if(s.status!=='survey')fail('STATE');s.status='completed';rt.surveyFinished=true;rt.surveyOpen=false;}
    const written=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!written.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,b.action==='notes'?{notes:rt.notes}:b.action==='stagecast'?{round:s.current,players:rt.targets}:{round:s.current});return {ok:true};
   }
-  if(['selectturn','spin','respin','box','override','hint'].includes(b.action))return gameInteract(db,s,active(),rt,null,b,now,true);
+  if(['selectturn','spin','respin','box','override','hint','wheelaward'].includes(b.action))return gameInteract(db,s,active(),rt,null,b,now,true);
   if(b.action==='finish'&&s.survey&&!rt.surveyFinished){const survey=JSON.parse(s.survey);if(survey.stage==='before-ceremony'){await writeSession(db,s,{...s,status:'survey',runtime:JSON.stringify({...rt,surveyOpen:true}),revision:s.revision+1});return {ok:true};}rt.surveyAvailable=true;rt.surveyOpen=true;}
   if(b.action==='close'&&isChampionship(active()))fail('SHOW_STATE',409);
   let index=b.index;if(b.action==='reveal'&&active()?.type==='Spin Wheel')index=fairIndex(active().items.length);
