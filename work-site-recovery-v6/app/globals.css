@@ -4615,3 +4615,12 @@ body:has(.session-shell.projector){height:100%;overflow:hidden!important}
  .arena-cinematic-intro.cinematic-composed .cinematic-copy,
  .arena-cinematic-intro.cinematic-composed .cinematic-scene-badge *{animation:none!important}
 }
+
+
+/* When a game intro or studio modal is open, do not leave scrollable page behind it. */
+html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}
+.arena-simulator-overlay:has(.stage-splash){overflow:hidden!important}
+.arena-cinematic-intro.cinematic-composed .cinematic-layout,
+.arena-cinematic-intro.cinematic-composed .cinematic-content-grid,
+.arena-cinematic-intro.cinematic-composed .cinematic-visual-zone{
+ overflow:hidden!important}
