@@ -1430,3 +1430,50 @@ test('projector content fits in one viewport independent of scrolling and never 
  assert.ok(css.includes('.session-shell.projector .display-bottom{display:flex!important'));
  assert.ok(css.includes('.session-shell.projector .arena-victory{min-height:0!important'));
 });
+
+
+test('intro composition keeps game artwork and animated identity in distinct bounded panels, never behind text',()=>{
+ const games=['Quiz','Ultimate Game Show','Wheel of Fortune','Escape Room','Open the Box',
+  'Live Poll','Meta Plan','Order It','Flashcards','Scenario Challenge'];
+ for(const game of games){
+  const h=renderToStaticMarkup(<StageSplash type={game} label={game} ar={true}
+   preview durationMs={4900} onComplete={()=>{}}/>);
+  const cover=h.indexOf('cinematic-art-frame splash-activity-cover');
+  const decoration=h.indexOf('cinematic-scene-badge');
+  const copy=h.indexOf('cinematic-copy');
+  assert.ok(h.includes('cinematic-composed'),game);
+  assert.ok(h.includes('cinematic-content-grid'),game);
+  assert.ok(cover>0&&decoration>cover&&copy>decoration,'visual identity must be separate from the artwork and copy in '+game);
+  assert.ok(h.includes('intro-scene--'+introIdentity(game).key),game);
+  assert.ok(h.includes('cinematic-skip'),game);
+  assert.ok(h.includes('العداد لم يبدأ'),game);
+ }
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 Intro COMPOSITION FIX'));
+ assert.ok(css.includes('grid-template-columns:minmax(0,1.17fr) minmax(0,.83fr)'));
+ assert.ok(css.includes('.cinematic-scene-badge .intro-scene'));
+ assert.ok(css.includes('overflow:hidden!important;isolation:isolate!important'));
+ assert.ok(css.includes('height:100dvh!important;max-height:100dvh!important'));
+ assert.ok(css.includes('html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}'));
+});
+
+test('simulator no longer reserves vertical rows for navigation and scenario forms',()=>{
+ const markup=renderToStaticMarkup(<ArenaSimulator ar={true} activities={[sample('Quiz','ar')]}
+  onClose={()=>{}}/>);
+ const menu=markup.indexOf('arena-simulator-tools__panel');
+ const activityNav=markup.indexOf('arena-simulator-progress',menu);
+ const scenario=markup.indexOf('arena-simulator-dry-run',menu);
+ const game=markup.indexOf('arena-simulator-main',menu);
+ assert.ok(menu>0&&activityNav>menu&&scenario>activityNav&&game>scenario);
+ const top=markup.slice(0,game);
+ assert.ok(top.includes('<details class="arena-simulator-tools"'));
+ assert.ok(!top.includes('<details class="arena-simulator-tools" open'));
+ assert.ok(markup.includes('arena-simulator-modes'));
+ assert.ok(markup.includes('arena-simulator-tools__trigger'));
+ const css=readFileSync('components/arena/ArenaSimulator.css','utf8');
+ assert.ok(css.includes('SIMULATOR VIEWPORT FIX v3'));
+ assert.ok(css.includes('position:absolute!important;z-index:80!important'));
+ assert.ok(css.includes('.arena-simulator-shell--stage-first>.arena-simulator-main'));
+ assert.ok(css.includes('flex:1 1 auto!important'));
+ assert.ok(css.includes('height:calc(100dvh - 12px)!important'));
+});
