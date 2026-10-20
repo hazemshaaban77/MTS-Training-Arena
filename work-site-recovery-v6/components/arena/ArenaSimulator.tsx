@@ -222,7 +222,7 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
   {cinematicPreview&&<StageSplash key={index+'-'+runId+'-cinema'} preview
     type={mainType(a)} label={activityLabel(a,ar)} ar={ar}
     durationMs={4900} onComplete={()=>setCinematicPreview(false)}/>}
-  <div className="arena-simulator-shell">
+  <div className="arena-simulator-shell arena-simulator-shell--stage-first">
    <header className="arena-simulator-header">
     <div><span className="eyebrow"><Gamepad2 size={17}/> ARENA PRACTICE MODE</span>
      <h2>{title||t('محاكي الجلسة','Session simulator')}</h2>
@@ -248,7 +248,12 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
        aria-pressed={mode===value}><Icon size={16}/>{label}</button>)}
     </div>
    </div>
-   <section className="arena-simulator-dry-run" aria-label={t('سيناريوهات محاكاة المتدربين','Simulated learner scenarios')}>
+   <details className="arena-simulator-dry-run" aria-label={t('إعدادات المحاكاة المتقدمة','Advanced practice settings')}>
+    <summary className="arena-simulator-dry-run__toggle">
+     <span><Users size={17}/><strong>{t('الإعدادات والسيناريوهات','Practice setup & scenarios')}</strong></span>
+     <small>{learnerCount} {t('متدرب افتراضي','demo learners')} · {t('اضغط للتعديل','Tap to edit')}</small>
+    </summary>
+    <div className="arena-simulator-dry-run__expanded">
     <div className="arena-simulator-dry-run__settings">
      <label>{t('عدد المتدربين الافتراضيين','Simulated learners')}
       <select value={learnerCount} onChange={e=>setLearnerCount(Number(e.target.value))}>
@@ -293,7 +298,8 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
      {t('ده اختبار حتمي محلي بقواعد تقييم الأسئلة الفعلية، مش تجربة سيرفر أو 20 جهاز حقيقي. السيناريوهات لا تبعت بيانات ولا تغيّر نتائج الجلسات.',
        'Deterministic local rehearsal using shared answer grading, not a live server or 20 devices. Scenarios never write to real rooms.')}
     </p>
-   </section>
+    </div>
+   </details>
    <div className="arena-simulator-learning-tip"><BookOpen size={17}/><span>{(activityGuides[mainType(a)]||activityGuides[a.type]||['جرّب النشاط وراجع خطواته.','Explore and rehearse this activity.'])[ar?0:1]}</span></div>
    <main className="arena-simulator-main">{a.showFormat==='championship'
     ?<ArenaChampionshipPractice key={index+'-'+runId} a={a} ar={ar} mode={mode}/>
