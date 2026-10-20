@@ -1,4 +1,5 @@
 import type {ArenaCue} from './arena-cinematics';
+import {introIdentity} from './arena-game-identity';
 
 export type ArenaAudioPreferences={enabled:boolean;volume:number;music:boolean;effects:boolean;muted:boolean};
 export const defaultArenaAudio: ArenaAudioPreferences={enabled:false,volume:.55,music:true,effects:true,muted:false};
@@ -79,6 +80,43 @@ export class ArenaSoundEngine{
    this.update(this.prefs);
    return this.unlocked;
   }catch{return false;}
+ }
+ /** Each title uses its own score, tempo, waveform and noise texture.
+  * Unlike `play('intro')`, this is intentionally NOT a transposed shared jingle. */
+ playGameIntro(type:string,options:{quiet?:boolean;light?:boolean}={}):void{
+  const p=this.prefs;
+  if(!p.enabled||p.muted||!p.music||options.quiet||!this.ctx||!this.master||!this.unlocked||this.ctx.state!=='running')return;
+  const cue=introIdentity(type),ctx=this.ctx,base=ctx.currentTime+.015;
+  const key='intro:'+cue.key;
+  const now=typeof performance!=='undefined'?performance.now():Date.now();
+  if(now-((this.lastPlayed as Record<string,number>)[key]||0)<350)return;
+  (this.lastPlayed as Record<string,number>)[key]=now;
+  try{
+   cue.notes.slice(0,options.light?3:cue.notes.length).forEach(note=>{
+    const oscillator=ctx.createOscillator(),gain=ctx.createGain(),start=base+note.at,end=start+note.hold;
+    oscillator.type=note.wave;
+    oscillator.frequency.setValueAtTime(note.pitch,start);
+    gain.gain.setValueAtTime(.0001,start);
+    gain.gain.exponentialRampToValueAtTime(options.light?.065:.13,start+Math.min(.04,note.hold*.2));
+    gain.gain.exponentialRampToValueAtTime(.0001,end);
+    oscillator.connect(gain);gain.connect(this.master!);
+    oscillator.start(start);oscillator.stop(end+.015);
+    oscillator.onended=()=>{try{oscillator.disconnect();gain.disconnect();}catch{}};
+   });
+   if(p.effects&&this.noiseBuffer){
+    const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+    source.buffer=this.noiseBuffer;filter.type=cue.noise==='rumble'?'lowpass':cue.noise==='tick'?'highpass':'bandpass';
+    filter.frequency.value=cue.noise==='rumble'?170:cue.noise==='tick'?3100:cue.noise==='pulse'?750:1800;
+    filter.Q.value=cue.noise==='pulse'?2:1;
+    const end=base+(cue.noise==='rumble'?.6:cue.noise==='tick'?.12:cue.noise==='pulse'?.3:.42);
+    gain.gain.setValueAtTime(.0001,base);
+    gain.gain.exponentialRampToValueAtTime(options.light?.014:.045,base+.025);
+    gain.gain.exponentialRampToValueAtTime(.0001,end);
+    source.connect(filter);filter.connect(gain);gain.connect(this.master);
+    source.start(base);source.stop(end+.01);
+    source.onended=()=>{try{source.disconnect();filter.disconnect();gain.disconnect();}catch{}};
+   }
+  }catch{}
  }
  play(cue:ArenaCue,options:{quiet?:boolean;light?:boolean}={}):void{
   const p=this.prefs;
