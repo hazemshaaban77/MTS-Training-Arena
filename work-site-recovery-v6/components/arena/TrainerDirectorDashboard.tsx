@@ -2,7 +2,7 @@
 import {Activity,Clock3,Monitor,Radio,RefreshCw,ScanLine,ShieldCheck,Timer,Users,UserRoundCheck,UserRoundX,Zap} from 'lucide-react';
 
 type Player={uid:string;approval?:string};
-type DirectorState={status:string;players:Player[];submitted?:number;queue?:unknown[];current:number;paused?:boolean;deadline?:number|null;serverNow?:number;revision?:number};
+type DirectorState={status:string;players:Player[];submitted?:number;queue?:unknown[];current:number;paused?:boolean;deadline?:number|null;serverNow?:number;revision?:number;activity?:{showFormat?:string}|null};
 type Props={ar:boolean;state:DirectorState;seconds:number;connected:boolean;transport:'live'|'fallback';busy:boolean;onJoinQR:()=>void;onProjector:()=>void;onPrimary:()=>void;onRefresh:()=>void};
 export function trainerDirectorStats(s:DirectorState){
  const players=Array.isArray(s.players)?s.players:[];
@@ -27,6 +27,7 @@ export default function TrainerDirectorDashboard({ar,state:s,seconds,connected,t
   s.status==='results'?t(s.current+1<stats.totalActivities?'النشاط التالي':'أنهِ الجلسة',
    s.current+1<stats.totalActivities?'Next activity':'Finish session'):null;
  const timed=s.status==='question'&&!!s.deadline;
+ const isChampionship=s.status==='question'&&s.activity?.showFormat==='championship';
  return <section className="trainer-director-dashboard" aria-label={t('لوحة مدير الجلسة المباشرة','Live session director dashboard')}>
   <header className="trainer-director-dashboard__heading">
    <div className="trainer-director-dashboard__label">
@@ -51,7 +52,7 @@ export default function TrainerDirectorDashboard({ar,state:s,seconds,connected,t
       'Counts come from room records, not live device presence. Submissions are server-confirmed, not a unique attendance metric.')}
   </p>
   <div className="trainer-director-dashboard__actions">
-   {nextAction&&<button type="button" className="btn primary" disabled={busy} onClick={onPrimary}><Zap size={17}/>{nextAction}</button>}
+   {nextAction&&!isChampionship&&<button type="button" className="btn primary" disabled={busy} onClick={onPrimary}><Zap size={17}/>{nextAction}</button>}
    <button type="button" className="btn secondary" onClick={onJoinQR}><ScanLine size={17}/>{t('QR الجلسة','Session QR')}</button>
    <button type="button" className="btn secondary" onClick={onProjector}><Monitor size={17}/>{t('فتح البروجيكتور','Open projector')}</button>
    <button type="button" className="btn secondary" onClick={onRefresh} disabled={busy}><RefreshCw size={17}/>{t('تحديث البيانات','Refresh data')}</button>
