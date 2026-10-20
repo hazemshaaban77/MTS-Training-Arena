@@ -454,6 +454,40 @@ async function checkRate(db, req) {
   if (r.count === 1) await db.prepare("DELETE FROM rate_buckets WHERE key IN (SELECT key FROM rate_buckets WHERE expires<? LIMIT 50)").bind(Date.now()).run();
 }
 
+// lib/show-rules.mjs
+var isPrizeLadder = (a) => a?.mainType === "Ultimate Game Show" && a?.showFormat === "ladder";
+function contestantKnockouts(deck, round, castRows, answerRows) {
+  const current = deck[round];
+  if (!isPrizeLadder(current)) return [];
+  const group = current.group, knocked = /* @__PURE__ */ new Set();
+  for (const row of castRows) {
+    const details = typeof row.detail === "string" ? JSON.parse(row.detail) : row.detail || {};
+    const at = Number(details.round);
+    if (!Number.isInteger(at) || at < 0 || at >= round) continue;
+    const stage = deck[at];
+    if (!isPrizeLadder(stage) || stage.group !== group) continue;
+    for (const id of details.players || []) {
+      if (!answerRows.some((x) => x.round === at && x.player === id && x.correct === 1)) knocked.add(id);
+    }
+  }
+  return [...knocked];
+}
+function previouslyUsedLifelines(deck, round, progressRows) {
+  const current = deck[round];
+  if (!isPrizeLadder(current)) return [];
+  const used = /* @__PURE__ */ new Set();
+  for (const row of progressRows) {
+    if (!Number.isInteger(row.round) || row.round >= round || row.round < 0) continue;
+    if (!isPrizeLadder(deck[row.round]) || deck[row.round].group !== current.group) continue;
+    const details = typeof row.data === "string" ? JSON.parse(row.data) : row.data || {};
+    for (const life of details.lifelines || []) used.add(life);
+  }
+  return [...used];
+}
+function shouldContinueContestant(previous, current, answers, target) {
+  return isPrizeLadder(previous) && isPrizeLadder(current) && previous.group === current.group && typeof target === "string" && !!target && answers.some((a) => a.player === target && a.correct === 1);
+}
+
 // lib/session-games.ts
 var read = async (db, s, actor) => {
   const row = await db.prepare("SELECT data,version FROM progress WHERE session=? AND round=? AND actor=?").bind(s.code, s.current, actor).first();
@@ -572,7 +606,9 @@ async function gameInteract(db, s, a, rt, p, b, now, host) {
   } else if (b.action === "lifeline") {
     if (a.mainType !== "Ultimate Game Show" || ["betting", "casting"].includes(rt.phase) || rt.targets?.length && !rt.targets.includes(p.id)) fail2("STATE");
     d.lifelines = d.lifelines || [];
-    if (!["fifty", "audience", "time"].includes(b.kind) || d.lifelines.includes(b.kind)) fail2("STATE");
+    const history = isPrizeLadder(a) ? (await db.prepare("SELECT round,data FROM progress WHERE session=? AND actor=? AND round<?").bind(s.code, p.id, s.current).all()).results : [];
+    const exhausted = previouslyUsedLifelines(JSON.parse(s.activities), s.current, history);
+    if (!["fifty", "audience", "time"].includes(b.kind) || d.lifelines.includes(b.kind) || exhausted.includes(b.kind)) fail2("STATE");
     d.lifelines.push(b.kind);
     if (b.kind === "fifty") {
       if (!a.options || a.options.length < 3) fail2("STATE");
@@ -723,6 +759,13 @@ async function gameSnapshot(db, s, a, rt, p, host, now) {
   if (a.mainType === "Ultimate Game Show") {
     game.lifelines = d.lifelines || [];
     game.eliminated = d.eliminated || [];
+    if (isPrizeLadder(a)) {
+      const earlier = p ? (await db.prepare("SELECT round,data FROM progress WHERE session=? AND actor=? AND round<?").bind(s.code, p.id, s.current).all()).results : [];
+      game.lifelines = [.../* @__PURE__ */ new Set([...previouslyUsedLifelines(JSON.parse(s.activities), s.current, earlier), ...game.lifelines])];
+      const casts = (await db.prepare("SELECT detail FROM audits WHERE session=? AND action='stagecast'").bind(s.code).all()).results;
+      const previousAnswers = (await db.prepare("SELECT round,player,correct FROM answers WHERE session=? AND round<?").bind(s.code, s.current).all()).results;
+      game.eliminated = contestantKnockouts(JSON.parse(s.activities), s.current, casts, previousAnswers);
+    }
     game.bet = d.bet ?? null;
     game.audienceRequested = !!d.audience;
     const allProgress = (await db.prepare("SELECT data FROM progress WHERE session=? AND round=?").bind(s.code, s.current).all()).results.map((x) => JSON.parse(x.data));
@@ -807,7 +850,7 @@ async function service(db, req, owner, ctx = {}) {
     s = await db.prepare("SELECT * FROM sessions WHERE code=?").bind(code).first();
     rt = JSON.parse(s.runtime || "{}");
   }
-  if (s.status === "results" && settings.progression === "auto" && (settings.reveal !== "manual" || rt.keyRevealed) && active()?.type !== "Meta Plan" && active()?.type !== "Categorize" && s.current + 1 < deck.length && now - (s.deadline || now) > 6e3) {
+  if (s.status === "results" && active()?.showFormat !== "ladder" && settings.progression === "auto" && (settings.reveal !== "manual" || rt.keyRevealed) && active()?.type !== "Meta Plan" && active()?.type !== "Categorize" && s.current + 1 < deck.length && now - (s.deadline || now) > 6e3) {
     const n = nextState(s, "next", now);
     await writeSession(db, s, n);
     s = await db.prepare("SELECT * FROM sessions WHERE code=?").bind(code).first();
@@ -922,6 +965,12 @@ async function service(db, req, owner, ctx = {}) {
         if (rt.phase !== "casting" || !Array.isArray(b.players) || !b.players.length) fail2("STATE");
         const eligible = (await db.prepare("SELECT id,team FROM players WHERE session=? AND approval='approved' AND eligible_from<=?").bind(code, s.current).all()).results;
         if (b.players.some((id) => !eligible.some((x) => x.id === id)) || active().participation === "individual" && b.players.length !== 1 || active().participation === "head-to-head" && b.players.length !== 2) fail2("PLAYER");
+        if (isPrizeLadder(active())) {
+          const casts = (await db.prepare("SELECT detail FROM audits WHERE session=? AND action='stagecast'").bind(code).all()).results;
+          const past = (await db.prepare("SELECT round,player,correct FROM answers WHERE session=? AND round<?").bind(code, s.current).all()).results;
+          const eliminated = contestantKnockouts(deck, s.current, casts, past);
+          if (b.players.some((id) => eliminated.includes(id))) fail2("SHOW_ELIMINATED", 409);
+        }
         rt.targets = [...new Set(b.players)];
         rt.phase = active().betEnabled ? "betting" : "answering";
         s.started_at = now;
@@ -946,7 +995,7 @@ async function service(db, req, owner, ctx = {}) {
       }
       const written = await writeSession(db, s, { ...s, runtime: JSON.stringify(rt), revision: s.revision + 1 });
       if (!written.meta.changes) fail2("STALE", 409);
-      await audit(db, owner, code, b.action, b.action === "notes" ? { notes: rt.notes } : { round: s.current });
+      await audit(db, owner, code, b.action, b.action === "notes" ? { notes: rt.notes } : b.action === "stagecast" ? { round: s.current, players: rt.targets } : { round: s.current });
       return { ok: true };
     }
     if (["selectturn", "spin", "respin", "box", "override", "hint"].includes(b.action)) return gameInteract(db, s, active(), rt, null, b, now, true);
@@ -966,6 +1015,16 @@ async function service(db, req, owner, ctx = {}) {
       n = nextState(s, b.action, now, index);
     } catch {
       fail2("STATE", 409);
+    }
+    if (b.action === "next" && isPrizeLadder(active()) && isPrizeLadder(deck[s.current + 1])) {
+      const target = (rt.targets || []).length === 1 ? rt.targets[0] : null;
+      const previousAnswers = target ? (await db.prepare("SELECT player,correct FROM answers WHERE session=? AND round=? AND player=?").bind(code, s.current, target).all()).results : [];
+      if (shouldContinueContestant(active(), deck[s.current + 1], previousAnswers, target)) {
+        const nextRuntime = JSON.parse(n.runtime || "{}");
+        n.runtime = JSON.stringify({ ...nextRuntime, phase: "answering", targets: [target] });
+        n.started_at = now;
+        n.deadline = deck[s.current + 1].timer ? now + deck[s.current + 1].timer * 1e3 : null;
+      }
     }
     if (b.action === "close") {
       n.deadline = now;
