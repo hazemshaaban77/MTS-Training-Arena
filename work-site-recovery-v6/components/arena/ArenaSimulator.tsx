@@ -3,6 +3,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {ArrowLeft,ArrowRight,CheckCircle2,Eye,Gamepad2,BookOpen,Monitor,Play,RotateCcw,ShieldCheck,Smartphone,Users,X} from 'lucide-react';
 import {activityLabel,mainType,type Activity} from '../../lib/catalog';
 import {publicActivity,flattenDeck,evaluate} from '../../lib/domain.mjs';
+import {runSimulatedRoom,type SimulatorScenario} from '../../lib/simulator-dry-run';
 import ActivityArt from './ActivityArt';
 import GamePlay from './GamePlay';
 import StageMedia from './StageMedia';
@@ -199,9 +200,11 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
  },[activities]);
  const [index,setIndex]=useState(Math.min(Math.max(0,initialIndex),Math.max(0,flattened.length-1)));
  const [mode,setMode]=useState<Mode>('play'),[runId,setRunId]=useState(0);
+ const [learnerCount,setLearnerCount]=useState(10),[scenario,setScenario]=useState<SimulatorScenario>('mixed');
  const go=(i:number)=>{if(i<0||i>=flattened.length)return;setIndex(i);setRunId(n=>n+1);};
  const a=flattened[index];
- if(!a)return null;
+ const room=useMemo(()=>a?runSimulatedRoom(a,learnerCount,scenario):null,[a,learnerCount,scenario]);
+ if(!a||!room)return null;
  return <div className="arena-simulator-overlay" role="dialog" aria-modal="true" aria-label={t('محاكي التدريب','Training simulator')} dir={ar?'rtl':'ltr'}>
   <div className="arena-simulator-shell">
    <header className="arena-simulator-header">
@@ -223,6 +226,52 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
        aria-pressed={mode===value}><Icon size={16}/>{label}</button>)}
     </div>
    </div>
+   <section className="arena-simulator-dry-run" aria-label={t('سيناريوهات محاكاة المتدربين','Simulated learner scenarios')}>
+    <div className="arena-simulator-dry-run__settings">
+     <label>{t('عدد المتدربين الافتراضيين','Simulated learners')}
+      <select value={learnerCount} onChange={e=>setLearnerCount(Number(e.target.value))}>
+       {Array.from({length:20},(_,i)=>i+1).map(n=><option value={n} key={n}>{n}</option>)}
+      </select>
+     </label>
+     <label>{t('نوع السيناريو','Scenario')}
+      <select value={scenario} onChange={e=>setScenario(e.target.value as SimulatorScenario)}>
+       <option value="mixed">{t('إجابات متنوعة وعدم استجابة','Mixed responses')}</option>
+       <option value="correct">{t('كل المتدربين يجيبوا صح','All correct')}</option>
+       <option value="incorrect">{t('كل المتدربين يجيبوا غلط','All incorrect')}</option>
+       <option value="no_response">{t('بدون إجابات / انتهاء وقت','No response / time out')}</option>
+       <option value="late_join">{t('انضمام متأخر','Late joins')}</option>
+       <option value="offline">{t('انقطاع إرسال بعض الإجابات','Disconnected learners')}</option>
+      </select>
+     </label>
+    </div>
+    <div className="arena-simulator-dry-run__metrics" role="status">
+     <span><b>{room.registered}</b>{t('متدرب افتراضي','demo learners')}</span>
+     <span><b>{room.submissions}</b>{t('إجابة محسوبة تجريبيًا','practice submissions')}</span>
+     <span><b>{room.graded?room.correct+'/'+room.graded:'—'}</b>{t('إجابات مصححة','graded correct')}</span>
+     <span><b>{room.missed}</b>{t('غائب/متأخر/غير متصل','missed / late / disconnected')}</span>
+    </div>
+    {room.unsupported&&<p className="arena-simulator-dry-run__notice" role="status">
+     {t('النشاط ده بيعتمد على أحداث لعبة يديرها السيرفر، فالمحاكي مش بيختلق نقاط أو إجابات. جرّب التفاعل من أدوار المدرب والمتدرب فوق.',
+       'This activity has server-controlled game events: the dry run never invents score awards. Use the trainer and learner previews for its interaction.')}
+    </p>}
+    <details>
+     <summary>{t('اعرض نتيجة كل متدرب والترتيب التجريبي','See each learner and the practice leaderboard')}</summary>
+     <div className="arena-simulator-dry-run__table-scroll"><table>
+      <thead><tr><th>{t('المتدرب','Learner')}</th><th>{t('الحالة','Status')}</th><th>{t('نقاط تجريبية','Practice points')}</th><th>{t('ترتيب تجريبي','Practice rank')}</th></tr></thead>
+      <tbody>{room.learners.map(p=><tr key={p.uid}><td>{p.name}</td><td>{
+       p.status==='graded'?(p.correct===1?t('إجابة صحيحة','Correct'):t('إجابة خاطئة','Wrong')):
+       p.status==='ungraded'?t('مشاركة بلا درجات','Ungraded'):
+       p.status==='late'?t('انضم متأخرًا','Late join'):
+       p.status==='disconnected'?t('الإجابة لم تصل','Not delivered'):
+       p.status==='missed'?t('لم يرسل إجابة','No response'):t('حدث لعبة بدون درجات مصطنعة','Game-controlled event')
+      }</td><td>{p.status==='unsupported'?'—':p.points}</td><td>{p.rank??'—'}</td></tr>)}</tbody>
+     </table></div>
+    </details>
+    <p className="arena-simulator-dry-run__notice">
+     {t('ده اختبار حتمي محلي بقواعد تقييم الأسئلة الفعلية، مش تجربة سيرفر أو 20 جهاز حقيقي. السيناريوهات لا تبعت بيانات ولا تغيّر نتائج الجلسات.',
+       'Deterministic local rehearsal using shared answer grading, not a live server or 20 devices. Scenarios never write to real rooms.')}
+    </p>
+   </section>
    <div className="arena-simulator-learning-tip"><BookOpen size={17}/><span>{(activityGuides[mainType(a)]||activityGuides[a.type]||['جرّب النشاط وراجع خطواته.','Explore and rehearse this activity.'])[ar?0:1]}</span></div>
    <main className="arena-simulator-main"><PracticeStage key={index+'-'+runId} a={a} ar={ar} mode={mode} runId={runId}/></main>
    <footer className="arena-simulator-footer">
