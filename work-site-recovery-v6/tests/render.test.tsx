@@ -1172,7 +1172,7 @@ test('quiz question studio exposes non-nested authoring, choice keys and safe mo
   assert.ok(html.includes(ar?'انسخ السؤال':'Duplicate'));
   const show=renderToStaticMarkup(<QuestionStudio ar={ar} activity={sample('Ultimate Game Show',ar?'ar':'en')}
    onCancel={()=>{}} onSave={()=>{}}/>);
-  assert.ok(show.includes(ar?'سلّم الجوائز':'Prize ladder'));
+  assert.ok(show.includes(ar?'طريق البطولة':'Championship'));
   assert.ok(show.includes(ar?'جولات حرة':'Open rounds'));
  }
  const css=readFileSync('app/globals.css','utf8');
