@@ -1,3 +1,6 @@
+import {introHighlight,sceneFromHighlight,canPreviewNext,eligibleMoment,stageAtmosphere} from '../lib/arena-cinematics';
+import {ArenaSoundEngine,defaultArenaAudio} from '../lib/arena-sound';
+import ArenaMoment from '../components/arena/ArenaMoment';
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import GamePlay from '../components/arena/GamePlay';import LivePoll,{LivePollChart} from '../components/arena/LivePoll';import ActivityArt from '../components/arena/ActivityArt';import StageSplash from '../components/arena/StageSplash';import StageMedia from '../components/arena/StageMedia';import ArenaPowerTimer from '../components/arena/ArenaPowerTimer';
 import ArenaVictory,{championsFromSession} from '../components/arena/ArenaVictory';
 import ArenaGameShow from '../components/arena/ArenaGameShow';
@@ -1247,4 +1250,89 @@ test('championship rehearsal uses pure Worker transitions in all three views wit
  assert.equal(winner.show.attempts.length,1);
  const src=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
  assert.ok(src.includes("a.showFormat==='championship'"));
+});
+
+
+test('cinematic scene is replayable only BEFORE next question and cannot consume a timed round',()=>{
+ for(const [status,current,total,expected] of [
+  ['lobby',-1,4,true],['results',1,4,true],['question',1,4,false],
+  ['completed',3,4,false],['lobby',-1,0,false],['results',3,4,false]
+ ] as const){assert.equal(canPreviewNext(status,current,total),expected);}
+ const n1=introHighlight(2,1001),n2=introHighlight(2,1002);
+ assert.ok(n1<0&&n1!==n2);
+ assert.deepEqual(sceneFromHighlight(n1,'results',1,4),{index:2,key:'scene:2:'+n1+':results'});
+ assert.deepEqual(sceneFromHighlight(n2,'results',1,4),{index:2,key:'scene:2:'+n2+':results'});
+ assert.equal(sceneFromHighlight(n1,'question',1,4),null);
+ assert.equal(sceneFromHighlight(n1,'results',2,4),null);
+ assert.equal(sceneFromHighlight(2,'lobby',1,4),null);
+ assert.equal(sceneFromHighlight(NaN,'results',1,4),null);
+ assert.equal(sceneFromHighlight(introHighlight(499,20),'results',1,4),null);
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes("onClick={()=>command('highlight',undefined,{index:introHighlight(s.current+1,Date.now())})"));
+ assert.ok(session.includes("s.deadline){setSplash(null)"), 'no blocking intro over a timed round');
+ assert.ok(session.includes("s.status==='question'&&s?.activity"));
+ assert.ok(session.includes("preview type={mainType(s.queue[previewIntro.index])}"));
+ const background=readFileSync('app/globals.css','utf8');
+ assert.ok(background.includes('V6 Cinematic Experience — pre-round theatre'));
+ assert.ok(background.includes('max-width:700px'));
+ assert.ok(background.includes('prefers-reduced-motion:reduce'));
+});
+
+test('all V6 game identities have stage-specific intro, unique color, skip and visual-safe settings',()=>{
+ const names=['Quiz','Ultimate Game Show','Wheel of Fortune','Escape Room','Open the Box',
+  'Live Poll','Order It','Flashcards','Meta Plan','Scenario Challenge'];
+ const schemes=new Set(names.map(stageAtmosphere));
+ assert.ok(schemes.size>=8);
+ for(const type of names){
+  for(const ar of [true,false]){
+   const h=renderToStaticMarkup(<StageSplash type={type} label={type} ar={ar}
+    preview durationMs={4800} onComplete={()=>{}}/>);
+   assert.ok(h.includes('cinematic-'+stageAtmosphere(type)));
+   assert.ok(h.includes(type));
+   assert.ok(h.includes('cinematic-art-frame'));
+   assert.ok(h.includes(ar?'تخطي المقدمة':'Skip intro'));
+   assert.ok(h.includes(ar?'العداد لم يبدأ':'TIMER NOT STARTED'));
+  }
+ }
+ const original=renderToStaticMarkup(<StageSplash type="Quiz" label="Quiz" ar={false} durationMs={850} onComplete={()=>{}}/>);
+ assert.ok(original.includes('850ms'));
+});
+
+test('optional WebAudio engine stays silent without user activation and exposes accessible controls',()=>{
+ assert.equal(defaultArenaAudio.enabled,false);
+ const engine=new ArenaSoundEngine();
+ engine.update({...defaultArenaAudio,enabled:true});
+ for(const cue of ['intro','stage','lock','reveal','correct','incorrect','tick','countdown',
+  'overtime','lead','victory','wheel','mystery','level'] as const)assert.doesNotThrow(()=>engine.play(cue));
+ assert.doesNotThrow(()=>engine.close());
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.ok(session.includes('await audio.current.unlock()'));
+ assert.ok(session.includes("arena-sound-panel__inner"));
+ assert.ok(session.includes('audioSetting({volume:Number(e.target.value)/100})'));
+ assert.ok(session.includes('audioSetting({music:e.target.checked})'));
+ assert.ok(session.includes('audioSetting({effects:e.target.checked})'));
+ assert.ok(session.includes('lastBeep.current===key'));
+ assert.ok(session.includes("audio.current?.play(seconds===1?'countdown':'tick'"));
+ assert.ok(!session.includes('new AudioContext()'), 'single sound engine owns all Web Audio allocation');
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('.arena-sound-panel__inner'));
+});
+
+test('champion, lead, and result banners use confirmed server transitions and are motion safe',()=>{
+ const a:any={code:'111111',status:'question',individual:[{uid:'a',rank:1,score:100}],current:0};
+ const b:any={...a,status:'results'};
+ assert.equal(eligibleMoment(a,b,'host'),'reveal');
+ assert.equal(eligibleMoment(a,b,'play'),null);
+ assert.equal(eligibleMoment(b,{...b,status:'completed'},'display'),'champion');
+ assert.equal(eligibleMoment(b,{...b,individual:[{uid:'b',rank:1,score:150}]},'host'),'lead');
+ assert.equal(eligibleMoment(b,{...b,code:'222222'},'host'),null);
+ for(const kind of ['champion','lead','reveal'] as const){
+  const h=renderToStaticMarkup(<ArenaMoment kind={kind} ar={true} light/>);
+  assert.ok(h.includes('role="status"'));
+  assert.ok(h.includes('aria-live="polite"'));
+  assert.ok(h.includes('arena-moment-'+kind));
+ }
+ const css=readFileSync('app/globals.css','utf8');
+ assert.ok(css.includes('V6 Cinematic Experience — milestone ribbons'));
+ assert.ok(css.includes('.session-shell.effects-off .arena-moment'));
 });
