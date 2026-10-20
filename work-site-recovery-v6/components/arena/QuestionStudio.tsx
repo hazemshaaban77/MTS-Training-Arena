@@ -193,6 +193,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      <small>{t('حدد حتى 3 مستويات. الانسحاب يحتفظ بآخر جائزة وصل لها المتسابق.',
       'Choose up to 3 safe levels. Withdrawal keeps the last prize won.')}</small>
     </fieldset>}
+    {error&&<p className="error-banner" role="alert">{error}</p>}
     <div className="question-studio__question-head">
      <h3>{game&&mode==='ladder'?t('المستوى','Level')+' '+(index+1):t('السؤال','Question')+' '+(index+1)}</h3>
      <div className="question-studio__question-actions">
@@ -232,7 +233,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
     </div>
     {game&&mode==='ladder'&&<p className="question-studio__hint"><ShieldCheck size={18}/>{t('الجائزة تُحتسب فقط عند الإجابة الصحيحة. الإجابة الخاطئة تمنع هذا المتسابق من المستويات التالية.',
       'The server awards this level only for a correct answer and blocks an eliminated contestant from later levels.')}</p>}
-    {error&&<p className="error-banner" role="alert">{error}</p>}
+
    </div>
   </div>
   <footer className="modal-footer question-studio__footer">
