@@ -2,6 +2,7 @@
 import {ArrowDown,ArrowUp,Plus,Trash2} from 'lucide-react';
 import type {Activity} from '../../lib/catalog';
 import QuestionMediaPicker,{type QuestionMedia} from './QuestionMediaPicker';
+import {setMatchingPair,deleteMatchingPair} from '../../lib/question-authoring';
 
 type Props={ar:boolean;q:Activity;onPatch:(change:Record<string,unknown>)=>void;onError:(value:string)=>void};
 export default function QuestionTypeFields({ar,q,onPatch,onError}:Props){
@@ -58,18 +59,13 @@ export default function QuestionTypeFields({ar,q,onPatch,onError}:Props){
      <label>{t('المعنى ','Match ')+(i+1)}<input maxLength={300} value={q.right?.[i]||''}
       onChange={e=>setArray('right',i,e.target.value)}/></label>
      <label>{t('يرتبط بالمعنى','Correct pair')}<select value={q.pairs?.[i]??i}
-      onChange={e=>onPatch({pairs:(q.left||[]).map((_:string,j:number)=>j===i?Number(e.target.value):(q.pairs?.[j]??j))})}>
+      onChange={e=>onPatch({pairs:setMatchingPair(q.pairs||q.left.map((_:string,j:number)=>j),i,Number(e.target.value))})}>
       {(q.right||[]).map((right:string,j:number)=><option key={j} value={j}>{j+1}. {right||t('المعنى','Match')}</option>)}
      </select></label>
      {(q.left?.length||0)>2&&<button className="question-studio__remove-option" type="button"
       aria-label={t('حذف الزوج','Remove pair')}
       onClick={()=>{
-       const old=q.pairs||q.left.map((_:string,j:number)=>j);
-       const deleted=old[i],pairs=old.filter((_:number,j:number)=>j!==i)
-        .map((x:number)=>x>i?x-1:x);
-       const used=new Set(pairs);
-       const missing=Array.from({length:pairs.length},(_,j)=>j).filter(j=>!used.has(j));
-       const patched=pairs.map((x:number)=>x===i&&deleted!==i&&missing.length?missing.shift()!:x);
+       const pairs=deleteMatchingPair(q.pairs||q.left.map((_:string,j:number)=>j),i);
        onPatch({left:q.left.filter((_:string,j:number)=>j!==i),
         right:q.right.filter((_:string,j:number)=>j!==i),pairs:patched});
       }}><Trash2 size={16}/></button>}
