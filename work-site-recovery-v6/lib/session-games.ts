@@ -74,7 +74,15 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
  }else if(b.action==='audience'){
   if(a.mainType!=='Ultimate Game Show'||!Number.isInteger(b.choice)||b.choice<0||b.choice>=a.options.length||d.audienceVote!=null)fail('STATE');d.audienceVote=b.choice;
  }else if(a.type==='Flashcards'){
-  if(!Number.isInteger(b.index)||b.index<0||b.index>=a.fronts.length)fail('ANSWER');d.card=b.index;if(['flip','card'].includes(b.action))d.flipped=b.action==='flip';d.reviewed=[...new Set([...(d.reviewed||[]),b.index])];if(b.action==='selfassess'){d.assessment={...(d.assessment||{}),[b.index]:b.known===true};}
+  // Host-only reveal is a server-enforced content-authoring permission, not
+  // merely a disabled client button. Refuse forged learner flip/card commands.
+  if(a.flipPermission==='host'&&['flip','card'].includes(b.action))fail('FORBIDDEN',403);
+  if(!['flip','card','selfassess'].includes(b.action))fail('ACTION');
+  if(!Number.isInteger(b.index)||b.index<0||b.index>=a.fronts.length)fail('ANSWER');
+  d.card=b.index;
+  if(['flip','card'].includes(b.action))d.flipped=b.action==='flip';
+  d.reviewed=[...new Set([...(d.reviewed||[]),b.index])];
+  if(b.action==='selfassess')d.assessment={...(d.assessment||{}),[b.index]:b.known===true};
  }else if(a.type==='Escape Room'){
   const room=d.room||0,puzzle=d.puzzle||0,r=a.rooms[room];if(!r)fail('CLOSED',409);d.attempts=d.attempts||0;
   if(b.action==='hint'){if(d.attempts<(r.hintAfter??1))fail('HINT_LOCKED');d.hint=r.hint;}
