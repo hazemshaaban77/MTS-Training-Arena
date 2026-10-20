@@ -1,11 +1,12 @@
 'use client';
-import {useEffect,useMemo,useState} from 'react';
-import {ArrowLeft,ArrowRight,CheckCircle2,Eye,Gamepad2,BookOpen,Monitor,Play,RotateCcw,ShieldCheck,Smartphone,Users,X} from 'lucide-react';
+import {useEffect,useMemo,useRef,useState} from 'react';
+import {ArrowLeft,ArrowRight,CheckCircle2,Eye,Gamepad2,BookOpen,Monitor,Play,Volume2,RotateCcw,ShieldCheck,Smartphone,Users,X} from 'lucide-react';
 import {activityLabel,mainType,type Activity} from '../../lib/catalog';
 import {publicActivity,flattenDeck,evaluate} from '../../lib/domain.mjs';
 import {runSimulatedRoom,type SimulatorScenario} from '../../lib/simulator-dry-run';
 import ActivityArt from './ActivityArt';
 import StageSplash from './StageSplash';
+import {ArenaSoundEngine,defaultArenaAudio} from '../../lib/arena-sound';
 import GamePlay from './GamePlay';
 import ArenaChampionshipPractice from './ArenaChampionshipPractice';
 import StageMedia from './StageMedia';
@@ -204,6 +205,15 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
  const [mode,setMode]=useState<Mode>('play'),[runId,setRunId]=useState(0);
  const [learnerCount,setLearnerCount]=useState(10),[scenario,setScenario]=useState<SimulatorScenario>('mixed');
  const [cinematicPreview,setCinematicPreview]=useState(false);
+ const simulatorAudio=useRef<ArenaSoundEngine|null>(null);
+ useEffect(()=>()=>{simulatorAudio.current?.close();simulatorAudio.current=null;},[]);
+ async function playCinematicPreview(withSound=false){
+  setCinematicPreview(true);
+  if(!withSound)return;
+  simulatorAudio.current??=new ArenaSoundEngine();
+  simulatorAudio.current.update({...defaultArenaAudio,enabled:true});
+  if(await simulatorAudio.current.unlock())simulatorAudio.current.play('intro');
+ }
  const go=(i:number)=>{if(i<0||i>=flattened.length)return;setCinematicPreview(false);setIndex(i);setRunId(n=>n+1);};
  const a=flattened[index];
  const room=useMemo(()=>a?runSimulatedRoom(a,learnerCount,scenario):null,[a,learnerCount,scenario]);
@@ -228,8 +238,11 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
     <span><CheckCircle2 size={17}/>{t('وضع تجريبي، مفيش QR ولا متدربين ولا نقاط حقيقية','Practice only: no QR, real participants or live scores')}</span>
     <div className="arena-simulator-modes">
      <button type="button" className="arena-simulator-cinema-btn"
-      onClick={()=>setCinematicPreview(true)}><Play size={16}/>
+      onClick={()=>playCinematicPreview()}><Play size={16}/>
       {t('شاهد انترو اللعبة','Preview cinematic intro')}</button>
+     <button type="button" className="arena-simulator-cinema-btn with-audio"
+      onClick={()=>playCinematicPreview(true)}><Volume2 size={16}/>
+      {t('جرّب الانترو بالصوت','Preview with sound')}</button>
      {([['play',Smartphone,t('المتدرب','Trainee')],['host',Users,t('المدرب','Trainer')],['display',Monitor,t('البروجيكتور','Projector')]] as const).map(([value,Icon,label])=>
       <button type="button" className={mode===value?'selected':''} key={value} onClick={()=>setMode(value)}
        aria-pressed={mode===value}><Icon size={16}/>{label}</button>)}
