@@ -7,8 +7,8 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
  onInteract:(action:string,extra?:any)=>void;
 }){
  const t=(a:string,e:string)=>ar?a:e,show=s.show||{},q=show.question;
- const [selected,setSelected]=useState<number|null>(null),[candidate,setCandidate]=useState('');
- useEffect(()=>{setSelected(null);},[show.level,show.contestant,show.phase]);
+ const [selected,setSelected]=useState<number|null>(null),[candidate,setCandidate]=useState(''),[confirmAnswer,setConfirmAnswer]=useState(false);
+ useEffect(()=>{setSelected(null);setConfirmAnswer(false);},[show.level,show.contestant,show.phase]);
  const contestant=(s.players||[]).find((p:any)=>p.uid===show.contestant);
  const isActor=!!s.mine&&s.mine.id===show.contestant&&!host&&!display;
  const audience=!!s.mine&&!host&&!display&&!isActor;
@@ -83,14 +83,21 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
        const removed=isActor&&(show.eliminatedChoices||[]).includes(i);
        return <button key={i} type="button" className={selected===i?'selected':''}
         disabled={!isActor||busy||seconds===0||removed}
-        aria-pressed={selected===i} onClick={()=>setSelected(i)}>
+        aria-pressed={selected===i} onClick={()=>{setSelected(i);setConfirmAnswer(false);}}>
         <b>{String.fromCharCode(65+i)}</b><span>{removed?'—':option}</span></button>;
       })}</div>
-      {isActor&&<button className="btn primary championship-stage__submit"
-       disabled={selected===null||busy||!seconds}
-       onClick={()=>{if(window.confirm(t('تثبيت إجابتك النهائية؟','Lock in your final answer?')))
-        onInteract('showanswer',{answer:selected});}}>
-       <CheckCircle2 size={18}/>{t('تثبيت الإجابة النهائية','Lock final answer')}</button>}
+      {isActor&&(confirmAnswer
+       ?<div className="championship-answer-confirm" role="group" aria-label={t('تأكيد الإجابة','Answer confirmation')}>
+        <p>{t('هل دي إجابتك النهائية؟','Is this your final answer?')} <strong>{selected!==null?q?.options?.[selected]:''}</strong></p>
+        <div><button type="button" className="btn secondary" disabled={busy}
+         onClick={()=>setConfirmAnswer(false)}>{t('تغيير الإجابة','Change answer')}</button>
+         <button type="button" className="btn primary" disabled={selected===null||busy||!seconds}
+         onClick={()=>{if(selected!==null){setConfirmAnswer(false);onInteract('showanswer',{answer:selected});}}}>
+          <CheckCircle2 size={18}/>{t('تأكيد نهائي','Confirm answer')}</button></div>
+       </div>
+       :<button type="button" className="btn primary championship-stage__submit"
+        disabled={selected===null||busy||!seconds} onClick={()=>setConfirmAnswer(true)}>
+         <CheckCircle2 size={18}/>{t('تثبيت الإجابة النهائية','Lock final answer')}</button>)}
       {!isActor&&!host&&!display&&<p className="championship-stage__spectator">
        {t('إنت من الجمهور. تقدر تصوّت لو المتسابق طلب مساعدة الجمهور.',
         'You are in the audience. Vote if the contestant requests audience help.')}</p>}
