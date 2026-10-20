@@ -1,29 +1,17 @@
 'use client';
 import {useEffect,useRef} from 'react';
-import {ArrowRight,Clapperboard,FastForward,Sparkles,Volume2,Zap} from 'lucide-react';
+import {ArrowRight,Clapperboard,FastForward,Sparkles,Zap} from 'lucide-react';
 import ActivityArt from './ActivityArt';
 import IntroScene from './IntroScene';
 import {introIdentity} from '../../lib/arena-game-identity';
 import {stageAtmosphere} from '../../lib/arena-cinematics';
 
-const captions:Record<string,[string,string,string,string]>={
- 'Quiz':['جاهز لاختبار السرعة والمعرفة؟','QUICK THINKING. BIG ENERGY.','أثبت معرفتك','KNOW YOUR ANSWER'],
- 'Ultimate Game Show':['أضواء المسرح… دور الأبطال','THE SPOTLIGHT IS YOURS','طريق البطولة','ROAD TO THE CROWN'],
- 'Wheel of Fortune':['دور العجلة… واكتشف التحدّي','SPIN INTO THE UNKNOWN','عجلة الحظ','THE WHEEL IS READY'],
- 'Escape Room':['الأبواب مقفولة… والمفتاح في إيدك','ONE ROOM. MANY SECRETS.','افتح طريق النجاة','UNLOCK THE EXIT'],
- 'Open the Box':['كل صندوق وراه مفاجأة','EVERY BOX HAS A SECRET','مفاجأة مستنياك','CHOOSE YOUR MYSTERY'],
- 'Live Poll':['صوتك بيصنع الصورة','MAKE YOUR VOICE COUNT','استعد للمشاركة','YOUR VOICE MATTERS'],
- 'Meta Plan':['رتّب الأفكار… وابني الحل','PUT IDEAS INTO ACTION','خطّط وشارك','PLAN THE WAY FORWARD'],
- 'Order It':['التحدّي كله في الترتيب','THE ORDER MATTERS','رتّبها صح','GET IT IN ORDER'],
- 'Flashcards':['كارت جديد… معرفة جديدة','FLIP. LEARN. REMEMBER.','اكتشف المعلومة','DISCOVER THE NEXT IDEA'],
- 'Scenario Challenge':['قرار واحد يغيّر كل حاجة','YOUR NEXT CHOICE CHANGES EVERYTHING','اتخذ القرار','CHOOSE YOUR PATH']
-};
 const normalized=(type:string)=>type==='Spin Wheel'?'Wheel of Fortune':type==='Categorize'?'Meta Plan':type;
 export default function StageSplash({type,label,ar,onComplete,durationMs=4600,preview=false}:{
  type:string;label:string;ar:boolean;onComplete:()=>void;durationMs?:number;preview?:boolean}){
  const finishRef=useRef(onComplete);finishRef.current=onComplete;
  useEffect(()=>{const id=window.setTimeout(()=>finishRef.current(),durationMs);return()=>window.clearTimeout(id);},[type,durationMs]);
- const base=normalized(type),theme=stageAtmosphere(base),caption=captions[base]||captions.Quiz,identity=introIdentity(base);
+ const base=normalized(type),theme=stageAtmosphere(base),identity=introIdentity(base);
  return <div className={'stage-splash arena-cinematic-intro stage-splash-'+base.toLowerCase().replace(/[^a-z0-9]+/g,'-')+' cinematic-'+theme+' intro-kind-'+identity.key}
   role="dialog" aria-label={ar?'مقدمة اللعبة': 'Game introduction'} aria-modal="false"
   style={{'--intro-duration':durationMs+'ms'} as React.CSSProperties}>
