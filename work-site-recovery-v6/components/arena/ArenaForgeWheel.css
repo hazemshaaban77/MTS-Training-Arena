@@ -1,0 +1,73 @@
+/* Forged Arena 3D wheel — physical redesign, no raster backdrop. */
+.wheel-stage--forge{isolation:isolate;position:relative;background:radial-gradient(ellipse at 50% 35%,#3c9fbd24,transparent 64%)}
+.wheel-stage--forge .forge-stage{display:grid;place-items:center;position:relative;perspective:1350px;width:100%;min-height:clamp(370px,43vw,665px);padding:28px 0 54px}
+.wheel-stage--forge .forge-stage:before{content:"";position:absolute;inset:5%;background:radial-gradient(ellipse,#81d9f43c,transparent 62%);filter:blur(25px);pointer-events:none}
+.wheel-stage--forge .wheel-wrap.wheel-wrap--3d.wheel-wrap--showtime.forge-wheel{box-sizing:border-box!important;position:relative!important;
+ width:clamp(310px,42vw,548px)!important;height:auto!important;aspect-ratio:1/1!important;
+ margin:0 auto!important;padding:0!important;max-width:91vw!important;border:clamp(12px,1.6vw,21px) ridge #fae4ab!important;
+ background:radial-gradient(circle at 25% 18%,#fff7db 0,#ddb669 43%,#70421c 83%)!important;
+ transform:rotateX(13deg) translateZ(0)!important;transform-style:preserve-3d!important;
+ box-shadow:0 5px 0 #f9e9be,0 13px 0 #af7234,0 21px 0 #49311e,0 28px 16px #000c,
+ inset 0 0 0 5px #774827,inset 0 0 0 11px #f0c27e!important;
+ filter:drop-shadow(0 25px 15px #000a) drop-shadow(0 0 35px #f4bc6b50)!important}
+.wheel-stage--forge .forge-wheel:before{content:"";position:absolute!important;inset:-9px!important;border-radius:50%!important;
+ background:repeating-conic-gradient(#fff2cc 0 1.3deg,#764b1c 1.3deg 2.2deg,transparent 2.2deg 15deg)!important;
+ border:10px solid transparent!important;animation:none!important;z-index:8!important;pointer-events:none;opacity:.72}
+.wheel-stage--forge .forge-wheel:after{content:"";inset:-22px!important;position:absolute!important;border-radius:50%!important;
+ border:3px solid #e3c37cbf!important;box-shadow:0 0 0 6px #14243c77,0 0 40px #f0c27261!important;pointer-events:none}
+.wheel-stage--forge .forge-wheel .wheel-tap-surface{position:absolute!important;inset:0!important;border-radius:50%!important;
+ border:8px solid #4a301b!important;background:transparent!important;transform:none!important;overflow:hidden!important;
+ box-shadow:inset 0 0 0 4px #f9e5ba,inset 0 0 0 11px #845e32,inset 0 0 0 17px #f9d08383,inset 0 0 33px #000b!important}
+.wheel-stage--forge .forge-wheel .wheel.cinematic-wheel{position:absolute!important;inset:0!important;border:0!important;
+ border-radius:50%!important;background:var(--arena-wheel-gradient)!important;box-shadow:inset 0 0 0 11px #ecd39b8f,
+ inset 0 0 35px #000a,inset 0 0 0 20px #111c31a6!important;transform-origin:50% 50%!important}
+.wheel-stage--forge .forge-wheel .wheel.cinematic-wheel:after{content:"";inset:0!important;position:absolute!important;
+ border-radius:50%!important;border:0!important;background:radial-gradient(circle at 28% 14%,#fffac54f,transparent 40%),
+ radial-gradient(circle at 70% 90%,#0007,transparent 52%),
+ repeating-conic-gradient(from 0deg,transparent 0 calc(360deg/var(--sector-count) - 1.6deg),
+ #fff1bcdd calc(360deg/var(--sector-count) - 1.6deg) calc(360deg/var(--sector-count)))!important;pointer-events:none}
+.wheel-stage--forge .forge-wheel .wheel.cinematic-wheel>span{z-index:7!important;font-weight:1000!important;
+ color:#fff5dd!important;font-size:clamp(17px,2vw,25px)!important;text-shadow:0 3px 7px #060d1b,0 0 16px #fff2c282!important}
+.wheel-stage--forge .forge-wheel .wheel-center{z-index:10!important;inset:35%!important;border:5px ridge #fff6c5!important;
+ background:radial-gradient(circle at 23% 17%,#fff9d8,#dca957 36%,#855123 70%,#351a0b)!important;
+ box-shadow:0 0 0 5px #473323,0 0 0 10px #f6d187,
+ inset 0 6px 10px #fff6cb6d,inset -9px -10px 16px #2d160ac9,0 13px 24px #000a!important}
+.wheel-stage--forge .forge-wheel .wheel-pointer{position:absolute!important;top:-51px!important;left:calc(50% - 22px)!important;
+ width:44px!important;height:57px!important;z-index:30!important;border:0!important;
+ background:linear-gradient(112deg,#fff5cf,#f0ca79 38%,#986127 76%,#4e2d13)!important;
+ clip-path:polygon(4% 0,96% 0,50% 100%);filter:drop-shadow(0 5px 5px #000b)!important}
+.wheel-stage--forge .forge-wheel .wheel.in-spin{
+ animation:arena-forge-roll var(--spin-duration,6s) cubic-bezier(.08,.55,.14,1) var(--spin-delay,0s) both!important}
+@keyframes arena-forge-roll{from{transform:rotate(0deg)}to{transform:rotate(var(--wheel-stop,2520deg))}}
+.wheel-stage--forge .forge-wheel .wheel.finished-spin{animation:none!important;
+ transform:rotate(var(--wheel-stop))!important;transition:transform .28s ease-out!important}
+.wheel-stage--forge .wheel-tap-hint,.wheel-stage--forge .wheel-rolling-label{
+ background:#142640de!important;border:1px solid #e4c178a6;padding:9px!important;border-radius:24px!important}
+.wheel-stage--forge .reveal-result.wheel-outcome-grand{animation:forge-reveal .4s cubic-bezier(.15,.85,.2,1) both;
+ border:2px solid #f3d292!important;box-shadow:0 0 40px #edd0974d!important}
+@keyframes forge-reveal{from{opacity:0;transform:translateY(17px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:760px){.wheel-stage--forge .forge-stage{min-height:375px}
+ .wheel-stage--forge .wheel-wrap.wheel-wrap--3d.wheel-wrap--showtime.forge-wheel{width:min(84vw,362px)!important}}
+@media(prefers-reduced-motion:reduce){.wheel-stage--forge .forge-wheel .wheel.in-spin{animation-duration:1.25s!important}}
+/* Global projector resilient grid, no cropped games even with custom branding. */
+html body .session-shell.projector{overflow-y:auto!important;min-height:100dvh!important}
+html body .session-shell.projector .live-columns{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+html body .session-shell.projector .main-stage{min-width:0!important;width:100%!important;max-width:100%!important;
+ flex:1 1 auto!important;overflow:visible!important}
+html body .session-shell.projector .round-stage{min-width:0!important;max-width:100%!important;overflow:visible!important;
+ min-height:min(75vh,830px)!important;height:auto!important}
+html body .session-shell.projector .wheel-stage--forge .wheel-wrap.forge-wheel{width:min(43vw,605px)!important}
+@media(max-width:900px){html body .session-shell.projector .wheel-stage--forge .wheel-wrap.forge-wheel{width:min(74vw,480px)!important}}
+/* Box reveal keeps the next player visible while ratings are committed. */
+.box-vault-turn--spotlight{display:flex!important;gap:14px!important;align-items:center!important;
+ background:linear-gradient(135deg,#1d3553,#14253d);border:2px solid #e4c077!important;border-radius:18px!important;
+ padding:16px!important;box-shadow:0 0 30px #e8c97833!important}
+.box-vault-turn--spotlight strong{display:block;font-size:clamp(21px,2.4vw,30px);color:#ffdf97}
+.box-vault-reveal--retiring{animation:forge-reveal .6s reverse both!important}
+.flash-grade-console{border:2px solid #d8b871;border-radius:18px;padding:18px;margin:18px 0;
+ background:linear-gradient(130deg,#253757,#111b30)}
+.flash-grade-console h3{color:#f5d08e}.flash-grade-console .flash-grade-fields{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.flash-grade-console input[type=range]{accent-color:#f4cb76;flex:1;min-width:120px}
+.flash-grade-console strong{font-size:32px;color:#ffe5a0}
+.flash-grade-console select{max-width:100%;min-width:170px}
+.flash-grade-console .rated{color:#bdf5d3}
