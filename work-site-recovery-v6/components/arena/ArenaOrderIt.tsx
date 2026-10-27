@@ -14,6 +14,32 @@ export default function ArenaOrderIt({a,s,ar,actor,canAnswer,busy,onSubmit}:{
   items.map((_,i)=>i);
  const [order,setOrder]=useState<number[]>(initial);
  const drag=useRef<number|null>(null);
+ const [hoverSlot,setHoverSlot]=useState<number|null>(null);
+ const [grabSlot,setGrabSlot]=useState<number|null>(null);
+ const targetAt=(x:number,y:number)=>{
+  const el=document.elementFromPoint(x,y);
+  const card=el?.closest('[data-order-slot]') as HTMLElement|null;
+  const pos=Number(card?.dataset.orderSlot);
+  return card&&Number.isInteger(pos)?pos:null;
+ };
+ function startTouch(event:React.PointerEvent<HTMLSpanElement>,position:number){
+  if(!ready)return;
+  drag.current=position;setGrabSlot(position);setHoverSlot(position);
+  event.currentTarget.setPointerCapture(event.pointerId);
+ }
+ function moveTouch(event:React.PointerEvent<HTMLSpanElement>){
+  if(drag.current===null)return;
+  const target=targetAt(event.clientX,event.clientY);
+  if(target!==null)setHoverSlot(target);
+ }
+ function stopTouch(event:React.PointerEvent<HTMLSpanElement>){
+  if(drag.current===null)return;
+  const source=drag.current,target=targetAt(event.clientX,event.clientY);
+  drag.current=null;setGrabSlot(null);setHoverSlot(null);
+  if(target!==null)swap(source,target);
+  if(event.currentTarget.hasPointerCapture(event.pointerId))
+   event.currentTarget.releasePointerCapture(event.pointerId);
+ }
  const valid=order.length===items.length&&new Set(order).size===items.length&&order.every(i=>i>=0&&i<items.length);
  const ready=actor&&canAnswer&&!busy&&!closed&&!already;
  const revealed=closed&&!!s.keyRevealed&&Array.isArray(a.order)&&a.order.length===items.length;
@@ -25,7 +51,7 @@ export default function ArenaOrderIt({a,s,ar,actor,canAnswer,busy,onSubmit}:{
    return next;
   });
  }
- function drop(to:number){if(drag.current!==null){swap(drag.current,to);drag.current=null;}}
+ function drop(to:number){if(drag.current!==null){swap(drag.current,to);drag.current=null;setHoverSlot(null);setGrabSlot(null);}}
  const heading=closed?t('الترتيب النهائي','FINAL SEQUENCE'):
   already?t('تم تثبيت ترتيبك','YOUR SEQUENCE IS LOCKED'):t('رتّب الخطوات… خطوة بخطوة','ARRANGE THE STEPS');
  return <section className={'arena-sequence'+(closed?' arena-sequence--closed':'')}
@@ -48,7 +74,8 @@ export default function ArenaOrderIt({a,s,ar,actor,canAnswer,busy,onSubmit}:{
     const stepLabel=items[itemIndex]||'';
     const correct=revealed&&a.order[pos]===itemIndex;
     return <div key={itemIndex} role="listitem"
-      className={'arena-sequence__step'+(revealed?' arena-sequence__step--revealed':'')}
+      data-order-slot={pos}
+      className={'arena-sequence__step'+(revealed?' arena-sequence__step--revealed':'')+(hoverSlot===pos?' arena-sequence__step--drop-target':'')+(grabSlot===pos?' arena-sequence__step--dragging':'')}
       draggable={ready}
       onDragStart={event=>{if(ready){drag.current=pos;event.dataTransfer.effectAllowed='move';}}}
       onDragEnd={()=>{drag.current=null;}}
@@ -58,7 +85,13 @@ export default function ArenaOrderIt({a,s,ar,actor,canAnswer,busy,onSubmit}:{
      <span className="arena-sequence__step-text">{stepLabel}</span>
      {revealed&&correct&&<CheckCircle2 size={21} className="arena-sequence__correct"/>}
      {ready&&<div className="arena-sequence__step-actions">
-      <span className="arena-sequence__drag" aria-hidden="true"><GripVertical size={20}/></span>
+      <span className="arena-sequence__drag" role="button" tabIndex={0}
+       aria-label={t('اسحب خطوة ','Drag step ')+(pos+1)}
+       onPointerDown={event=>startTouch(event,pos)}
+       onPointerMove={moveTouch} onPointerUp={stopTouch}
+       onPointerCancel={()=>{drag.current=null;setGrabSlot(null);setHoverSlot(null);}}
+       onKeyDown={event=>{if(event.key==='ArrowUp'||event.key==='ArrowDown'){event.preventDefault();swap(pos,pos+(event.key==='ArrowUp'?-1:1));}}}>
+       <GripVertical size={20}/></span>
       <button type="button" disabled={pos===0} onClick={()=>swap(pos,pos-1)}
        aria-label={t('حرّك ','Move ')+stepLabel+t(' لأعلى',' up')} title={t('لأعلى','Move up')}><ArrowUp size={20}/></button>
       <button type="button" disabled={pos===shown.length-1} onClick={()=>swap(pos,pos+1)}
