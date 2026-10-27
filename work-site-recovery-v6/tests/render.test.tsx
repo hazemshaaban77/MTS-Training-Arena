@@ -1750,7 +1750,7 @@ test('ImportVerse evidence-marked sixty-minute preset contains all ten engines a
  assert.ok(deck[0].questions.some((q:any)=>q.type==='Match It'));
  assert.ok(deck[0].questions.some((q:any)=>q.type==='True/False'));
  assert.equal(new Set(importVerseQuestions.map(q=>q.episode)).size,6);
- assert.equal(importVerseQuestions.filter(q=>q.episode===6).length,30);
+ assert.equal(importVerseQuestions.filter(q=>q.episode===6).length,40);
  assert.ok(importVerseQuestions.filter(q=>q.episode===6).every(q=>q.source==='Episode 6 Word script'));
  assert.ok(deck[2].questions.some((q:any)=>q.sourceEpisode===6));
  const fresh=newSessionActivity('Ultimate Game Show','ar');
