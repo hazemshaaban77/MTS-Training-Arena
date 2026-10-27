@@ -35,8 +35,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
    try{
     const THREE=await import('three');
     if(removed)return;
-    const probe=document.createElement('canvas');
-    if(!probe.getContext('webgl2')&&!probe.getContext('webgl'))throw Error('WebGL unavailable');
+    // WebGLRenderer probes support itself. Avoid allocating a second GPU context.
     renderer=new THREE.WebGLRenderer({antialias:!coarse,alpha:true,powerPreference:coarse?'low-power':'high-performance'});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,coarse?1.3:1.75));
     renderer.outputColorSpace=THREE.SRGBColorSpace;

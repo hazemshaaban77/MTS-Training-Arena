@@ -1806,7 +1806,9 @@ test('optional real WebGL wheel is a render-only layer and preserves existing se
  assert.ok(source.includes('new THREE.ExtrudeGeometry'));
  assert.ok(source.includes('current.revealed&&Number.isInteger(current.index)'));
  assert.ok(source.includes('if(now<(current.startsAt||0))'));
- assert.ok(parent.includes("get('arena3d')==='1'"));
+ assert.ok(parent.includes("get('arena3d')"));
+ assert.ok(parent.includes('arena-v6-crown-wheel-3d-preview'));
+ assert.ok(parent.includes('onClick={()=>changeWheel3D(!wheel3DOptIn)}'));
  assert.ok(parent.includes('wheel3DOptIn&&wheel3DAvailable?'));
  assert.ok(parent.includes('setWheel3DAvailable(false)'));
 });
@@ -1825,4 +1827,16 @@ test('Arena Crown wheel has original authored sector labels, mechanical bulbs an
  assert.match(scene,/current\.revealed&&Number\.isInteger\(current\.index\)/);
  assert.match(scene,/if\(now<\(current\.startsAt\|\|0\)\)/);
  assert.match(css,/arena-wheel3d--crown/);
+});
+
+test('Arena Crown trainer/projector visual-only switch persists through App navigation safely',()=>{
+ const parent=readFileSync('components/arena/GamePlay.tsx','utf8');
+ const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ assert.match(parent,/\(host\|\|display\)&&<div className="wheel-3d-mode-switch"/);
+ assert.match(parent,/localStorage\.setItem\(wheel3DStorageKey,enabled\?'1':'0'\)/);
+ assert.match(parent,/window\.addEventListener\('storage',onStorage\)/);
+ assert.match(parent,/wheel3DOptIn&&wheel3DAvailable\?<ArenaWheel3D/);
+ assert.match(parent,/onUnavailable=\{\(\)=>setWheel3DAvailable\(false\)\}/);
+ assert.doesNotMatch(scene,/probe\.getContext/);
+ assert.match(scene,/renderer=new THREE\.WebGLRenderer/);
 });

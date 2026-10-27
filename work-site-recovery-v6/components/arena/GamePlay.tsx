@@ -18,7 +18,23 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
  const a=s.activity,t=(a:string,e:string)=>ar?a:e,closed=s.status!=='question',g=s.game||{},mine=s.mine,actor=!!mine&&!host&&!display;
  const [word,setWord]=useState(''),[card,setCard]=useState(0),[bet,setBet]=useState(0),[cast,setCast]=useState<string[]>([]);
  const [wheel3DOptIn,setWheel3DOptIn]=useState(false),[wheel3DAvailable,setWheel3DAvailable]=useState(true);
- useEffect(()=>{setWheel3DOptIn(new URLSearchParams(window.location.search).get('arena3d')==='1');},[]);
+ const wheel3DStorageKey='arena-v6-crown-wheel-3d-preview';
+ useEffect(()=>{
+  const query=new URLSearchParams(window.location.search).get('arena3d');
+  // A ?arena3d=1 link activates the preview across App's pushState transitions.
+  // Local-only per-browser preference never touches room/session state.
+  const enabled=query==='1'||query!== '0'&&localStorage.getItem(wheel3DStorageKey)==='1';
+  setWheel3DOptIn(enabled);
+  if(query==='1'||query==='0')localStorage.setItem(wheel3DStorageKey,enabled?'1':'0');
+  const onStorage=(e:StorageEvent)=>{if(e.key===wheel3DStorageKey){setWheel3DOptIn(e.newValue==='1');setWheel3DAvailable(true);}};
+  window.addEventListener('storage',onStorage);
+  return ()=>window.removeEventListener('storage',onStorage);
+ },[]);
+ function changeWheel3D(enabled:boolean){
+  localStorage.setItem(wheel3DStorageKey,enabled?'1':'0');
+  setWheel3DAvailable(true);
+  setWheel3DOptIn(enabled);
+ }
  // Freeze the server-to-client start offset for each spin. Recomputing the
  // animation delay on every clock tick can pull the wheel forward early.
  const stableWheelSpinDelay=useMemo(()=>g.spin
@@ -51,7 +67,7 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
    const color=colors[i%colors.length]||fallback[i%fallback.length];
    return `${color} ${(i*step).toFixed(3)}deg ${((i+1)*step).toFixed(3)}deg`;
   }).join(', ')})`;
-  return <div className="presentation-play wheel-stage wheel-stage--forge"><div className="turn-entrance" key={g.target}><span className="avatar">{turnPlayer?.name?.charAt(0)||'✦'}</span><div><small>{t('الدور الحالي','IN THE SPOTLIGHT')}</small><b>{turnPlayer?.name||t('في انتظار مشارك','Waiting for a player')}</b></div><strong>{g.turn}/{g.rounds}</strong></div><div className="wheel-arena-banner"><Zap size={18}/><span>{t('لحظة الحظّ… يا ترى العجلة هتقف على إيه؟','THE WHEEL DECIDES · LET THE CHALLENGE BEGIN')}</span><Zap size={18}/></div>{wheel3DOptIn&&wheel3DAvailable?<ArenaWheel3D sectors={sectors} spin={spin} serverNow={now} canSpin={canRequestSpin} countdown={count} ar={ar} onUnavailable={()=>setWheel3DAvailable(false)} onSpin={()=>host?onControl('spin'):send('spin')}/>:<div className="forge-stage"><div className="wheel-wrap wheel-wrap--grand wheel-wrap--3d wheel-wrap--showtime forge-wheel">
+  return <div className="presentation-play wheel-stage wheel-stage--forge"><div className="turn-entrance" key={g.target}><span className="avatar">{turnPlayer?.name?.charAt(0)||'✦'}</span><div><small>{t('الدور الحالي','IN THE SPOTLIGHT')}</small><b>{turnPlayer?.name||t('في انتظار مشارك','Waiting for a player')}</b></div><strong>{g.turn}/{g.rounds}</strong></div><div className="wheel-arena-banner"><Zap size={18}/><span>{t('لحظة الحظّ… يا ترى العجلة هتقف على إيه؟','THE WHEEL DECIDES · LET THE CHALLENGE BEGIN')}</span><Zap size={18}/></div>{(host||display)&&<div className="wheel-3d-mode-switch" role="group" aria-label={t('وضع عرض العجلة','Wheel visual mode')}><button type="button" className={'btn secondary compact '+(wheel3DOptIn?'is-active':'')} aria-pressed={wheel3DOptIn} onClick={()=>changeWheel3D(!wheel3DOptIn)}>{wheel3DOptIn?t('3D الحقيقي · إيقاف','REAL 3D · OFF'):t('جرّب العجلة 3D','TRY REAL 3D')}</button>{wheel3DOptIn&&<span>{t('معاينة محلية على الجهاز · النتيجة من السيرفر','Local visual preview · official result from server')}</span>}</div>}{wheel3DOptIn&&wheel3DAvailable?<ArenaWheel3D sectors={sectors} spin={spin} serverNow={now} canSpin={canRequestSpin} countdown={count} ar={ar} onUnavailable={()=>setWheel3DAvailable(false)} onSpin={()=>host?onControl('spin'):send('spin')}/>:<div className="forge-stage"><div className="wheel-wrap wheel-wrap--grand wheel-wrap--3d wheel-wrap--showtime forge-wheel">
    <i className="wheel-pointer" aria-hidden="true"/>
    <button type="button" className="wheel-tap-surface"
     aria-label={spin&&!spin.revealed?t('العجلة بتلف دلوقتي','The wheel is spinning'):t('اضغط على العجلة لبدء اللف','Tap wheel to spin')}
