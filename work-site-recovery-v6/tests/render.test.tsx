@@ -581,7 +581,7 @@ test('Mystery Vault opens only the selected server box and marks exhausted boxes
  const spectator=renderToStaticMarkup(<GamePlay s={{...base,game:{...base.game,used:[],box:null}}}
   ar={true} host={false} display={true} canAnswer={false} busy={false}
   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(spectator.includes('صناديق المفاجآت'));
+ assert.ok(spectator.includes('صناديق الجوائز ثلاثية الأبعاد'),'Projector sees the new authentic 3D vault');
  assert.ok(spectator.includes('disabled=""'),'Projector has no authority to open a box');
  assert.ok(!spectator.includes('DISCOVERY CHALLENGE'),'No reveal before server sends it');
  const src=readFileSync('components/arena/GamePlay.tsx','utf8');
