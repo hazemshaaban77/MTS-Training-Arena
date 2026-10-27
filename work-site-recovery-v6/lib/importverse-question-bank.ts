@@ -3,7 +3,7 @@ import type {Activity} from './catalog';
 /** ImportVerse training question bank. Source: user-provided speech-to-text
  * output for MP3 Episodes 1–5 and the user-uploaded Word script for Episode 6.
  * This is an educational recap, NOT a source of current customs/legal advice.
- * Dates, thresholds, reliefs and regulations require independent verification.
+ * Business-centered forms only; narrative-only questions are omitted.\n * Dates, thresholds, reliefs and regulations require independent verification.
  */
 export type ImportVerseQuestion={id:string;episode:number;topic:string;level:string;prompt:string;options:string[];correct:number;explanation:string;activity:Activity;source:'MP3 transcript'|'Episode 6 Word script'};
 const sections=[
@@ -890,15 +890,165 @@ const sections=[
  ]
 }
 ];
-export const importVerseQuestions:ImportVerseQuestion[]=sections.flatMap(section=>section.questions.map((q,i)=>{
- const [prompt,correctAnswer,...rest]=q;
- const level=rest.pop() as string, explanation=rest.pop() as string;
- const other=rest as string[];
- const position=(section.episode+i)%4;
- const options=[...other]; options.splice(position,0,correctAnswer);
+
+// Knowledge questions focus on trade operations, not the fictional protagonist.
+// Two story-only chronology questions are deliberately excluded rather than
+// silently transformed into unrelated regulatory claims.
+const OMIT_STORY_ONLY = new Set(['IV-E1-11','IV-E1-12']);
+const BUSINESS_PROMPTS:Record<string,string>={
+ "IV-E1-01": "لتسجيل منشأة تجارية على منصة نافذة، أي نوع حساب يناسب ممثل الشركة؟",
+ "IV-E1-04": "من قائمة «حسابي» في نافذة، ما الخيار المستخدم لبدء طلب تفعيل الخدمات الإلكترونية؟",
+ "IV-E1-05": "ما صفة الحساب المستخدمة لتفعيل الخدمات الإلكترونية لمستورد صاحب شأن؟",
+ "IV-E1-06": "ما التسلسل التشغيلي لطلب تفعيل خدمات المنشأة بعد إدخال البيانات؟",
+ "IV-E1-07": "أين تُقدَّم المستندات الداعمة المطلوبة لتفعيل الخدمات في الإجراء المشروح؟",
+ "IV-E1-10": "ما وظيفة خيار «حساب جديد» في بوابة نافذة؟",
+ "IV-E2-05": "في شرط EXW، أين تكون نقطة تسليم البضاعة الأساسية؟",
+ "IV-E2-10": "ما المقصود بالدفع الآجل في الاعتماد المستندي؟",
+ "IV-E3-03": "ما مجموعات البيانات الأساسية في طلب إصدار ACID؟",
+ "IV-E4-08": "ما امتداد ملف قالب الفاتورة الإلكترونية الموضح في تدريب CargoX؟",
+ "IV-E4-09": "أين يُحمّل قالب الفاتورة الإلكترونية المخصص للاستخدام في نافذة؟",
+ "IV-E4-13": "قبل إصدار بوليصة الشحن، أي مستند يمكن ربطه ببيانات الاعتماد المستندي في الإجراء المشروح؟",
+ "IV-E5-03": "في نموذج الإفراج المسبق قبل وصول السفينة، بأي دفتر تقيد الشهادة الجمركية؟",
+ "IV-E5-04": "عند الإفراج العادي بعد وصول الشحنة وربط إذن التسليم، ما دفتر القيد المذكور بالتدريب؟",
+ "IV-E5-09": "ما الفائدة التشغيلية من بدء الإجراءات الجمركية قبل وصول السفينة؟",
+ "IV-E5-10": "ماذا يمثل إصدار رقم 46 في إجراءات تسجيل البيان الجمركي؟",
+ "IV-E5-11": "ما المكونات التي يعرضها التدريب لرقم الشهادة الجمركية؟",
+ "IV-E5-12": "في حالة وصول السفينة وربط إذن التسليم قبل استكمال الإفراج المسبق، كيف يمكن أن يتغير نوع القيد وفق الإجراء المشروح؟",
+ "IV-E5-13": "لماذا يُبدأ تجهيز ومراجعة مستندات الإفراج المسبق أثناء رحلة السفينة؟",
+ "IV-E6-01": "أي وسيلة شحن مناسبة للسلع العاجلة مرتفعة القيمة رغم تكلفتها الأعلى عادةً؟",
+ "IV-E6-02": "من هو الناقل البحري الفعلي الذي يشغّل السفن والحاويات؟",
+ "IV-E6-06": "للأوزان الثقيلة والمركزة، أي حاوية قياسية وردت في شرح اختيار المعدات؟",
+ "IV-E6-10": "ما نوع الحمولة التي تناسب تجهيزات ISO Tank؟",
+ "IV-E6-12": "إلى ماذا يشير الحرف U في كود فئة معدات الحاويات؟",
+ "IV-E6-22": "ما معنى Telex Release في تداول بوليصة الشحن؟",
+ "IV-E6-23": "ما الرقم الذي يجب التدقيق في إدراجه بصورة صحيحة في مستندات شحنة مستوردة ضمن ACI؟",
+ "IV-E6-24": "ما موضوع «العوارية العامة» General Average في النقل البحري؟",
+ "IV-E6-25": "أي فئة من Institute Cargo Clauses وُصفت في التدريب بأنها الأوسع نسبيًا؟",
+ "IV-E6-26": "ما أول مرحلة في رحلة الشحن البحري، قبل الحجز وتحميل السفينة؟",
+ "IV-E6-27": "متى يُنشأ Booking Number في إجراءات الشحن البحري؟",
+ "IV-E6-30": "ما الحاوية الملائمة غالبًا للبضاعة كبيرة الحجم وخفيفة الوزن نسبيًا مع احتياج ارتفاع إضافي؟"
+};
+const BUSINESS_OPTIONS:Record<string,string[]>={
+ "IV-E1-01": [
+  "حساب تجاري",
+  "حساب مصدر أجنبي",
+  "حساب توكيل ملاحي",
+  "حساب جهة حكومية"
+ ],
+ "IV-E1-04": [
+  "تفعيل الخدمات الإلكترونية",
+  "الاستعلام عن بوليصة الشحن",
+  "تفويض مخلص جمركي",
+  "إنشاء شهادة جمركية"
+ ],
+ "IV-E1-05": [
+  "حساب صاحب شأن",
+  "حساب جهة مصرفية",
+  "حساب توكيل ملاحي",
+  "حساب مصدر أجنبي"
+ ]
+};
+const MISLEADING_DISTRACTOR_REPLACEMENTS:Record<string,string>={
+ "اسم لعبة العجلة": "اسم الخط الملاحي",
+ "رقم حساب المدرب": "رقم الإذن البنكي",
+ "أرقام مستلزمات القاعة": "رقم الميناء",
+ "قائمة المستخدمين فقط": "صفحة البيانات الجمركية",
+ "نتيجة العجلة": "قائمة الطلبات الجمركية",
+ "رمز مسابقة": "رقم إيصال الشحن",
+ "رمز طلب تصويت": "رقم الاعتماد المستندي",
+ "حساب شركة الشحن على CargoX": "حساب المصدر في CargoX",
+ "دفتر حضور المتدربين": "دفتر التأمين المستندي",
+ "رمز صلاحية المتدرب": "رقم شهادة المنشأ",
+ "حساب المدرب والمتدرب": "البنك وشركة التأمين",
+ "في شهادة الأداء": "في إذن التسليم",
+ "لتحسين صوت الفيديو": "لتصحيح فاتورة المورد",
+ "لفتح غرفة التدريب": "لتعديل بيانات التأمين",
+ "لإلغاء الخصم": "لتحديث البيان الجمركي",
+ "بطاقة المعرفة": "خانة تفاصيل الشحنة",
+ "اختيار نتيجة العجلة": "اختيار الحساب البنكي",
+ "اسم المدرب": "اسم المخلص الجمركي",
+ "لون الحاوية": "رقم حجز السفينة",
+ "عدد المشاركين": "وزن البضاعة"
+};
+export const importVerseQuestions:ImportVerseQuestion[]=sections.flatMap(section=>section.questions.flatMap((q,i)=>{
  const id='IV-E'+section.episode+'-'+String(i+1).padStart(2,'0');
- return {id,episode:section.episode,topic:section.title,level,prompt,options,correct:position,explanation,
- source:(section.episode===6?'Episode 6 Word script':'MP3 transcript') as 'MP3 transcript'|'Episode 6 Word script',activity:{type:'Quiz',prompt:'الحلقة '+section.episode+': '+prompt,options,correct:position,timer:40,points:1000,speed:false,
- sourceEpisode:section.episode,questionBankId:id,explanation}};
+ if(OMIT_STORY_ONLY.has(id))return [];
+ const [rawPrompt,correctAnswer,...rest]=q;
+ const level=rest.pop() as string,rawExplanation=rest.pop() as string;
+ const prompt=BUSINESS_PROMPTS[id]||rawPrompt
+  .replace(/في (?:الحلقة|القصة|المثال التدريبي|مثال الحلقة)/g,'في الإجراء التدريبي')
+  .replace(/وفق (?:تعريف|شرح) الحلقة/g,'وفق التعريف المهني');
+ const explanation=rawExplanation
+  .replace(/مالك/g,'المستورد')
+  .replace(/في (?:قصة|رحلة) المستورد/g,'في تسلسل الإجراء')
+  .replace(/الحلقة (?:الخامسة|الرابعة|الثالثة|الثانية|السادسة|الأولى)/g,'التدريب')
+  .replace(/الحلقة/g,'المادة التدريبية')
+  .replace(/السكريبت/g,'المحتوى التدريبي')
+  .replace(/القصة/g,'الإجراء')
+  .replace(/المشهد (?:الثاني|الثالث|الرابع)/g,'التوضيح المهني');
+ const alternate=(rest as string[]).map(o=>MISLEADING_DISTRACTOR_REPLACEMENTS[o]||o);
+ const options=BUSINESS_OPTIONS[id]||(()=>{
+  const p=(section.episode+i)%4;
+  const choices=[...alternate]; choices.splice(p,0,correctAnswer); return choices;
+ })();
+ const correct=options.indexOf(correctAnswer);
+ if(correct<0)throw Error('Correct business answer missing for '+id);
+ const source=(section.episode===6?'Episode 6 Word script':'MP3 transcript') as 'MP3 transcript'|'Episode 6 Word script';
+ return [{id,episode:section.episode,topic:section.title,level,prompt,options,correct,explanation,source,
+  activity:{type:'Quiz',prompt,options,correct,timer:40,points:1000,speed:false,
+   sourceEpisode:section.episode,questionBankId:id,explanation}}];
 }));
+const businessBase=[...importVerseQuestions];
+
+const ADDITIONAL_TRUE_FALSE:any[]=[[1,"تفعيل البريد الإلكتروني يغني تمامًا عن طلب تفعيل الخدمات الإلكترونية في نافذة.",false,"تنشيط البريد منفصل عن إجراء تفعيل الخدمات للمنشأة."],[1,"تأكيد رقم الهاتف قد يعتمد على إدخال رمز أمان مرسل للهاتف.",true,"التسجيل يشمل التحقق من رقم الهاتف برمز أمان."],[1,"الحساب التجاري مناسب لتسجيل منشأة تقوم بنشاط استيراد.",true,"التسجيل التجاري يربط الحساب ببيانات المنشأة."],[2,"شرط FOB يُلزم المشتري بتحميل البضاعة على السفينة في ميناء الشحن.",false,"في FOB البائع يسلّم البضاعة على ظهر السفينة وفق الشرط."],[2,"Incoterms توضح توزيع الالتزامات والتكاليف والمخاطر في التسليم.",true,"هي قواعد تجارية دولية لتوزيع مسؤوليات النقل والتسليم."],[2,"الاعتماد المستندي يرتكز على فحص المستندات المقدمة وفق شروط الاعتماد.",true,"الامتثال لشروط الاعتماد ومستنداته محور السداد."],[3,"التفويض الإلكتروني يسري فور كتابة اسم شركة التخليص دون قبولها.",false,"يجب أن تقبل الشركة المفوض إليها التفويض بحسب شرح الإجراء."],[3,"ACID رقم تعريفي يُستخدم لربط بيانات الشحنة وأطرافها ومستنداتها.",true,"وظيفة ACID تعريف الشحنة في ACI."],[3,"طلب ACID يكتفي ببيانات المستورد دون المصدر أو الشحنة.",false,"يضم بيانات المستورد والمصدر والشحنة."],[4,"KYC في CargoX يشير إلى إجراءات التحقق من هوية الكيان الاقتصادي.",true,"Know Your Customer يعني التحقق من بيانات الشركة."],[4,"CargoX Envelope هو مظروف ورقي لازم يُسلَّم لشركة الشحن.",false,"هو ظرف إلكتروني لتجميع المستندات وتداولها."],[4,"التوقيع الإلكتروني على مرفقات نافذة يتطلب مراجعة المرفق واستكمال بياناته اللازمة.",true,"تختلف الحقول المطلوبة وفق المستند، ثم يتم التوقيع."],[5,"دفتر 15 في السيناريو التدريبي متعلق بالإفراج المسبق.",true,"السكريبت يفرق بين دفتر 15 ودفتر 1 حسب حالة الإجراء."],[5,"الإفراج العادي بعد وصول السفينة يتم تقييده دائمًا في دفتر 15 في المثال المعروض.",false,"ورد ربط الإفراج العادي بدفتر 1."],[5,"مرتجع الصادر يعني بضائع سبق تصديرها ثم عادت.",true,"قد تعود بضائع مصدرة لأسباب مثل الإصلاح أو العيب."],[6,"Reefer تُستخدم لنقل البضائع المحتاجة ضبط درجة الحرارة.",true,"حاوية التبريد مُجهزة للمحافظة على درجات الحرارة."],[6,"ISO Tank أفضل تجهيز قياسي لنقل الأثاث المكتبي.",false,"تُستخدم لنقل سوائل وحمولات مناسبة لخزانات ISO."],[6,"Port of Loading هو ميناء تحميل البضاعة على وسيلة النقل.",true,"POL اختصار Port of Loading."],[6,"Free Time تعني إعفاءً غير محدود من كل رسوم التأخير في أي ميناء.",false,"هي فترة سماح محددة بحسب الشروط والاتفاق."],[6,"Bill of Lading يمكن أن تؤدي وظيفة إيصال استلام وعقد نقل وسند ملكية.",true,"هذه الوظائف الثلاث ذُكرت في السكريبت مع اختلاف أنواع البوالص."]];
+ADDITIONAL_TRUE_FALSE.forEach(([episode,statement,truth,explanation],i)=>{
+ const id='IV-TF-'+String(i+1).padStart(2,'0');
+ importVerseQuestions.push({id,episode,topic:'العمليات التجارية · صح أم غلط',level:'متوسط',
+ prompt:statement,options:['صح','غلط'],correct:truth?0:1,explanation,
+ source:episode===6?'Episode 6 Word script':'MP3 transcript',
+ activity:{type:'True/False',prompt:statement,options:['صح','غلط'],
+ correct:truth?0:1,timer:30,points:1000,speed:false,sourceEpisode:episode,questionBankId:id,explanation}});
+});
+["IV-E1-03","IV-E1-09","IV-E2-01","IV-E2-06","IV-E3-01","IV-E3-02","IV-E4-01","IV-E4-02","IV-E5-01","IV-E5-08","IV-E6-07","IV-E6-18"].forEach((sourceId,i)=>{
+ const q=businessBase.find(x=>x.id===sourceId);
+ if(!q)throw Error('Dropdown source not found '+sourceId);
+ const id='IV-DD-'+String(i+1).padStart(2,'0'),prompt='اختر الإجابة من القائمة: '+q.prompt;
+ importVerseQuestions.push({...q,id,prompt,topic:'اختيار من قائمة · '+q.topic,
+ activity:{...q.activity,type:'Dropdown',prompt,questionBankId:id,timer:35}});
+});
+const MATCH_SPECS:any[]=[[1,"وصل مراحل تفعيل حساب المستورد بوظيفتها",["تفعيل البريد","تأكيد الموبايل","تفعيل الخدمات"],["تأكيد رقم الهاتف","تأكيد صلاحية البريد","إتاحة خدمات المنشأة"],[1,0,2]],[2,"طابق شروط التجارة الدولية مع طريقة التسليم",["EXW","FOB","CIF"],["تسليم على السفينة بميناء الشحن","تسليم بمقر البائع","تكلفة وشحن وتأمين متعاقد عليها"],[1,0,2]],[3,"وصل مصطلحات ACI والتفويض بوظيفتها",["ACID","ACI","التفويض الإلكتروني"],["قبول المفوض إليه يحدد سريان التكليف","رقم يميز الشحنة","التسجيل المسبق للشحنات"],[1,2,0]],[4,"طابق خدمات CargoX ونافذة مع وظيفتها",["KYC","Envelope","eToken"],["توقيع إلكتروني","التحقق من هوية الشركة","مظروف رقمي للمستندات"],[1,2,0]],[5,"وصل مسميات الإجراءات الجمركية بوظيفتها",["دفتر 15","دفتر 1","رقم 46"],["شهادة جمركية برقم قيد","إجراء إفراج مسبق في السيناريو","إجراء إفراج عادي في السيناريو"],[1,2,0]],[6,"طابق أنواع معدات الشحن بالحمولة المناسبة",["Reefer","ISO Tank","Flat Rack"],["حاويات لأبعاد غير قياسية","حمولة تحتاج تبريد","نقل سوائل مناسبة للخزان"],[1,2,0]]];
+MATCH_SPECS.forEach(([episode,prompt,left,right,pairs],i)=>{
+ const id='IV-MT-'+String(i+1).padStart(2,'0');
+ importVerseQuestions.push({id,episode,topic:'توصيل المصطلحات',level:'متوسط',prompt,
+ options:[],correct:0,explanation:'وصّل كل مصطلح بمفهومه المهني الصحيح.',
+ source:episode===6?'Episode 6 Word script':'MP3 transcript',
+ activity:{type:'Match It',prompt,left,right,pairs,timer:75,points:1000,speed:false,
+ sourceEpisode:episode,questionBankId:id}});
+});
+const ORDER_SPECS:any[]=[[1,"رتب خطوات تجهيز حساب نافذة للتعامل التجاري",["طلب تفعيل الخدمات الإلكترونية","اختيار الحساب التجاري","تأكيد رقم الموبايل","التحقق من البريد الإلكتروني"],[1,3,2,0]],[3,"رتب مراحل إصدار ACID بعد إتمام تفويض جهة التخليص",["مراجعة البيانات وإرسال الطلب","إضافة بيانات المستورد والمصدر","إدخال بيانات الشحنة","قبول التفويض من الجهة المفوضة"],[3,1,2,0]],[4,"رتب تسلسل تسليم مستندات CargoX وتوقيعها",["توقيع المستندات إلكترونيًا","إنشاء Envelope للمرفقات","مراجعة المرفقات في نافذة","تسجيل المصدر والتحقق من شركته"],[3,1,2,0]],[6,"رتب المراحل الأساسية للشحن البحري",["تحميل البضاعة على السفينة","طلب عرض سعر للشحن","الحجز Booking","تجهيز البضاعة وتسليمها للنقل"],[1,2,3,0]]];
+ORDER_SPECS.forEach(([episode,prompt,items,order],i)=>{
+ const id='IV-OR-'+String(i+1).padStart(2,'0');
+ importVerseQuestions.push({id,episode,topic:'تسلسل إجراءات الاستيراد',level:'متوسط',prompt,
+ options:[],correct:0,explanation:'رتب الخطوات بحسب تسلسل الإجراءات في المحتوى التدريبي.',
+ source:episode===6?'Episode 6 Word script':'MP3 transcript',
+ activity:{type:'Order It',prompt,items,order,timer:85,points:1000,speed:false,
+ sourceEpisode:episode,questionBankId:id}});
+});
+const FILL_SPECS:any[]=[[1,"رمز التحقق المستخدم لتأكيد رقم الهاتف يسمى عادةً ___ .",["OTP","رمز أمان"],"تستخدم خطوة تفعيل الهاتف رمزًا يُرسل للتحقق من مالكه."],[2,"الشرط التجاري الذي يتضمن تكلفة الشحن البحري والتأمين هو ___ .",["CIF"],"CIF اختصار Cost Insurance and Freight."],[3,"الرقم المستخدم لتعريف الشحنة مسبقًا في منظومة ACI هو ___ .",["ACID"],"ACID يُستخدم لربط الشحنة ومستنداتها."],[4,"منصة المستندات المبنية على البلوكتشين المستخدمة في الحلقة الرابعة هي ___ .",["CargoX","كارجو إكس"],"CargoX هي منصة تداول المستندات الرقمية."],[5,"الدفتر المستخدم للإفراج المسبق قبل وصول السفينة في سيناريو التدريب هو دفتر ___ .",["15","١٥"],"ورد دفتر 15 في نموذج الإفراج المسبق."],[6,"الحاوية المستخدمة للبضائع التي تتطلب تبريدًا يطلق عليها ___ .",["Reefer"],"حاوية Reefer مجهزة للتبريد."]];
+FILL_SPECS.forEach(([episode,prompt,accepted,explanation],i)=>{
+ const id='IV-FB-'+String(i+1).padStart(2,'0');
+ importVerseQuestions.push({id,episode,topic:'أكمل المصطلح',level:'متوسط',prompt,
+ options:[],correct:0,explanation,
+ source:episode===6?'Episode 6 Word script':'MP3 transcript',
+ activity:{type:'Fill Blank',prompt,accepted,timer:50,points:1000,speed:false,
+ sourceEpisode:episode,questionBankId:id,explanation}});
+});
 export function importVerseEpisodeQuestions(episode:number){return importVerseQuestions.filter(q=>q.episode===episode);}
+export const importVerseQuestionDistribution={
+ multipleChoice:businessBase.length,
+ trueFalse:ADDITIONAL_TRUE_FALSE.length,
+ dropdown:12,
+ matchIt:MATCH_SPECS.length,
+ orderIt:ORDER_SPECS.length,
+ fillBlank:FILL_SPECS.length
+};
