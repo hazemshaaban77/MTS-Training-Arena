@@ -1,0 +1,39 @@
+name: Verify V6 legacy box grading hotfix (no deploy)
+on:
+  push:
+    branches: ['fix/v6-legacy-box-judging']
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: node scripts/verify-game-overhaul.mjs
+      - run: pnpm run build:github
+        env:
+          VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-gateway.pages.dev
+      - run: pnpm run build:github-api
+      - name: Package tested worker for rollback-ready deployment
+        working-directory: .
+        run: |
+          mkdir -p deployment-bundles/v6
+          cp work-site-recovery-v6/dist-github-api/worker.mjs deployment-bundles/v6/worker.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-bundles/v6/worker.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "build(v6): legacy box fix Worker bundle [skip ci]"
+            git push origin HEAD:fix/v6-legacy-box-judging
+          fi
