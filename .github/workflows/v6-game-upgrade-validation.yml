@@ -4,7 +4,7 @@ on:
     branches: ['feature/v6-game-experience-overhaul']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   verify-v6-games:
     runs-on: ubuntu-latest
@@ -27,3 +27,15 @@ jobs:
         env:
           VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-gateway.pages.dev
       - run: pnpm run build:github-api
+      - name: Capture reviewed v6 Worker bundle to release branch (do not deploy)
+        working-directory: .
+        run: |
+          mkdir -p deployment-bundles/v6
+          cp work-site-recovery-v6/dist-github-api/worker.mjs deployment-bundles/v6/worker.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-bundles/v6/worker.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "build(v6): reviewed game upgrade Worker bundle [skip ci]"
+            git push origin HEAD:feature/v6-game-experience-overhaul
+          fi
