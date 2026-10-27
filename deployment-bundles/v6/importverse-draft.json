@@ -1,0 +1,577 @@
+{
+  "title": "ImportVerse — The Ultimate Import Challenge | 60 دقيقة | 5 حلقات مؤكدة",
+  "language": "ar",
+  "teams": false,
+  "settings": {
+    "tie": "shared",
+    "teamNames": [
+      "فريق البرق",
+      "فريق الموج"
+    ],
+    "progression": "manual",
+    "reveal": "manual",
+    "surveyOnly": false
+  },
+  "activities": [
+    {
+      "type": "Quiz",
+      "prompt": "ImportVerse | بوابة المعرفة: رحلة مالك من التسجيل للإفراج",
+      "timer": 40,
+      "options": [
+        "إنشاء حساب واستيفاء المتطلبات",
+        "شحن البضاعة",
+        "طلب الإفراج",
+        "حجز المخزن"
+      ],
+      "correct": 0,
+      "questions": [
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 1: مالك صاحب المصنع اختار أي نوع حساب على نافذة؟",
+          "options": [
+            "حساب شخصي",
+            "حساب تجاري",
+            "حساب شركة شحن",
+            "حساب موظف جمركي"
+          ],
+          "correct": 1,
+          "timer": 40,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 1,
+          "questionBankId": "IV-E1-01",
+          "explanation": "اختار حساب تجاري لتسجيل المنشأة وتفعيل الخدمات."
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 2: أي مستند يبدأ به تفاوض الكمية والسعر وشروط الصفقة؟",
+          "options": [
+            "رقم 46",
+            "إذن التسليم",
+            "الفاتورة المبدئية Proforma Invoice",
+            "رسالة إغلاق الجلسة"
+          ],
+          "correct": 2,
+          "timer": 40,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 2,
+          "questionBankId": "IV-E2-01",
+          "explanation": "الفاتورة المبدئية تحدد البضاعة والسعر والكمية."
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 3: التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
+          "options": [
+            "بمجرد إدخال اسمها",
+            "بعد وصول السفينة فقط",
+            "بعد استلام CargoX للفاتورة",
+            "بعد قبول الشركة المفوض إليها للتفويض"
+          ],
+          "correct": 3,
+          "timer": 40,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 3,
+          "questionBankId": "IV-E3-01",
+          "explanation": "المفوض إليه يراجع ثم يقبل التفويض عبر نافذة."
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 4: KYC في تسجيل CargoX معناه إيه؟",
+          "options": [
+            "Know Your Customer والتحقق من بيانات الشركة",
+            "رمز ميناء الوصول",
+            "نظام تسليم الحاويات",
+            "رقم الضريبة الجدولية"
+          ],
+          "correct": 0,
+          "timer": 40,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 4,
+          "questionBankId": "IV-E4-01",
+          "explanation": "KYC توثيق الكيان الاقتصادي."
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 5: لو بدأت الإجراءات قبل وصول السفينة، في أي دفتر قُيّدت شهادة الإفراج المسبق في مثال الحلقة؟",
+          "options": [
+            "دفتر 1",
+            "دفتر حضور المتدربين",
+            "دفتر اعتماد البنك",
+            "دفتر 15"
+          ],
+          "correct": 3,
+          "timer": 40,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 5,
+          "questionBankId": "IV-E5-03",
+          "explanation": "الحلقة الخامسة تشرح تسجيل حالة الإفراج المسبق في دفتر 15."
+        }
+      ],
+      "plannedMinutes": 6,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    },
+    {
+      "type": "Wheel of Fortune",
+      "prompt": "عجلة ImportVerse | تحديات أداء من الحلقات 1–5",
+      "timer": 0,
+      "rounds": 5,
+      "spinDuration": 5,
+      "sectors": [
+        {
+          "label": "التسجيل على نافذة",
+          "kind": "challenge",
+          "points": 0,
+          "repeatable": true,
+          "detail": "من الحلقة 1: اشرح التسلسل من الحساب التجاري وتفعيل البريد والموبايل وحتى تفعيل الخدمات الإلكترونية. تقييم 0–10."
+        },
+        {
+          "label": "Incoterms",
+          "kind": "challenge",
+          "points": 0,
+          "repeatable": true,
+          "detail": "من الحلقة 2: وضّح الفرق العملي بين EXW وFOB وCIF من حيث الالتزامات. تقييم 0–10."
+        },
+        {
+          "label": "تفويض + ACID",
+          "kind": "challenge",
+          "points": 0,
+          "repeatable": true,
+          "detail": "من الحلقة 3: اشرح قبول التفويض وخطوات طلب ACID والبيانات الأساسية. تقييم 0–10."
+        },
+        {
+          "label": "CargoX + التوقيع",
+          "kind": "challenge",
+          "points": 0,
+          "repeatable": true,
+          "detail": "من الحلقة 4: اشرح KYC والـEnvelope والتوقيع الإلكتروني على المرفقات. تقييم 0–10."
+        },
+        {
+          "label": "دفتر 15 ودفتر 1",
+          "kind": "challenge",
+          "points": 0,
+          "repeatable": true,
+          "detail": "من الحلقة 5: وضّح الفرق بين دفتر 15 للإفراج المسبق ودفتر 1 بعد الوصول حسب شرح الحلقة. تقييم 0–10."
+        }
+      ],
+      "points": 1000,
+      "weight": 1,
+      "plannedMinutes": 6,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    },
+    {
+      "type": "Ultimate Game Show",
+      "prompt": "التحدي الكبير | خمس حلقات وسبعة مستويات",
+      "timer": 0,
+      "options": [
+        "المراجعة قبل الإرسال",
+        "التخمين",
+        "تجاهل الاختلافات",
+        "الإرسال المتكرر"
+      ],
+      "correct": 0,
+      "showFormat": "championship",
+      "minimumLevels": 7,
+      "participation": "individual",
+      "betEnabled": false,
+      "safeLevels": [
+        3,
+        5
+      ],
+      "questions": [
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 1: مالك صاحب المصنع اختار أي نوع حساب على نافذة؟",
+          "options": [
+            "حساب شخصي",
+            "حساب تجاري",
+            "حساب شركة شحن",
+            "حساب موظف جمركي"
+          ],
+          "correct": 1,
+          "timer": 45,
+          "points": 100,
+          "speed": false,
+          "sourceEpisode": 1,
+          "questionBankId": "IV-E1-01",
+          "explanation": "اختار حساب تجاري لتسجيل المنشأة وتفعيل الخدمات.",
+          "section": "المستوى 1"
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 2: في شرط FOB مين يتحمل تحميل البضاعة على ظهر السفينة بميناء الشحن؟",
+          "options": [
+            "المستورد بعد الوصول",
+            "شركة الجمارك المصرية",
+            "المدرب",
+            "المصدر ضمن التزام تسليم البضاعة على السفينة"
+          ],
+          "correct": 3,
+          "timer": 45,
+          "points": 250,
+          "speed": false,
+          "sourceEpisode": 2,
+          "questionBankId": "IV-E2-02",
+          "explanation": "الحلقة توضح التحميل على ظهر السفينة ضمن التزامات البائع بـFOB.",
+          "section": "المستوى 2"
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 3: التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
+          "options": [
+            "بمجرد إدخال اسمها",
+            "بعد وصول السفينة فقط",
+            "بعد استلام CargoX للفاتورة",
+            "بعد قبول الشركة المفوض إليها للتفويض"
+          ],
+          "correct": 3,
+          "timer": 45,
+          "points": 500,
+          "speed": false,
+          "sourceEpisode": 3,
+          "questionBankId": "IV-E3-01",
+          "explanation": "المفوض إليه يراجع ثم يقبل التفويض عبر نافذة.",
+          "section": "المستوى 3"
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 3: طلب ACID في القصة بيحتوي على أي مجموعات أساسية من البيانات؟",
+          "options": [
+            "اسم المدرب والتوقيت فقط",
+            "بيانات المستورد والمصدر والشحنة",
+            "المخلص والتوكيل فقط",
+            "المخزن والسائق فقط"
+          ],
+          "correct": 1,
+          "timer": 45,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 3,
+          "questionBankId": "IV-E3-03",
+          "explanation": "تظهر ثلاثة أقسام أساسية في نموذج الطلب.",
+          "section": "المستوى 4"
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 4: KYC في تسجيل CargoX معناه إيه؟",
+          "options": [
+            "Know Your Customer والتحقق من بيانات الشركة",
+            "رمز ميناء الوصول",
+            "نظام تسليم الحاويات",
+            "رقم الضريبة الجدولية"
+          ],
+          "correct": 0,
+          "timer": 45,
+          "points": 2000,
+          "speed": false,
+          "sourceEpisode": 4,
+          "questionBankId": "IV-E4-01",
+          "explanation": "KYC توثيق الكيان الاقتصادي.",
+          "section": "المستوى 5"
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 4: قبل التوقيع على مرفقات نافذة، المستورد بيعمل إيه؟",
+          "options": [
+            "يحذف الفاتورة",
+            "يستخرج رقم 46 دون مستندات",
+            "يفتح المرفق ويعرضه ويدخل PIN الخاص بالتوقيع",
+            "يختار نتيجة العجلة"
+          ],
+          "correct": 2,
+          "timer": 45,
+          "points": 3500,
+          "speed": false,
+          "sourceEpisode": 4,
+          "questionBankId": "IV-E4-03",
+          "explanation": "التوقيع الإلكتروني مرتبط بعرض المرفق ثم eToken وPIN.",
+          "section": "المستوى 6"
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 5: الإفراج العادي بعد وصول السفينة وربط إذن التسليم في المثال مربوط بإيه؟",
+          "options": [
+            "دفتر 1",
+            "دفتر 15 دائمًا",
+            "دفتر تسجيل المصدر",
+            "قائمة المرفقات"
+          ],
+          "correct": 0,
+          "timer": 45,
+          "points": 5000,
+          "speed": false,
+          "sourceEpisode": 5,
+          "questionBankId": "IV-E5-04",
+          "explanation": "السيناريو الثاني في الحلقة: الإفراج العادي، دفتر 1.",
+          "section": "المستوى 7"
+        }
+      ],
+      "plannedMinutes": 10,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    },
+    {
+      "type": "Meta Plan",
+      "prompt": "ميتا بلان | رتّب المعلومات حسب مرحلة الاستيراد",
+      "timer": 0,
+      "categories": [
+        "التسجيل والتعاقد",
+        "التفويض وACI",
+        "CargoX والإفراج"
+      ],
+      "items": [
+        "تفعيل البريد والموبايل",
+        "إصدار الفاتورة المبدئية",
+        "قبول شركة التخليص للتفويض",
+        "إدراج بيانات المستورد والمصدر والشحنة",
+        "رفع Envelope على CargoX",
+        "بدء الإجراءات الجمركية ورقم 46"
+      ],
+      "assignments": [
+        0,
+        0,
+        1,
+        1,
+        2,
+        2
+      ],
+      "autoClose": true,
+      "plannedMinutes": 5,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations",
+      "scored": false
+    },
+    {
+      "type": "Escape Room",
+      "prompt": "غرفة الهروب | أنقذ رحلة مالك من خطأ المستندات",
+      "timer": 0,
+      "mode": "individual",
+      "theme": "gateway",
+      "scored": true,
+      "rooms": [
+        {
+          "title": "باب التفويض",
+          "narrative": "شركة التخليص اتفوضت لكن التفويض مش ساري. إيه الخطوة الناقصة؟",
+          "hint": "شركة التخليص لازم تقبل التفويض من حسابها.",
+          "hintAfter": 1,
+          "puzzles": [
+            {
+              "type": "Quiz",
+              "prompt": "الحلقة 3: التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
+              "options": [
+                "بمجرد إدخال اسمها",
+                "بعد وصول السفينة فقط",
+                "بعد استلام CargoX للفاتورة",
+                "بعد قبول الشركة المفوض إليها للتفويض"
+              ],
+              "correct": 3,
+              "timer": 40,
+              "points": 1000,
+              "speed": false,
+              "sourceEpisode": 3,
+              "questionBankId": "IV-E3-01",
+              "explanation": "المفوض إليه يراجع ثم يقبل التفويض عبر نافذة."
+            }
+          ]
+        },
+        {
+          "title": "بوابة CargoX",
+          "narrative": "المصدر رفع مستندات لكن المستورد مش عارف يوقّع. اختار الإجراء الصح.",
+          "hint": "افتح المرفق وأكمل بياناته ثم استخدم eToken.",
+          "hintAfter": 1,
+          "puzzles": [
+            {
+              "type": "Quiz",
+              "prompt": "الحلقة 4: قبل التوقيع على مرفقات نافذة، المستورد بيعمل إيه؟",
+              "options": [
+                "يحذف الفاتورة",
+                "يستخرج رقم 46 دون مستندات",
+                "يفتح المرفق ويعرضه ويدخل PIN الخاص بالتوقيع",
+                "يختار نتيجة العجلة"
+              ],
+              "correct": 2,
+              "timer": 40,
+              "points": 1000,
+              "speed": false,
+              "sourceEpisode": 4,
+              "questionBankId": "IV-E4-03",
+              "explanation": "التوقيع الإلكتروني مرتبط بعرض المرفق ثم eToken وPIN."
+            }
+          ]
+        }
+      ],
+      "plannedMinutes": 6,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    },
+    {
+      "type": "Live Poll",
+      "prompt": "من أي حلقة حاسس إنك محتاج تدريب عملي أكتر؟",
+      "timer": 30,
+      "options": [
+        "حساب نافذة · 1",
+        "العقد والاعتماد · 2",
+        "تفويض وACID · 3",
+        "CargoX أو الإفراج · 4–5"
+      ],
+      "pollKind": "choice",
+      "plannedMinutes": 4,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations",
+      "scored": false
+    },
+    {
+      "type": "Order It",
+      "prompt": "رتّب رحلة مالك: التسجيل → التعاقد → تفويض → مستندات → إفراج",
+      "timer": 75,
+      "items": [
+        "بدء الإجراءات الجمركية ورقم 46",
+        "فتح حساب تجاري بنافذة",
+        "إصدار فاتورة مبدئية وتعاقد",
+        "رفع وتوقيع المرفقات عبر CargoX ونافذة",
+        "التفويض ثم طلب ACID"
+      ],
+      "order": [
+        1,
+        2,
+        4,
+        3,
+        0
+      ],
+      "plannedMinutes": 5,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    },
+    {
+      "type": "Open the Box",
+      "prompt": "افتح الصندوق | خمس حلقات وتحديات الشرح",
+      "timer": 0,
+      "rounds": 5,
+      "items": [
+        "التسجيل",
+        "Incoterms",
+        "تفويض",
+        "CargoX",
+        "الإفراج"
+      ],
+      "points": 1000,
+      "boxes": [
+        {
+          "kind": "challenge",
+          "points": 0,
+          "detail": "الحلقة 1: اعرض على زملائك خطوات إنشاء حساب تجاري وتفعيل الخدمات الإلكترونية."
+        },
+        {
+          "kind": "challenge",
+          "points": 0,
+          "detail": "الحلقة 2: اشرح فرق EXW وFOB وCIF واختبر زميلك في التزامات البائع."
+        },
+        {
+          "kind": "challenge",
+          "points": 0,
+          "detail": "الحلقة 3: مثل دور المستورد وشركة التخليص في قبول تفويض نافذة."
+        },
+        {
+          "kind": "challenge",
+          "points": 0,
+          "detail": "الحلقة 4: اشرح سلسلة رفع Envelope وتوقيع المستورد للمرفقات."
+        },
+        {
+          "kind": "challenge",
+          "points": 0,
+          "detail": "الحلقة 5: اشرح سيناريو بدء الإجراءات قبل الوصول وبعده، ودفتر 15/1."
+        }
+      ],
+      "plannedMinutes": 6,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    },
+    {
+      "type": "Flashcards",
+      "prompt": "بطاقات ImportVerse | راجع 5 مفاهيم أساسية",
+      "timer": 0,
+      "flipPermission": "host",
+      "fronts": [
+        "الحلقة 1: إيه الخطوة بعد تفعيل البريد؟",
+        "الحلقة 2: إيه المقصود بـ Incoterms؟",
+        "الحلقة 3: التفويض بيسري إمتى؟",
+        "الحلقة 4: إيه معنى Envelope وKYC؟",
+        "الحلقة 5: الفرق بين دفتر 15 ودفتر 1؟"
+      ],
+      "backs": [
+        "تسجيل الدخول وتفعيل الموبايل ثم الخدمات الإلكترونية.",
+        "شروط غرفة التجارة الدولية لتوزيع مسؤوليات النقل والتكاليف.",
+        "بعد ما شركة التخليص تراجع التفويض وتقبل من حسابها.",
+        "Envelope ظرف مستندات رقمي؛ KYC التحقق من هوية الشركة.",
+        "بحسب سيناريو الحلقة: 15 إفراج مسبق قبل الوصول، و1 إفراج عادي بعد الوصول."
+      ],
+      "trainingMode": "challenge",
+      "scored": true,
+      "points": 1000,
+      "plannedMinutes": 5,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    },
+    {
+      "type": "Scenario Challenge",
+      "prompt": "تحدي المواقف | مالك قدام قرار مهم في CargoX والإفراج",
+      "timer": 0,
+      "scored": true,
+      "start": "start",
+      "nodes": [
+        {
+          "id": "start",
+          "text": "وصل إشعار إن المصدر رفع المستندات على CargoX، بس البنك مش شايفها. إيه أول خطوة صحيحة؟",
+          "correctChoice": 0,
+          "choices": [
+            {
+              "label": "أراجع وأوقّع المستندات وأبدأ الإجراءات البنكية",
+              "next": "verified",
+              "points": 200,
+              "consequence": "قللت خطر نقل مستند غير مُراجع."
+            },
+            {
+              "label": "أعتبر وصول المرفقات كفاية من غير توقيع",
+              "next": "risk",
+              "points": 0,
+              "consequence": "مخاطرة بتداول بيانات خاطئة."
+            }
+          ]
+        },
+        {
+          "id": "verified",
+          "text": "المصدر أرسل الفاتورة والبضاعة لسه ما اتشحنتش. إيه اللي ينفع تربطه بنكيًا دلوقتي؟",
+          "correctChoice": 0,
+          "choices": [
+            {
+              "label": "أربط الفاتورة ببيانات الاعتماد، والبوليصة لاحقًا",
+              "next": "done",
+              "points": 400,
+              "consequence": "تسلسل معتمد لنقل الحيازة."
+            },
+            {
+              "label": "أربط البوليصة قبل وجود بيانات شحنها",
+              "next": "risk",
+              "points": 0,
+              "consequence": "العملية لم تُستكمل."
+            }
+          ]
+        },
+        {
+          "id": "done",
+          "ending": true,
+          "text": "المسار الصحيح وفق الحلقة 4: مراجعة ثم توقيع مرفقات ثم إجراءات بنكية وربط الفاتورة.",
+          "discussion": "ما المخاطر التي تجنبتها قبل التوقيع؟"
+        },
+        {
+          "id": "risk",
+          "ending": true,
+          "text": "مسار غير آمن: عملية ناقصة أو بيانات غير موثقة.",
+          "discussion": "أين تتدخل لتصحيح القرار؟"
+        }
+      ],
+      "plannedMinutes": 7,
+      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+    }
+  ],
+  "survey": null,
+  "sourceNote": "MP3 transcripts from episodes 1–5. Episode 6 unavailable for text extraction. Customs regulations require current authoritative verification.",
+  "bankCount": 64,
+  "plannedMinutes": 60
+}
