@@ -1,0 +1,116 @@
+/* Projector layout V7 — single full-width stage, no clipping or phantom columns.
+   Fixes live 1365x768 screenshot with left ~60% empty and wheel clipped below fold.
+   Specificity intentionally overrides old V6 screen-fit rules in globals.css. */
+html body .session-shell.projector {
+  position:fixed!important;inset:0!important;
+  display:flex!important;flex-direction:column!important;
+  grid-template-columns:none!important;grid-template-rows:none!important;
+  width:100vw!important;max-width:100vw!important;
+  height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  box-sizing:border-box!important;
+}
+html body .session-shell.projector>.session-brand-header {
+  display:flex!important;flex:0 0 62px!important;box-sizing:border-box!important;
+  width:100%!important;min-width:0!important;max-width:100vw!important;
+  height:62px!important;min-height:62px!important;
+  grid-column:auto!important;grid-row:auto!important;
+  position:relative!important;
+}
+html body .session-shell.projector>.live-workspace {
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  position:relative!important;inset:auto!important;float:none!important;
+  flex:1 0 auto!important;align-self:stretch!important;
+  grid-column:auto!important;grid-row:auto!important;
+  width:100%!important;min-width:0!important;max-width:100vw!important;
+  height:auto!important;min-height:calc(100dvh - 62px)!important;max-height:none!important;
+  margin:0!important;padding:8px clamp(12px,2vw,26px) 22px!important;
+  overflow:visible!important;zoom:1!important;transform:none!important;box-sizing:border-box!important;
+}
+html body .session-shell.projector .live-title,
+html body .session-shell.projector .session-progress {
+  flex:0 0 auto!important;min-width:0!important;max-width:100%!important;
+}
+html body .session-shell.projector .live-columns {
+  display:block!important;direction:inherit!important;
+  flex:1 0 auto!important;align-self:stretch!important;
+  grid-template-columns:minmax(0,1fr)!important;grid-auto-columns:minmax(0,1fr)!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  margin:0!important;padding:0!important;overflow:visible!important;
+}
+html body .session-shell.projector .main-stage {
+  display:block!important;float:none!important;flex:1 1 auto!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  margin:0!important;padding:0!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  overflow:visible!important;
+}
+html body .session-shell.projector .round-stage {
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  padding:clamp(10px,1.2vw,18px)!important;
+  gap:clamp(6px,1vh,12px)!important;
+  overflow:visible!important;box-sizing:border-box!important;
+}
+html body .session-shell.projector .round-stage .wheel-stage {
+  position:relative!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:auto!important;max-height:none!important;min-height:0!important;
+  overflow:visible!important;padding:4px 0 18px!important;
+}
+html body .session-shell.projector .wheel-stage--forge .forge-stage {
+  position:relative!important;display:grid!important;place-items:center!important;
+  width:100%!important;min-height:0!important;max-width:100%!important;
+  height:auto!important;aspect-ratio:auto!important;
+  padding:40px 0 28px!important;overflow:visible!important;
+}
+html body .session-shell.projector .wheel-stage--forge .forge-stage .forge-wheel {
+  box-sizing:border-box!important;
+  display:block!important;flex:0 0 auto!important;
+  width:clamp(270px,min(42vw,57dvh),570px)!important;
+  height:auto!important;aspect-ratio:1/1!important;
+  max-width:calc(100vw - 70px)!important;
+  max-height:none!important;min-width:0!important;min-height:0!important;
+  margin:0 auto!important;position:relative!important;
+}
+html body .session-shell.projector .wheel-stage--forge .forge-wheel .wheel-tap-surface {
+  position:absolute!important;inset:0!important;
+}
+html body .session-shell.projector .wheel-stage--forge .forge-wheel .wheel {
+  width:100%!important;height:100%!important;
+}
+html body .session-shell.projector .round-stage .wheel-arena-banner,
+html body .session-shell.projector .round-stage .turn-entrance,
+html body .session-shell.projector .round-stage .wheel-outcome-grand {
+  max-width:min(1080px,96%)!important;margin-left:auto!important;margin-right:auto!important;
+}
+html body .session-shell.projector .round-stage .sector-legend--grand {
+  max-height:none!important;overflow:visible!important;
+}
+html body .session-shell.projector .display-bottom {
+  position:relative!important;inset:auto!important;flex:0 0 auto!important;
+  width:100%!important;max-width:100%!important;height:auto!important;
+  min-height:44px!important;max-height:none!important;margin:12px 0 0!important;
+  box-sizing:border-box!important;overflow:visible!important;
+}
+/* Never cut off the 7-rung ladder, box board or meta-plan on the shared screen. */
+html body .session-shell.projector .round-stage .championship-stage,
+html body .session-shell.projector .round-stage .championship-stage__ladder,
+html body .session-shell.projector .round-stage .championship-stage__question,
+html body .session-shell.projector .round-stage .arena-tv-show,
+html body .session-shell.projector .round-stage .arena-metaplan,
+html body .session-shell.projector .round-stage .arena-escape-vault,
+html body .session-shell.projector .round-stage .box-stage--vault,
+html body .session-shell.projector .round-stage .flash-stage--academy,
+html body .session-shell.projector .round-stage .arena-scenario {
+  height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;
+}
+html body .session-shell.projector .championship-stage__ladder{max-height:none!important;overflow:visible!important}
+@media(max-height:650px){
+ html body .session-shell.projector>.session-brand-header{flex-basis:46px!important;height:46px!important;min-height:46px!important}
+ html body .session-shell.projector>.live-workspace{min-height:calc(100dvh - 46px)!important}
+ html body .session-shell.projector .wheel-stage--forge .forge-stage .forge-wheel{width:clamp(245px,min(39vw,53dvh),440px)!important}
+}
