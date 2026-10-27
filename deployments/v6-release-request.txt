@@ -198,3 +198,11 @@ Target: https://hazemshaaban77.github.io/MTS-Training-Arena/v6/
 Scope: rebuild and publish frontend /v6/ only via the guarded GitHub Pages workflow.
 Keep original /arena/, main, logos, Firebase, existing Cloudflare Worker and D1 database untouched.
 Acceptance: live trainer/projector/trainee wheel smoke test still required; do not claim game runtime proven before user verification.
+
+V6 UX GAME OVERHAUL — 2026-10-27 — PR #2
+Release source: squash merge 27a969f87fd1f309f81d1574d3a5dee3027deca1 (feature/v6-game-experience-overhaul).
+Validated branch: GitHub Actions 40489636672 successful, including game test suite, legacy tests, identity and frontend+Worker bundling.
+Backend: Cloudflare V6 Worker deployment b8fbf604-b82c-4d2b-a69f-2f60f5a09110, version cb996246-490d-4851-9ab7-e6260a3e4154, preserved live D1/DO bindings.
+Release only GitHub Pages /v6/ client; retain legacy /arena/, main, logos, other apps.
+Features: 3D spinning sector-stop, no public reveal leakage, ten-point challenge rubric, 7-level championship authoring and lifelines, cinematic boxes, mobile order-it drag, post-round scenario mind map, meta-plan safe tap, realistic simulator and timing.
+Rollback: previous Worker version 59c754e8-f05d-419d-be9e-9cc1a35c6e5c; GitHub Pages previous release run 40479196576.
