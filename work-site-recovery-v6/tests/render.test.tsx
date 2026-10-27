@@ -576,7 +576,7 @@ test('Mystery Vault opens only the selected server box and marks exhausted boxes
  assert.ok(host.includes('Team reflection prompt'));
  assert.ok(host.includes('Select player'));
  assert.ok(host.includes('aria-pressed="true"'));
- assert.ok(host.includes('already opened'));
+ assert.ok(host.includes('Box number 2 opened'),'Exhausted state remains accessible');
  assert.ok(host.includes('disabled=""'),'Used box cannot be reopened without repeatable flag');
  const spectator=renderToStaticMarkup(<GamePlay s={{...base,game:{...base.game,used:[],box:null}}}
   ar={true} host={false} display={true} canAnswer={false} busy={false}
