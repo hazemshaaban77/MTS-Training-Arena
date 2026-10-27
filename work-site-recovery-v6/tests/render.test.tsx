@@ -133,7 +133,7 @@ test('Futuristic Arena timer uses server remaining time in all roles and respect
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
 
-test('cinematic WebP art appears in every activity intro, trainer and bilingual trainee view',()=>{
+test('all ten game intros have live WebGL stages while WebP thumbnails remain valid in trainer library',()=>{
  const names=['Quiz','Wheel of Fortune','Ultimate Game Show','Meta Plan','Escape Room','Live Poll','Order It','Open the Box','Flashcards','Scenario Challenge'];
  for(const type of names){
   const id=type.toLowerCase().replaceAll(' ','-');
@@ -143,8 +143,9 @@ test('cinematic WebP art appears in every activity intro, trainer and bilingual 
   assert.equal(data.toString('ascii',8,12),'WEBP',type);
   for(const ar of [true,false]){
    const html=renderToStaticMarkup(<StageSplash type={type} label={type} ar={ar} durationMs={2100} onComplete={()=>{}}/>);
-   assert.ok(html.includes(expected),type);
-   assert.ok(html.includes('splash-activity-cover'),type);
+   assert.ok(html.includes('arena-world3d--intro'),type);
+   assert.ok(html.includes('arena-intro-world-frame'),type);
+   assert.ok(!html.includes('splash-activity-cover'),type);
    assert.ok(html.includes('<h2>'+type+'</h2>'),type);
    assert.ok(html.includes(ar?'لحظة انطلاق التحدّي':'THE CHALLENGE BEGINS'),type);
   }
@@ -535,19 +536,20 @@ test('Fortune Wheel stage artwork follows server selected sector and keeps game 
  const html=renderToStaticMarkup(<GamePlay s={base} ar={false} host={true}
   display={false} canAnswer={false} busy={false} onSubmit={()=>{}}
   onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(html.includes('wheel-wrap--grand'));
- assert.ok(html.includes('arena-wheel-gradient'),'Segments are painted from authored kinds');
+ assert.ok(html.includes('arena-wheel3d--crown'));
+ assert.ok(html.includes('aria-label="Arena Crown 3D Wheel"'),'Only the Crown WebGL wheel renders');
  assert.ok(html.includes('wheel-legend-winner'),'Server selected sector is highlighted');
  assert.ok(html.includes('aria-current="true"'),'Accessible winning section marker');
  assert.ok(html.includes('Participation star'),'Real server outcome label is displayed');
  assert.ok(html.includes('+200'),'Real server assigned points are displayed');
- assert.ok(html.includes('--wheel-stop'),'Wheel stop angle follows server index');
- assert.ok(html.includes('wheel-tap-surface'),'Wheel itself is the accessible trainer and player Spin control');
+ const model=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ assert.ok(model.includes('sectorAngle(current.index!,sectors.length)'),'Wheel stop angle follows official index');
+ assert.ok(html.includes('arena-wheel3d__tap'),'Crown wheel itself is the accessible trainer and player Spin control');
  const untouched=renderToStaticMarkup(<GamePlay s={{
   ...base,game:{...base.game,spin:null,outcome:null,turn:0,used:[]}
  }} ar={true} host={true} display={false} canAnswer={false} busy={false}
  onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(untouched.includes('اضغط على العجلة لبدء اللف'));
+ assert.ok(untouched.includes('اضغط على مجسم عجلة الحظ لبدء اللف'));
  assert.ok(!untouched.includes('wheel-legend-winner'));
  const source=readFileSync('components/arena/GamePlay.tsx','utf8');
  assert.ok(source.includes("spin?.revealed&&spin.index===i"),'Winners must come from server spin, never client randomness');
@@ -567,18 +569,19 @@ test('Mystery Vault opens only the selected server box and marks exhausted boxes
  const host=renderToStaticMarkup(<GamePlay s={base} ar={false} host={true} display={false}
   canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
  assert.ok(host.includes('box-stage--vault'));
- assert.ok(host.includes('box-vault-box--active'));
- assert.ok(host.includes('box-vault-box--used'));
+ assert.ok(host.includes('arena-box3d'),'Actual WebGL box vault replaces static CSS boxes');
+ assert.ok(host.includes('arena-box3d__selector--active'),'Officially opened box is selected');
+ assert.ok(host.includes('arena-box3d__selector--used'),'Server exhausted state is shown');
  assert.ok(host.includes('DISCOVERY CHALLENGE'),'Use actual server reveal, never sample text');
  assert.ok(host.includes('Team reflection prompt'));
  assert.ok(host.includes('Select player'));
  assert.ok(host.includes('aria-pressed="true"'));
- assert.ok(host.includes('already opened'));
+ assert.ok(host.includes('Box number 2 opened'),'Exhausted state remains accessible');
  assert.ok(host.includes('disabled=""'),'Used box cannot be reopened without repeatable flag');
  const spectator=renderToStaticMarkup(<GamePlay s={{...base,game:{...base.game,used:[],box:null}}}
   ar={true} host={false} display={true} canAnswer={false} busy={false}
   onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(spectator.includes('صناديق المفاجآت'));
+ assert.ok(spectator.includes('صناديق الجوائز ثلاثية الأبعاد'),'Projector sees the new authentic 3D vault');
  assert.ok(spectator.includes('disabled=""'),'Projector has no authority to open a box');
  assert.ok(!spectator.includes('DISCOVERY CHALLENGE'),'No reveal before server sends it');
  const src=readFileSync('components/arena/GamePlay.tsx','utf8');
@@ -1361,11 +1364,11 @@ test('ten game openings have unique visual motifs, independent notes, rhythms an
   const h=renderToStaticMarkup(<StageSplash type={type} label={type} ar={false}
    durationMs={3600} preview onComplete={()=>{}}/>);
   assert.ok(h.includes('intro-kind-'+identity.key),type);
-  assert.ok(h.includes('intro-scene--'+identity.key),type);
+  assert.ok(h.includes('arena-world3d--intro'),type);
   assert.ok(h.includes(identity.introEn),type);
   assert.ok(h.includes(identity.tagEn),type);
-  assert.ok(h.includes('splash-activity-cover'),type);
-  visuals.add('intro-scene--'+identity.key);
+  assert.ok(h.includes('arena-intro-world-frame'),type);
+  visuals.add('intro-kind-'+identity.key);
  }
  assert.equal(keys.size,10);
  assert.equal(songs.size,10,'No two game titles share the same soundtrack');
@@ -1446,13 +1449,13 @@ test('intro composition keeps game artwork and animated identity in distinct bou
  for(const game of games){
   const h=renderToStaticMarkup(<StageSplash type={game} label={game} ar={true}
    preview durationMs={4900} onComplete={()=>{}}/>);
-  const cover=h.indexOf('cinematic-art-frame splash-activity-cover');
-  const decoration=h.indexOf('cinematic-scene-badge');
+  const world=h.indexOf('cinematic-art-frame arena-intro-world-frame');
   const copy=h.indexOf('cinematic-copy');
   assert.ok(h.includes('cinematic-composed'),game);
   assert.ok(h.includes('cinematic-content-grid'),game);
-  assert.ok(cover>0&&decoration>cover&&copy>decoration,'visual identity must be separate from the artwork and copy in '+game);
-  assert.ok(h.includes('intro-scene--'+introIdentity(game).key),game);
+  assert.ok(world>0&&copy>world,'real 3D world must be separate from readable copy in '+game);
+  assert.ok(h.includes('arena-world3d--intro'),game);
+  assert.ok(h.includes('intro-kind-'+introIdentity(game).key),game);
   assert.ok(h.includes('cinematic-skip'),game);
   assert.ok(h.includes('العداد لم يبدأ'),game);
  }
@@ -1674,7 +1677,7 @@ test('practical Wheel award cannot be automatic and only host-authorized score e
  };
  const host=renderToStaticMarkup(<GamePlay s={session} ar host display={false}
   canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(host.includes('wheel-tap-surface'),'Entire wheel is the tap target');
+ assert.ok(host.includes('arena-wheel3d'),'The official game renders only the WebGL Crown wheel');
  assert.ok(host.includes('wheel-judge'),'Only host sees scoring controls');
  assert.ok(host.includes('Candidate'),'Current player comes from server');
  assert.ok(host.includes('wheel-judge__direction'),'Trainer can award or deduct points');
@@ -1764,11 +1767,12 @@ test('ImportVerse evidence-marked sixty-minute preset contains all ten engines a
 
 test('v6 new 3D wheel and grading surfaces preserve server authority and contest flow',()=>{
  const wheel=readFileSync('components/arena/GamePlay.tsx','utf8');
- const forge=readFileSync('components/arena/ArenaForgeWheel.css','utf8');
+ const crown=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
  const discovery=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
- assert.match(wheel,/wheel-stage--forge/);
- assert.match(wheel,/forge-wheel/);
- assert.match(forge,/arena-forge-roll/);
+ assert.match(wheel,/wheel-stage--crown-real3d/);
+ assert.match(wheel,/ArenaWheel3D/);
+ assert.doesNotMatch(wheel,/forge-wheel|wheel-tap-surface/);
+ assert.ok(crown.includes('new THREE.InstancedMesh'));
  assert.match(discovery,/onControl\('flashjudge',index/);
  assert.match(discovery,/flash-grade-console/);
  assert.match(discovery,/box-vault-turn--spotlight/);
@@ -1788,14 +1792,11 @@ test('Projector repaired with full-width live-display flex instead of fixed-heig
  assert.match(css,/\.session-shell\.projector \.wheel-stage--forge/);
 });
 
-test('optional real WebGL wheel is a render-only layer and preserves existing server gameplay',()=>{
+test('real 3D Crown wheel is the only game wheel, with accessible action if GPU unavailable',()=>{
  assert.equal(sectorAngle(2,8),Math.PI/2);
  assert.equal(sectorAngle(8,8),0);
- assert.equal(sectorAngle(-1,8),0);
- for(let i=0;i<20;i++){
-  const target=sectorAngle(i,20),from=37.77,delta=forwardSweep(from,target);
-  assert.ok(delta>0&&delta<=TAU*1.001);
-  const err=((from+delta-target)%TAU+TAU)%TAU;
+ for(let i=0;i<20;i++){const target=sectorAngle(i,20),from=37.77,delta=forwardSweep(from,target);
+  assert.ok(delta>0&&delta<=TAU*1.001);const err=((from+delta-target)%TAU+TAU)%TAU;
   assert.ok(err<1e-9||Math.abs(err-TAU)<1e-9);
  }
  assert.equal(easedStop(0),0);assert.equal(easedStop(1),1);
@@ -1806,13 +1807,12 @@ test('optional real WebGL wheel is a render-only layer and preserves existing se
  assert.ok(source.includes('new THREE.ExtrudeGeometry'));
  assert.ok(source.includes('current.revealed&&Number.isInteger(current.index)'));
  assert.ok(source.includes('if(now<(current.startsAt||0))'));
- assert.ok(parent.includes("get('arena3d')"));
- assert.ok(parent.includes('arena-v6-crown-wheel-3d-preview'));
- assert.ok(parent.includes('onClick={()=>changeWheel3D(!wheel3DOptIn)}'));
- assert.ok(parent.includes('wheel3DOptIn&&wheel3DAvailable?'));
- assert.ok(parent.includes('setWheel3DAvailable(false)'));
+ assert.ok(parent.includes('!wheelFallback&&sectors.length>=2?<ArenaWheel3D'));
+ assert.ok(parent.includes('setWheelFallback(true)'));
+ assert.ok(parent.includes('arena-wheel-webgl-unavailable'));
+ assert.ok(!parent.includes('wheel3DOptIn'));
+ assert.ok(!parent.includes('ArenaForgeWheel.css'));
 });
-
 test('Arena Crown wheel has original authored sector labels, mechanical bulbs and jewel pointer',()=>{
  const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
  const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
@@ -1829,14 +1829,46 @@ test('Arena Crown wheel has original authored sector labels, mechanical bulbs an
  assert.match(css,/arena-wheel3d--crown/);
 });
 
-test('Arena Crown trainer/projector visual-only switch persists through App navigation safely',()=>{
- const parent=readFileSync('components/arena/GamePlay.tsx','utf8');
- const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
- assert.match(parent,/\(host\|\|display\)&&<div className="wheel-3d-mode-switch"/);
- assert.match(parent,/localStorage\.setItem\(wheel3DStorageKey,enabled\?'1':'0'\)/);
- assert.match(parent,/window\.addEventListener\('storage',onStorage\)/);
- assert.match(parent,/wheel3DOptIn&&wheel3DAvailable\?<ArenaWheel3D/);
- assert.match(parent,/onUnavailable=\{\(\)=>setWheel3DAvailable\(false\)\}/);
- assert.doesNotMatch(scene,/probe\.getContext/);
- assert.match(scene,/renderer=new THREE\.WebGLRenderer/);
+test('all ten 3D cinematic scene identities replace 2D picture splash, with skip preserved',()=>{
+ const splash=readFileSync('components/arena/StageSplash.tsx','utf8');
+ const world=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
+ const css=readFileSync('components/arena/ArenaWorld3D.css','utf8');
+ const game=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.match(splash,/<ArenaWorld3D kind=\{base\} mode="intro"\/>/);
+ assert.doesNotMatch(splash,/ActivityArt|IntroScene/);
+ assert.match(splash,/FastForward/);assert.match(splash,/onComplete/);
+ for(const identity of ['wheel','championship','quiz','escape','box','poll','plan','order','cards','scenario']){
+  assert.match(world,new RegExp("key==='"+identity+"'"));
+ }
+ assert.match(world,/new T\.WebGLRenderer/);
+ assert.match(world,/new T\.SpotLight/);
+ assert.match(world,/Math\.max\(0,Math\.min\(1,\(elapsed-\.38\)\/1\.6\)\)/);
+ assert.match(world,/camera\.position\.set/);
+ assert.match(css,/@keyframes arena-world-blackout/);
+ assert.doesNotMatch(game,/wheel3DOptIn|wheel-wrap--grand|wheel-tap-surface/);
+});
+test('3D stage ambient scene mounts for trainer and projector, native QR and player forms unchanged',()=>{
+ const app=readFileSync('components/arena/App.tsx','utf8');
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.match(app,/arena-home-world/);assert.match(app,/arena-hero-world/);
+ assert.match(session,/arena-live-world/);
+ assert.match(session,/mode="ambient" light/);
+ assert.match(session,/employeeId/);assert.match(session,/identity-confirmation/);
+ const html=renderToStaticMarkup(<StageSplash type="Wheel of Fortune" label="عجلة الحظ" ar onComplete={()=>{}}/>);
+ assert.ok(html.includes('arena-world3d--intro'));
+ assert.ok(html.includes('تخطي المقدمة'));
+ assert.ok(!html.includes('splash-activity-cover'));
+});
+
+test('3D Vault replaces legacy box-card buttons without changing authoritative selection',()=>{
+ const source=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
+ const model=readFileSync('components/arena/ArenaBoxVault3D.tsx','utf8');
+ assert.match(source,/<ArenaBoxVault3D items=\{items\} used=\{used\}/);
+ assert.doesNotMatch(source,/className=\{'box-vault-box'/);
+ assert.match(model,/new THREE\.WebGLRenderer/);
+ assert.match(model,/new THREE\.BoxGeometry/);
+ assert.match(model,/new THREE\.Raycaster/);
+ assert.match(model,/const official=st\.used\.includes\(chest\.index\)\|\|st\.active===chest\.index/);
+ assert.match(model,/st\.onOpen\(i\)/);
+ assert.match(model,/aria-label=\{\(ar\?'صندوق رقم '/);
 });

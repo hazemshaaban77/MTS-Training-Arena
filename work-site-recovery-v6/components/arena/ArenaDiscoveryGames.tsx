@@ -2,6 +2,7 @@
 import {useEffect,useState} from 'react';
 import {BookOpen,CheckCircle2,ChevronLeft,ChevronRight,Gift,Layers3,LockKeyhole,RotateCcw,Sparkles,UnlockKeyhole,Users} from 'lucide-react';
 import WheelJudge from './WheelJudge';
+import ArenaBoxVault3D from './ArenaBoxVault3D';
 
 type ActorProps={a:any;ar:boolean;host:boolean;display:boolean;actor:boolean;usable:boolean;
  closed:boolean;busy:boolean;g:any;mine:any;s:any;onControl:(action:string,index?:number,extra?:any)=>void;
@@ -28,25 +29,7 @@ export function OpenBoxExperience({a,ar,host,actor,usable,closed,busy,g,mine,s,o
   <div className="box-vault-heading"><span className="eyebrow"><Sparkles size={17}/>{t('اختار صندوقك… واكتشف المفاجأة','PICK A BOX. UNLOCK THE SURPRISE.')}</span>
    <div className="box-vault-stats"><span><Gift size={16}/>{items.length-openCount} {t('صندوق متبقي','remaining')}</span><span>{openCount}/{items.length} {t('اتفتحوا','opened')}</span></div>
   </div>
-  <div className="box-vault-grid" role="group" aria-label={t('صناديق المفاجآت','Mystery boxes')}>
-   {items.map((label,i)=>{
-    const exhausted=!a.repeatable&&used.includes(i),active=selectedIndex===i;
-    return <button key={i} type="button"
-      className={'box-vault-box'+(active?' box-vault-box--active':'')+(exhausted?' box-vault-box--used':'')}
-      aria-label={t('صندوق رقم ','Box number ')+(i+1)+(exhausted?t(' تم فتحه',' already opened'):'')}
-      aria-pressed={active}
-      disabled={!canChoose||exhausted}
-      onClick={()=>open(i)}>
-      <span className="box-vault-lid" aria-hidden="true"><span className="box-vault-lid-cap"/></span>
-      <span className="box-vault-body" aria-hidden="true">
-       <span className="box-vault-glow"/>
-       {active?<UnlockKeyhole size={40}/>:exhausted?<CheckCircle2 size={39}/>:<LockKeyhole size={38}/>}
-       <strong>{String(i+1).padStart(2,'0')}</strong>
-      </span>
-      <span className="box-vault-label">{active?t('المفاجأة ظهرت','REVEALED'):exhausted?t('تم فتحه','OPENED'):t('افتح الصندوق','UNLOCK BOX')}</span>
-     </button>;
-   })}
-  </div>
+  <ArenaBoxVault3D items={items} used={used} active={selectedIndex} canChoose={canChoose} repeatable={!!a.repeatable} onOpen={open} ar={ar}/>
   {g.box&&!retired&&<div className={'box-vault-reveal'+(g.manualJudgement?' box-vault-reveal--retiring':'')} role="status" aria-live="polite" key={g.box.index}>
    <div className="box-vault-reveal__badge"><Sparkles size={21}/>{t('المفاجأة اتكشفت','THE REVEAL')}</div>
    <Gift size={47} className="box-vault-reveal__icon" aria-hidden="true"/>

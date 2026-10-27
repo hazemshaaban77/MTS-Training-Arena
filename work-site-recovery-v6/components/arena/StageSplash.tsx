@@ -1,8 +1,7 @@
 'use client';
 import {useEffect,useRef} from 'react';
 import {ArrowRight,Clapperboard,FastForward,Sparkles} from 'lucide-react';
-import ActivityArt from './ActivityArt';
-import IntroScene from './IntroScene';
+import ArenaWorld3D from './ArenaWorld3D';
 import {introIdentity} from '../../lib/arena-game-identity';
 import {gameIntroBeats} from '../../lib/arena-intro-beats';
 import {stageAtmosphere} from '../../lib/arena-cinematics';
@@ -14,7 +13,7 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
  useEffect(()=>{const id=window.setTimeout(()=>finishRef.current(),durationMs);return()=>window.clearTimeout(id);},[type,durationMs]);
  const base=normalized(type),theme=stageAtmosphere(base),identity=introIdentity(base);
  const beats=gameIntroBeats[identity.key];
- return <div className={'stage-splash arena-cinematic-intro cinematic-composed stage-splash-'+base.toLowerCase().replace(/[^a-z0-9]+/g,'-')+' cinematic-'+theme+' intro-kind-'+identity.key}
+ return <div className={'stage-splash arena-cinematic-intro cinematic-composed arena-intro-real3d stage-splash-'+base.toLowerCase().replace(/[^a-z0-9]+/g,'-')+' cinematic-'+theme+' intro-kind-'+identity.key}
   role="dialog" aria-label={ar?'مقدمة اللعبة':'Game introduction'} aria-modal="false"
   style={{'--intro-duration':durationMs+'ms'} as React.CSSProperties}>
   <div className="cinematic-lights" aria-hidden="true"><i/><i/><i/></div>
@@ -23,10 +22,7 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
    <header className="cinematic-kicker"><Sparkles size={16}/><span>MTS TRAINING ARENA</span><Sparkles size={16}/></header>
    <div className="cinematic-content-grid">
     <div className="cinematic-visual-zone">
-     <div className="cinematic-art-frame splash-activity-cover">
-      <ActivityArt activity={base} label={label} eager/>
-     </div>
-     <div className="cinematic-scene-badge" aria-hidden="true"><IntroScene kind={identity.key}/></div>
+     <div className="cinematic-art-frame arena-intro-world-frame"><ArenaWorld3D kind={base} mode="intro"/></div>
     </div>
     <div className="cinematic-copy">
      <span className="cinematic-caption">{ar?identity.tagAr:identity.tagEn}</span>

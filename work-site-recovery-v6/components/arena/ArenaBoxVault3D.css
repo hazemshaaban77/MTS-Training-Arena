@@ -1,0 +1,13 @@
+.arena-box3d{position:relative;overflow:hidden;border-radius:25px;min-height:clamp(380px,43vw,570px);background:radial-gradient(ellipse 54% 59% at 50% 44%,#215374 0%,#06152a 75%);border:1px solid #cdaa624b;box-shadow:inset 0 0 40px #0009,0 17px 39px #050f234d;isolation:isolate;display:flex;flex-direction:column}
+.arena-box3d:before{position:absolute;inset:0;content:"";background:repeating-linear-gradient(90deg,transparent 0 77px,#49b6e909 78px 79px);pointer-events:none}
+.arena-box3d__scene{position:relative;z-index:1;flex:1;min-height:310px;touch-action:manipulation;cursor:pointer}
+.arena-box3d__scene canvas{display:block;width:100%;height:100%}
+.arena-box3d__numbers{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:9px;padding:10px 15px 16px;max-width:100%}
+.arena-box3d__selector{width:46px;height:46px;display:grid;place-items:center;background:linear-gradient(160deg,#16324c,#081b2a);color:#ffe2a6;border:2px solid #be924f;border-radius:10px;cursor:pointer;font-size:15px;font-weight:900;box-shadow:0 4px 9px #0006}
+.arena-box3d__selector:hover,.arena-box3d__selector--active{background:linear-gradient(160deg,#ffe5a5,#b98c36);color:#0e1a28;box-shadow:0 0 19px #f1c66d88}
+.arena-box3d__selector--used{opacity:.44}
+.arena-box3d__selector:disabled{cursor:default}
+.arena-box3d__selector:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.arena-box3d__lite-note{font-size:12px;line-height:1.4;text-align:center;color:#d0e2ed;padding:5px 12px 15px}
+@media(max-width:600px){.arena-box3d{min-height:370px}.arena-box3d__scene{min-height:280px}.arena-box3d__selector{width:44px;height:44px}}
+@media(prefers-reduced-motion:reduce){.arena-box3d *{transition:none!important}}
