@@ -84,6 +84,7 @@ export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,li
    'القالب هيستبدل الأنشطة الموجودة في المحرر. لو محتاجهم احفظ نسخة أولًا. تكمل؟',
    'This template replaces the current editor activities. Save a copy first if needed. Continue?')))return;
   setDeck(makeSessionStarter(template,lang==='en'?'en':'ar'));
+  if(template==='importverse'){setTitle('ImportVerse — The Ultimate Import Challenge');setSettings((x:any)=>({...x,progression:'manual'}));}
   setAdding(false);
   setSaved(t('اتحمّل قالب البداية. راجع المحتوى والوقت وعدّله قبل إنشاء الجلسة.',
     'Starting template loaded. Review and edit all content and timings before creating the session.'));
@@ -140,8 +141,8 @@ export default function Builder({ar,initial,onClose,onCreated,onGoHome,source,li
  <div className="builder-planning-summary" role="status">
   <span><Clock size={18}/>{t('تقدير مبدئي للوقت','DRAFT TIME ESTIMATE')}</span>
   <strong>{Math.ceil(agenda.totalSeconds/60)} {t('دقيقة','min')}</strong>
-  <small>{t('يشمل الوقت المحدد للأسئلة و20 ثانية انتقال لكل نشاط. وقت الشرح والنقاش واللعب الحر مش محسوب.',
-   'Includes configured countdowns and 20 seconds per activity transition. Trainer discussion and free play are not included.')}
+  <small>{t('المدة تقديرية، وتشمل وقت الأنشطة المخطط والمناقشة والانتقالات؛ المدرب يتحكم في بدء كل نشاط.',
+   'Estimated duration includes planned activities, discussion and transitions; trainer controls when each round starts.')}
    {agenda.untimedSteps>0&&<> · {agenda.untimedSteps} {t('خطوة بدون مؤقت','untimed steps')}</>}
   </small>
  </div>
