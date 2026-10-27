@@ -1808,5 +1808,5 @@ test('optional real WebGL wheel is a render-only layer and preserves existing se
  assert.ok(source.includes('if(now<(current.startsAt||0))'));
  assert.ok(parent.includes("get('arena3d')==='1'"));
  assert.ok(parent.includes('wheel3DOptIn&&wheel3DAvailable?'));
- assert.ok(parent.includes('wheel3DAvailable(false)'));
+ assert.ok(parent.includes('setWheel3DAvailable(false)'));
 });
