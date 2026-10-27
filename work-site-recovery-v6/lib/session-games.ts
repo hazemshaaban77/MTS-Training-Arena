@@ -49,6 +49,29 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   }
   const r=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!r.meta.changes)fail('STALE',409);return {ok:true};
  }
+ if(b.action==='flashjudge'){
+  if(!host||a.type!=='Flashcards'||a.trainingMode!=='challenge')fail('FORBIDDEN',403);
+  const ix=b.index,playerId=b.player,grade=b.grade,delta=b.delta;
+  if(!Number.isInteger(ix)||ix<0||ix>=a.fronts.length||
+   !Number.isInteger(grade)||grade<0||grade>10||![1,-1].includes(b.direction)||
+   !Number.isInteger(delta)||delta!==b.direction*Math.min(10000,Math.round(grade*Number(a.points??1000)*Number(a.weight??1)/10)))
+   fail('AWARD',400);
+  const validPlayer:any=await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'")
+   .bind(s.code,playerId).first();
+  if(!validPlayer)fail('PLAYER',404);
+  const key=ix+':'+playerId,grades=rt.flashGrades||{};
+  if(grades[key])fail('ALREADY_GRADED',409);
+  const id='flashjudge:'+s.current+':'+key;
+  const updated={...rt,flashGrades:{...grades,[key]:{grade,delta,player:playerId,index:ix}}};
+  const results=await batch(db,[
+   db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')")
+    .bind(s.code,id,playerId,s.current,'flash-judge',delta,JSON.stringify({grade,index:ix}),now,s.code,s.revision),
+   db.prepare("UPDATE sessions SET runtime=?,revision=revision+1 WHERE code=? AND revision=? AND status='question'")
+    .bind(JSON.stringify(updated),s.code,s.revision)
+  ]);
+  if(!results[0]?.meta.changes||!results[1]?.meta.changes)fail('STALE',409);
+  await audit(db,s.owner,s.code,'flash-judge',{player:playerId,grade,delta,index:ix});return {ok:true};
+ }
  if(['wheelaward','boxaward'].includes(b.action)){
   const isBox=b.action==='boxaward',item=isBox?rt.box:rt.spin;
   const challenge=isBox?(a.boxes?.[item?.index]||(!a.boxes?{kind:'challenge'}:undefined)):a.sectors?.[item?.index];
@@ -148,6 +171,10 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   if(rt.spin){game.spinTarget=rt.spin.target;game.spin={id:rt.spin.id,startsAt:rt.spin.startsAt,stopsAt:rt.spin.stopsAt,revealAt:rt.spin.revealAt,revealed:!!rt.spin.revealed,index:now>=rt.spin.stopsAt?rt.spin.index:null};if(rt.spin.revealed){const sector=a.sectors?.[rt.spin.index];game.outcome=sector?{label:sector.label,kind:sector.kind,detail:sector.detail,points:sector.points||0}:a.items[rt.spin.index];if(sector?.kind==='question'){const md=await read(db,s,`wheel:${rt.spin.id}:${rt.spin.target}`),q=sector.questions[md.data.step||0];game.mini={version:md.version,step:md.data.step||0,total:sector.questions.length,question:q?publicActivity(q):null,deadline:q?(md.data.clock||rt.spin.revealAt-(rt.pausedTotal||0))+q.timer*1000+(rt.pausedTotal||0):null,lastCorrect:md.data.lastCorrect};}}}
   if(rt.box){const box=a.boxes?.[rt.box.index];game.box={id:rt.box.id,target:rt.box.target,index:rt.box.index,label:a.items[rt.box.index],kind:box?.kind||(!a.boxes?'challenge':undefined),detail:box?.detail,question:box?.question?publicActivity(box.question):null,answered:!!d.boxes?.includes(rt.box.id)};}
   game.manualJudgement=rt.judgements?.[(a.type==='Open the Box'?rt.box?.id:rt.spin?.id)||'']||null;
+ }
+ if(a.type==='Flashcards'&&a.trainingMode==='challenge'){
+  game.flashGrades=host?rt.flashGrades||{}:p?
+   Object.fromEntries(Object.entries(rt.flashGrades||{}).filter(([key]:any)=>key.endsWith(':'+p.id))):{};
  }
  if(a.type==='Flashcards'&&p){game.card=d.card??0;game.flipped=!!d.flipped;game.back=d.flipped?a.backs[d.card??0]:null;game.reviewed=d.reviewed||[];game.assessment=d.assessment||{};}
  if(a.type==='Escape Room'){
