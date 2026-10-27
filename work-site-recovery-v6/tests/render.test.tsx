@@ -1810,3 +1810,19 @@ test('optional real WebGL wheel is a render-only layer and preserves existing se
  assert.ok(parent.includes('wheel3DOptIn&&wheel3DAvailable?'));
  assert.ok(parent.includes('setWheel3DAvailable(false)'));
 });
+
+test('Arena Crown wheel has original authored sector labels, mechanical bulbs and jewel pointer',()=>{
+ const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
+ assert.match(scene,/const labelText=String\(sectors\[i\]\.label/);
+ assert.match(scene,/new THREE\.InstancedMesh/);
+ assert.match(scene,/new THREE\.ExtrudeGeometry/);
+ assert.match(scene,/const pointerShape=new THREE\.Shape/);
+ assert.match(scene,/new THREE\.CanvasTexture/);
+ assert.match(scene,/Math\.min\(window\.devicePixelRatio/);
+ assert.match(scene,/wheel\.rotation\.z=angle/);
+ assert.match(scene,/onSpin/);
+ assert.match(scene,/current\.revealed&&Number\.isInteger\(current\.index\)/);
+ assert.match(scene,/if\(now<\(current\.startsAt\|\|0\)\)/);
+ assert.match(css,/arena-wheel3d--crown/);
+});

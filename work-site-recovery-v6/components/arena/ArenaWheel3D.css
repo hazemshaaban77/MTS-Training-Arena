@@ -1,11 +1,13 @@
-.arena-wheel3d{position:relative;isolation:isolate;display:grid;place-items:center;width:100%;height:clamp(340px,43vw,615px);overflow:hidden;border-radius:28px;contain:layout paint;background:radial-gradient(ellipse 57% 50% at 50% 53%,#31749333,transparent 80%)}
-.arena-wheel3d__canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation}
+.arena-wheel3d--crown{position:relative;isolation:isolate;display:grid;place-items:center;width:100%;height:clamp(395px,46vw,665px);overflow:hidden;border-radius:26px;background:radial-gradient(ellipse at 50% 44%,#1b548468 0%,#09203db5 46%,#061428 82%);box-shadow:inset 0 0 65px #0008,inset 0 0 0 1px #5098b234}
+.arena-wheel3d--crown:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 73%,#c989342c,transparent 37%),repeating-linear-gradient(90deg,transparent 0 83px,#5bd8ff08 84px 85px);pointer-events:none}
+.arena-wheel3d__canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation;z-index:1}
 .arena-wheel3d__canvas canvas{display:block;width:100%;height:100%}
-.arena-wheel3d__tap{position:absolute;left:50%;top:50%;transform:translate(-50%,-47%);width:min(80%,430px);aspect-ratio:1;border:0;border-radius:50%;background:transparent;color:transparent;cursor:pointer;outline-offset:-10px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.arena-wheel3d__ambient{position:absolute;inset:auto 12% 0;height:21%;border-radius:100%;background:radial-gradient(ellipse,#f3ac4360,transparent 68%);filter:blur(13px);pointer-events:none}
+.arena-wheel3d__tap{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(80%,440px);aspect-ratio:1;border:0;border-radius:50%;background:transparent;color:transparent;cursor:pointer;outline-offset:-10px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;z-index:3}
 .arena-wheel3d__tap:disabled{cursor:default}
-.arena-wheel3d__tap:focus-visible{outline:5px solid #ffdc80;outline-offset:-7px}
-.arena-wheel3d__pill{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);white-space:nowrap;max-width:90%;font-weight:800;letter-spacing:.08em;font-size:clamp(10px,1.3vw,13px);color:#e3faff;background:#0b2945de;border:1px solid #67bbd155;border-radius:999px;padding:6px 14px;pointer-events:none}
-.arena-wheel3d__countdown{position:absolute;z-index:4;top:4px;left:50%;transform:translateX(-50%);background:#0d2744f5;color:#ffe3a3;min-width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:29px;font-weight:900;pointer-events:none}
-.arena-wheel3d__status{position:absolute;top:10px;right:12px;padding:5px 10px;background:#0b2039c9;color:#cff9ff;border:1px solid #65add255;border-radius:9px;font-size:10px;pointer-events:none}
-@media(max-width:600px){.arena-wheel3d{height:clamp(285px,82vw,410px)}.arena-wheel3d__tap{width:83%}.arena-wheel3d__pill{font-size:10px}}
+.arena-wheel3d__tap:focus-visible{outline:4px solid #ffdc80;outline-offset:-7px}
+.arena-wheel3d__pill{position:absolute;z-index:4;bottom:10px;left:50%;transform:translateX(-50%);white-space:nowrap;max-width:92%;font-weight:900;letter-spacing:.04em;font-size:clamp(11px,1.3vw,14px);color:#fff0d0;background:#08162ded;border:1px solid #b48648b0;box-shadow:0 4px 22px #0009,0 0 14px #ffbd432f;border-radius:999px;padding:10px 19px;pointer-events:none}
+.arena-wheel3d__countdown{position:absolute;z-index:5;top:34px;left:50%;transform:translateX(-50%);background:#08152bf5;color:#ffdc7c;min-width:64px;height:64px;box-shadow:0 0 35px #ffb7477a;border:2px solid #e7b761;border-radius:50%;display:grid;place-items:center;font-size:32px;font-weight:900;pointer-events:none}
+.arena-wheel3d__status{position:absolute;z-index:4;top:14px;right:15px;padding:6px 12px;background:#061327d6;color:#e9cb91;border:1px solid #b7844e77;border-radius:10px;font-size:10px;font-weight:900;letter-spacing:.09em;pointer-events:none}
+@media(max-width:600px){.arena-wheel3d--crown{height:clamp(335px,91vw,450px);border-radius:16px}.arena-wheel3d__tap{width:85%;top:45%}.arena-wheel3d__pill{font-size:10px;bottom:6px;padding:7px 11px}.arena-wheel3d__status{font-size:9px;top:7px;right:7px}.arena-wheel3d__countdown{top:18px;min-width:50px;height:50px;font-size:25px}}
 @media(prefers-reduced-motion:reduce){.arena-wheel3d__pill,.arena-wheel3d__status{transition:none!important}}

@@ -1,12 +1,9 @@
-# Arena Real 3D Wheel — isolated prototype
+# Arena Crown Wheel — premium real 3D concept
 
-Branch: `feature/v6-real-3d-wheel` from `develop/v6-github-arena`. **No production release** in this branch.
+Model 3 reimagined as a sculpted vertical metallic gameshow wheel with deep brushed bronze/black steel housing, 48 glowing arcade bulbs, precious-gold machined bezels, dark jewel pointer, 3D stage plinth and focused cinematic lights.
 
-- Opt in by appending `?arena3d=1` to a tested V6 environment's URL. Without the opt-in the exact prior CSS wheel continues to render.
-- Uses real WebGL 3D extruded segment meshes, textured numerical glyphs, metal materials, lights, stage pedestal and perspective camera, with lazy-loaded Three.js.
-- The exact original trainer/participant `spin` command, server-sourced countdown, outcome/score/round rendering and 0–10 host judging are preserved. The renderer never issues scores or guesses a winner before server release.
-- Winning sector arrives only after the trusted Worker reveals `index`. 3D rendering then finishes the final angular alignment in 430ms. This is a deliberate bounded post-reveal settle, not a prediction or a source of scoring. Late joiners settle from their current angle.
-- Supports WebGL context loss / unsupported browsers fallback to existing CSS wheel. Respects reduced-motion and lower mobile pixel density.
-- Sector labels remain DOM text in the host legend; geometry's labels are numerals for readability.
-- Real-device 1366×768 and 1920×1080 projector, Android, physical long-term stability, 60–80 participant load are **not verified** by automated tests.
-- Dependency lockfile must be generated with pnpm 11.25.0 before CI can use frozen lockfile.
+**Function**: Opt-in via `?arena3d=1` only on the feature build; previous CSS model remains default and fallback. Shapes are real 3D extruded geometry. The wheel uses **authored** source labels, Arabic glyphs drawn via CanvasTexture on WebGL sprites, and an English/Arabic stage HUD. No imported paid textures, external sound, or new backend services.
+
+**Safety**: The existing server is the only authority for eligible spins, start and stop times, result index, prizes and manual 0–10 judging. The renderer never precomputes, reveals or awards a sector. 380 ms final easing after official reveal is purely visual. The wheel defaults to lite rendering on coarse-pointer mobiles with reduced DPR and lower frame-rate. No changes to main, V5, Firebase, Cloudflare Worker, D1, existing user assets or live results.
+
+**Remaining acceptance**: actual Android GPU/browser session test, 1366×768 + 1920×1080 projector, users reading live Arabic sector labels at distance, cross-device timing and server outcome, failure fallback, 60–80-participant classroom load. Development CI is not substitute for these tests.
