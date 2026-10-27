@@ -12,7 +12,7 @@ export function validateActivity(a,depth=0){
  if(a.media!=null){ok(a.media&&typeof a.media==='object'&&['image','video'].includes(a.media.type)&&str(a.media.url,2048)&&/^https:\/\/[^\s]+$/i.test(a.media.url)&&(!a.media.alt||typeof a.media.alt==='string'&&a.media.alt.length<=200));}
  const type=a.type;
  if(type==='Ultimate Game Show'&&a.showFormat==='championship'){
-  if(!Array.isArray(a.questions)||a.questions.length<2||a.questions.length>20)throw Error('DECK');
+  if(!Array.isArray(a.questions)||a.questions.length<(a.minimumLevels===7?7:2)||a.questions.length>20)throw Error('DECK');
   for(const q of a.questions)validateActivity(q,depth+1);
   ok(a.questions.every(q=>q.type==='Quiz'&&Number.isInteger(q.timer)&&q.timer>=5&&q.timer<=300&&Array.isArray(q.options)&&q.options.length===4));
   const amounts=a.questions.map(q=>q.points);
@@ -20,7 +20,7 @@ export function validateActivity(a,depth=0){
   ok(Array.isArray(a.safeLevels)&&a.safeLevels.length<=3&&new Set(a.safeLevels).size===a.safeLevels.length&&a.safeLevels.every(x=>Number.isInteger(x)&&x>=1&&x<=a.questions.length));
   ok(a.participation==='individual'&&a.betEnabled!==true);return a;
  }
- if(['Quiz','Ultimate Game Show'].includes(type)&&a.questions){ok(Array.isArray(a.questions)&&a.questions.length&&a.questions.length<=500);a.questions.forEach(q=>validateActivity({...q,timer:q.timer??a.timer},depth+1));return a;}
+ if(['Quiz','Ultimate Game Show'].includes(type)&&a.questions){ok(Array.isArray(a.questions)&&a.questions.length>=(type==='Ultimate Game Show'&&a.minimumLevels===7?7:1)&&a.questions.length<=500);a.questions.forEach(q=>validateActivity({...q,timer:q.timer??a.timer},depth+1));return a;}
  if(['Quiz','Dropdown','True/False','Ultimate Game Show'].includes(type)){ok(list(a.options,2,4)&&idx(a.correct,a.options.length));if(type==='True/False')ok(a.options.length===2);}
  else if(type==='Fill Blank')ok(list(a.accepted,1,20));
  else if(type==='Image Hotspot'){ok(str(a.image,2048)&&/^https:\/\/|^\/[^/]/.test(a.image)&&Array.isArray(a.regions)&&a.regions.length>0&&a.regions.length<=10&&a.regions.every(r=>['x','y','r'].every(k=>typeof r[k]==='number'&&r[k]>=0&&r[k]<=1)));}
@@ -36,7 +36,7 @@ export function validateActivity(a,depth=0){
  else if(type==='Escape Room'){ok(Array.isArray(a.rooms)&&a.rooms.length>=1&&a.rooms.length<=5);for(const r of a.rooms){ok(str(r.title,100)&&Array.isArray(r.puzzles)&&r.puzzles.length>0&&r.puzzles.length<=30);r.puzzles.forEach(q=>validateActivity(q,depth+1));}ok(['individual','team','collaborative',undefined].includes(a.mode));a.timer=0;}
  else if(type==='Scenario Challenge'){
   if(!a.nodes){ok(list(a.options,2,4)&&idx(a.correct,a.options.length));}
-  else {ok(Array.isArray(a.nodes)&&a.nodes.length>1&&a.nodes.length<=100&&new Set(a.nodes.map(n=>n.id)).size===a.nodes.length);const ids=new Set(a.nodes.map(n=>n.id));ok(ids.has(a.start));for(const n of a.nodes){ok(str(n.id,100)&&str(n.text));if(!n.ending){ok(Array.isArray(n.choices)&&n.choices.length>0&&n.choices.length<=6);n.choices.forEach(c=>ok(str(c.label,160)&&ids.has(c.next)&&Number.isInteger(c.points??0)&&Math.abs(c.points??0)<=10000));}}const visit=(id,path)=>{ok(!path.has(id));const n=a.nodes.find(n=>n.id===id);if(!n.ending)for(const c of n.choices)visit(c.next,new Set([...path,id]));};visit(a.start,new Set());a.timer=0;}
+  else {ok(Array.isArray(a.nodes)&&a.nodes.length>1&&a.nodes.length<=100&&new Set(a.nodes.map(n=>n.id)).size===a.nodes.length);const ids=new Set(a.nodes.map(n=>n.id));ok(ids.has(a.start));for(const n of a.nodes){ok(str(n.id,100)&&str(n.text));if(!n.ending){ok(Array.isArray(n.choices)&&n.choices.length>0&&n.choices.length<=6);ok(n.correctChoice===undefined||idx(n.correctChoice,n.choices.length));n.choices.forEach(c=>ok(str(c.label,160)&&ids.has(c.next)&&Number.isInteger(c.points??0)&&Math.abs(c.points??0)<=10000));}}const visit=(id,path)=>{ok(!path.has(id));const n=a.nodes.find(n=>n.id===id);if(!n.ending)for(const c of n.choices)visit(c.next,new Set([...path,id]));};visit(a.start,new Set());a.timer=0;}
  }else throw Error('DECK');
  if(a.weight!=null)ok(typeof a.weight==='number'&&a.weight>=0&&a.weight<=10);
  if(a.wrongPenalty!=null)ok(Number.isInteger(a.wrongPenalty)&&a.wrongPenalty>=0&&a.wrongPenalty<=10000);
@@ -54,7 +54,12 @@ export function flattenDeck(activities){
 export function publicActivity(a,{closed=false,reveal=null,host=false}={}){
  if(!a)return null;const r=JSON.parse(JSON.stringify(a));
  for(const k of ['correct','order','pairs','assignments','backs','accepted','regions','nodes','rooms','sectors','boxes','questions','explanation'])delete r[k];
- if(a.sectors)r.sectors=a.sectors.map(s=>({label:s.label,kind:s.kind,repeatable:!!s.repeatable}));
+ if(a.sectors)r.sectors=a.sectors.map((s,i)=>({
+  label:host?s.label:String(i+1),kind:host?s.kind:'hidden',repeatable:!!s.repeatable
+ }));
+ // No item text leaks to a learner before a box/wheel is opened by the server.
+ if(!host&&['Wheel of Fortune','Spin Wheel','Open the Box'].includes(a.type)&&Array.isArray(r.items))
+  r.items=r.items.map((_,i)=>String(i+1));
  if(a.rooms)r.rooms=a.rooms.map(x=>({title:x.title,narrative:x.narrative,puzzles:x.puzzles.length}));
  if(closed)for(const k of ['correct','order','pairs','assignments','accepted','regions','explanation'])if(a[k]!==undefined)r[k]=a[k];
  if(a.type==='Flashcards'&&reveal!==null)r.revealed={front:a.fronts[reveal],back:a.backs[reveal]};

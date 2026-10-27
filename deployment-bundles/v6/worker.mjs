@@ -97,7 +97,7 @@ function validateActivity2(a, depth = 0) {
   }
   const type = a.type;
   if (type === "Ultimate Game Show" && a.showFormat === "championship") {
-    if (!Array.isArray(a.questions) || a.questions.length < 2 || a.questions.length > 20) throw Error("DECK");
+    if (!Array.isArray(a.questions) || a.questions.length < (a.minimumLevels === 7 ? 7 : 2) || a.questions.length > 20) throw Error("DECK");
     for (const q of a.questions) validateActivity2(q, depth + 1);
     ok(a.questions.every((q) => q.type === "Quiz" && Number.isInteger(q.timer) && q.timer >= 5 && q.timer <= 300 && Array.isArray(q.options) && q.options.length === 4));
     const amounts = a.questions.map((q) => q.points);
@@ -107,7 +107,7 @@ function validateActivity2(a, depth = 0) {
     return a;
   }
   if (["Quiz", "Ultimate Game Show"].includes(type) && a.questions) {
-    ok(Array.isArray(a.questions) && a.questions.length && a.questions.length <= 500);
+    ok(Array.isArray(a.questions) && a.questions.length >= (type === "Ultimate Game Show" && a.minimumLevels === 7 ? 7 : 1) && a.questions.length <= 500);
     a.questions.forEach((q) => validateActivity2({ ...q, timer: q.timer ?? a.timer }, depth + 1));
     return a;
   }
@@ -177,6 +177,7 @@ function validateActivity2(a, depth = 0) {
         ok(str2(n.id, 100) && str2(n.text));
         if (!n.ending) {
           ok(Array.isArray(n.choices) && n.choices.length > 0 && n.choices.length <= 6);
+          ok(n.correctChoice === void 0 || idx(n.correctChoice, n.choices.length));
           n.choices.forEach((c) => ok(str2(c.label, 160) && ids.has(c.next) && Number.isInteger(c.points ?? 0) && Math.abs(c.points ?? 0) <= 1e4));
         }
       }
@@ -219,7 +220,13 @@ function publicActivity(a, { closed = false, reveal = null, host = false } = {})
   if (!a) return null;
   const r = JSON.parse(JSON.stringify(a));
   for (const k of ["correct", "order", "pairs", "assignments", "backs", "accepted", "regions", "nodes", "rooms", "sectors", "boxes", "questions", "explanation"]) delete r[k];
-  if (a.sectors) r.sectors = a.sectors.map((s) => ({ label: s.label, kind: s.kind, repeatable: !!s.repeatable }));
+  if (a.sectors) r.sectors = a.sectors.map((s, i) => ({
+    label: host ? s.label : String(i + 1),
+    kind: host ? s.kind : "hidden",
+    repeatable: !!s.repeatable
+  }));
+  if (!host && ["Wheel of Fortune", "Spin Wheel", "Open the Box"].includes(a.type) && Array.isArray(r.items))
+    r.items = r.items.map((_, i) => String(i + 1));
   if (a.rooms) r.rooms = a.rooms.map((x) => ({ title: x.title, narrative: x.narrative, puzzles: x.puzzles.length }));
   if (closed) {
     for (const k of ["correct", "order", "pairs", "assignments", "accepted", "regions", "explanation"]) if (a[k] !== void 0) r[k] = a[k];
@@ -581,7 +588,7 @@ async function gameInteract(db, s, a, rt, p, b, now, host) {
         if (!Number.isInteger(i) || i < 0 || i >= a.items.length || rt.used?.includes(i) && !a.repeatable) fail2("STATE", 409);
         const box = a.boxes?.[i], id = crypto.randomUUID();
         rt = { ...rt, target, box: { id, index: i, target, done: !box?.question }, used: [...rt.used || [], i], turn: (rt.turn || 0) + 1 };
-        const points = box && !box.question ? Math.round((box.points || 0) * (a.weight ?? 1)) : 0;
+        const points = box?.kind === "surprise" && !box.question ? Math.round((box.points || 0) * (a.weight ?? 1)) : 0;
         const statements = [];
         if (target) statements.push(db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? FROM sessions WHERE code=? AND revision=?").bind(s.code, "box:" + id, target, s.current, "box", points, JSON.stringify({ box: i }), now, s.code, s.revision));
         statements.push(db.prepare("UPDATE sessions SET runtime=?,reveal=?,revision=revision+1 WHERE code=? AND revision=?").bind(JSON.stringify(rt), i, s.code, s.revision));
@@ -600,22 +607,42 @@ async function gameInteract(db, s, a, rt, p, b, now, host) {
     if (!r.meta.changes) fail2("STALE", 409);
     return { ok: true };
   }
-  if (b.action === "wheelaward") {
-    if (!host || !["Wheel of Fortune", "Spin Wheel"].includes(a.type)) fail2("FORBIDDEN", 403);
-    const spin = rt.spin, sector = spin && a.sectors?.[spin.index];
-    if (!spin?.revealed || sector?.kind !== "challenge" || !spin.target) fail2("STATE", 409);
-    const delta = b.delta, reason = String(b.reason || "").trim(), awardId = b.adjustmentId;
-    if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 1e4 || reason.length < 5 || reason.length > 280 || typeof awardId !== "string" || !/^[0-9a-fA-F-]{36}$/.test(awardId)) fail2("AWARD");
-    const target = await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'").bind(s.code, spin.target).first();
+  if (["wheelaward", "boxaward"].includes(b.action)) {
+    const isBox = b.action === "boxaward", item = isBox ? rt.box : rt.spin;
+    const challenge = isBox ? a.boxes?.[item?.index] : a.sectors?.[item?.index];
+    if (!host || (isBox ? a.type !== "Open the Box" : !["Wheel of Fortune", "Spin Wheel"].includes(a.type)))
+      fail2("FORBIDDEN", 403);
+    if (!item || !isBox && !item.revealed || challenge?.kind !== "challenge" || !item.target)
+      fail2("STATE", 409);
+    if (rt.judgements?.[item.id]) fail2("ALREADY_GRADED", 409);
+    const reason = String(b.reason || "").trim(), awardId = b.adjustmentId;
+    if (reason.length < 5 || reason.length > 280 || typeof awardId !== "string" || !/^[0-9a-fA-F-]{36}$/.test(awardId)) fail2("AWARD");
+    const grade2 = b.grade === void 0 ? null : b.grade;
+    if (isBox && grade2 === null) fail2("AWARD");
+    if (grade2 !== null && (!Number.isInteger(grade2) || grade2 < 0 || grade2 > 10 || ![1, -1].includes(b.direction))) fail2("AWARD");
+    const canonical = grade2 === null ? b.delta : b.direction * Math.min(1e4, Math.round(grade2 * Number(a.points ?? 1e3) * Number(a.weight ?? 1) / 10));
+    const delta = b.delta;
+    if (!Number.isInteger(delta) || Math.abs(delta) > 1e4 || grade2 === null && delta === 0 || delta !== canonical) fail2("AWARD");
+    const target = await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'").bind(s.code, item.target).first();
     if (!target) fail2("PLAYER");
-    const eventId = "wheel-judge:" + spin.id + ":" + awardId;
-    const details = JSON.stringify({ sector: spin.index, spin: spin.id, reason, delta, actor: s.owner });
-    const result = await batch(db, [
-      db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')").bind(s.code, eventId, spin.target, s.current, "wheel-judge", delta, details, now, s.code, s.revision),
-      db.prepare("UPDATE sessions SET revision=revision+1 WHERE code=? AND revision=? AND status='question'").bind(s.code, s.revision)
+    const kind = isBox ? "box-judge" : "wheel-judge", eventId = kind + ":" + item.id;
+    const judgement = { grade: grade2, delta, direction: delta < 0 ? -1 : 1, reason };
+    const next = { ...rt, judgements: { ...rt.judgements || {}, [item.id]: judgement } };
+    const details = JSON.stringify({
+      source: isBox ? "box" : "wheel",
+      reveal: item.id,
+      index: item.index,
+      grade: grade2,
+      delta,
+      reason,
+      actor: s.owner
+    });
+    const changes = await batch(db, [
+      db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')").bind(s.code, eventId, item.target, s.current, kind, delta, details, now, s.code, s.revision),
+      db.prepare("UPDATE sessions SET runtime=?,revision=revision+1 WHERE code=? AND revision=? AND status='question'").bind(JSON.stringify(next), s.code, s.revision)
     ]);
-    if (!result[0]?.meta.changes || !result[1]?.meta.changes) fail2("STALE", 409);
-    await audit(db, s.owner, s.code, "wheel-manual-score", { player: spin.target, delta, reason, spin: spin.id });
+    if (!changes[0]?.meta.changes || !changes[1]?.meta.changes) fail2("STALE", 409);
+    await audit(db, s.owner, s.code, kind, { player: item.target, grade: grade2, delta, reason, item: item.id });
     return { ok: true };
   }
   if (host && ["override", "hint"].includes(b.action)) {
@@ -775,8 +802,9 @@ async function gameSnapshot(db, s, a, rt, p, host, now) {
     }
     if (rt.box) {
       const box = a.boxes?.[rt.box.index];
-      game.box = { id: rt.box.id, target: rt.box.target, index: rt.box.index, label: a.items[rt.box.index], detail: box?.detail, question: box?.question ? publicActivity(box.question) : null, answered: !!d.boxes?.includes(rt.box.id) };
+      game.box = { id: rt.box.id, target: rt.box.target, index: rt.box.index, label: a.items[rt.box.index], kind: box?.kind, detail: box?.detail, question: box?.question ? publicActivity(box.question) : null, answered: !!d.boxes?.includes(rt.box.id) };
     }
+    game.manualJudgement = rt.judgements?.[(a.type === "Open the Box" ? rt.box?.id : rt.spin?.id) || ""] || null;
   }
   if (a.type === "Flashcards" && p) {
     game.card = d.card ?? 0;
@@ -796,6 +824,26 @@ async function gameSnapshot(db, s, a, rt, p, host, now) {
   if (a.nodes && p) {
     const node = a.nodes.find((n) => n.id === (d.node || a.start));
     game.scenario = { text: node.text, ending: !!node.ending, discussion: node.discussion, choices: node.choices?.map((c) => ({ label: c.label })), consequence: d.consequence, path: d.path || [] };
+  }
+  if (a.type === "Scenario Challenge" && a.nodes && rt.keyRevealed === true && s.status !== "question") {
+    const map = [], seen = /* @__PURE__ */ new Set();
+    let id = a.start, complete = false;
+    while (id && !seen.has(id) && map.length < 100) {
+      seen.add(id);
+      const node = a.nodes.find((x) => x.id === id);
+      if (!node) break;
+      if (node.ending) {
+        map.push({ id: node.id, text: node.text, ending: true, discussion: node.discussion });
+        complete = true;
+        break;
+      }
+      const ix = node.correctChoice;
+      if (!Number.isInteger(ix) || ix < 0 || ix >= node.choices.length) break;
+      const choice = node.choices[ix];
+      map.push({ id: node.id, text: node.text, choice: choice.label, consequence: choice.consequence || "" });
+      id = choice.next;
+    }
+    game.scenarioMap = { path: map, complete };
   }
   if (a.mainType === "Ultimate Game Show") {
     game.lifelines = d.lifelines || [];
@@ -820,7 +868,7 @@ async function gameSnapshot(db, s, a, rt, p, host, now) {
 // lib/championship.mjs
 var isChampionship = (a) => a?.type === "Ultimate Game Show" && a.showFormat === "championship";
 function validateChampionship(a) {
-  if (!isChampionship(a) || !Array.isArray(a.questions) || a.questions.length < 2 || a.questions.length > 20) throw Error("DECK");
+  if (!isChampionship(a) || !Array.isArray(a.questions) || a.questions.length < (a.minimumLevels === 7 ? 7 : 2) || a.questions.length > 20) throw Error("DECK");
   const prizes = a.questions.map((q) => q.points);
   if (prizes.some((x, i) => !Number.isInteger(x) || x <= 0 || x > 1e4 || i > 0 && x <= prizes[i - 1])) throw Error("DECK");
   const safe = a.safeLevels || [];
@@ -936,8 +984,8 @@ function showPublic(a, show, viewer, host = false) {
       earned: show.lastCompleted.earned
     } : null,
     question: q ? { type: q.type, prompt: q.prompt, options: q.options, timer: q.timer } : null,
-    lifelines: mine ? current.usedLifelines : [],
-    eliminatedChoices: mine ? eliminated : [],
+    lifelines: (mine || host) && current ? current.usedLifelines : [],
+    eliminatedChoices: (mine || host) && current?.usedLifelines.includes("fifty") ? eliminated : [],
     audienceOpen: !!current?.usedLifelines.includes("audience"),
     audienceVotes: audienceCount,
     voted: viewer ? show.audienceVotes?.[viewer] !== void 0 : false,
@@ -956,13 +1004,13 @@ async function mutateChampionship(db, s, activity, rt, body, now, player, host) 
     if (!host) fail2("FORBIDDEN", 403);
     const candidate = await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved' AND eligible_from<=?").bind(s.code, body.player, s.current).first();
     if (!candidate) fail2("SHOW_CAST", 409);
-  } else if (action === "showanswer" || action === "showwithdraw" || action === "showlifeline") {
+  } else if (action === "showanswer" || action === "showwithdraw" || action === "showlifeline" && !host) {
     if (!player || player.id !== rt.show?.current?.player) fail2("SHOW_CONTESTANT", 403);
   } else if (action === "showaudience") {
     if (!player || player.approval !== "approved" || player.eligible_from > s.current) fail2("PLAYER", 403);
   } else fail2("SHOW_ACTION", 409);
   const mapped = { showcast: "cast", showanswer: "answer", showwithdraw: "withdraw", showlifeline: "lifeline", showaudience: "audience" };
-  const extra = { ...body, player: action === "showcast" ? body.player : player?.id, attemptId: action === "showcast" ? crypto.randomUUID() : void 0 };
+  const extra = { ...body, player: action === "showcast" ? body.player : host && action === "showlifeline" ? rt.show?.current?.player : player?.id, attemptId: action === "showcast" ? crypto.randomUUID() : void 0 };
   let result;
   try {
     result = showCommand(activity, rt.show || showStart(), mapped[action], extra, now, s.deadline);
@@ -1138,7 +1186,7 @@ async function service(db, req, owner, ctx = {}) {
   if (url.pathname === "/api/control" && method === "POST") {
     requireHost();
     if (b.revision !== s.revision) fail2("STALE", 409);
-    if (["showcast", "showfinish"].includes(b.action) && isChampionship(active())) {
+    if (["showcast", "showfinish", "showlifeline"].includes(b.action) && isChampionship(active())) {
       if (b.action === "showfinish") {
         if (s.status !== "question" || rt.show?.phase === "answering") fail2("SHOW_STATE", 409);
         const n2 = nextState(s, "close", now);
@@ -1246,7 +1294,7 @@ async function service(db, req, owner, ctx = {}) {
       await audit(db, owner, code, b.action, b.action === "notes" ? { notes: rt.notes } : b.action === "stagecast" ? { round: s.current, players: rt.targets } : { round: s.current });
       return { ok: true };
     }
-    if (["selectturn", "spin", "respin", "box", "override", "hint", "wheelaward"].includes(b.action)) return gameInteract(db, s, active(), rt, null, b, now, true);
+    if (["selectturn", "spin", "respin", "box", "override", "hint", "wheelaward", "boxaward"].includes(b.action)) return gameInteract(db, s, active(), rt, null, b, now, true);
     if (b.action === "finish" && s.survey && !rt.surveyFinished) {
       const survey = JSON.parse(s.survey);
       if (survey.stage === "before-ceremony") {
@@ -1277,7 +1325,7 @@ async function service(db, req, owner, ctx = {}) {
     }
     if (b.action === "close") {
       n.deadline = now;
-      n.runtime = JSON.stringify({ ...rt, keyRevealed: !["Meta Plan", "Categorize"].includes(active()?.type) && settings.reveal !== "manual", revealAt: now + (active()?.mainType === "Ultimate Game Show" ? 2e3 : 0) });
+      n.runtime = JSON.stringify({ ...rt, keyRevealed: !["Meta Plan", "Categorize", "Scenario Challenge"].includes(active()?.type) && settings.reveal !== "manual", revealAt: now + (active()?.mainType === "Ultimate Game Show" ? 2e3 : 0) });
     }
     if (b.action === "finish") n.runtime = JSON.stringify(rt);
     const r = await writeSession(db, s, n);
@@ -1383,7 +1431,7 @@ async function service(db, req, owner, ctx = {}) {
   for (const r of events) totals[r.player] = (totals[r.player] || 0) + r.total;
   const roundAnswers = (await db.prepare("SELECT player,answer,points,correct FROM answers WHERE session=? AND round=?").bind(code, s.current).all()).results;
   const anon = (await db.prepare("SELECT receipt,answer FROM anonymous_responses WHERE session=? AND round=?").bind(code, s.current).all()).results;
-  const closed = ["results", "completed", "survey", "archived"].includes(s.status), a = active() ?? null, revealed = closed && (["Meta Plan", "Categorize"].includes(a?.type) ? rt.keyRevealed === true : settings.reveal !== "manual" || rt.keyRevealed) && !(rt.revealAt > now);
+  const closed = ["results", "completed", "survey", "archived"].includes(s.status), a = active() ?? null, revealed = closed && (["Meta Plan", "Categorize", "Scenario Challenge"].includes(a?.type) ? rt.keyRevealed === true : settings.reveal !== "manual" || rt.keyRevealed) && !(rt.revealAt > now);
   const mine = roundAnswers.find((x) => x.player === player?.id);
   let ownAnon = null;
   if (player && a?.anonymous) {
@@ -1397,7 +1445,7 @@ async function service(db, req, owner, ctx = {}) {
     const survey = JSON.parse(s.survey), receipt = await hash(s.anonymous_secret + ":survey:" + player.id);
     surveySubmitted = !!(survey.anonymous ? await db.prepare("SELECT 1 FROM anonymous_responses WHERE session=? AND round=-1 AND receipt=?").bind(code, receipt).first() : await db.prepare("SELECT 1 FROM answers WHERE session=? AND round=-1 AND player=?").bind(code, player.id).first());
   }
-  let pub = publicActivity(a, { closed: revealed, reveal: s.reveal });
+  let pub = publicActivity(a, { closed: revealed, reveal: s.reveal, host });
   if (pub?.assignments && rt.metaCount) pub.assignments = pub.assignments.map((x, i) => i < rt.metaCount ? x : -1);
   if (["betting", "casting"].includes(rt.phase) && pub) {
     pub = { ...pub, prompt: a.section || a.mainType, options: [], correct: void 0 };

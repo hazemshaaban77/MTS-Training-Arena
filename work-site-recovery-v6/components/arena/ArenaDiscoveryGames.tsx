@@ -1,5 +1,6 @@
 'use client';
 import {BookOpen,CheckCircle2,ChevronLeft,ChevronRight,Gift,Layers3,LockKeyhole,RotateCcw,Sparkles,UnlockKeyhole,Users} from 'lucide-react';
+import WheelJudge from './WheelJudge';
 
 type ActorProps={a:any;ar:boolean;host:boolean;display:boolean;actor:boolean;usable:boolean;
  closed:boolean;busy:boolean;g:any;mine:any;s:any;onControl:(action:string,index?:number,extra?:any)=>void;
@@ -48,6 +49,7 @@ export function OpenBoxExperience({a,ar,host,actor,usable,closed,busy,g,mine,s,o
    {g.box.question&&!g.box.answered&&<div className="box-vault-reveal__question">{questionSlot}</div>}
    {g.box.question&&g.box.answered&&<p className="box-vault-reveal__done"><CheckCircle2 size={17}/>{t('اتسجل ردّ التحدي','Challenge answer submitted')}</p>}
   </div>}
+  {host&&<WheelJudge mode="box" ar={ar} game={g} session={s} activity={a} busy={busy} onControl={onControl}/>}
   {host&&<label className="box-vault-turn"><Users size={19}/>
    <span>{t('اختار المشارك صاحب الدور','Choose whose turn it is')}</span>
    <select aria-label={t('اختار المشارك','Select player')}

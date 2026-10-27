@@ -57,9 +57,11 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
  const [seconds,setSeconds]=useState(Math.max(0,a.questions?.[0]?.timer??a.timer??0));
  const [paused,setPaused]=useState(true);
  const [note,setNote]=useState('');
+ const wheelPreviewTimers=useRef<ReturnType<typeof setTimeout>[]>([]);
+ useEffect(()=>()=>{wheelPreviewTimers.current.forEach(clearTimeout);},[]);
  const isPresentation=['Wheel of Fortune','Spin Wheel','Open the Box','Flashcards'].includes(mainType(a));
  const active:any=a.questions?.length?{...a.questions[Math.min(step,a.questions.length-1)],mainType:a.type}:a;
- const displayActive=revealed?{...active}:publicActivity({...active});
+ const displayActive=revealed?{...active}:publicActivity({...active},{host:mode==='host'});
  const isPoll=a.type==='Live Poll';
  useEffect(()=>{
   if(phase!=='question'||paused||revealed||seconds<=0)return;
@@ -67,7 +69,7 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
   return()=>window.clearTimeout(id);
  },[seconds,paused,phase,revealed]);
  const progress=active.timer?Math.min(100,seconds/Math.max(1,active.timer)*100):100;
- function resetStage(){setGame(initialGame(a));setAnswer(null);setVotes([]);setRevealed(false);
+ function resetStage(){wheelPreviewTimers.current.forEach(clearTimeout);wheelPreviewTimers.current=[];setGame(initialGame(a));setAnswer(null);setVotes([]);setRevealed(false);
   setPhase('intro');setStep(0);setSeconds(Math.max(0,a.questions?.[0]?.timer??a.timer??0));setPaused(true);setNote('');}
  function reveal(){setRevealed(true);setPaused(true);}
  function submit(value:any){setAnswer(value);if(isPoll)setVotes(v=>[...v.slice(-19),value]);setNote(t('اتسجلت إجابتك التجريبية. تقدر تعرض النتيجة أو ترجع تغيّرها.','Practice response recorded. Reveal the result or try another answer.'));}
@@ -124,18 +126,28 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
   else if(type==='box'){openBox(Number(payload.index));}
  }
  function spin(){
-  const sectors=a.sectors||[];if(!sectors.length)return;
-  const i=(game.turn||0)%sectors.length,s=sectors[i];
-  setGame((g:any)=>({...g,turn:(g.turn||0)+1,used:[...g.used,i],
-   spin:{id:'practice-'+runId+'-'+(g.turn||0),index:i,revealed:true,startsAt:Date.now()-5000,stopsAt:Date.now()},
-   outcome:{label:s.label,kind:s.kind,points:s.points||0,detail:s.detail},
-   mini:s.kind==='question'&&s.questions?.length?{question:s.questions[0],step:0,total:s.questions.length,
-    deadline:Date.now()+30000,version:1}:null}));
+  const sectors=a.sectors||[];
+  if(!sectors.length||game.spin&&!game.spin.revealed)return;
+  const i=(game.turn||0)%sectors.length,sector=sectors[i],now=Date.now();
+  // Mirror actual V6 Worker: 3-second countdown, animated rotation and
+  // server-style delayed reveal. This is only a deterministic local rehearsal.
+  const duration=(a.spinDuration||6)*1000;
+  const spin={id:'practice-'+runId+'-'+(game.turn||0),index:i,target:fakePlayer.uid,
+   startsAt:now+3000,stopsAt:now+3000+duration,revealAt:now+3150+duration,revealed:false};
+  setGame((g:any)=>({...g,spin,target:fakePlayer.uid,spinTarget:fakePlayer.uid}));
+  const id=setTimeout(()=>{
+   setGame((g:any)=>g.spin?.id===spin.id?{...g,turn:(g.turn||0)+1,
+    used:[...(g.used||[]),i],spin:{...spin,revealed:true},
+    outcome:{label:sector.label,kind:sector.kind,points:sector.points||0,detail:sector.detail},
+    mini:sector.kind==='question'&&sector.questions?.length?{question:sector.questions[0],step:0,
+      total:sector.questions.length,deadline:Date.now()+30000,version:1}:null}:g);
+  },3150+duration);
+  wheelPreviewTimers.current.push(id);
  }
  function openBox(index:number){
   const b=a.boxes?.[index]||{};
   setGame((g:any)=>({...g,used:[...g.used,index],
-   box:{index,label:a.items?.[index]||'',detail:b.detail||b.description||
+   box:{id:'practice-box-'+runId+'-'+index+'-'+Date.now(),index,kind:b.kind||'challenge',label:a.items?.[index]||'',detail:b.detail||b.description||
     t('الصندوق اتفتح! ناقش التحدّي مع المشاركين.','Box opened! Discuss the challenge with participants.'),
     question:b.question||null,answered:false,target:fakePlayer.uid}}));
  }
@@ -175,12 +187,18 @@ function PracticeStage({a,ar,mode,runId}:{a:Activity;ar:boolean;mode:Mode;runId:
      if(kind==='spin')spin();else if(kind==='box')openBox(Number(index));
      else if(kind==='revealkey'||kind==='metareveal')reveal();
      else if(kind==='reveal')setGame((g:any)=>({...g,card:index||0,flipped:true}));
+     else if(['wheelaward','boxaward'].includes(kind)){
+      const details=extra||{};setGame((g:any)=>({...g,manualJudgement:{grade:details.grade,
+       delta:details.delta,reason:details.reason,direction:details.direction}}));
+      setNote(t('اتسجل تقييم تجريبي فقط، من غير تعديل رصيد أي متدرب حقيقي.',
+       'Demo judgement recorded. No live learner balance was changed.'));
+     }
      else if(kind==='selectturn')setNote(t('اختيار المتدرب هنا تجريبي فقط.','Demo player selection only.'));
     }}/>
    {note&&<p className="arena-sim-note" role="status">{note}</p>}
    <div className="arena-sim-controls">
-    {host&&<>{isPoll&&<button className="btn secondary" onClick={addDemoVotes}><Users size={17}/>{t('أضف أصوات تجريبية','Add demo votes')}</button>}<button className="btn secondary" onClick={()=>setPaused(v=>!v)} disabled={closed||!active.timer}>
-     {paused?t('استكمال العداد','Resume timer'):t('إيقاف العداد','Pause timer')}</button>
+    {host&&<>{isPoll&&<button className="btn secondary" onClick={addDemoVotes}><Users size={17}/>{t('أضف أصوات تجريبية','Add demo votes')}</button>}{!!active.timer&&<button className="btn secondary" onClick={()=>setPaused(v=>!v)} disabled={closed}>
+     {paused?t('استكمال العداد','Resume timer'):t('إيقاف العداد','Pause timer')}</button>}
      {!closed&&<button className="btn primary" onClick={reveal}>{t('اعرض النتيجة','Reveal results')}</button>}</>}
     {play&&!closed&&answer!==null&&<button className="btn secondary" onClick={()=>{setAnswer(null);setNote('');}}>{t('جرّب إجابة أخرى','Try another answer')}</button>}
     {display&&!closed&&<p className="muted">{t('عرض محاكاة البروجيكتور، من غير تحكم في الجلسة.','Simulated projector view: read only.')}</p>}

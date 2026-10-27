@@ -80,7 +80,7 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
       <small>{t('سؤال الجائزة','PRIZE QUESTION')} · {possible.toLocaleString()} {t('نقطة','points')}</small>
       <h3>{q?.prompt||t('السؤال بيظهر بعد اختيار المتسابق','Question appears after casting')}</h3>
       <div className="championship-stage__options">{(q?.options||[]).map((option:string,i:number)=>{
-       const removed=isActor&&(show.eliminatedChoices||[]).includes(i);
+       const removed=(show.eliminatedChoices||[]).includes(i);
        return <button key={i} type="button" className={selected===i?'selected':''}
         disabled={!isActor||busy||seconds===0||removed}
         aria-pressed={selected===i} onClick={()=>{setSelected(i);setConfirmAnswer(false);}}>
@@ -103,11 +103,11 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
         'You are in the audience. Vote if the contestant requests audience help.')}</p>}
      </article>
      <section className="championship-stage__lifelines">
-      <h4>{t('وسائل المساعدة · مرة لكل محاولة','Lifelines · once per run')}</h4>
+      <h4>{t('وسائل المساعدة · مرة لكل محاولة · المدرب أو المتسابق يقدر يفعّلها','Lifelines · once per run · contestant or trainer may activate')}</h4>
       <div>{[['fifty','50:50'],['audience',t('الجمهور','Audience')],['time','+30s']].map(([kind,label])=>{
        const used=(show.lifelines||[]).includes(kind);
-       return <button key={kind} type="button" disabled={!isActor||used||busy||!seconds}
-        onClick={()=>onInteract('showlifeline',{kind})} className={used?'used':''}>
+       return <button key={kind} type="button" disabled={!(isActor||host)||used||busy||!seconds}
+        onClick={()=>host?onControl('showlifeline',undefined,{kind}):onInteract('showlifeline',{kind})} className={used?'used':''}>
         {kind==='time'?<TimerReset size={20}/>:kind==='audience'?<Users size={20}/>:<ShieldCheck size={20}/>}
         {label}{used&&<CheckCircle2 size={13}/>}</button>;
       })}</div>

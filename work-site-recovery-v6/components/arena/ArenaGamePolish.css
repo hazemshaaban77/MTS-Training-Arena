@@ -1,0 +1,185 @@
+
+/* V6 showmanship upgrades: visual only; gameplay and score authority remain server-side. */
+.wheel-wrap--showtime{
+  --wheel-label-radius:clamp(91px,14.4vw,157px);
+  perspective:1200px!important;
+  filter:drop-shadow(0 35px 30px #010916e0)!important;
+}
+.wheel-wrap--showtime:before{
+  inset:-30px!important;border:3px solid #e8c777b3!important;
+  box-shadow:0 0 0 9px #142945,0 0 0 13px #c69b51,
+    0 0 38px 15px #eac57d43,inset 0 0 35px #d6a85522!important;
+  animation:arena-ring-breathe 3.4s ease-in-out infinite!important;
+}
+.wheel-wrap--showtime:after{inset:-40px!important;border-color:#f6db8a66!important}
+.wheel-wrap--showtime .wheel-tap-surface{
+  transform:rotateX(10deg)!important;
+  box-shadow:0 11px 0 #bf9759,0 17px 0 #503a1b,0 25px 30px #000b,
+    0 0 0 9px #d9ae5b,0 0 0 14px #283e58!important;
+}
+.wheel-wrap--showtime .wheel.cinematic-wheel{
+  border:13px ridge #f7d98b!important;
+  background:var(--arena-wheel-gradient,conic-gradient(#225b97,#1599a4,#7d4cc1,#ef9b40))!important;
+  box-shadow:inset 0 0 0 5px #181d31,inset 0 0 40px #000a,
+    0 0 0 2px #ffecba,0 0 32px #eec17c7a!important;
+}
+.wheel-wrap--showtime .wheel.cinematic-wheel:after{
+  background:repeating-conic-gradient(
+    transparent 0deg calc(360deg / var(--sector-count) - 1.2deg),
+    #fdf0c0 calc(360deg / var(--sector-count) - 1.2deg) calc(360deg / var(--sector-count)))!important;
+}
+.wheel-wrap--showtime .wheel.cinematic-wheel>span{
+  z-index:4!important;color:#fff!important;font-size:clamp(18px,2vw,27px)!important;
+  font-weight:950!important;text-shadow:0 2px 7px #000,0 0 14px #0008!important;
+}
+.wheel-wrap--showtime .wheel-center{
+  inset:35%!important;
+  background:radial-gradient(circle at 32% 20%,#fff3c3,#d69a3f 57%,#5f3b16 100%)!important;
+  box-shadow:0 0 0 4px #fce6b1,0 4px 13px #0009,inset 0 -8px 14px #553d1f99!important;
+}
+.wheel-wrap--showtime .wheel-pointer{
+  left:calc(50% - 19px)!important;top:-41px!important;
+  border-left:19px solid transparent!important;border-right:19px solid transparent!important;
+  border-top:48px solid #ffe6ab!important;
+  filter:drop-shadow(0 3px 4px #000)!important;z-index:20!important;
+}
+.wheel-wrap--showtime .wheel-tap-hint,
+.wheel-wrap--showtime .wheel-rolling-label{
+  position:absolute;bottom:-54px;left:-25%;right:-25%;text-align:center;
+  color:#ffdf8f;font-size:clamp(12px,1.1vw,17px);font-weight:900;
+  letter-spacing:.07em;text-shadow:0 0 15px #cd8f2baa;pointer-events:none;z-index:15;
+}
+.wheel-wrap--showtime .wheel-rolling-label{animation:arena-rolling-pulse 1s ease-in-out infinite}
+.wheel-stage .turn-entrance{
+  background:linear-gradient(115deg,#11223c,#284363,#122039)!important;
+  border:1px solid #e5bd706a!important;border-radius:17px!important;
+}
+.wheel-wrap--showtime .wheel-tap-surface:disabled{opacity:1!important}
+.wheel-wrap--showtime .wheel.in-spin,
+.effects-off .wheel-wrap--showtime .wheel.in-spin,
+.effects-light .wheel-wrap--showtime .wheel.in-spin{
+  animation:arena-real-wheel-spin var(--spin-duration,6s) cubic-bezier(.08,.58,.1,1)
+    var(--spin-delay,0s) both!important;
+  will-change:transform!important;
+}
+.wheel-wrap--showtime .wheel.finished-spin{
+  animation:none!important;
+  transform:rotate(var(--wheel-stop,2160deg))!important;
+  transition:transform .65s cubic-bezier(.18,.8,.17,1)!important;
+}
+@keyframes arena-real-wheel-spin{
+  0%{transform:rotate(0deg)}
+  15%{transform:rotate(460deg)}
+  48%{transform:rotate(1320deg)}
+  78%{transform:rotate(1940deg)}
+  100%{transform:rotate(var(--wheel-stop,2160deg))}
+}
+@keyframes arena-rolling-pulse{50%{opacity:.35;transform:translateY(2px)}}
+@keyframes arena-ring-breathe{50%{box-shadow:0 0 0 9px #172e48,0 0 0 13px #c79d55,0 0 60px 16px #eed39799}}
+@media(max-width:700px){
+  .wheel-wrap--showtime{--wheel-label-radius:clamp(86px,31vw,120px)}
+  .wheel-wrap--showtime .wheel-pointer{top:-27px!important}
+  .wheel-wrap--showtime .wheel-tap-hint,.wheel-wrap--showtime .wheel-rolling-label{bottom:-43px}
+}
+@media(prefers-reduced-motion:reduce){
+ .wheel-wrap--showtime:before{animation:none!important}
+ .wheel-wrap--showtime .wheel.in-spin{animation-duration:1.2s!important}
+}
+/* Box vault: a mechanical stage reveal rather than flat grid buttons. */
+.box-stage--vault .box-vault-grid{gap:clamp(12px,2.1vw,24px);perspective:1250px}
+.box-stage--vault .box-vault-box{
+ min-height:clamp(160px,18vw,215px);position:relative;isolation:isolate;
+ transform:perspective(700px) rotateX(5deg) rotateY(-3deg) translateZ(0);
+ transition:transform .48s cubic-bezier(.22,.8,.2,1),filter .35s;
+ filter:drop-shadow(0 18px 12px #0009);
+}
+.box-stage--vault .box-vault-box:hover:not(:disabled){
+ transform:perspective(700px) rotateX(-5deg) rotateY(3deg) translateY(-10px);
+ filter:drop-shadow(0 25px 20px #d7a55244);
+}
+.box-stage--vault .box-vault-body{
+ background:linear-gradient(137deg,#283c61,#101f38 52%,#142b48)!important;
+ border:2px solid #f8d58a!important;border-bottom:8px solid #866332!important;
+ box-shadow:inset 0 2px 3px #e8d5a851,inset 0 -15px 22px #0008,9px 13px 0 #071120;
+}
+.box-stage--vault .box-vault-lid{
+ border:2px solid #ffdf91!important;
+ background:linear-gradient(160deg,#e9ba64,#7e5122 65%,#ffde8c)!important;
+ box-shadow:inset 0 3px 8px #fff3ce8a,0 8px 13px #000a;
+ transform-origin:top center;
+}
+.box-stage--vault .box-vault-box--active .box-vault-lid{
+ animation:arena-vault-lid-open .85s cubic-bezier(.23,.8,.2,1) both!important;
+}
+.box-stage--vault .box-vault-box--active .box-vault-body{
+ box-shadow:0 0 36px #f3cb709e,0 15px 0 #6e5127,inset 0 0 43px #ffda8d55!important;
+}
+.box-stage--vault .box-vault-reveal{
+ animation:arena-vault-award .8s cubic-bezier(.18,.84,.26,1) both!important;
+ border:2px solid #e0b96a!important;
+ background:radial-gradient(circle at 50% 0%,#f5ca7340,transparent 55%),linear-gradient(150deg,#1b2945,#091c32)!important;
+ box-shadow:0 22px 55px #000a,0 0 65px #c99c4a28;
+}
+@keyframes arena-vault-lid-open{
+ 0%{transform:perspective(600px) rotateX(0) translateY(0)}
+ 45%{transform:perspective(600px) rotateX(-66deg) translateY(-16px)}
+ 100%{transform:perspective(600px) rotateX(-116deg) translateY(-26px)}
+}
+@keyframes arena-vault-award{
+ 0%{transform:translateY(35px) scale(.84);opacity:0;filter:blur(9px)}
+ 100%{transform:translateY(0) scale(1);opacity:1;filter:blur(0)}
+}
+/* A visible show ladder always emphasizes the current rung. */
+.championship-stage__ladder li.active{
+ border:2px solid #edc574!important;background:linear-gradient(100deg,#63492a,#183955)!important;
+ box-shadow:0 0 23px #f2c7657a!important;transform:scale(1.04)
+}
+.championship-stage__ladder li.won{color:#8ef2c1}
+
+/* Touch DnD (the grip owns pointer capture; vertical page scrolling works elsewhere). */
+.arena-sequence__drag{
+  touch-action:none!important;user-select:none;cursor:grab;
+  min-width:43px;min-height:48px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:12px;background:#12577c55;border:1px solid #6ccbd266;
+}
+.arena-sequence__drag:active{cursor:grabbing}
+.arena-sequence__drag:focus-visible{outline:3px solid #ffe3a5;outline-offset:4px}
+.arena-sequence__step--dragging{opacity:.72;transform:scale(.97);border-color:#ffdb91!important}
+.arena-sequence__step--drop-target{border-color:#ffce66!important;background:#735b2b33!important;box-shadow:0 0 0 3px #ffc75b33}
+
+/* Debrief mind map visible only after server-approved trainer reveal. */
+.arena-scenario__mind-map{width:min(100%,1060px);margin:25px auto;
+ padding:clamp(20px,3vw,36px);border:2px solid #e5c378;
+ border-radius:25px;background:radial-gradient(ellipse at 50% 0%,#b5893c30,transparent 60%),#0a1b31;
+ box-shadow:0 20px 50px #0009}
+.arena-scenario__mind-map h3{display:flex;align-items:center;justify-content:center;gap:13px;color:#f8e3a7;margin-bottom:26px}
+.arena-scenario__mind-map ol{list-style:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:32px}
+.arena-scenario__mind-map li{width:min(100%,760px);position:relative;display:flex;align-items:flex-start;gap:20px;
+ padding:18px;border:1px solid #86d1d2;border-radius:18px;
+ background:linear-gradient(115deg,#153456,#0c253a);box-shadow:0 8px 24px #0007}
+.arena-scenario__mind-map li+li:before{content:"↓";position:absolute;top:-32px;left:50%;color:#e5c378;font-size:28px;transform:translateX(-50%)}
+.arena-scenario__mind-map .arena-scenario__mind-index{flex:none;display:grid;place-items:center;width:37px;height:37px;border-radius:50%;background:#c99549;color:#111b2a;font-weight:900}
+.arena-scenario__mind-map li>div{display:flex;flex-direction:column;gap:8px;text-align:start}
+.arena-scenario__mind-map strong{color:#99ffe3;display:flex;gap:8px;align-items:center}
+.arena-scenario__mind-map small{color:#a3bbce}
+.arena-scenario__mind-map li.is-ending{border-color:#efc66a;background:linear-gradient(115deg,#4f3a25,#103e4c)}
+.arena-scenario__mind-map p{margin-top:14px;color:#ffde97}
+
+/* 0-10 grade panel shared by practical wheel and box reveals. */
+.arena-practical-rubric{width:min(100%,750px);margin:20px auto;padding:24px;
+ border:2px solid #a5d5d6;border-radius:20px;
+ background:radial-gradient(ellipse at 80% 0,#ca9e5140,transparent 60%),#101d31;
+ box-shadow:0 20px 40px #0007;display:flex;flex-direction:column;gap:16px}
+.arena-practical-rubric header{display:flex;gap:12px;align-items:center;color:#ffe1a5}
+.arena-practical-rubric header strong{display:block;font-size:17px}
+.arena-practical-rubric label{font-weight:700}
+.arena-rubric-grade{display:flex;align-items:center;gap:24px}
+.arena-rubric-grade label{flex:1}
+.arena-rubric-grade input{accent-color:#dfb465;cursor:pointer}
+.arena-rubric-grade>strong{font-size:56px;font-variant-numeric:tabular-nums;color:#f7d48d;min-width:105px;text-align:center}
+.arena-rubric-grade small{font-size:17px}
+.arena-rubric-preview{display:flex;gap:12px;align-items:center;color:#cce8ed}
+.arena-rubric-preview b{color:#ffe29c;font-size:21px}
+.arena-rubric-confirmed{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+ border:1px solid #86dabc;background:#14684835;padding:20px;border-radius:13px;color:#c9ffdb}
+.arena-rubric-confirmed strong{font-size:22px}

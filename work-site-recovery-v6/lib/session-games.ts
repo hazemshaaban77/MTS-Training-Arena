@@ -39,7 +39,7 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
    if(b.action==='respin'){if(!host||typeof b.reason!=='string'||b.reason.trim().length<5)fail('REASON');if(rt.spin?.revealed)fail('IMMUTABLE',409);await audit(db,s.owner,s.code,'wheel-respin',{reason:b.reason,previous:rt.spin?.id});}
    if(b.action==='box'){
     const i=b.index;if(!Number.isInteger(i)||i<0||i>=a.items.length||rt.used?.includes(i)&&!a.repeatable)fail('STATE',409);const box=a.boxes?.[i],id=crypto.randomUUID();rt={...rt,target,box:{id,index:i,target,done:!box?.question},used:[...(rt.used||[]),i],turn:(rt.turn||0)+1};
-    const points=box&&!box.question?Math.round((box.points||0)*(a.weight??1)):0;
+    const points=box?.kind==='surprise'&&!box.question?Math.round((box.points||0)*(a.weight??1)):0;
     const statements:D1PreparedStatement[]=[];if(target)statements.push(db.prepare('INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? FROM sessions WHERE code=? AND revision=?').bind(s.code,'box:'+id,target,s.current,'box',points,JSON.stringify({box:i}),now,s.code,s.revision));
     statements.push(db.prepare('UPDATE sessions SET runtime=?,reveal=?,revision=revision+1 WHERE code=? AND revision=?').bind(JSON.stringify(rt),i,s.code,s.revision));const result=await batch(db,statements);if(!result.at(-1)?.meta.changes)fail('STALE',409);return {ok:true};
    }else if(b.action!=='selectturn'){
@@ -49,29 +49,42 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   }
   const r=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!r.meta.changes)fail('STALE',409);return {ok:true};
  }
- if(b.action==='wheelaward'){
-  // Only authenticated host may judge a completed PRACTICAL CHALLENGE.
-  // Award/penalty is a distinct immutable event, never a client-side score.
-  if(!host||!['Wheel of Fortune','Spin Wheel'].includes(a.type))fail('FORBIDDEN',403);
-  const spin=rt.spin,sector=spin&&a.sectors?.[spin.index];
-  if(!spin?.revealed||sector?.kind!=='challenge'||!spin.target)fail('STATE',409);
-  const delta=b.delta,reason=String(b.reason||'').trim(),awardId=b.adjustmentId;
-  if(!Number.isInteger(delta)||delta===0||Math.abs(delta)>10000||
-    reason.length<5||reason.length>280||
-    typeof awardId!=='string'||!/^[0-9a-fA-F-]{36}$/.test(awardId))fail('AWARD');
-  const target=await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'")
-   .bind(s.code,spin.target).first();
+ if(['wheelaward','boxaward'].includes(b.action)){
+  const isBox=b.action==='boxaward',item=isBox?rt.box:rt.spin;
+  const challenge=isBox?a.boxes?.[item?.index]:a.sectors?.[item?.index];
+  if(!host||(isBox?a.type!=='Open the Box':!['Wheel of Fortune','Spin Wheel'].includes(a.type)))
+   fail('FORBIDDEN',403);
+  if(!item||(!isBox&&!item.revealed)||challenge?.kind!=='challenge'||!item.target)
+   fail('STATE',409);
+  if(rt.judgements?.[item.id])fail('ALREADY_GRADED',409);
+  const reason=String(b.reason||'').trim(),awardId=b.adjustmentId;
+  if(reason.length<5||reason.length>280||typeof awardId!=='string'||
+    !/^[0-9a-fA-F-]{36}$/.test(awardId))fail('AWARD');
+  const grade=b.grade===undefined?null:b.grade; // permit legacy wheel clients
+  if(isBox&&grade===null)fail('AWARD');
+  if(grade!==null&&(!Number.isInteger(grade)||grade<0||grade>10||
+    ![1,-1].includes(b.direction)))fail('AWARD');
+  const canonical=grade===null?b.delta:b.direction*
+   Math.min(10000,Math.round(grade*Number(a.points??1000)*Number(a.weight??1)/10));
+  const delta=b.delta;
+  if(!Number.isInteger(delta)||Math.abs(delta)>10000||
+    (grade===null&&delta===0)||delta!==canonical)fail('AWARD');
+  const target:any=await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'")
+   .bind(s.code,item.target).first();
   if(!target)fail('PLAYER');
-  const eventId='wheel-judge:'+spin.id+':'+awardId;
-  const details=JSON.stringify({sector:spin.index,spin:spin.id,reason,delta,actor:s.owner});
-  const result=await batch(db,[
+  const kind=isBox?'box-judge':'wheel-judge',eventId=kind+':'+item.id;
+  const judgement={grade,delta,direction:delta<0?-1:1,reason};
+  const next={...rt,judgements:{...(rt.judgements||{}),[item.id]:judgement}};
+  const details=JSON.stringify({source:isBox?'box':'wheel',reveal:item.id,index:item.index,
+   grade,delta,reason,actor:s.owner});
+  const changes=await batch(db,[
    db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')")
-    .bind(s.code,eventId,spin.target,s.current,'wheel-judge',delta,details,now,s.code,s.revision),
-   db.prepare("UPDATE sessions SET revision=revision+1 WHERE code=? AND revision=? AND status='question'")
-    .bind(s.code,s.revision)
+    .bind(s.code,eventId,item.target,s.current,kind,delta,details,now,s.code,s.revision),
+   db.prepare("UPDATE sessions SET runtime=?,revision=revision+1 WHERE code=? AND revision=? AND status='question'")
+    .bind(JSON.stringify(next),s.code,s.revision)
   ]);
-  if(!result[0]?.meta.changes||!result[1]?.meta.changes)fail('STALE',409);
-  await audit(db,s.owner,s.code,'wheel-manual-score',{player:spin.target,delta,reason,spin:spin.id});
+  if(!changes[0]?.meta.changes||!changes[1]?.meta.changes)fail('STALE',409);
+  await audit(db,s.owner,s.code,kind,{player:item.target,grade,delta,reason,item:item.id});
   return {ok:true};
  }
  if(host&&['override','hint'].includes(b.action)){
@@ -133,7 +146,8 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   const players:any[]=(await db.prepare("SELECT id AS uid,name,team FROM players WHERE session=? AND approval='approved' AND eligible_from<=? ORDER BY joined_at").bind(s.code,s.current).all()).results;
   game.target=rt.target||players[(rt.turn||0)%Math.max(1,players.length)]?.uid;game.turn=rt.turn||0;game.rounds=a.rounds??a.items?.length??1;game.used=rt.used||[];
   if(rt.spin){game.spinTarget=rt.spin.target;game.spin={id:rt.spin.id,startsAt:rt.spin.startsAt,stopsAt:rt.spin.stopsAt,revealAt:rt.spin.revealAt,revealed:!!rt.spin.revealed,index:now>=rt.spin.stopsAt?rt.spin.index:null};if(rt.spin.revealed){const sector=a.sectors?.[rt.spin.index];game.outcome=sector?{label:sector.label,kind:sector.kind,detail:sector.detail,points:sector.points||0}:a.items[rt.spin.index];if(sector?.kind==='question'){const md=await read(db,s,`wheel:${rt.spin.id}:${rt.spin.target}`),q=sector.questions[md.data.step||0];game.mini={version:md.version,step:md.data.step||0,total:sector.questions.length,question:q?publicActivity(q):null,deadline:q?(md.data.clock||rt.spin.revealAt-(rt.pausedTotal||0))+q.timer*1000+(rt.pausedTotal||0):null,lastCorrect:md.data.lastCorrect};}}}
-  if(rt.box){const box=a.boxes?.[rt.box.index];game.box={id:rt.box.id,target:rt.box.target,index:rt.box.index,label:a.items[rt.box.index],detail:box?.detail,question:box?.question?publicActivity(box.question):null,answered:!!d.boxes?.includes(rt.box.id)};}
+  if(rt.box){const box=a.boxes?.[rt.box.index];game.box={id:rt.box.id,target:rt.box.target,index:rt.box.index,label:a.items[rt.box.index],kind:box?.kind,detail:box?.detail,question:box?.question?publicActivity(box.question):null,answered:!!d.boxes?.includes(rt.box.id)};}
+  game.manualJudgement=rt.judgements?.[(a.type==='Open the Box'?rt.box?.id:rt.spin?.id)||'']||null;
  }
  if(a.type==='Flashcards'&&p){game.card=d.card??0;game.flipped=!!d.flipped;game.back=d.flipped?a.backs[d.card??0]:null;game.reviewed=d.reviewed||[];game.assessment=d.assessment||{};}
  if(a.type==='Escape Room'){
@@ -141,6 +155,23 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   if(host)game.progress=(await db.prepare('SELECT actor,data FROM progress WHERE session=? AND round=?').bind(s.code,s.current).all()).results.map((x:any)=>{const d=JSON.parse(x.data);return {actor:x.actor,room:d.room||0,puzzle:d.puzzle||0,attempts:d.attempts||0};});
  }
  if(a.nodes&&p){const node=a.nodes.find((n:any)=>n.id===(d.node||a.start));game.scenario={text:node.text,ending:!!node.ending,discussion:node.discussion,choices:node.choices?.map((c:any)=>({label:c.label})),consequence:d.consequence,path:d.path||[]};}
+ // Never disclose authored correctChoices before the trainer deliberately reveals
+ // the debrief and the round has closed. Keep individual learner paths private.
+ if(a.type==='Scenario Challenge'&&a.nodes&&rt.keyRevealed===true&&s.status!=='question'){
+  const map:any[]=[],seen=new Set<string>();let id=a.start,complete=false;
+  while(id&&!seen.has(id)&&map.length<100){
+   seen.add(id);
+   const node=a.nodes.find((x:any)=>x.id===id);
+   if(!node)break;
+   if(node.ending){map.push({id:node.id,text:node.text,ending:true,discussion:node.discussion});complete=true;break;}
+   const ix=node.correctChoice;
+   if(!Number.isInteger(ix)||ix<0||ix>=node.choices.length)break;
+   const choice=node.choices[ix];
+   map.push({id:node.id,text:node.text,choice:choice.label,consequence:choice.consequence||''});
+   id=choice.next;
+  }
+  game.scenarioMap={path:map,complete};
+ }
  if(a.mainType==='Ultimate Game Show'){
   game.lifelines=d.lifelines||[];game.eliminated=d.eliminated||[];
   if(isPrizeLadder(a)){

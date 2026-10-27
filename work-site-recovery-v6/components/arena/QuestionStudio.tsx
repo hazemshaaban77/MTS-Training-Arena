@@ -13,12 +13,23 @@ type Props={ar:boolean;activity:Activity;onCancel:()=>void;onSave:(a:Activity)=>
 const prizes=[100,250,500,1000,2000,3000,5000,7500,9000,10000];
 function initialQuestions(a:Activity):Activity[]{
  if(Array.isArray(a.questions)&&a.questions.length)return a.questions.map(q=>({...q,type:q.type==='Ultimate Game Show'?'Quiz':q.type,questions:undefined}));
+ if(a.type==='Ultimate Game Show'&&!a.questions?.length){
+  const values=[100,250,500,1000,2000,3000,5000];
+  return values.map((points,i)=>({
+   ...a,type:'Quiz',showFormat:undefined,questions:undefined,mainType:undefined,
+   prompt:(a.prompt||'Championship question')+' · '+(i+1),
+   options:Array.isArray(a.options)&&a.options.length===4?[...a.options]:['A','B','C','D'],
+   correct:Number.isInteger(a.correct)?a.correct:0,
+   section:'Level '+(i+1),speed:false,points,timer:30
+  }));
+ }
+
  return [{...a,type:a.type==='Ultimate Game Show'?'Quiz':a.type,questions:undefined,mainType:undefined}];
 }
 export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  const t=(a:string,e:string)=>ar?a:e;
  const game=activity.type==='Ultimate Game Show';
- const [mode,setMode]=useState<'ladder'|'classic'>(game&&activity.showFormat==='championship'?'ladder':'classic');
+ const [mode,setMode]=useState<'ladder'|'classic'>(game&&(activity.showFormat==='championship'||!activity.questions?.length)?'ladder':'classic');
  const [questions,setQuestions]=useState<Activity[]>(()=>initialQuestions(activity));
  const [active,setActive]=useState(0);
  const [nextType,setNextType]=useState<KnowledgeQuestionType>('Quiz');
@@ -46,11 +57,11 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   if(questions.length>=500){setError(t('وصلت للحد الأقصى 500 سؤال.','Maximum 500 questions.'));return;}
   setQuestions(old=>[...old,makeQuestion(old.length,type)]);setActive(questions.length);setError('');
  }
- function loadFiveLevels(){
+ function loadSevenLevels(){
   if(questions.length&&typeof window!=='undefined'&&!window.confirm(t(
-   'ده هيستبدل الأسئلة الموجودة بخمس مستويات. احفظ نسخة لو محتاجها. تكمل؟',
-   'This replaces the existing questions with five levels. Save a copy first if needed. Continue?')))return;
-  setMode('ladder');setSafety([3]);setQuestions(Array.from({length:5},(_,i)=>makeQuestion(i)));
+   'ده هيستبدل الأسئلة الموجودة بسبع مستويات. احفظ نسخة لو محتاجها. تكمل؟',
+   'This replaces the existing questions with seven levels. Save a copy first if needed. Continue?')))return;
+  setMode('ladder');setSafety([3]);setQuestions(Array.from({length:7},(_,i)=>makeQuestion(i)));
   setActive(0);setError('');
  }
  function importFromBank(id:string){
@@ -74,8 +85,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   setQuestions(old=>old.filter((_,i)=>i!==index));setActive(Math.max(0,index-1));}
  function chooseMode(value:'ladder'|'classic'){
   if(value==='ladder'&&mode!=='ladder'&&questions.some(q=>q.type!=='Quiz'||q.options?.length!==4)){
-   setError(t('نظام البطولة يتطلب أسئلة اختيار من متعدد بأربع اختيارات. غيّر الأنواع الأول أو استخدم قالب 5 مستويات؛ مش هنمسح أسئلتك تلقائيًا.',
-    'Championship requires four-choice multiple-choice questions. Change incompatible questions or use the 5-level template; existing questions will not be erased automatically.'));return;
+   setError(t('نظام البطولة يتطلب أسئلة اختيار من متعدد بأربع اختيارات. غيّر الأنواع الأول أو استخدم قالب 7 مستويات؛ مش هنمسح أسئلتك تلقائيًا.',
+    'Championship requires four-choice multiple-choice questions. Change incompatible questions or use the 7-level template; existing questions will not be erased automatically.'));return;
   }
   if(value==='ladder'&&mode!=='ladder'){
    const next=questions.map((x,i)=>({...x,points:prizes[Math.min(i,prizes.length-1)],speed:false,
@@ -90,8 +101,11 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
    setError(t('نظام البطولة على السيرفر غير متاح حاليًا، ومش هنحفظ لعبة بقواعد غير مفعّلة.',
     'Championship server rules are not yet available, so this game cannot be saved in that mode.'));return;
   }
-  if(game&&mode==='ladder'&&(questions.length<2||questions.length>10)){
-   setError(t('البطولة تحتاج من 2 إلى 10 مستويات.','A championship needs 2–10 levels.'));return;
+  if(game&&mode==='classic'&&questions.length<7){
+   setError(t('التحدي الكبير لازم يحتوي على 7 أسئلة على الأقل.','Ultimate Game Show needs at least seven questions.'));return;
+  }
+  if(game&&mode==='ladder'&&(questions.length<7||questions.length>10)){
+   setError(t('البطولة تحتاج من 7 إلى 10 مستويات.','A championship needs 7–10 levels.'));return;
   }
   const copy:Activity[]=[];
   for(let i=0;i<questions.length;i++){
@@ -124,6 +138,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   try{
    const final={...activity,prompt:title.trim()||copy[0].prompt,questions:copy,
     showFormat:game&&mode==='ladder'?'championship':undefined,
+    minimumLevels:game?7:undefined,
     safeLevels:game&&mode==='ladder'?safety.filter(x=>x<=copy.length).sort((a,b)=>a-b):undefined,
     participation:game&&mode==='ladder'?'individual':activity.participation,
     betEnabled:game&&mode==='ladder'?false:activity.betEnabled};
@@ -152,8 +167,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      <select value={nextType} onChange={e=>setNextType(e.target.value as KnowledgeQuestionType)}>
       {knowledgeQuestionTypes.map(type=><option value={type} key={type}>{questionTypeLabel(type,ar)}</option>)}
      </select></label>}
-    {game&&<button type="button" className="question-studio__preset" onClick={loadFiveLevels}>
-      {t('جهّز مسابقة من 5 مستويات','Start a 5-level show')}</button>}
+    {game&&<button type="button" className="question-studio__preset" onClick={loadSevenLevels}>
+      {t('جهّز مسابقة من 7 مستويات','Start a 7-level show')}</button>}
     {bank.length>0&&<label className="question-studio__bank">
      {t('أضف من بنك الأسئلة','Import from question bank')}
      <select aria-label={t('اختر سؤالًا من البنك','Pick a bank question')} value=""

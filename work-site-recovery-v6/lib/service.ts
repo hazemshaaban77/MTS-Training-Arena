@@ -69,7 +69,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
  }
  if(url.pathname==='/api/control'&&method==='POST'){
   requireHost();if(b.revision!==s.revision)fail('STALE',409);
-  if(['showcast','showfinish'].includes(b.action)&&isChampionship(active())){
+  if(['showcast','showfinish','showlifeline'].includes(b.action)&&isChampionship(active())){
    if(b.action==='showfinish'){
     if(s.status!=='question'||rt.show?.phase==='answering')fail('SHOW_STATE',409);
     const n=nextState(s,'close',now);n.deadline=null;
@@ -111,7 +111,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
    if(b.action==='ceremony'){if(s.status!=='survey')fail('STATE');s.status='completed';rt.surveyFinished=true;rt.surveyOpen=false;}
    const written=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!written.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,b.action==='notes'?{notes:rt.notes}:b.action==='stagecast'?{round:s.current,players:rt.targets}:{round:s.current});return {ok:true};
   }
-  if(['selectturn','spin','respin','box','override','hint','wheelaward'].includes(b.action))return gameInteract(db,s,active(),rt,null,b,now,true);
+  if(['selectturn','spin','respin','box','override','hint','wheelaward','boxaward'].includes(b.action))return gameInteract(db,s,active(),rt,null,b,now,true);
   if(b.action==='finish'&&s.survey&&!rt.surveyFinished){const survey=JSON.parse(s.survey);if(survey.stage==='before-ceremony'){await writeSession(db,s,{...s,status:'survey',runtime:JSON.stringify({...rt,surveyOpen:true}),revision:s.revision+1});return {ok:true};}rt.surveyAvailable=true;rt.surveyOpen=true;}
   if(b.action==='close'&&isChampionship(active()))fail('SHOW_STATE',409);
   let index=b.index;if(b.action==='reveal'&&active()?.type==='Spin Wheel')index=fairIndex(active().items.length);
@@ -127,7 +127,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
     n.started_at=now;n.deadline=deck[s.current+1].timer?now+deck[s.current+1].timer*1000:null;
    }
   }
-  if(b.action==='close'){n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
+  if(b.action==='close'){n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize','Scenario Challenge'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
   if(b.action==='finish')n.runtime=JSON.stringify(rt);
   const r=await writeSession(db,s,n);if(!r.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,{round:s.current});return {ok:true};
  }
@@ -177,13 +177,13 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
  const totals=Object.fromEntries(all.map(p=>[p.uid,0])),metrics:any={};for(const r of settled){totals[r.player]=r.total;metrics[r.player]={correct:r.correct||0,elapsed:r.elapsed||0};}for(const r of events)totals[r.player]=(totals[r.player]||0)+r.total;
  const roundAnswers:any[]=(await db.prepare('SELECT player,answer,points,correct FROM answers WHERE session=? AND round=?').bind(code,s.current).all()).results;
  const anon:any[]=(await db.prepare('SELECT receipt,answer FROM anonymous_responses WHERE session=? AND round=?').bind(code,s.current).all()).results;
- const closed=['results','completed','survey','archived'].includes(s.status),a=active()??null,revealed=closed&&(['Meta Plan','Categorize'].includes(a?.type)?rt.keyRevealed===true:(settings.reveal!=='manual'||rt.keyRevealed))&&!(rt.revealAt>now);
+ const closed=['results','completed','survey','archived'].includes(s.status),a=active()??null,revealed=closed&&(['Meta Plan','Categorize','Scenario Challenge'].includes(a?.type)?rt.keyRevealed===true:(settings.reveal!=='manual'||rt.keyRevealed))&&!(rt.revealAt>now);
  const mine=roundAnswers.find(x=>x.player===player?.id);
  let ownAnon:any=null;if(player&&a?.anonymous){const receipt=await hash(s.anonymous_secret+':poll:'+s.current+':'+player.id);ownAnon=anon.find(x=>x.receipt===receipt);}
  const responses=[...roundAnswers,...anon],tally=a?.options?a.options.map((_:any,i:number)=>responses.filter(r=>JSON.parse(r.answer)===i).length):null;
  const boards=scoreboards(all,totals,settings.tie||'shared',metrics,settings.teamScoring);
  let surveySubmitted=false;if(player&&s.survey){const survey=JSON.parse(s.survey),receipt=await hash(s.anonymous_secret+':survey:'+player.id);surveySubmitted=!!(survey.anonymous?await db.prepare('SELECT 1 FROM anonymous_responses WHERE session=? AND round=-1 AND receipt=?').bind(code,receipt).first():await db.prepare('SELECT 1 FROM answers WHERE session=? AND round=-1 AND player=?').bind(code,player.id).first());}
- let pub=publicActivity(a,{closed:revealed,reveal:s.reveal});if(pub?.assignments&&rt.metaCount)pub.assignments=pub.assignments.map((x:number,i:number)=>i<rt.metaCount?x:-1);if(['betting','casting'].includes(rt.phase)&&pub){pub={...pub,prompt:a.section||a.mainType,options:[],correct:undefined};}
+ let pub=publicActivity(a,{closed:revealed,reveal:s.reveal,host});if(pub?.assignments&&rt.metaCount)pub.assignments=pub.assignments.map((x:number,i:number)=>i<rt.metaCount?x:-1);if(['betting','casting'].includes(rt.phase)&&pub){pub={...pub,prompt:a.section||a.mainType,options:[],correct:undefined};}
  return {code:s.code,title:s.title,language:s.language,teamMode:!!s.teams,surveyOnly:!!settings.surveyOnly,teamNames:settings.teamNames||['Lightning','Wave'],settings:host?settings:undefined,status:s.status,current:s.current,revision:s.revision,deadline:s.deadline,paused:!!s.paused,remaining:s.remaining,reveal:s.reveal,serverNow:now,queue:deck.map((x:any,i:number)=>({type:x.type,mainType:x.mainType,prompt:host||i<s.current||i===s.current&&!['betting','casting'].includes(rt.phase)?x.prompt:x.mainType||x.type,timer:x.timer,group:x.group,step:x.step})),activity:pub,players:all.filter(p=>host||p.approval==='approved').map(({eligible_from,employee_id,...p})=>host?{...p,employeeId:employee_id}:p),...boards,submitted:responses.length,tally:revealed||a?.type==='Live Poll'&&a.liveResults?tally:null,pollSummary:a?.type==='Live Poll'&&(revealed||a.liveResults)?summarizePoll(a,responses.map(x=>JSON.parse(x.answer))):null,metaSummary:a?.assignments&&(host||rt.analytics)?a.items.map((_:any,i:number)=>a.categories.map((_:any,j:number)=>roundAnswers.filter(x=>JSON.parse(x.answer)[i]===j).length)):null,keyRevealed:revealed,runtime:{phase:rt.phase,targets:rt.targets||[],board:!!rt.board,quiet:!!rt.quiet,intensity:rt.intensity||'full',analytics:!!rt.analytics,highlight:rt.highlight,notes:host?rt.notes:undefined},mine:player?{id:player.id,name:player.name,employeeId:player.employee_id,approval:player.approval,language:player.language,eligible:player.approval==='approved'&&player.eligible_from<=s.current&&(!rt.targets?.length||rt.targets.includes(player.id)),answered:!!(mine||ownAnon),answer:mine?JSON.parse(mine.answer):ownAnon?JSON.parse(ownAnon.answer):null,points:revealed&&mine?mine.points:null,correct:revealed&&mine?mine.correct:null}:null,survey:closed&&s.survey?JSON.parse(s.survey):null,surveySubmitted,surveyOpen:!!rt.surveyOpen,surveyCount:s.survey?Number((await db.prepare('SELECT (SELECT COUNT(*) FROM answers WHERE session=? AND round=-1)+(SELECT COUNT(*) FROM anonymous_responses WHERE session=? AND round=-1) AS n').bind(code,code).first() as any).n):0,...await gameSnapshot(db,s,a,rt,player,host,now),...(isChampionship(a)?{show:showPublic(a,rt.show||showStart(),player?.id,host)}:{}),...(host?{owner:s.owner,activities:deck,blueprint:JSON.parse(s.blueprint||s.activities),surveyDefinition:s.survey?JSON.parse(s.survey):null,metaAnalytics:a?.assignments?roundAnswers.map(x=>({player:x.player,answer:JSON.parse(x.answer)})):null}:{})};
 }
 export async function writeSession(db:D1Database,s:any,n:any){return db.prepare('UPDATE sessions SET status=?,current=?,revision=?,started_at=?,deadline=?,paused=?,remaining=?,reveal=?,runtime=? WHERE code=? AND revision=?').bind(n.status,n.current,n.revision,n.started_at??null,n.deadline??null,n.paused,n.remaining,n.reveal??null,n.runtime||s.runtime||'{}',s.code,s.revision).run();}

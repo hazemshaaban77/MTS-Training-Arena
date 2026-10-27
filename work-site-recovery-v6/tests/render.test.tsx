@@ -439,15 +439,16 @@ test('trainer launch readiness distinguishes actual state from manual checks',()
 
 test('trainer session builder supports safe blank vs sample deck and honest timing estimate',()=>{
  const empty=estimateSessionAgenda([]);
- assert.deepEqual(empty,{timedSeconds:0,transitionSeconds:0,totalSeconds:0,untimedSteps:0,steps:0});
+ assert.deepEqual(empty,{timedSeconds:0,discussionSeconds:0,transitionSeconds:0,totalSeconds:0,untimedSteps:0,steps:0});
  const demo=estimateSessionAgenda([
   {type:'Quiz',timer:30},
   {type:'Quiz',questions:[{type:'Quiz',timer:20},{type:'Quiz',timer:40}]},
   {type:'Flashcards'},
  ] as any);
  assert.equal(demo.timedSeconds,90);
- assert.equal(demo.transitionSeconds,60);
- assert.equal(demo.totalSeconds,150);
+ assert.equal(demo.discussionSeconds,90, 'Two flashcards need time for explanation and reflection');
+ assert.equal(demo.transitionSeconds,90);
+ assert.equal(demo.totalSeconds,270);
  assert.equal(demo.untimedSteps,1);
  assert.equal(demo.steps,4);
  for(const ar of [true,false]){
@@ -1678,7 +1679,7 @@ test('practical Wheel award cannot be automatic and only host-authorized score e
   canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
  assert.ok(!guest.includes('wheel-judge__direction'),'Projector never has scoring controls');
  const game=readFileSync('lib/session-games.ts','utf8');
- assert.ok(game.includes("b.action==='wheelaward'"));
+ assert.ok(game.includes("['wheelaward','boxaward'].includes(b.action)"),'Both practical games share the strict host-scoring endpoint');
  assert.ok(game.includes("'wheel-judge'"));
  assert.ok(game.includes("['question','challenge'].includes(sector?.kind)?0"));
  assert.ok(game.includes('revealAt:now+3000+duration+150'),'No 2-second reveal gap');

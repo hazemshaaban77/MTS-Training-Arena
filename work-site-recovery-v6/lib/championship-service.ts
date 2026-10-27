@@ -9,13 +9,13 @@ export async function mutateChampionship(db:D1Database,s:any,activity:any,rt:any
   if(!host)fail('FORBIDDEN',403);
   const candidate:any=await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved' AND eligible_from<=?").bind(s.code,body.player,s.current).first();
   if(!candidate)fail('SHOW_CAST',409);
- }else if(action==='showanswer'||action==='showwithdraw'||action==='showlifeline'){
+ }else if(action==='showanswer'||action==='showwithdraw'||action==='showlifeline'&&!host){
   if(!player||player.id!==(rt.show?.current?.player))fail('SHOW_CONTESTANT',403);
  }else if(action==='showaudience'){
   if(!player||player.approval!=='approved'||player.eligible_from>s.current)fail('PLAYER',403);
  }else fail('SHOW_ACTION',409);
  const mapped={showcast:'cast',showanswer:'answer',showwithdraw:'withdraw',showlifeline:'lifeline',showaudience:'audience'} as Record<string,string>;
- const extra={...body,player:action==='showcast'?body.player:player?.id,attemptId:action==='showcast'?crypto.randomUUID():undefined};
+ const extra={...body,player:action==='showcast'?body.player:host&&action==='showlifeline'?rt.show?.current?.player:player?.id,attemptId:action==='showcast'?crypto.randomUUID():undefined};
  let result:any;
  try{result=showCommand(activity,rt.show||showStart(),mapped[action],extra,now,s.deadline);}catch(e:any){fail(e.message?.startsWith('SHOW_')?e.message:'SHOW_STATE',409);}
  const runtime=JSON.stringify({...rt,show:result.show,phase:result.show.phase,

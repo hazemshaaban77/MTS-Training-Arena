@@ -40,7 +40,7 @@ export default function ArenaChampionshipPractice({a,ar,mode}:{a:Activity;ar:boo
     showlifeline:'lifeline',showaudience:'audience'};
    const mapped=dict[action];if(!mapped)throw Error('SHOW_ACTION');
    const now=Date.now();
-   const details={...extra,player:action==='showcast'?extra.player:who,
+   const details={...extra,player:action==='showcast'?extra.player:action==='showlifeline'&&mode==='host'?show.current?.player:who,
     attemptId:action==='showcast'?'demo-attempt-'+(show.attempts.length+1):undefined};
    const result=showCommand(a,show,mapped,details,now,deadline);
    setShow(result.show);setDeadline(result.deadline??null);setClock(now);
