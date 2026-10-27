@@ -60,7 +60,9 @@ const short=x=>String(x||'').replace(/\s+/g,' ').slice(0,220);
      }
      case 'Ultimate Game Show':{
       rec.observations.ladderRungs=await page.locator('.championship-stage__ladder li').count();
-      const casting=await activate(page,'.championship-stage__casting button:has-text("ابدأ")','cast contestant',rec);
+      const caster=page.locator('.championship-stage__casting select');
+      if(await caster.count())await caster.selectOption('demo-a');
+      await activate(page,'.championship-stage__casting button:has-text("ابدأ محاولة")','cast contestant',rec);
       rec.observations.ladderRungsAfterCast=await page.locator('.championship-stage__ladder li').count();
       rec.observations.question=await page.locator('.championship-stage__question h3').innerText().catch(()=>'');
       rec.observations.lifelineAboveQuestion=await page.evaluate(()=>{
@@ -89,9 +91,8 @@ const short=x=>String(x||'').replace(/\s+/g,' ').slice(0,220);
       rec.passed=!!rec.observations.rooms;break;
      }
      case 'Live Poll':{
-      await activate(page,'.poll-options button','choose poll option',rec);
-      if(!rec.actions.some(x=>x.startsWith('choose poll option:clicked')))await activate(page,'button:has-text("التسجيل")','choose poll option',rec);
-      await activate(page,'button:has-text("إرسال صوتي")','vote',rec);
+      await activate(page,'.live-poll-vote__card','choose poll option',rec);
+      await activate(page,'.live-poll-vote__submit','vote',rec);
       rec.observations.pollText=short(await main.innerText());
       rec.passed=rec.actions.some(x=>x.startsWith('vote:clicked'));break;
      }
@@ -108,7 +109,13 @@ const short=x=>String(x||'').replace(/\s+/g,' ').slice(0,220);
       rec.observations.after=(await steps.allTextContents()).map(short);
       rec.observations.reordered=JSON.stringify(rec.observations.before)!==JSON.stringify(rec.observations.after);
       await activate(page,'button:has-text("ثبّت ترتيب الخطوات")','submit order',rec);
-      rec.passed=!!rec.observations.grips;break;
+      const down=page.locator('.arena-sequence__step-actions button[aria-label*="لأسفل"]').first();
+      if(await down.count()&&await down.isEnabled()){
+       await down.click();
+       rec.observations.afterArrow=(await steps.allTextContents()).map(short);
+       rec.observations.arrowReordered=JSON.stringify(rec.observations.afterArrow)!==JSON.stringify(rec.observations.after);
+      }
+      rec.passed=!!(rec.observations.grips&&rec.observations.arrowReordered);break;
      }
      case 'Open the Box':{
       await activate(page,'.box-vault-box','open box',rec);
