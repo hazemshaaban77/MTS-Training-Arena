@@ -135,3 +135,14 @@
  box-shadow:0 0 23px #f2c7657a!important;transform:scale(1.04)
 }
 .championship-stage__ladder li.won{color:#8ef2c1}
+
+/* Touch DnD (the grip owns pointer capture; vertical page scrolling works elsewhere). */
+.arena-sequence__drag{
+  touch-action:none!important;user-select:none;cursor:grab;
+  min-width:43px;min-height:48px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:12px;background:#12577c55;border:1px solid #6ccbd266;
+}
+.arena-sequence__drag:active{cursor:grabbing}
+.arena-sequence__drag:focus-visible{outline:3px solid #ffe3a5;outline-offset:4px}
+.arena-sequence__step--dragging{opacity:.72;transform:scale(.97);border-color:#ffdb91!important}
+.arena-sequence__step--drop-target{border-color:#ffce66!important;background:#735b2b33!important;box-shadow:0 0 0 3px #ffc75b33}
