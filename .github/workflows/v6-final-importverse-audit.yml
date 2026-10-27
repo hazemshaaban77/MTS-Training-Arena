@@ -1,0 +1,51 @@
+name: V6 final ImportVerse full trainer trainee projector audit
+on:
+  push:
+    branches: ['audit/v6-final-importverse-20261027']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  final-roleplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - run: pnpm install --frozen-lockfile
+      - name: Contract and security/regression suite
+        run: pnpm test
+      - name: 3D wheel and gameplay contract checks
+        run: node scripts/verify-game-overhaul.mjs
+      - name: Install Playwright (non-prod, no login)
+        run: |
+          npm install -g playwright@1.58.2
+          if command -v google-chrome >/dev/null || command -v chromium >/dev/null; then echo "Existing chromium"; else playwright install chromium; fi
+      - name: Start actual V6 React UI with isolated mock rehearsal
+        run: |
+          pnpm exec vite --config vite.github.config.ts --host 127.0.0.1 --port 4173 --base / > /tmp/mts-audit-vite.log 2>&1 &
+          for i in $(seq 1 50); do
+            if curl --silent --fail http://127.0.0.1:4173/audit-browser.html >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/mts-audit-vite.log
+          exit 1
+      - name: Ten games x three role/viewport screenshots
+        run: NODE_PATH="$(npm root -g)" node scripts/audit-roleplay-browser.cjs
+      - name: Ten game interaction probes
+        if: always()
+        run: NODE_PATH="$(npm root -g)" node scripts/audit-game-interactions.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v6-final-importverse-trainer-trainee-projector-audit
+          path: work-site-recovery-v6/audit-results/
+          retention-days: 14
