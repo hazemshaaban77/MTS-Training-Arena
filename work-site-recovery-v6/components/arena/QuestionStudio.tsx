@@ -90,6 +90,9 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
    setError(t('نظام البطولة على السيرفر غير متاح حاليًا، ومش هنحفظ لعبة بقواعد غير مفعّلة.',
     'Championship server rules are not yet available, so this game cannot be saved in that mode.'));return;
   }
+  if(game&&mode==='classic'&&questions.length<7){
+   setError(t('التحدي الكبير لازم يحتوي على 7 أسئلة على الأقل.','Ultimate Game Show needs at least seven questions.'));return;
+  }
   if(game&&mode==='ladder'&&(questions.length<7||questions.length>10)){
    setError(t('البطولة تحتاج من 7 إلى 10 مستويات.','A championship needs 7–10 levels.'));return;
   }
@@ -124,7 +127,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   try{
    const final={...activity,prompt:title.trim()||copy[0].prompt,questions:copy,
     showFormat:game&&mode==='ladder'?'championship':undefined,
-    minimumLevels:game&&mode==='ladder'?7:undefined,
+    minimumLevels:game?7:undefined,
     safeLevels:game&&mode==='ladder'?safety.filter(x=>x<=copy.length).sort((a,b)=>a-b):undefined,
     participation:game&&mode==='ladder'?'individual':activity.participation,
     betEnabled:game&&mode==='ladder'?false:activity.betEnabled};
