@@ -10,11 +10,10 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
  const t=(a:string,e:string)=>ar?a:e;
  const [grade,setGrade]=useState(7);
  const [direction,setDirection]=useState<1|-1>(1);
- const [reason,setReason]=useState('');
  const [pending,setPending]=useState(false);
  const isBox=mode==='box',reveal=isBox?game?.box:game?.spin;
  const sector=isBox?reveal:activity.sectors?.[reveal?.index]; // Box contents intentionally absent from publicActivity; signed reveal is server-owned
- const shown=!!reveal&&(isBox||reveal.revealed)&&sector?.kind==='challenge';
+ const shown=!!reveal&&(isBox||reveal.revealed)&&['challenge','penalty'].includes(sector?.kind);
  const rated=game?.manualJudgement||null;
  const targetId=isBox?reveal?.target:game?.spinTarget;
  const target=(session.players||[]).find((x:any)=>x.uid===targetId);
@@ -22,16 +21,15 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
  const weight=Number(activity.weight??1);
  const points=Math.min(10000,Math.round(grade*base*weight/10));
  const delta=direction*points;
- const valid=Number.isInteger(grade)&&grade>=0&&grade<=10&&Number.isFinite(points)&&
-  reason.trim().length>=5&&reason.trim().length<=280;
- useEffect(()=>{setPending(false);setReason('');setGrade(7);setDirection(1);},[reveal?.id]);
+ const valid=Number.isInteger(grade)&&grade>=0&&grade<=10&&Number.isFinite(points);
+ useEffect(()=>{setPending(false);setGrade(7);setDirection(1);},[reveal?.id]);
  useEffect(()=>{if(!busy)setPending(false);},[busy,session.revision]);
  if(!shown)return null;
  function submit(){
   if(!valid||busy||pending||rated)return;
   setPending(true);
   onControl(isBox?'boxaward':'wheelaward',undefined,
-   {grade,direction,delta,reason:reason.trim(),adjustmentId:crypto.randomUUID()});
+   {grade,direction,delta,adjustmentId:crypto.randomUUID()});
  }
  return <section className="wheel-judge arena-practical-rubric"
    aria-label={t('تقييم أداء المتدرب من عشرة','Grade practical performance out of ten')}>
@@ -57,10 +55,6 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
   </div>
   <p className="arena-rubric-preview"><Star size={18}/>
    {t('التأثير على الرصيد','Leaderboard impact')}: <b>{delta>0?'+':''}{delta} {t('نقطة','points')}</b></p>
-  <label>{t('سبب التقييم (إجباري)','Justification (required)')}
-   <input type="text" maxLength={280} value={reason}
-    placeholder={t('مثال: شرح التعريف بدقة واكتمال','e.g. Clear and complete definition')}
-    onChange={e=>setReason(e.target.value)}/></label>
   <button type="button" className="btn primary" disabled={busy||pending||!valid}
    onClick={submit}><ShieldCheck size={18}/>{t('اعتماد الدرجة','Commit grade')}</button>
   {pending&&<small role="status">{t('جاري التحقق من تسجيل الدرجة على السيرفر...',
