@@ -26,7 +26,7 @@ export function estimateSessionAgenda(deck:Activity[]){
    if(Number.isFinite(time)&&time>0)timedSeconds+=Math.min(3600,time);
    else untimedSteps++;
   }
-  if(!activity.timer||['Wheel of Fortune','Spin Wheel','Meta Plan','Categorize','Open the Box','Flashcards','Scenario Challenge','Escape Room'].includes(activity.type)){
+  if((!activity.timer&&content.every((step:any)=>!Number(step.timer)))||['Wheel of Fortune','Spin Wheel','Meta Plan','Categorize','Open the Box','Flashcards','Scenario Challenge','Escape Room'].includes(activity.type)){
    // Training facilitation is not just a timer. This is a planning assumption,
    // never a guarantee of elapsed duration or forced session timeout.
    discussionSeconds+=estimateUntimed(activity);
