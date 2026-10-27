@@ -1,3 +1,4 @@
+import {TAU,sectorAngle,forwardSweep,easedStop,wheelClock} from '../lib/arena-wheel3d-math';
 import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel,setMatchingPair,deleteMatchingPair} from '../lib/question-authoring';
 import {gameIntroBeats} from '../lib/arena-intro-beats';
 import {safeYouTubeEmbed,classifyMediaLink} from '../lib/media-url';
@@ -1785,4 +1786,27 @@ test('Projector repaired with full-width live-display flex instead of fixed-heig
  assert.match(css,/\.session-shell\.projector \.live-columns/);
  assert.match(css,/\.session-shell\.projector \.round-stage/);
  assert.match(css,/\.session-shell\.projector \.wheel-stage--forge/);
+});
+
+test('optional real WebGL wheel is a render-only layer and preserves existing server gameplay',()=>{
+ assert.equal(sectorAngle(2,8),Math.PI/2);
+ assert.equal(sectorAngle(8,8),0);
+ assert.equal(sectorAngle(-1,8),0);
+ for(let i=0;i<20;i++){
+  const target=sectorAngle(i,20),from=37.77,delta=forwardSweep(from,target);
+  assert.ok(delta>0&&delta<=TAU*1.001);
+  const err=((from+delta-target)%TAU+TAU)%TAU;
+  assert.ok(err<1e-9||Math.abs(err-TAU)<1e-9);
+ }
+ assert.equal(easedStop(0),0);assert.equal(easedStop(1),1);
+ assert.equal(wheelClock(1000,100,450),1350);
+ const source=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ const parent=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(source.includes("await import('three')"));
+ assert.ok(source.includes('new THREE.ExtrudeGeometry'));
+ assert.ok(source.includes('current.revealed&&Number.isInteger(current.index)'));
+ assert.ok(source.includes('if(now<(current.startsAt||0))'));
+ assert.ok(parent.includes("get('arena3d')==='1'"));
+ assert.ok(parent.includes('wheel3DOptIn&&wheel3DAvailable?'));
+ assert.ok(parent.includes('wheel3DAvailable(false)'));
 });

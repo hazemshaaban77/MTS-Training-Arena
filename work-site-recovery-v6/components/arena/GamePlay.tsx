@@ -1,5 +1,5 @@
 'use client';
-import {useState,useRef,useMemo} from 'react';
+import {useState,useRef,useMemo,useEffect} from 'react';
 import {Send,Check,CheckCircle2,ArrowUp,ArrowDown,RotateCw,Gift,Zap,Lightbulb,DoorOpen,Flag,Users,Clock,Star} from 'lucide-react';
 import LivePoll from './LivePoll';
 import ArenaQuizExperience from './ArenaQuizExperience';
@@ -9,6 +9,7 @@ import ArenaEscapeRoom from './ArenaEscapeRoom';
 import ArenaOrderIt from './ArenaOrderIt';
 import ArenaMetaPlan from './ArenaMetaPlan';
 import WheelJudge from './WheelJudge';
+import ArenaWheel3D from './ArenaWheel3D';
 import './ArenaGamePolish.css';
 import './ArenaForgeWheel.css';
 import ArenaScenario from './ArenaScenario';
@@ -16,6 +17,8 @@ import {OpenBoxExperience,FlashcardExperience} from './ArenaDiscoveryGames';
 export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onInteract,onControl}:any){
  const a=s.activity,t=(a:string,e:string)=>ar?a:e,closed=s.status!=='question',g=s.game||{},mine=s.mine,actor=!!mine&&!host&&!display;
  const [word,setWord]=useState(''),[card,setCard]=useState(0),[bet,setBet]=useState(0),[cast,setCast]=useState<string[]>([]);
+ const [wheel3DOptIn,setWheel3DOptIn]=useState(false),[wheel3DAvailable,setWheel3DAvailable]=useState(true);
+ useEffect(()=>{setWheel3DOptIn(new URLSearchParams(window.location.search).get('arena3d')==='1');},[]);
  // Freeze the server-to-client start offset for each spin. Recomputing the
  // animation delay on every clock tick can pull the wheel forward early.
  const stableWheelSpinDelay=useMemo(()=>g.spin
@@ -48,7 +51,7 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
    const color=colors[i%colors.length]||fallback[i%fallback.length];
    return `${color} ${(i*step).toFixed(3)}deg ${((i+1)*step).toFixed(3)}deg`;
   }).join(', ')})`;
-  return <div className="presentation-play wheel-stage wheel-stage--forge"><div className="turn-entrance" key={g.target}><span className="avatar">{turnPlayer?.name?.charAt(0)||'✦'}</span><div><small>{t('الدور الحالي','IN THE SPOTLIGHT')}</small><b>{turnPlayer?.name||t('في انتظار مشارك','Waiting for a player')}</b></div><strong>{g.turn}/{g.rounds}</strong></div><div className="wheel-arena-banner"><Zap size={18}/><span>{t('لحظة الحظّ… يا ترى العجلة هتقف على إيه؟','THE WHEEL DECIDES · LET THE CHALLENGE BEGIN')}</span><Zap size={18}/></div><div className="forge-stage"><div className="wheel-wrap wheel-wrap--grand wheel-wrap--3d wheel-wrap--showtime forge-wheel">
+  return <div className="presentation-play wheel-stage wheel-stage--forge"><div className="turn-entrance" key={g.target}><span className="avatar">{turnPlayer?.name?.charAt(0)||'✦'}</span><div><small>{t('الدور الحالي','IN THE SPOTLIGHT')}</small><b>{turnPlayer?.name||t('في انتظار مشارك','Waiting for a player')}</b></div><strong>{g.turn}/{g.rounds}</strong></div><div className="wheel-arena-banner"><Zap size={18}/><span>{t('لحظة الحظّ… يا ترى العجلة هتقف على إيه؟','THE WHEEL DECIDES · LET THE CHALLENGE BEGIN')}</span><Zap size={18}/></div>{wheel3DOptIn&&wheel3DAvailable?<ArenaWheel3D sectors={sectors} spin={spin} serverNow={now} canSpin={canRequestSpin} countdown={count} ar={ar} onUnavailable={()=>setWheel3DAvailable(false)} onSpin={()=>host?onControl('spin'):send('spin')}/>:<div className="forge-stage"><div className="wheel-wrap wheel-wrap--grand wheel-wrap--3d wheel-wrap--showtime forge-wheel">
    <i className="wheel-pointer" aria-hidden="true"/>
    <button type="button" className="wheel-tap-surface"
     aria-label={spin&&!spin.revealed?t('العجلة بتلف دلوقتي','The wheel is spinning'):t('اضغط على العجلة لبدء اللف','Tap wheel to spin')}
@@ -58,7 +61,7 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
     <div key={spin?.id||'waiting'} className={'wheel cinematic-wheel '+(spin&&!spin.revealed?'in-spin':'')+(spin?.revealed?' finished-spin':'')} style={{'--sector-count':sectors.length,'--arena-wheel-gradient':wheelGradient,'--wheel-stop':`${2520-360/sectors.length*(spin?.index??0)}deg`,'--spin-duration':`${Math.max(0,(spin?.stopsAt-spin?.startsAt)/1000)||6}s`,'--spin-delay':`${stableWheelSpinDelay}s`} as any}><div className="wheel-center"><Zap size={32}/></div>{sectors.map((v:any,i:number)=><span key={i} className={g.used.includes(i)?'sector-used':''} style={{transform:`rotate(${step*i}deg) translateY(calc(-1 * var(--wheel-label-radius))) rotate(-${step*i}deg)`}} aria-label={t('قطاع رقم ','Sector ')+(i+1)}>{String(i+1).padStart(2,'0')}</span>)}</div>
    </button>{count>0&&count<=3&&<div className="spin-countdown" key={count}>{count}</div>}{spin&&!spin.revealed&&count<=0&&<span className="wheel-rolling-label">{t('العجلة بتختار...','SPINNING FOR YOUR CHALLENGE...')}</span>}
    {canRequestSpin&&<span className="wheel-tap-hint">{t('اضغط على العجلة لبدء التحدّي','TAP THE WHEEL TO START')}</span>}
-   </div></div>{host&&<div className="sector-legend sector-legend--grand" aria-label={t('القطاعات الموجودة في عجلة الحظ','Wheel sections')}>{sectors.map((v:any,i:number)=><span className={(g.used.includes(i)?'used ':'')+(spin?.revealed&&spin.index===i?'wheel-legend-winner':'')} aria-current={spin?.revealed&&spin.index===i?'true':undefined} key={i}><b>{String(i+1).padStart(2,'0')}</b><span>{v.label}</span></span>)}</div>}
+   </div></div>}{wheel3DOptIn&&<div className="arena-wheel3d-lab-notice" role="status">{wheel3DAvailable?t('معاينة تجريبية للعجلة ثلاثية الأبعاد · لا تغيّر النتائج الرسمية','3D wheel preview · official results unchanged'):t('الجهاز لا يدعم عرض WebGL الحالي · تم الرجوع للعجلة الأصلية','WebGL unavailable · original wheel restored')}</div>}{host&&<div className="sector-legend sector-legend--grand" aria-label={t('القطاعات الموجودة في عجلة الحظ','Wheel sections')}>{sectors.map((v:any,i:number)=><span className={(g.used.includes(i)?'used ':'')+(spin?.revealed&&spin.index===i?'wheel-legend-winner':'')} aria-current={spin?.revealed&&spin.index===i?'true':undefined} key={i}><b>{String(i+1).padStart(2,'0')}</b><span>{v.label}</span></span>)}</div>}
  {host&&<div className="hero-actions"><select aria-label="Select player" value={g.target||''} onChange={e=>onControl('selectturn',undefined,{player:e.target.value})}>{s.players.map((p:any)=><option key={p.uid} value={p.uid}>{p.name}</option>)}</select><button className="btn secondary" onClick={()=>onControl('selectturn',undefined,{mode:'random'})}>{t('اختيار عشوائي','Random player')}</button>{spin&&!spin.revealed&&<button className="text-button" onClick={()=>{const reason=prompt(t('سبب إعادة اللف','Reason for re-spin'));if(reason)onControl('respin',undefined,{reason});}}>{t('إعادة لف موثّقة','Audited re-spin')}</button>}</div>}
  {host&&<WheelJudge ar={ar} game={g} session={s} activity={a} busy={busy} onControl={onControl}/>}{g.outcome&&spin?.revealed&&<div role="status" aria-live="polite" className={'reveal-result wheel-outcome-grand outcome-'+g.outcome.kind} key={spin.id}><span>✦ {g.outcome.kind||t('النتيجة','OUTCOME')}</span><h3>{g.outcome.label||g.outcome}</h3><p>{g.outcome.detail}</p>{!!g.outcome.points&&g.outcome.kind!=='penalty'&&<strong>{g.outcome.points>0?'+':''}{g.outcome.points}</strong>}</div>}{g.mini?.question&&<div className="mini-quiz"><span className="eyebrow">MINI QUIZ {g.mini.step+1}/{g.mini.total}</span><p className="mini-clock">{Math.max(0,Math.ceil((g.mini.deadline-now)/1000))}s</p>{g.mini.deadline<=now&&usable&&mine?.id===g.spinTarget?<button className="btn secondary" onClick={()=>send('miniquiz',{answer:null})}>{t('انتهى الوقت · متابعة','Time is up · Continue')}</button>:<Question key={`${spin?.id}:${g.mini.step}`} a={g.mini.question} ar={ar} disabled={!usable||mine?.id!==g.spinTarget} onSubmit={(answer:any)=>send('miniquiz',{answer})}/>}</div>}{g.mini&&!g.mini.question&&<p className="answer-sent">{t('اكتمل التحدّي المصغر','Mini quiz complete')}</p>}</div>;
  }
