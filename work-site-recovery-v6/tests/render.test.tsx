@@ -1804,8 +1804,8 @@ test('real 3D Crown wheel is the only game wheel, with accessible action if GPU 
  assert.ok(source.includes('new THREE.ExtrudeGeometry'));
  assert.ok(source.includes('current.revealed&&Number.isInteger(current.index)'));
  assert.ok(source.includes('if(now<(current.startsAt||0))'));
- assert.ok(parent.includes('!fallback&&sectors.length>=2?<ArenaWheel3D'));
- assert.ok(parent.includes('setFallback(true)'));
+ assert.ok(parent.includes('!wheelFallback&&sectors.length>=2?<ArenaWheel3D'));
+ assert.ok(parent.includes('setWheelFallback(true)'));
  assert.ok(parent.includes('arena-wheel-webgl-unavailable'));
  assert.ok(!parent.includes('wheel3DOptIn'));
  assert.ok(!parent.includes('ArenaForgeWheel.css'));
