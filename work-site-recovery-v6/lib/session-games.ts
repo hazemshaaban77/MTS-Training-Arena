@@ -38,7 +38,7 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
    if((rt.turn||0)>=(a.rounds??a.items?.length??1)&&b.action!=='respin')fail('ROUNDS_COMPLETE',409);
    if(b.action==='respin'){if(!host||typeof b.reason!=='string'||b.reason.trim().length<5)fail('REASON');if(rt.spin?.revealed)fail('IMMUTABLE',409);await audit(db,s.owner,s.code,'wheel-respin',{reason:b.reason,previous:rt.spin?.id});}
    if(b.action==='box'){
-    const i=b.index;if(!Number.isInteger(i)||i<0||i>=a.items.length||rt.used?.includes(i)&&!a.repeatable)fail('STATE',409);const box=a.boxes?.[i],id=crypto.randomUUID();rt={...rt,target,box:{id,index:i,target,done:!box?.question},used:[...(rt.used||[]),i],turn:(rt.turn||0)+1};
+    const i=b.index;if(!Number.isInteger(i)||i<0||i>=a.items.length||rt.used?.includes(i)&&!a.repeatable)fail('STATE',409);const box=a.boxes?.[i]||(!a.boxes?{kind:'challenge',detail:a.items[i]}:undefined),id=crypto.randomUUID();rt={...rt,target,box:{id,index:i,target,done:!box?.question},used:[...(rt.used||[]),i],turn:(rt.turn||0)+1};
     const points=box?.kind==='surprise'&&!box.question?Math.round((box.points||0)*(a.weight??1)):0;
     const statements:D1PreparedStatement[]=[];if(target)statements.push(db.prepare('INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? FROM sessions WHERE code=? AND revision=?').bind(s.code,'box:'+id,target,s.current,'box',points,JSON.stringify({box:i}),now,s.code,s.revision));
     statements.push(db.prepare('UPDATE sessions SET runtime=?,reveal=?,revision=revision+1 WHERE code=? AND revision=?').bind(JSON.stringify(rt),i,s.code,s.revision));const result=await batch(db,statements);if(!result.at(-1)?.meta.changes)fail('STALE',409);return {ok:true};
@@ -51,7 +51,7 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
  }
  if(['wheelaward','boxaward'].includes(b.action)){
   const isBox=b.action==='boxaward',item=isBox?rt.box:rt.spin;
-  const challenge=isBox?a.boxes?.[item?.index]:a.sectors?.[item?.index];
+  const challenge=isBox?(a.boxes?.[item?.index]||(!a.boxes?{kind:'challenge'}:undefined)):a.sectors?.[item?.index];
   if(!host||(isBox?a.type!=='Open the Box':!['Wheel of Fortune','Spin Wheel'].includes(a.type)))
    fail('FORBIDDEN',403);
   if(!item||(!isBox&&!item.revealed)||challenge?.kind!=='challenge'||!item.target)
@@ -146,7 +146,7 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   const players:any[]=(await db.prepare("SELECT id AS uid,name,team FROM players WHERE session=? AND approval='approved' AND eligible_from<=? ORDER BY joined_at").bind(s.code,s.current).all()).results;
   game.target=rt.target||players[(rt.turn||0)%Math.max(1,players.length)]?.uid;game.turn=rt.turn||0;game.rounds=a.rounds??a.items?.length??1;game.used=rt.used||[];
   if(rt.spin){game.spinTarget=rt.spin.target;game.spin={id:rt.spin.id,startsAt:rt.spin.startsAt,stopsAt:rt.spin.stopsAt,revealAt:rt.spin.revealAt,revealed:!!rt.spin.revealed,index:now>=rt.spin.stopsAt?rt.spin.index:null};if(rt.spin.revealed){const sector=a.sectors?.[rt.spin.index];game.outcome=sector?{label:sector.label,kind:sector.kind,detail:sector.detail,points:sector.points||0}:a.items[rt.spin.index];if(sector?.kind==='question'){const md=await read(db,s,`wheel:${rt.spin.id}:${rt.spin.target}`),q=sector.questions[md.data.step||0];game.mini={version:md.version,step:md.data.step||0,total:sector.questions.length,question:q?publicActivity(q):null,deadline:q?(md.data.clock||rt.spin.revealAt-(rt.pausedTotal||0))+q.timer*1000+(rt.pausedTotal||0):null,lastCorrect:md.data.lastCorrect};}}}
-  if(rt.box){const box=a.boxes?.[rt.box.index];game.box={id:rt.box.id,target:rt.box.target,index:rt.box.index,label:a.items[rt.box.index],kind:box?.kind,detail:box?.detail,question:box?.question?publicActivity(box.question):null,answered:!!d.boxes?.includes(rt.box.id)};}
+  if(rt.box){const box=a.boxes?.[rt.box.index];game.box={id:rt.box.id,target:rt.box.target,index:rt.box.index,label:a.items[rt.box.index],kind:box?.kind||(!a.boxes?'challenge':undefined),detail:box?.detail,question:box?.question?publicActivity(box.question):null,answered:!!d.boxes?.includes(rt.box.id)};}
   game.manualJudgement=rt.judgements?.[(a.type==='Open the Box'?rt.box?.id:rt.spin?.id)||'']||null;
  }
  if(a.type==='Flashcards'&&p){game.card=d.card??0;game.flipped=!!d.flipped;game.back=d.flipped?a.backs[d.card??0]:null;game.reviewed=d.reviewed||[];game.assessment=d.assessment||{};}
