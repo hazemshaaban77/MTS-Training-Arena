@@ -1732,16 +1732,33 @@ test('ImportVerse evidence-marked sixty-minute preset contains all ten engines a
  assert.deepEqual(deck.map(a=>a.type),types);
  assert.doesNotThrow(()=>validateDeck(structuredClone(deck)));
  assert.equal(estimateSessionAgenda(deck).totalSeconds,60*60);
- assert.equal(deck[1].sectors.length,4);
+ assert.equal(deck[1].sectors.length,5);
  assert.ok(deck[1].sectors.every((s:any)=>s.kind==='challenge'&&s.points===0));
  assert.equal(deck[2].questions.length,7);
  assert.equal(deck[2].minimumLevels,7);
- assert.equal(deck[7].boxes.length,4);
- assert.ok(deck.every(a=>String(a.contentSource).includes('not video-verified')),'Unreviewed video material must not be presented as verified');
+ assert.equal(deck[7].boxes.length,5);
+ assert.ok(deck.every(a=>String(a.contentSource).includes('Episodes 1–5')));
+ assert.ok(deck.every(a=>String(a.contentSource).includes('Episode 6 transcript unavailable')));
+ assert.ok(deck[2].questions.some((q:any)=>q.prompt.includes('الحلقة 4')));
  const fresh=newSessionActivity('Ultimate Game Show','ar');
  assert.equal(fresh.questions.length,7);
  assert.equal(fresh.showFormat,'championship');
  assert.doesNotThrow(()=>validateActivity(structuredClone(fresh)));
  const old=sample('Ultimate Game Show','ar');
  assert.equal(old.questions,undefined,'legacy seeds stay backward compatible');
+});
+
+test('v6 new 3D wheel and grading surfaces preserve server authority and contest flow',()=>{
+ const wheel=readFileSync('components/arena/GamePlay.tsx','utf8');
+ const forge=readFileSync('components/arena/ArenaForgeWheel.css','utf8');
+ const discovery=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
+ assert.match(wheel,/wheel-stage--forge/);
+ assert.match(wheel,/forge-wheel/);
+ assert.match(forge,/arena-forge-roll/);
+ assert.match(discovery,/onControl\('flashjudge',index/);
+ assert.match(discovery,/flash-grade-console/);
+ assert.match(discovery,/box-vault-turn--spotlight/);
+ const worker=readFileSync('lib/session-games.ts','utf8');
+ assert.match(worker,/if\(b.action==='flashjudge'\)/);
+ assert.match(worker,/flashGrades/);
 });
