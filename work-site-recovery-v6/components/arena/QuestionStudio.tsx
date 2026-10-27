@@ -13,12 +13,23 @@ type Props={ar:boolean;activity:Activity;onCancel:()=>void;onSave:(a:Activity)=>
 const prizes=[100,250,500,1000,2000,3000,5000,7500,9000,10000];
 function initialQuestions(a:Activity):Activity[]{
  if(Array.isArray(a.questions)&&a.questions.length)return a.questions.map(q=>({...q,type:q.type==='Ultimate Game Show'?'Quiz':q.type,questions:undefined}));
+ if(a.type==='Ultimate Game Show'&&!a.questions?.length){
+  const values=[100,250,500,1000,2000,3000,5000];
+  return values.map((points,i)=>({
+   ...a,type:'Quiz',showFormat:undefined,questions:undefined,mainType:undefined,
+   prompt:(a.prompt||'Championship question')+' · '+(i+1),
+   options:Array.isArray(a.options)&&a.options.length===4?[...a.options]:['A','B','C','D'],
+   correct:Number.isInteger(a.correct)?a.correct:0,
+   section:'Level '+(i+1),speed:false,points,timer:30
+  }));
+ }
+
  return [{...a,type:a.type==='Ultimate Game Show'?'Quiz':a.type,questions:undefined,mainType:undefined}];
 }
 export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  const t=(a:string,e:string)=>ar?a:e;
  const game=activity.type==='Ultimate Game Show';
- const [mode,setMode]=useState<'ladder'|'classic'>(game&&activity.showFormat==='championship'?'ladder':'classic');
+ const [mode,setMode]=useState<'ladder'|'classic'>(game&&(activity.showFormat==='championship'||!activity.questions?.length)?'ladder':'classic');
  const [questions,setQuestions]=useState<Activity[]>(()=>initialQuestions(activity));
  const [active,setActive]=useState(0);
  const [nextType,setNextType]=useState<KnowledgeQuestionType>('Quiz');
