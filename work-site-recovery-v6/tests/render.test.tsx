@@ -1674,7 +1674,7 @@ test('practical Wheel award cannot be automatic and only host-authorized score e
  };
  const host=renderToStaticMarkup(<GamePlay s={session} ar host display={false}
   canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(host.includes('wheel-tap-surface'),'Entire wheel is the tap target');
+ assert.ok(host.includes('arena-wheel3d'),'The official game renders only the WebGL Crown wheel');
  assert.ok(host.includes('wheel-judge'),'Only host sees scoring controls');
  assert.ok(host.includes('Candidate'),'Current player comes from server');
  assert.ok(host.includes('wheel-judge__direction'),'Trainer can award or deduct points');
@@ -1764,11 +1764,12 @@ test('ImportVerse evidence-marked sixty-minute preset contains all ten engines a
 
 test('v6 new 3D wheel and grading surfaces preserve server authority and contest flow',()=>{
  const wheel=readFileSync('components/arena/GamePlay.tsx','utf8');
- const forge=readFileSync('components/arena/ArenaForgeWheel.css','utf8');
+ const crown=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
  const discovery=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
- assert.match(wheel,/wheel-stage--forge/);
- assert.match(wheel,/forge-wheel/);
- assert.match(forge,/arena-forge-roll/);
+ assert.match(wheel,/wheel-stage--crown-real3d/);
+ assert.match(wheel,/ArenaWheel3D/);
+ assert.doesNotMatch(wheel,/forge-wheel|wheel-tap-surface/);
+ assert.match(crown,/new THREE\\.InstancedMesh/);
  assert.match(discovery,/onControl\('flashjudge',index/);
  assert.match(discovery,/flash-grade-console/);
  assert.match(discovery,/box-vault-turn--spotlight/);
@@ -1788,14 +1789,11 @@ test('Projector repaired with full-width live-display flex instead of fixed-heig
  assert.match(css,/\.session-shell\.projector \.wheel-stage--forge/);
 });
 
-test('optional real WebGL wheel is a render-only layer and preserves existing server gameplay',()=>{
+test('real 3D Crown wheel is the only game wheel, with accessible action if GPU unavailable',()=>{
  assert.equal(sectorAngle(2,8),Math.PI/2);
  assert.equal(sectorAngle(8,8),0);
- assert.equal(sectorAngle(-1,8),0);
- for(let i=0;i<20;i++){
-  const target=sectorAngle(i,20),from=37.77,delta=forwardSweep(from,target);
-  assert.ok(delta>0&&delta<=TAU*1.001);
-  const err=((from+delta-target)%TAU+TAU)%TAU;
+ for(let i=0;i<20;i++){const target=sectorAngle(i,20),from=37.77,delta=forwardSweep(from,target);
+  assert.ok(delta>0&&delta<=TAU*1.001);const err=((from+delta-target)%TAU+TAU)%TAU;
   assert.ok(err<1e-9||Math.abs(err-TAU)<1e-9);
  }
  assert.equal(easedStop(0),0);assert.equal(easedStop(1),1);
@@ -1806,13 +1804,12 @@ test('optional real WebGL wheel is a render-only layer and preserves existing se
  assert.ok(source.includes('new THREE.ExtrudeGeometry'));
  assert.ok(source.includes('current.revealed&&Number.isInteger(current.index)'));
  assert.ok(source.includes('if(now<(current.startsAt||0))'));
- assert.ok(parent.includes("get('arena3d')"));
- assert.ok(parent.includes('arena-v6-crown-wheel-3d-preview'));
- assert.ok(parent.includes('onClick={()=>changeWheel3D(!wheel3DOptIn)}'));
- assert.ok(parent.includes('wheel3DOptIn&&wheel3DAvailable?'));
- assert.ok(parent.includes('setWheel3DAvailable(false)'));
+ assert.ok(parent.includes('!fallback&&sectors.length>=2?<ArenaWheel3D'));
+ assert.ok(parent.includes('setFallback(true)'));
+ assert.ok(parent.includes('arena-wheel-webgl-unavailable'));
+ assert.ok(!parent.includes('wheel3DOptIn'));
+ assert.ok(!parent.includes('ArenaForgeWheel.css'));
 });
-
 test('Arena Crown wheel has original authored sector labels, mechanical bulbs and jewel pointer',()=>{
  const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
  const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
@@ -1829,14 +1826,33 @@ test('Arena Crown wheel has original authored sector labels, mechanical bulbs an
  assert.match(css,/arena-wheel3d--crown/);
 });
 
-test('Arena Crown trainer/projector visual-only switch persists through App navigation safely',()=>{
- const parent=readFileSync('components/arena/GamePlay.tsx','utf8');
- const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
- assert.match(parent,/\(host\|\|display\)&&<div className="wheel-3d-mode-switch"/);
- assert.match(parent,/localStorage\.setItem\(wheel3DStorageKey,enabled\?'1':'0'\)/);
- assert.match(parent,/window\.addEventListener\('storage',onStorage\)/);
- assert.match(parent,/wheel3DOptIn&&wheel3DAvailable\?<ArenaWheel3D/);
- assert.match(parent,/onUnavailable=\{\(\)=>setWheel3DAvailable\(false\)\}/);
- assert.doesNotMatch(scene,/probe\.getContext/);
- assert.match(scene,/renderer=new THREE\.WebGLRenderer/);
+test('all ten 3D cinematic scene identities replace 2D picture splash, with skip preserved',()=>{
+ const splash=readFileSync('components/arena/StageSplash.tsx','utf8');
+ const world=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
+ const css=readFileSync('components/arena/ArenaWorld3D.css','utf8');
+ const game=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.match(splash,/<ArenaWorld3D kind=\{base\} mode="intro"\/>/);
+ assert.doesNotMatch(splash,/ActivityArt|IntroScene/);
+ assert.match(splash,/FastForward/);assert.match(splash,/onComplete/);
+ for(const identity of ['wheel','championship','quiz','escape','box','poll','plan','order','cards','scenario']){
+  assert.match(world,new RegExp("key==='"+identity+"'"));
+ }
+ assert.match(world,/new T\.WebGLRenderer/);
+ assert.match(world,/new T\.SpotLight/);
+ assert.match(world,/Math\.max\(0,Math\.min\(1,\(elapsed-\.38\)\/1\.6\)\)/);
+ assert.match(world,/camera\.position\.set/);
+ assert.match(css,/@keyframes arena-world-blackout/);
+ assert.doesNotMatch(game,/wheel3DOptIn|wheel-wrap--grand|wheel-tap-surface/);
+});
+test('3D stage ambient scene mounts for trainer and projector, native QR and player forms unchanged',()=>{
+ const app=readFileSync('components/arena/App.tsx','utf8');
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ assert.match(app,/arena-home-world/);assert.match(app,/arena-hero-world/);
+ assert.match(session,/arena-live-world/);
+ assert.match(session,/mode="ambient" light/);
+ assert.match(session,/employeeId/);assert.match(session,/identity-confirmation/);
+ const html=renderToStaticMarkup(<StageSplash type="Wheel of Fortune" label="عجلة الحظ" ar onComplete={()=>{}}/>);
+ assert.ok(html.includes('arena-world3d--intro'));
+ assert.ok(html.includes('تخطي المقدمة'));
+ assert.ok(!html.includes('splash-activity-cover'));
 });
