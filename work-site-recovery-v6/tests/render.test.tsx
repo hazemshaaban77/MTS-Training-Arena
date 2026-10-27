@@ -26,7 +26,8 @@ import TrainerReadiness from '../components/arena/TrainerReadiness';
 import {estimateSessionAgenda} from '../lib/session-planning';
 import {makeSessionStarter,sessionTemplateOptions} from '../lib/session-templates';
 import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder,{newSessionActivity} from '../components/arena/Builder';
-import {makeImportVerseWorkshop,importVersePlannedMinutes} from '../lib/importverse-workshop';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity,validateActivity,validateDeck} from '../lib/domain.mjs';
+import {makeImportVerseWorkshop,importVersePlannedMinutes} from '../lib/importverse-workshop';
+import {importVerseQuestions} from '../lib/importverse-question-bank';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity,validateActivity,validateDeck} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -1738,8 +1739,12 @@ test('ImportVerse evidence-marked sixty-minute preset contains all ten engines a
  assert.equal(deck[2].minimumLevels,7);
  assert.equal(deck[7].boxes.length,5);
  assert.ok(deck.every(a=>String(a.contentSource).includes('Episodes 1–5')));
- assert.ok(deck.every(a=>String(a.contentSource).includes('Episode 6 transcript unavailable')));
+ assert.ok(deck.every(a=>String(a.contentSource).includes('episode 6 pending')));
  assert.ok(deck[2].questions.some((q:any)=>q.prompt.includes('الحلقة 4')));
+ assert.equal(importVerseQuestions.length,64);
+ assert.equal(new Set(importVerseQuestions.map(q=>q.prompt)).size,64);
+ assert.ok(importVerseQuestions.every(q=>q.options.length===4&&q.options[q.correct]&&q.explanation.length>15));
+ assert.equal(new Set(importVerseQuestions.map(q=>q.episode)).size,5);
  const fresh=newSessionActivity('Ultimate Game Show','ar');
  assert.equal(fresh.questions.length,7);
  assert.equal(fresh.showFormat,'championship');
