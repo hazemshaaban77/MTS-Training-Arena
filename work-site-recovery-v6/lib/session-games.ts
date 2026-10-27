@@ -141,6 +141,23 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   if(host)game.progress=(await db.prepare('SELECT actor,data FROM progress WHERE session=? AND round=?').bind(s.code,s.current).all()).results.map((x:any)=>{const d=JSON.parse(x.data);return {actor:x.actor,room:d.room||0,puzzle:d.puzzle||0,attempts:d.attempts||0};});
  }
  if(a.nodes&&p){const node=a.nodes.find((n:any)=>n.id===(d.node||a.start));game.scenario={text:node.text,ending:!!node.ending,discussion:node.discussion,choices:node.choices?.map((c:any)=>({label:c.label})),consequence:d.consequence,path:d.path||[]};}
+ // Never disclose authored correctChoices before the trainer deliberately reveals
+ // the debrief and the round has closed. Keep individual learner paths private.
+ if(a.type==='Scenario Challenge'&&a.nodes&&rt.keyRevealed===true&&s.status!=='question'){
+  const map:any[]=[],seen=new Set<string>();let id=a.start,complete=false;
+  while(id&&!seen.has(id)&&map.length<100){
+   seen.add(id);
+   const node=a.nodes.find((x:any)=>x.id===id);
+   if(!node)break;
+   if(node.ending){map.push({id:node.id,text:node.text,ending:true,discussion:node.discussion});complete=true;break;}
+   const ix=node.correctChoice;
+   if(!Number.isInteger(ix)||ix<0||ix>=node.choices.length)break;
+   const choice=node.choices[ix];
+   map.push({id:node.id,text:node.text,choice:choice.label,consequence:choice.consequence||''});
+   id=choice.next;
+  }
+  game.scenarioMap={path:map,complete};
+ }
  if(a.mainType==='Ultimate Game Show'){
   game.lifelines=d.lifelines||[];game.eliminated=d.eliminated||[];
   if(isPrizeLadder(a)){
