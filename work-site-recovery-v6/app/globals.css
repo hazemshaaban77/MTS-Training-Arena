@@ -5050,6 +5050,17 @@ html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}
 /* Wheel V6: direct-touch 3D tilted wheel with distinct metal rim and depth.
    The timer is controlled by server startsAt; UI can't pre-spin.
    Pointer lives OUTSIDE rotating wheel; the disc is the only spin control. */
+/* The tap surface is absolutely positioned, so its wrapper needs its own
+   geometry. Without explicit dimensions the entire wheel shrinks to padding. */
+.wheel-wrap--grand.wheel-wrap--3d{
+ box-sizing:border-box!important;
+ width:clamp(280px,38vw,460px)!important;
+ max-width:min(100%,calc(100vw - 38px))!important;
+ aspect-ratio:1 / 1!important;
+ height:auto!important;
+ padding:0!important;
+ flex:0 0 auto;
+}
 .wheel-wrap--3d{
  perspective:1100px!important;transform-style:preserve-3d!important;
  isolation:isolate!important;filter:drop-shadow(0 26px 22px #020916cc)}
@@ -5068,7 +5079,7 @@ html:has(.stage-splash),body:has(.stage-splash){overflow:hidden!important}
  0 0 0 14px #9b7042,0 0 47px #ffe29177!important}
 .wheel-wrap--3d .wheel-tap-surface:focus-visible{
  outline:5px solid #fff!important;outline-offset:17px!important}
-.wheel-wrap--3d .wheel-tap-surface:disabled{cursor:default!important}
+.wheel-wrap--3d .wheel-tap-surface:disabled{cursor:default!important;opacity:1!important}
 .wheel-wrap--3d .wheel.cinematic-wheel{
  width:100%!important;height:100%!important;inset:0!important;
  border:12px solid #f8d99a!important;
