@@ -1,0 +1,41 @@
+name: V6 independent trainer and trainee browser role-play
+on:
+  push:
+    branches: ['audit/v6-trainer-trainee-roleplay']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual-roleplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - run: pnpm install --frozen-lockfile
+      - name: Install isolated browser driver
+        run: |
+          npm install -g playwright@1.58.2
+          playwright install --with-deps chromium
+      - name: Start local client (no API credentials)
+        run: |
+          pnpm exec vite --config vite.github.config.ts --host 127.0.0.1 --port 4173 --base / > /tmp/mts-arena-roleplay-vite.log 2>&1 &
+          for i in $(seq 1 40); do if curl -s -f http://127.0.0.1:4173/audit-browser.html > /dev/null; then exit 0; fi; sleep 2; done
+          cat /tmp/mts-arena-roleplay-vite.log
+          exit 1
+      - name: Play all ten games as trainer, learner and projector
+        run: NODE_PATH="$(npm root -g)" node scripts/audit-roleplay-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v6-ux-roleplay-evidence
+          path: work-site-recovery-v6/audit-results/
+          retention-days: 14
