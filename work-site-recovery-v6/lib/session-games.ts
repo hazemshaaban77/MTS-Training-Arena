@@ -15,7 +15,7 @@ async function saveProgress(db:D1Database,s:any,actor:string,old:any,data:any,ev
 }
 export async function settleWheel(db:D1Database,s:any,a:any,rt:any,now:number){
  if(!rt.spin||rt.spin.revealed||rt.spin.revealAt>now)return;
- const spin={...rt.spin,revealed:true},sector=a.sectors?.[spin.index],points=['question','challenge'].includes(sector?.kind)?0:Math.round((sector?.points??0)*(a.weight??1));
+ const spin={...rt.spin,revealed:true},sector=a.sectors?.[spin.index],points=['question','challenge','penalty'].includes(sector?.kind)?0:Math.round((sector?.points??0)*(a.weight??1));
  const next={...rt,spin,used:sector?.repeatable?rt.used:[...new Set([...(rt.used||[]),spin.index])],turn:(rt.turn||0)+1,target:null};
  const statements:D1PreparedStatement[]=[];
  if(spin.target)statements.push(db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? FROM sessions WHERE code=? AND revision=?").bind(s.code,`wheel:${s.current}:${spin.id}`,spin.target,s.current,'wheel',points,JSON.stringify({sector:spin.index,turn:rt.turn}),now,s.code,s.revision));
@@ -44,7 +44,7 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
     statements.push(db.prepare('UPDATE sessions SET runtime=?,reveal=?,revision=revision+1 WHERE code=? AND revision=?').bind(JSON.stringify(rt),i,s.code,s.revision));const result=await batch(db,statements);if(!result.at(-1)?.meta.changes)fail('STALE',409);return {ok:true};
    }else if(b.action!=='selectturn'){
     const sectors=a.sectors||a.items.map((label:string)=>({label,repeatable:true}));const available=sectors.map((_:any,i:number)=>i).filter((i:number)=>sectors[i].repeatable||!rt.used?.includes(i));if(!available.length)fail('ROUNDS_COMPLETE',409);
-    const index=available[fairIndex(available.length)],id=crypto.randomUUID(),duration=(a.spinDuration??6)*1000;rt={...rt,target,spin:{id,index,target,startsAt:now+3000,stopsAt:now+3000+duration,revealAt:now+3000+duration+150,revealed:false}};
+    const index=available[fairIndex(available.length)],id=crypto.randomUUID(),duration=(a.spinDuration??6)*1000;rt={...rt,target,spin:{id,index,target,startsAt:now+450,stopsAt:now+450+duration,revealAt:now+450+duration,revealed:false}};
    }
   }
   const r=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!r.meta.changes)fail('STALE',409);return {ok:true};
@@ -54,11 +54,11 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   const challenge=isBox?(a.boxes?.[item?.index]||(!a.boxes?{kind:'challenge'}:undefined)):a.sectors?.[item?.index];
   if(!host||(isBox?a.type!=='Open the Box':!['Wheel of Fortune','Spin Wheel'].includes(a.type)))
    fail('FORBIDDEN',403);
-  if(!item||(!isBox&&!item.revealed)||challenge?.kind!=='challenge'||!item.target)
+  if(!item||(!isBox&&!item.revealed)||!['challenge','penalty'].includes(challenge?.kind)||!item.target)
    fail('STATE',409);
   if(rt.judgements?.[item.id])fail('ALREADY_GRADED',409);
-  const reason=String(b.reason||'').trim(),awardId=b.adjustmentId;
-  if(reason.length<5||reason.length>280||typeof awardId!=='string'||
+  const reason=String(b.reason||'').trim()||'Trainer performance grade / 10',awardId=b.adjustmentId;
+  if(reason.length>280||typeof awardId!=='string'||
     !/^[0-9a-fA-F-]{36}$/.test(awardId))fail('AWARD');
   const grade=b.grade===undefined?null:b.grade; // permit legacy wheel clients
   if(isBox&&grade===null)fail('AWARD');
