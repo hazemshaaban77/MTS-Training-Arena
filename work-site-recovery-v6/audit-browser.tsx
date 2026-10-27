@@ -12,7 +12,7 @@ function Audit(){
    <button type="button" data-testid="audit-simulator" onClick={()=>setScreen('sim')}>SIMULATOR</button>
    <button type="button" data-testid="audit-builder" onClick={()=>setScreen('builder')}>TRAINER SESSION STUDIO</button>
   </nav>
-  {screen==='sim'?<ArenaSimulator ar activities={activities} onClose={()=>setScreen('builder')} title="MTS Arena • Trainer / Trainee roleplay"/>:
+  {screen==='sim'?<ArenaSimulator ar activities={activities} onClose={()=>setScreen('builder')} title="MTS Arena • Trainer / Trainee roleplay" initialIndex={Number(new URLSearchParams(window.location.search).get("index")||0)}/>:
    <Builder ar initial="all" owner="isolated-audit-no-login" onClose={()=>setScreen('sim')} onGoHome={()=>setScreen('sim')} onCreated={()=>setScreen('sim')}/>}
  </div>;
 }
