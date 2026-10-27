@@ -29,7 +29,7 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
  const yes=language==='ar';
  const a=(s:string,e:string)=>yes?s:e;
  const deck:Activity[]=[
-  {...sample('Quiz',language),prompt:a('ImportVerse | بوابة المعرفة: رحلة مالك من التسجيل للإفراج','ImportVerse | Importer journey knowledge gateway'),
+  {...sample('Quiz',language),prompt:a('ImportVerse | بوابة المعرفة المهنية: من التسجيل إلى الإفراج','ImportVerse | Professional import procedures knowledge challenge'),
    questions:[bank[0],bank[3],bank[6],bank[9],bank[15],bank[17],
     ...['IV-TF-02','IV-TF-08','IV-DD-04','IV-MT-06','IV-OR-03','IV-FB-06'].map(id=>{
      const q=importVerseQuestions.find(x=>x.id===id);
@@ -46,7 +46,7 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
    {label:a('الحاويات والبوليصة','Container and B/L'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 6: اختار الحاوية المناسبة لشحنة معدات ثقيلة، واشرح Shipper وConsignee وNotify Party وACID. تقييم 0–10.','Episode 6: Pick an equipment container and explain B/L parties and ACID.')}
    ]},
   {...sample('Ultimate Game Show',language),showFormat:'championship',minimumLevels:7,participation:'individual',betEnabled:false,
-   prompt:a('التحدي الكبير | ست حلقات وسبعة مستويات','Championship | Five episodes, seven levels'),timer:0,
+   prompt:a('التحدي الكبير | ست حلقات وسبعة مستويات','Championship | Six episodes, seven levels'),timer:0,
    safeLevels:[3,5],questions:[bank[0],bank[4],bank[6],bank[9],bank[15],bank[20],bank[23]].map((q,i)=>({...q,section:a('المستوى '+(i+1),'Level '+(i+1)),
     points:[100,250,500,1000,2000,3500,5000][i],timer:45}))},
   {...sample('Meta Plan',language),prompt:a('ميتا بلان | رتّب المعلومات حسب مرحلة الاستيراد','Meta Plan | Categorize import stages'),
@@ -60,7 +60,7 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
    {title:a('بوابة CargoX','CargoX gate'),narrative:a('المصدر رفع مستندات لكن المستورد مش عارف يوقّع. اختار الإجراء الصح.','Exporter uploaded docs; what must importer do to sign?'),
      hint:a('افتح المرفق وأكمل بياناته ثم استخدم eToken.','Open attachment and use eToken.'),hintAfter:1,
      puzzles:[bank[11]]},
-   {title:a('بوابة الشحن البحري','Ocean shipment gate'),narrative:a('مستورد لديه معدات ثقيلة ويحتاج حجز الشحن واختيار الحاوية المناسبة.','Malik has heavy machinery and must choose proper container.'),hint:a('راجع الفرق بين 20 قدم للأوزان المركزة وHigh Cube للأحجام الكبيرة.','Consider 20-foot heavy cargo vs high-volume High Cube.'),hintAfter:1,puzzles:[bank[19]]}
+   {title:a('بوابة الشحن البحري','Ocean shipment gate'),narrative:a('مستورد لديه معدات ثقيلة ويحتاج حجز الشحن واختيار الحاوية المناسبة.','An importer needs an appropriate container for heavy equipment.'),hint:a('راجع الفرق بين 20 قدم للأوزان المركزة وHigh Cube للأحجام الكبيرة.','Consider 20-foot heavy cargo vs high-volume High Cube.'),hintAfter:1,puzzles:[bank[19]]}
    ]},
   {...sample('Live Poll',language),prompt:a('من أي محور في حلقات ImportVerse الستة محتاج تدريب عملي أكتر؟','Which episode needs more hands-on practice?'),
    timer:30,pollKind:'choice',options:[a('حساب نافذة · 1','Account · 1'),a('العقد والاعتماد · 2','Contract · 2'),a('تفويض وACID · 3','ACI · 3'),a('CargoX والإفراج والشحن · 4–6','CargoX/Clearance · 4–6')]},
@@ -78,7 +78,7 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
     {kind:'challenge',points:0,detail:a('الحلقة 5: اشرح سيناريو بدء الإجراءات قبل الوصول وبعده، ودفتر 15/1.','Ep 5: Compare clearance timing and records.')},
     {kind:'challenge',points:0,detail:a('الحلقة 6: امثل دور وكيل شحن يشرح للمستورد اختيار الحاوية وأنواع البوليصة وأهمية التأمين البحري. الدرجة من 10.','Ep 6: Roleplay freight advisor on equipment, B/L and cargo cover.')}
    ]},
-  {...sample('Flashcards',language),prompt:a('بطاقات ImportVerse | راجع 6 مفاهيم أساسية','ImportVerse Flashcards | Five key concepts'),
+  {...sample('Flashcards',language),prompt:a('بطاقات ImportVerse | راجع 6 مفاهيم أساسية','ImportVerse Flashcards | Six key concepts'),
    flipPermission:'host',trainingMode:'challenge',scored:true,points:1000,
    fronts:[a('الحلقة 1: إيه الخطوة بعد تفعيل البريد؟','Ep1: What follows email activation?'),
     a('الحلقة 2: إيه المقصود بـ Incoterms؟','Ep2: Define Incoterms.'),
