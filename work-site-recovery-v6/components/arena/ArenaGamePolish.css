@@ -72,7 +72,7 @@
   15%{transform:rotate(460deg)}
   48%{transform:rotate(1320deg)}
   78%{transform:rotate(1940deg)}
-  100%{transform:rotate(2160deg)}
+  100%{transform:rotate(var(--wheel-stop,2160deg))}
 }
 @keyframes arena-rolling-pulse{50%{opacity:.35;transform:translateY(2px)}}
 @keyframes arena-ring-breathe{50%{box-shadow:0 0 0 9px #172e48,0 0 0 13px #c79d55,0 0 60px 16px #eed39799}}
