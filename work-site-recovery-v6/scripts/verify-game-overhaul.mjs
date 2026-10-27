@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {validateActivity} from '../lib/domain.mjs';
+import {showStart,showCommand,showPublic} from '../lib/championship.mjs';
+const source=async file=>readFile(new URL('../'+file,import.meta.url),'utf8');
+const wheel=await source('components/arena/GamePlay.tsx');
+const session=await source('components/arena/Session.tsx');
+const order=await source('components/arena/ArenaOrderIt.tsx');
+const stage=await source('components/arena/ArenaScenario.tsx');
+const box=await source('components/arena/ArenaDiscoveryGames.tsx');
+const server=await source('lib/session-games.ts');
+const css=await source('components/arena/ArenaGamePolish.css');
+const championship=await source('components/arena/ArenaChampionship.tsx');
+assert.match(wheel, /\{host&&<div className="sector-legend/);
+assert.match(wheel, /wheel-wrap--showtime/);
+assert.match(css,/\.effects-off \.wheel-wrap--showtime \.wheel\.in-spin/);
+assert.match(css,/@keyframes arena-real-wheel-spin/);
+assert.match(session, /\{!meta&&<button className="btn secondary" disabled=\{busy\|\|!!s\.deadline&&!seconds\}/);
+assert.match(order, /onPointerMove=\{moveTouch\} onPointerUp=\{stopTouch\}/);
+assert.match(stage, /g\?\.scenarioMap/);
+assert.match(box, /<WheelJudge mode="box"/);
+assert.match(server, /'boxaward'/);
+assert.match(server, /grade<0\|\|grade>10/);
+assert.match(championship, /onControl\('showlifeline'/);
+const quiz=i=>({type:'Quiz',prompt:'Question '+i,timer:30,options:['A','B','C','D'],correct:0,points:100*(i+1)});
+const show={type:'Ultimate Game Show',prompt:'The arena',timer:0,showFormat:'championship',
+ minimumLevels:7,participation:'individual',betEnabled:false,safeLevels:[3],
+ questions:Array.from({length:7},(_,i)=>quiz(i))};
+assert.doesNotThrow(()=>validateActivity(structuredClone(show)));
+assert.throws(()=>validateActivity({...show,questions:show.questions.slice(0,6)}));
+const legacy={...show,minimumLevels:undefined,questions:show.questions.slice(0,5)};
+assert.doesNotThrow(()=>validateActivity(structuredClone(legacy)));
+const start=showCommand(show,showStart(),'cast',{player:'candidate',attemptId:'attempt1'},1000,0);
+const aided=showCommand(show,start.show,'lifeline',{kind:'fifty',player:'candidate'},1100,start.deadline);
+assert.equal(aided.show.current.usedLifelines[0],'fifty');
+assert.equal(showPublic(show,aided.show,'audience').eliminatedChoices.length,2);
+assert.throws(()=>showCommand(show,aided.show,'lifeline',{kind:'fifty'},1300,aided.deadline));
+console.log('GAME UPGRADE SAFETY PASS: wheel, grading, touch, championship and scenario contracts.');
