@@ -439,15 +439,16 @@ test('trainer launch readiness distinguishes actual state from manual checks',()
 
 test('trainer session builder supports safe blank vs sample deck and honest timing estimate',()=>{
  const empty=estimateSessionAgenda([]);
- assert.deepEqual(empty,{timedSeconds:0,transitionSeconds:0,totalSeconds:0,untimedSteps:0,steps:0});
+ assert.deepEqual(empty,{timedSeconds:0,discussionSeconds:0,transitionSeconds:0,totalSeconds:0,untimedSteps:0,steps:0});
  const demo=estimateSessionAgenda([
   {type:'Quiz',timer:30},
   {type:'Quiz',questions:[{type:'Quiz',timer:20},{type:'Quiz',timer:40}]},
   {type:'Flashcards'},
  ] as any);
  assert.equal(demo.timedSeconds,90);
- assert.equal(demo.transitionSeconds,60);
- assert.equal(demo.totalSeconds,150);
+ assert.equal(demo.discussionSeconds,90, 'Two flashcards need time for explanation and reflection');
+ assert.equal(demo.transitionSeconds,90);
+ assert.equal(demo.totalSeconds,270);
  assert.equal(demo.untimedSteps,1);
  assert.equal(demo.steps,4);
  for(const ar of [true,false]){
