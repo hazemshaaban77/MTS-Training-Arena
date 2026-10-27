@@ -616,7 +616,7 @@ const sections=[
 ];
 export const importVerseQuestions:ImportVerseQuestion[]=sections.flatMap(section=>section.questions.map((q,i)=>{
  const [prompt,correctAnswer,...rest]=q;
- const explanation=rest.pop() as string, level=rest.pop() as string;
+ const level=rest.pop() as string, explanation=rest.pop() as string;
  const other=rest as string[];
  const position=(section.episode+i)%4;
  const options=[...other]; options.splice(position,0,correctAnswer);
