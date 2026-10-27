@@ -127,7 +127,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
     n.started_at=now;n.deadline=deck[s.current+1].timer?now+deck[s.current+1].timer*1000:null;
    }
   }
-  if(b.action==='close'){n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
+  if(b.action==='close'){n.deadline=now;n.runtime=JSON.stringify({...rt,keyRevealed:!['Meta Plan','Categorize','Scenario Challenge'].includes(active()?.type)&&settings.reveal!=='manual',revealAt:now+(active()?.mainType==='Ultimate Game Show'?2000:0)});}
   if(b.action==='finish')n.runtime=JSON.stringify(rt);
   const r=await writeSession(db,s,n);if(!r.meta.changes)fail('STALE',409);await audit(db,owner!,code,b.action,{round:s.current});return {ok:true};
  }
@@ -177,7 +177,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
  const totals=Object.fromEntries(all.map(p=>[p.uid,0])),metrics:any={};for(const r of settled){totals[r.player]=r.total;metrics[r.player]={correct:r.correct||0,elapsed:r.elapsed||0};}for(const r of events)totals[r.player]=(totals[r.player]||0)+r.total;
  const roundAnswers:any[]=(await db.prepare('SELECT player,answer,points,correct FROM answers WHERE session=? AND round=?').bind(code,s.current).all()).results;
  const anon:any[]=(await db.prepare('SELECT receipt,answer FROM anonymous_responses WHERE session=? AND round=?').bind(code,s.current).all()).results;
- const closed=['results','completed','survey','archived'].includes(s.status),a=active()??null,revealed=closed&&(['Meta Plan','Categorize'].includes(a?.type)?rt.keyRevealed===true:(settings.reveal!=='manual'||rt.keyRevealed))&&!(rt.revealAt>now);
+ const closed=['results','completed','survey','archived'].includes(s.status),a=active()??null,revealed=closed&&(['Meta Plan','Categorize','Scenario Challenge'].includes(a?.type)?rt.keyRevealed===true:(settings.reveal!=='manual'||rt.keyRevealed))&&!(rt.revealAt>now);
  const mine=roundAnswers.find(x=>x.player===player?.id);
  let ownAnon:any=null;if(player&&a?.anonymous){const receipt=await hash(s.anonymous_secret+':poll:'+s.current+':'+player.id);ownAnon=anon.find(x=>x.receipt===receipt);}
  const responses=[...roundAnswers,...anon],tally=a?.options?a.options.map((_:any,i:number)=>responses.filter(r=>JSON.parse(r.answer)===i).length):null;
