@@ -148,6 +148,17 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   const id=setInterval(()=>refreshLatest.current(),liveConnection==='live'?45000:fallbackMs);
   return()=>clearInterval(id);
  },[code,host,view,token,liveConnection,s?.status,!!s?.mine]);
+ // A wheel result is settled by the Worker only after its committed stop time.
+ // Fetch precisely at the boundary rather than waiting for a 1.4–12s fallback
+ // poll. No early sector labels or scoring are computed by the browser.
+ useEffect(()=>{
+  const spin=s?.game?.spin;
+  if(s?.status!=='question'||!spin||spin.revealed||!spin.revealAt)return;
+  const serverNow=Date.now()+(s.serverNow-received.current);
+  const delay=Math.max(0,spin.revealAt-serverNow);
+  const timeout=setTimeout(()=>refreshLatest.current(),delay+45);
+  return()=>clearTimeout(timeout);
+ },[s?.game?.spin?.id,s?.game?.spin?.revealAt,s?.game?.spin?.revealed,s?.status,s?.code]);
  // Timed rounds complete on schedule even when no audience events arrive.
  useEffect(()=>{
   if(!s?.deadline||s.status!=='question'||s.paused)return;
