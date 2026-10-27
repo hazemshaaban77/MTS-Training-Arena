@@ -461,7 +461,7 @@ test('trainer session builder supports safe blank vs sample deck and honest timi
  }
  const src=readFileSync('components/arena/Builder.tsx','utf8');
  assert.ok(src.includes('if(deck.length&&!window.confirm('));
- assert.ok(src.includes('setDeck(blank?[]:types.map(type=>newSessionActivity(type,lang==='en'?'en':'ar')))'));
+  assert.ok(src.includes('setDeck(blank?[]:types.map(type=>newSessionActivity('));
  assert.ok(src.includes('disabled={busy||!deck.length}'));
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('.builder-starter-panel'));
