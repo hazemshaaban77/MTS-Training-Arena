@@ -17,6 +17,7 @@ import {OpenBoxExperience,FlashcardExperience} from './ArenaDiscoveryGames';
 export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onInteract,onControl}:any){
  const a=s.activity,t=(a:string,e:string)=>ar?a:e,closed=s.status!=='question',g=s.game||{},mine=s.mine,actor=!!mine&&!host&&!display;
  const [word,setWord]=useState(''),[card,setCard]=useState(0),[bet,setBet]=useState(0),[cast,setCast]=useState<string[]>([]);
+ const [wheelFallback,setWheelFallback]=useState(false);
  const send=(action:string,extra:any={})=>onInteract(action,{version:action==='miniquiz'?g.mini?.version:g.version||0,turn:g.turn||0,...extra});
  const usable=actor&&mine.eligible&&!s.paused&&!closed&&!busy;
  if(a.type==='Ultimate Game Show'&&a.showFormat==='championship')
@@ -39,12 +40,12 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
   const turnPlayer=(s.players||[]).find((p:any)=>p.uid===(spin&&!spin.revealed||g.mini?.question?g.spinTarget:g.target));
   const selected=g.target===mine?.id;
   const canRequestSpin=!!g.target&&(host||selected)&&!busy&&!s.paused&&!closed&&(!spin||spin.revealed)&&g.turn<g.rounds&&!g.mini?.question;
-  const [fallback,setFallback]=useState(false);
+
   return <div className="presentation-play wheel-stage wheel-stage--crown-real3d">
    <div className="turn-entrance" key={g.target}><span className="avatar">{turnPlayer?.name?.charAt(0)||'✦'}</span><div><small>{t('الدور الحالي','IN THE SPOTLIGHT')}</small><b>{turnPlayer?.name||t('في انتظار مشارك','Waiting for a player')}</b></div><strong>{g.turn}/{g.rounds}</strong></div>
    <div className="wheel-arena-banner"><Zap size={18}/><span>{t('المسرح جاهز… العجلة الملكية هتحدد التحدي!','LIGHTS. CAMERA. CROWN WHEEL!')}</span><Zap size={18}/></div>
-   {!fallback&&sectors.length>=2?<ArenaWheel3D sectors={sectors} spin={spin} serverNow={now} canSpin={canRequestSpin} countdown={count} ar={ar}
-    onUnavailable={()=>setFallback(true)} onSpin={()=>host?onControl('spin'):send('spin')}/>:
+   {!wheelFallback&&sectors.length>=2?<ArenaWheel3D sectors={sectors} spin={spin} serverNow={now} canSpin={canRequestSpin} countdown={count} ar={ar}
+    onUnavailable={()=>setWheelFallback(true)} onSpin={()=>host?onControl('spin'):send('spin')}/>:
     <div className="arena-wheel-webgl-unavailable" role="status"><strong>{t('وضع التشغيل الميسّر','Accessible play mode')}</strong>
      <p>{t('الجهاز مش قادر يعرض المسرح الثلاثي الأبعاد حاليًا. تقدر تكمل النشاط بنفس النتيجة الرسمية من غير العجلة القديمة.','This device cannot render the 3D stage. You can continue with the official server outcome without the old wheel.')}</p>
      <button className="btn primary large" type="button" disabled={!canRequestSpin} onClick={()=>host?onControl('spin'):send('spin')}>{t('ابدأ التحدي','Start the challenge')}</button></div>}
