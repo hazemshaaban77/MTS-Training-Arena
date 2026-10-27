@@ -1,4 +1,5 @@
 import {sample,type Activity} from './catalog';
+import {importVerseQuestions} from './importverse-question-bank';
 
 /** Trainer-editable session based on the speech transcripts of ImportVerse episodes 1–5.
  * The uploaded MP3 episode 6 exists but the source reader returned no transcript.
@@ -7,34 +8,22 @@ import {sample,type Activity} from './catalog';
  * must be separately re-verified before using them as compliance advice.
  */
 export const importVerseSource={
- title:'ImportVerse MP3 Episodes 1–5 (user audio speech transcripts) · Episode 6 pending transcription',
+ title:'ImportVerse Episodes 1–5 · Question bank 64 sourced questions · Episode 6 pending transcript',
  url:'', episodesReviewed:[1,2,3,4,5], episodesPending:[6],
  note:'Some spoken terminology and regulatory claims may be stale; cross-check with Nafeza.'
 };
-const quiz=(prompt:string,options:string[],correct=0,points=100,timer=40):Activity=>({
- type:'Quiz',prompt,options,correct,points,timer,speed:false
-});
-// Every question below follows a concrete step explicitly described in the
-// supplied audio; no fabricated episode-6 material is included.
-const bank=[
- quiz('الحلقة 1: مالك صاحب المصنع اختار أي نوع حساب للتسجيل بمنصة نافذة؟',['حساب تجاري','حساب شخصي','حساب موظف جمركي','حساب شركة شحن']),
- quiz('الحلقة 1: بعد الضغط على سجّل الآن، إيه الخطوة المطلوبة لتنشيط الحساب؟',['فتح رسالة البريد والضغط على رابط التفعيل','إنشاء ACID فورًا','رفع بوليصة الشحن','بدء إجراء بنكي']),
- quiz('الحلقة 1: إيه الخطوة التالية لتفعيل رقم الهاتف؟',['إدخال رمز الأمان المرسل للموبايل','رفع فاتورة إلكترونية','التوقيع على بوليصة','طلب تفويض جمركي']),
- quiz('الحلقة 2: إيه المستند اللي بيبدأ بيه الاتفاق على نوع البضاعة والكمية والسعر؟',['الفاتورة المبدئية Proforma Invoice','رقم 46','إذن التسليم','إيصال الأرضيات']),
- quiz('الحلقة 2: في شرط FOB، المصدر مسؤول عن إيه عند ميناء الشحن؟',['تسليم وتحميل البضاعة على السفينة','تخليص الواردات في مصر','إنهاء إجراءات المستورد البنكية','الرسوم المحلية في ميناء الوصول']),
- quiz('الحلقة 2: الاعتماد المستندي بيعتمد في السداد أساسًا على إيه؟',['تقديم مستندات مطابقة لشروط الاعتماد','وصول البضاعة قبل الشحن','مكالمة بين المستورد والمصدر','اختيار وسيط بدون بنوك']),
- quiz('الحلقة 3: التفويض الإلكتروني بيصبح ساري إمتى؟',['بعد قبول الشركة المفوَّض إليها للتفويض','فور كتابة اسم شركة التخليص','بعد وصول المركب','بعد فتح الاعتماد فقط']),
- quiz('الحلقة 3: رقم ACID بيستخدم لإيه في منظومة ACI؟',['تعريف الشحنة وربط المستندات والأطراف','رقم هاتف المستورد','رقم حساب البنك','رمز صلاحية المتدرب']),
- quiz('الحلقة 3: طلب ACID يشمل أي مجموعات بيانات أساسية؟',['المستورد والمصدر والشحنة','مورد واحد فقط','حساب المدرب والمتدرب','البنك والسائق فقط']),
- quiz('الحلقة 4: إيه معنى KYC عند التسجيل على CargoX؟',['اعرف عميلك والتحقق من هوية الكيان','استلام الشحنة بالميناء','إصدار رقم 46','قلب بطاقة المعرفة']),
- quiz('الحلقة 4: إيه هو Envelope على CargoX؟',['ظرف رقمي يضم مستندات الشحنة','الاعتماد البنكي','إذن التسليم النهائي','بطاقة المستورد']),
- quiz('الحلقة 4: إيه المطلوب لتوقيع المستورد إلكترونيًا على المرفقات بنافذة؟',['فتح المرفق وتفعيل زر التوقيع ثم إدخال PIN','رفع الفاتورة من غير توقيع','تغيير مصدر الشحنة','إنشاء رقم 46']),
- quiz('الحلقة 4: في المثال قبل شحن البضاعة، البنك يربط إيه أولًا؟',['مرفق الفاتورة ببيانات الاعتماد','إذن التسليم','مستند الوصول النهائي','أمر الفسح بعد المعاينة']),
- quiz('الحلقة 5: إيه الفرق بين الاستيراد للاتجار والإنتاج؟',['الاتجار لإعادة البيع، والإنتاج يدخل في تصنيع منتج جديد','الاتجار للمواد الخام فقط','الاتجار للشحن الجوي فقط','مفيش فرق']),
- quiz('الحلقة 5: الاستخدام الخاص للشركات يشمل مثال إيه؟',['ماكينات ومكاتب لمنفعة النشاط','سلع لإعادة البيع كما هي','متعلقات مسافر مستعملة','شحن طرود بريدية']),
- quiz('الحلقة 5: لو بدأت الإجراءات قبل وصول السفينة في السيناريو المعروض، الإقرار يتسجل في أي دفتر؟',['دفتر 15','دفتر 1','دفتر الحضور','دفتر التحصيل البنكي']),
- quiz('الحلقة 5: إيه اللي بيميز إجراء الإفراج العادي بعد وصول الشحنة وربط إذن التسليم؟',['قيد دفتر 1 ومراحل الإجراءات معًا','قيد دفتر 15 بالضرورة','إلغاء المعاينة تلقائيًا','مش محتاج شهادة جمركية'])
+const curatedIds=[
+ 'IV-E1-01','IV-E1-02','IV-E1-04',
+ 'IV-E2-01','IV-E2-02','IV-E2-03',
+ 'IV-E3-01','IV-E3-02','IV-E3-03',
+ 'IV-E4-01','IV-E4-02','IV-E4-03','IV-E4-12',
+ 'IV-E5-01','IV-E5-02','IV-E5-03','IV-E5-04'
 ];
+const bank=curatedIds.map(id=>{
+ const item=importVerseQuestions.find(x=>x.id===id);
+ if(!item)throw Error('Missing ImportVerse question '+id);
+ return item.activity;
+});
 const planned=[6,6,10,5,6,4,5,6,5,7];
 export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
  const yes=language==='ar';
@@ -105,6 +94,6 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
     {id:'risk',ending:true,text:a('مسار غير آمن: عملية ناقصة أو بيانات غير موثقة.','Unsafe path: incomplete or unverified transfer.'),discussion:a('أين تتدخل لتصحيح القرار؟','Where should you intervene?')}
    ]}
  ];
- return deck.map((activity,i)=>({...activity,plannedMinutes:planned[i],contentSource:'ImportVerse MP3 Episodes 1–5 (transcripts verified); Episode 6 transcript unavailable; regulatory facts need current review'}));
+ return deck.map((activity,i)=>({...activity,plannedMinutes:planned[i],contentSource:'ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations'}));
 }
 export const importVersePlannedMinutes=planned.reduce((sum,n)=>sum+n,0);
