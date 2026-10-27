@@ -124,6 +124,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   try{
    const final={...activity,prompt:title.trim()||copy[0].prompt,questions:copy,
     showFormat:game&&mode==='ladder'?'championship':undefined,
+    minimumLevels:game&&mode==='ladder'?7:undefined,
     safeLevels:game&&mode==='ladder'?safety.filter(x=>x<=copy.length).sort((a,b)=>a-b):undefined,
     participation:game&&mode==='ladder'?'individual':activity.participation,
     betEnabled:game&&mode==='ladder'?false:activity.betEnabled};
