@@ -1,5 +1,5 @@
 {
-  "title": "ImportVerse — The Ultimate Import Challenge | 60 دقيقة | الحلقات الستة",
+  "title": "ImportVerse — Business Knowledge Challenge | 60 دقيقة | الحلقات الستة",
   "language": "ar",
   "teams": false,
   "settings": {
@@ -15,7 +15,7 @@
   "activities": [
     {
       "type": "Quiz",
-      "prompt": "ImportVerse | بوابة المعرفة: رحلة مالك من التسجيل للإفراج",
+      "prompt": "ImportVerse | بوابة المعرفة المهنية: من التسجيل إلى الإفراج",
       "timer": 40,
       "options": [
         "إنشاء حساب واستيفاء المتطلبات",
@@ -27,14 +27,14 @@
       "questions": [
         {
           "type": "Quiz",
-          "prompt": "الحلقة 1: مالك صاحب المصنع اختار أي نوع حساب على نافذة؟",
+          "prompt": "لتسجيل منشأة تجارية على منصة نافذة، أي نوع حساب يناسب ممثل الشركة؟",
           "options": [
-            "حساب شخصي",
             "حساب تجاري",
-            "حساب شركة شحن",
-            "حساب موظف جمركي"
+            "حساب مصدر أجنبي",
+            "حساب توكيل ملاحي",
+            "حساب جهة حكومية"
           ],
-          "correct": 1,
+          "correct": 0,
           "timer": 40,
           "points": 1000,
           "speed": false,
@@ -44,12 +44,12 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 2: أي مستند يبدأ به تفاوض الكمية والسعر وشروط الصفقة؟",
+          "prompt": "أي مستند يبدأ به تفاوض الكمية والسعر وشروط الصفقة؟",
           "options": [
             "رقم 46",
             "إذن التسليم",
             "الفاتورة المبدئية Proforma Invoice",
-            "رسالة إغلاق الجلسة"
+            "إذن التسليم البحري"
           ],
           "correct": 2,
           "timer": 40,
@@ -61,7 +61,7 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 3: التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
+          "prompt": "التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
           "options": [
             "بمجرد إدخال اسمها",
             "بعد وصول السفينة فقط",
@@ -78,7 +78,7 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 4: KYC في تسجيل CargoX معناه إيه؟",
+          "prompt": "KYC في تسجيل CargoX معناه إيه؟",
           "options": [
             "Know Your Customer والتحقق من بيانات الشركة",
             "رمز ميناء الوصول",
@@ -95,10 +95,10 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 5: لو بدأت الإجراءات قبل وصول السفينة، في أي دفتر قُيّدت شهادة الإفراج المسبق في مثال الحلقة؟",
+          "prompt": "في نموذج الإفراج المسبق قبل وصول السفينة، بأي دفتر تقيد الشهادة الجمركية؟",
           "options": [
             "دفتر 1",
-            "دفتر حضور المتدربين",
+            "دفتر التأمين المستندي",
             "دفتر اعتماد البنك",
             "دفتر 15"
           ],
@@ -108,11 +108,11 @@
           "speed": false,
           "sourceEpisode": 5,
           "questionBankId": "IV-E5-03",
-          "explanation": "الحلقة الخامسة تشرح تسجيل حالة الإفراج المسبق في دفتر 15."
+          "explanation": "التدريب تشرح تسجيل حالة الإفراج المسبق في دفتر 15."
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 6: مين الناقل الفعلي اللي يمتلك السفن والحاويات وفق تعريف الحلقة؟",
+          "prompt": "من هو الناقل البحري الفعلي الذي يشغّل السفن والحاويات؟",
           "options": [
             "التوكيل الملاحي Shipping Agent",
             "وكيل الشحن Freight Forwarder",
@@ -125,15 +125,120 @@
           "speed": false,
           "sourceEpisode": 6,
           "questionBankId": "IV-E6-02",
-          "explanation": "المشهد الثاني يفرق بين الناقل الفعلي وممثله المحلي ووسيط الشحن."
+          "explanation": "التوضيح المهني يفرق بين الناقل الفعلي وممثله المحلي ووسيط الشحن."
+        },
+        {
+          "type": "True/False",
+          "prompt": "تأكيد رقم الهاتف قد يعتمد على إدخال رمز أمان مرسل للهاتف.",
+          "options": [
+            "صح",
+            "غلط"
+          ],
+          "correct": 0,
+          "timer": 30,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 1,
+          "questionBankId": "IV-TF-02",
+          "explanation": "التسجيل يشمل التحقق من رقم الهاتف برمز أمان."
+        },
+        {
+          "type": "True/False",
+          "prompt": "ACID رقم تعريفي يُستخدم لربط بيانات الشحنة وأطرافها ومستنداتها.",
+          "options": [
+            "صح",
+            "غلط"
+          ],
+          "correct": 0,
+          "timer": 30,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 3,
+          "questionBankId": "IV-TF-08",
+          "explanation": "وظيفة ACID تعريف الشحنة في ACI."
+        },
+        {
+          "type": "Dropdown",
+          "prompt": "اختر الإجابة من القائمة: أي شرط من المذكورة يتضمن تعاقد البائع على التأمين مع الشحن البحري؟",
+          "options": [
+            "EXW",
+            "FCA",
+            "FOB",
+            "CIF"
+          ],
+          "correct": 3,
+          "timer": 35,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 2,
+          "questionBankId": "IV-DD-04",
+          "explanation": "CIF = Cost Insurance Freight."
+        },
+        {
+          "type": "Match It",
+          "prompt": "طابق أنواع معدات الشحن بالحمولة المناسبة",
+          "left": [
+            "Reefer",
+            "ISO Tank",
+            "Flat Rack"
+          ],
+          "right": [
+            "حاويات لأبعاد غير قياسية",
+            "حمولة تحتاج تبريد",
+            "نقل سوائل مناسبة للخزان"
+          ],
+          "pairs": [
+            1,
+            2,
+            0
+          ],
+          "timer": 75,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 6,
+          "questionBankId": "IV-MT-06"
+        },
+        {
+          "type": "Order It",
+          "prompt": "رتب تسلسل تسليم مستندات CargoX وتوقيعها",
+          "items": [
+            "توقيع المستندات إلكترونيًا",
+            "إنشاء Envelope للمرفقات",
+            "مراجعة المرفقات في نافذة",
+            "تسجيل المصدر والتحقق من شركته"
+          ],
+          "order": [
+            3,
+            1,
+            2,
+            0
+          ],
+          "timer": 85,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 4,
+          "questionBankId": "IV-OR-03"
+        },
+        {
+          "type": "Fill Blank",
+          "prompt": "الحاوية المستخدمة للبضائع التي تتطلب تبريدًا يطلق عليها ___ .",
+          "accepted": [
+            "Reefer"
+          ],
+          "timer": 50,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 6,
+          "questionBankId": "IV-FB-06",
+          "explanation": "حاوية Reefer مجهزة للتبريد."
         }
       ],
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     },
     {
       "type": "Wheel of Fortune",
-      "prompt": "عجلة ImportVerse | تحديات من الحلقات الستة",
+      "prompt": "عجلة المهارات | شرح إجراءات التجارة والاستيراد",
       "timer": 0,
       "rounds": 6,
       "spinDuration": 5,
@@ -178,13 +283,13 @@
           "kind": "challenge",
           "points": 0,
           "repeatable": true,
-          "detail": "من الحلقة 6: اختار الحاوية المناسبة لمعدات مالك، واشرح Shipper وConsignee وNotify Party وACID. تقييم 0–10."
+          "detail": "من الحلقة 6: اختار الحاوية المناسبة لشحنة معدات ثقيلة، واشرح Shipper وConsignee وNotify Party وACID. تقييم 0–10."
         }
       ],
       "points": 1000,
       "weight": 1,
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     },
     {
       "type": "Ultimate Game Show",
@@ -208,14 +313,14 @@
       "questions": [
         {
           "type": "Quiz",
-          "prompt": "الحلقة 1: مالك صاحب المصنع اختار أي نوع حساب على نافذة؟",
+          "prompt": "لتسجيل منشأة تجارية على منصة نافذة، أي نوع حساب يناسب ممثل الشركة؟",
           "options": [
-            "حساب شخصي",
             "حساب تجاري",
-            "حساب شركة شحن",
-            "حساب موظف جمركي"
+            "حساب مصدر أجنبي",
+            "حساب توكيل ملاحي",
+            "حساب جهة حكومية"
           ],
-          "correct": 1,
+          "correct": 0,
           "timer": 45,
           "points": 100,
           "speed": false,
@@ -226,11 +331,11 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 2: في شرط FOB مين يتحمل تحميل البضاعة على ظهر السفينة بميناء الشحن؟",
+          "prompt": "في شرط FOB مين يتحمل تحميل البضاعة على ظهر السفينة بميناء الشحن؟",
           "options": [
             "المستورد بعد الوصول",
             "شركة الجمارك المصرية",
-            "المدرب",
+            "مستخلص الشركة الجمركي",
             "المصدر ضمن التزام تسليم البضاعة على السفينة"
           ],
           "correct": 3,
@@ -239,12 +344,12 @@
           "speed": false,
           "sourceEpisode": 2,
           "questionBankId": "IV-E2-02",
-          "explanation": "الحلقة توضح التحميل على ظهر السفينة ضمن التزامات البائع بـFOB.",
+          "explanation": "المادة التدريبية توضح التحميل على ظهر السفينة ضمن التزامات البائع بـFOB.",
           "section": "المستوى 2"
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 3: التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
+          "prompt": "التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
           "options": [
             "بمجرد إدخال اسمها",
             "بعد وصول السفينة فقط",
@@ -262,7 +367,7 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 4: KYC في تسجيل CargoX معناه إيه؟",
+          "prompt": "KYC في تسجيل CargoX معناه إيه؟",
           "options": [
             "Know Your Customer والتحقق من بيانات الشركة",
             "رمز ميناء الوصول",
@@ -280,10 +385,10 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 5: لو بدأت الإجراءات قبل وصول السفينة، في أي دفتر قُيّدت شهادة الإفراج المسبق في مثال الحلقة؟",
+          "prompt": "في نموذج الإفراج المسبق قبل وصول السفينة، بأي دفتر تقيد الشهادة الجمركية؟",
           "options": [
             "دفتر 1",
-            "دفتر حضور المتدربين",
+            "دفتر التأمين المستندي",
             "دفتر اعتماد البنك",
             "دفتر 15"
           ],
@@ -293,12 +398,12 @@
           "speed": false,
           "sourceEpisode": 5,
           "questionBankId": "IV-E5-03",
-          "explanation": "الحلقة الخامسة تشرح تسجيل حالة الإفراج المسبق في دفتر 15.",
+          "explanation": "التدريب تشرح تسجيل حالة الإفراج المسبق في دفتر 15.",
           "section": "المستوى 5"
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 6: بوليصة الشحن Bill of Lading لها إيه من وظائف في السكريبت؟",
+          "prompt": "بوليصة الشحن Bill of Lading لها إيه من وظائف في السكريبت؟",
           "options": [
             "إيصال استلام وعقد نقل وقد تؤدي وظيفة سند ملكية",
             "فاتورة ضريبية فقط",
@@ -316,7 +421,7 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 6: إيه أول خطوة في المراحل الست للشحن البحري في الحلقة؟",
+          "prompt": "ما أول مرحلة في رحلة الشحن البحري، قبل الحجز وتحميل السفينة؟",
           "options": [
             "الوصول والتخليص",
             "تحميل السفينة مباشرة",
@@ -329,12 +434,12 @@
           "speed": false,
           "sourceEpisode": 6,
           "questionBankId": "IV-E6-26",
-          "explanation": "مراحل الحلقة تبدأ بطلب عرض سعر ثم Booking وتجهيز ونقل ثم تخليص صادر وتحميل ووصول.",
+          "explanation": "مراحل المادة التدريبية تبدأ بطلب عرض سعر ثم Booking وتجهيز ونقل ثم تخليص صادر وتحميل ووصول.",
           "section": "المستوى 7"
         }
       ],
       "plannedMinutes": 10,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     },
     {
       "type": "Meta Plan",
@@ -366,12 +471,12 @@
       ],
       "autoClose": true,
       "plannedMinutes": 5,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms",
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms",
       "scored": false
     },
     {
       "type": "Escape Room",
-      "prompt": "غرفة الهروب | أنقذ رحلة مالك من خطأ المستندات",
+      "prompt": "غرفة الهروب | صحّح أخطاء المستندات والإجراءات",
       "timer": 0,
       "mode": "individual",
       "theme": "gateway",
@@ -385,7 +490,7 @@
           "puzzles": [
             {
               "type": "Quiz",
-              "prompt": "الحلقة 3: التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
+              "prompt": "التفويض الإلكتروني لشركة التخليص يصبح ساري إمتى؟",
               "options": [
                 "بمجرد إدخال اسمها",
                 "بعد وصول السفينة فقط",
@@ -410,7 +515,7 @@
           "puzzles": [
             {
               "type": "Quiz",
-              "prompt": "الحلقة 4: قبل التوقيع على مرفقات نافذة، المستورد بيعمل إيه؟",
+              "prompt": "قبل التوقيع على مرفقات نافذة، المستورد بيعمل إيه؟",
               "options": [
                 "يحذف الفاتورة",
                 "يستخرج رقم 46 دون مستندات",
@@ -429,13 +534,13 @@
         },
         {
           "title": "بوابة الشحن البحري",
-          "narrative": "مالك معه معدات ثقيلة ومحتاج يحجز ويختار الحاوية المناسبة.",
+          "narrative": "مستورد لديه معدات ثقيلة ويحتاج حجز الشحن واختيار الحاوية المناسبة.",
           "hint": "راجع الفرق بين 20 قدم للأوزان المركزة وHigh Cube للأحجام الكبيرة.",
           "hintAfter": 1,
           "puzzles": [
             {
               "type": "Quiz",
-              "prompt": "الحلقة 6: لو عندك ماكينة أطول من سقف الحاوية العادية وممكن تُحمّل من أعلى، تختار إيه؟",
+              "prompt": "لو عندك ماكينة أطول من سقف الحاوية العادية وممكن تُحمّل من أعلى، تختار إيه؟",
               "options": [
                 "ISO Tank",
                 "Open Top",
@@ -454,7 +559,7 @@
         }
       ],
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     },
     {
       "type": "Live Poll",
@@ -468,12 +573,12 @@
       ],
       "pollKind": "choice",
       "plannedMinutes": 4,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms",
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms",
       "scored": false
     },
     {
       "type": "Order It",
-      "prompt": "رتّب رحلة مالك: التسجيل → التعاقد → تفويض → مستندات → إفراج",
+      "prompt": "رتّب إجراءات الاستيراد: تسجيل → تعاقد → تفويض → مستندات → إفراج",
       "timer": 75,
       "items": [
         "بدء الإجراءات الجمركية ورقم 46",
@@ -490,7 +595,7 @@
         0
       ],
       "plannedMinutes": 5,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     },
     {
       "type": "Open the Box",
@@ -535,11 +640,11 @@
         {
           "kind": "challenge",
           "points": 0,
-          "detail": "الحلقة 6: امثل دور وكيل شحن يشرح لمالك اختيار الحاوية وأنواع البوليصة وأهمية التأمين البحري. الدرجة من 10."
+          "detail": "الحلقة 6: امثل دور وكيل شحن يشرح للمستورد اختيار الحاوية وأنواع البوليصة وأهمية التأمين البحري. الدرجة من 10."
         }
       ],
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     },
     {
       "type": "Flashcards",
@@ -566,11 +671,11 @@
       "scored": true,
       "points": 1000,
       "plannedMinutes": 5,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     },
     {
       "type": "Scenario Challenge",
-      "prompt": "تحدي المواقف | مالك قدام قرار مهم في CargoX والإفراج",
+      "prompt": "تحدي المواقف | قرارات مهنية في CargoX والإفراج",
       "timer": 0,
       "scored": true,
       "start": "start",
@@ -627,11 +732,19 @@
         }
       ],
       "plannedMinutes": 7,
-      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms"
     }
   ],
   "survey": null,
   "sourceNote": "Episodes 1–5: MP3 text extracts. Episode 6: user-uploaded shipping and marine insurance Word script. Technical, legal and insurance terms must be separately reviewed against current primary sources.",
-  "bankCount": 94,
-  "plannedMinutes": 60
+  "bankCount": 140,
+  "plannedMinutes": 60,
+  "questionFormats": [
+    "Quiz",
+    "True/False",
+    "Dropdown",
+    "Match It",
+    "Order It",
+    "Fill Blank"
+  ]
 }
