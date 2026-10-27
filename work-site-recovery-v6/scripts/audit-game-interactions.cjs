@@ -108,6 +108,21 @@ const short=x=>String(x||'').replace(/\s+/g,' ').slice(0,220);
       }
       rec.observations.after=(await steps.allTextContents()).map(short);
       rec.observations.reordered=JSON.stringify(rec.observations.before)!==JSON.stringify(rec.observations.after);
+      if(!rec.observations.reordered&&await grips.count()>1){
+       // Real touch device event rather than synthetic mouse, using the same
+       // touch-action and pointer-capture path as Android Chrome.
+       const p=await grips.nth(0).boundingBox(),dest=await steps.nth(1).boundingBox();
+       if(p&&dest){
+        const sx=p.x+p.width/2,sy=p.y+p.height/2,ex=dest.x+dest.width/2,ey=dest.y+dest.height/2;
+        const cdp=await ctx.newCDPSession(page);
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:sx,y:sy,id:1}]});
+        for(let k=1;k<=14;k++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:sx+(ex-sx)*k/14,y:sy+(ey-sy)*k/14,id:1}]});
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+        await cdp.detach();await page.waitForTimeout(250);
+        rec.observations.afterRealTouch=(await steps.allTextContents()).map(short);
+        rec.observations.realTouchReordered=JSON.stringify(rec.observations.afterRealTouch)!==JSON.stringify(rec.observations.after);
+       }
+      }
       await activate(page,'button:has-text("ثبّت ترتيب الخطوات")','submit order',rec);
       const down=page.locator('.arena-sequence__step-actions button[aria-label*="لأسفل"]').first();
       if(await down.count()&&await down.isEnabled()){
