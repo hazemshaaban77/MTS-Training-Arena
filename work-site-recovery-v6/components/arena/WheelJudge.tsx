@@ -13,7 +13,7 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
  const [reason,setReason]=useState('');
  const [pending,setPending]=useState(false);
  const isBox=mode==='box',reveal=isBox?game?.box:game?.spin;
- const sector=isBox?activity.boxes?.[reveal?.index]:activity.sectors?.[reveal?.index];
+ const sector=isBox?reveal:activity.sectors?.[reveal?.index]; // Box contents intentionally absent from publicActivity; signed reveal is server-owned
  const shown=!!reveal&&(isBox||reveal.revealed)&&sector?.kind==='challenge';
  const rated=game?.manualJudgement||null;
  const targetId=isBox?reveal?.target:game?.spinTarget;
