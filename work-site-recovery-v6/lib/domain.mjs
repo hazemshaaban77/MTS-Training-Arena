@@ -12,7 +12,7 @@ export function validateActivity(a,depth=0){
  if(a.media!=null){ok(a.media&&typeof a.media==='object'&&['image','video'].includes(a.media.type)&&str(a.media.url,2048)&&/^https:\/\/[^\s]+$/i.test(a.media.url)&&(!a.media.alt||typeof a.media.alt==='string'&&a.media.alt.length<=200));}
  const type=a.type;
  if(type==='Ultimate Game Show'&&a.showFormat==='championship'){
-  if(!Array.isArray(a.questions)||a.questions.length<2||a.questions.length>20)throw Error('DECK');
+  if(!Array.isArray(a.questions)||a.questions.length<(a.minimumLevels===7?7:2)||a.questions.length>20)throw Error('DECK');
   for(const q of a.questions)validateActivity(q,depth+1);
   ok(a.questions.every(q=>q.type==='Quiz'&&Number.isInteger(q.timer)&&q.timer>=5&&q.timer<=300&&Array.isArray(q.options)&&q.options.length===4));
   const amounts=a.questions.map(q=>q.points);
