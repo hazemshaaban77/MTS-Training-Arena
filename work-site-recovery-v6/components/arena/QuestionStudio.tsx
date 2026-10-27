@@ -46,11 +46,11 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   if(questions.length>=500){setError(t('وصلت للحد الأقصى 500 سؤال.','Maximum 500 questions.'));return;}
   setQuestions(old=>[...old,makeQuestion(old.length,type)]);setActive(questions.length);setError('');
  }
- function loadFiveLevels(){
+ function loadSevenLevels(){
   if(questions.length&&typeof window!=='undefined'&&!window.confirm(t(
-   'ده هيستبدل الأسئلة الموجودة بخمس مستويات. احفظ نسخة لو محتاجها. تكمل؟',
-   'This replaces the existing questions with five levels. Save a copy first if needed. Continue?')))return;
-  setMode('ladder');setSafety([3]);setQuestions(Array.from({length:5},(_,i)=>makeQuestion(i)));
+   'ده هيستبدل الأسئلة الموجودة بسبع مستويات. احفظ نسخة لو محتاجها. تكمل؟',
+   'This replaces the existing questions with seven levels. Save a copy first if needed. Continue?')))return;
+  setMode('ladder');setSafety([3]);setQuestions(Array.from({length:7},(_,i)=>makeQuestion(i)));
   setActive(0);setError('');
  }
  function importFromBank(id:string){
@@ -90,8 +90,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
    setError(t('نظام البطولة على السيرفر غير متاح حاليًا، ومش هنحفظ لعبة بقواعد غير مفعّلة.',
     'Championship server rules are not yet available, so this game cannot be saved in that mode.'));return;
   }
-  if(game&&mode==='ladder'&&(questions.length<2||questions.length>10)){
-   setError(t('البطولة تحتاج من 2 إلى 10 مستويات.','A championship needs 2–10 levels.'));return;
+  if(game&&mode==='ladder'&&(questions.length<7||questions.length>10)){
+   setError(t('البطولة تحتاج من 7 إلى 10 مستويات.','A championship needs 7–10 levels.'));return;
   }
   const copy:Activity[]=[];
   for(let i=0;i<questions.length;i++){
@@ -152,8 +152,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
      <select value={nextType} onChange={e=>setNextType(e.target.value as KnowledgeQuestionType)}>
       {knowledgeQuestionTypes.map(type=><option value={type} key={type}>{questionTypeLabel(type,ar)}</option>)}
      </select></label>}
-    {game&&<button type="button" className="question-studio__preset" onClick={loadFiveLevels}>
-      {t('جهّز مسابقة من 5 مستويات','Start a 5-level show')}</button>}
+    {game&&<button type="button" className="question-studio__preset" onClick={loadSevenLevels}>
+      {t('جهّز مسابقة من 7 مستويات','Start a 7-level show')}</button>}
     {bank.length>0&&<label className="question-studio__bank">
      {t('أضف من بنك الأسئلة','Import from question bank')}
      <select aria-label={t('اختر سؤالًا من البنك','Pick a bank question')} value=""
