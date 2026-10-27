@@ -569,8 +569,9 @@ test('Mystery Vault opens only the selected server box and marks exhausted boxes
  const host=renderToStaticMarkup(<GamePlay s={base} ar={false} host={true} display={false}
   canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
  assert.ok(host.includes('box-stage--vault'));
- assert.ok(host.includes('box-vault-box--active'));
- assert.ok(host.includes('box-vault-box--used'));
+ assert.ok(host.includes('arena-box3d'),'Actual WebGL box vault replaces static CSS boxes');
+ assert.ok(host.includes('arena-box3d__selector--active'),'Officially opened box is selected');
+ assert.ok(host.includes('arena-box3d__selector--used'),'Server exhausted state is shown');
  assert.ok(host.includes('DISCOVERY CHALLENGE'),'Use actual server reveal, never sample text');
  assert.ok(host.includes('Team reflection prompt'));
  assert.ok(host.includes('Select player'));
@@ -1857,4 +1858,17 @@ test('3D stage ambient scene mounts for trainer and projector, native QR and pla
  assert.ok(html.includes('arena-world3d--intro'));
  assert.ok(html.includes('تخطي المقدمة'));
  assert.ok(!html.includes('splash-activity-cover'));
+});
+
+test('3D Vault replaces legacy box-card buttons without changing authoritative selection',()=>{
+ const source=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
+ const model=readFileSync('components/arena/ArenaBoxVault3D.tsx','utf8');
+ assert.match(source,/<ArenaBoxVault3D items=\{items\} used=\{used\}/);
+ assert.doesNotMatch(source,/className=\{'box-vault-box'/);
+ assert.match(model,/new THREE\.WebGLRenderer/);
+ assert.match(model,/new THREE\.BoxGeometry/);
+ assert.match(model,/new THREE\.Raycaster/);
+ assert.match(model,/const official=st\.used\.includes\(chest\.index\)\|\|st\.active===chest\.index/);
+ assert.match(model,/st\.onOpen\(i\)/);
+ assert.match(model,/aria-label=\{\(ar\?'صندوق رقم '/);
 });
