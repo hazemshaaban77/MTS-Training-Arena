@@ -20,7 +20,7 @@ export function validateActivity(a,depth=0){
   ok(Array.isArray(a.safeLevels)&&a.safeLevels.length<=3&&new Set(a.safeLevels).size===a.safeLevels.length&&a.safeLevels.every(x=>Number.isInteger(x)&&x>=1&&x<=a.questions.length));
   ok(a.participation==='individual'&&a.betEnabled!==true);return a;
  }
- if(['Quiz','Ultimate Game Show'].includes(type)&&a.questions){ok(Array.isArray(a.questions)&&a.questions.length&&a.questions.length<=500);a.questions.forEach(q=>validateActivity({...q,timer:q.timer??a.timer},depth+1));return a;}
+ if(['Quiz','Ultimate Game Show'].includes(type)&&a.questions){ok(Array.isArray(a.questions)&&a.questions.length>=(type==='Ultimate Game Show'&&a.minimumLevels===7?7:1)&&a.questions.length<=500);a.questions.forEach(q=>validateActivity({...q,timer:q.timer??a.timer},depth+1));return a;}
  if(['Quiz','Dropdown','True/False','Ultimate Game Show'].includes(type)){ok(list(a.options,2,4)&&idx(a.correct,a.options.length));if(type==='True/False')ok(a.options.length===2);}
  else if(type==='Fill Blank')ok(list(a.accepted,1,20));
  else if(type==='Image Hotspot'){ok(str(a.image,2048)&&/^https:\/\/|^\/[^/]/.test(a.image)&&Array.isArray(a.regions)&&a.regions.length>0&&a.regions.length<=10&&a.regions.every(r=>['x','y','r'].every(k=>typeof r[k]==='number'&&r[k]>=0&&r[k]<=1)));}
