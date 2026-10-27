@@ -190,3 +190,11 @@ Reviewed fixes in V6 source:
 Cloudflare connection's deployed V6 Worker source was separately inspected and does contain wheelaward and flipPermission paths. DO NOT redeploy or rewrite current Worker/D1/Firebase/Cloudflare settings during this frontend-only Pages release; retain existing Worker deployed source, live sessions and scores.
 Publish ONLY frontend /v6/ using existing guarded GitHub Pages release workflow; do not alter main, legacy /arena/, initial participant QR, original logos or accounts.
 Residual acceptance: REAL logged-in projector UI at 1366x768 plus 1920x1080, LIVE multi-device wheel judging, Cloudflare scoring and Mobile MetaPlan touch manual/UAT remain not verified by code tests. Do NOT claim those have been validated end-to-end.
+
+V6 PREVIEW FRONTEND RELEASE — 2026-10-27 — Fix 3D Wheel of Fortune visibility and tap-to-spin.
+Source: merged PR #1, squash commit 49009155e47889ff22206dc9dcb8a289391bb34d.
+CI: successful V6 GitHub migration checks run 40478989500 (tests, build, branding, service and static website checks).
+Target: https://hazemshaaban77.github.io/MTS-Training-Arena/v6/
+Scope: rebuild and publish frontend /v6/ only via the guarded GitHub Pages workflow.
+Keep original /arena/, main, logos, Firebase, existing Cloudflare Worker and D1 database untouched.
+Acceptance: live trainer/projector/trainee wheel smoke test still required; do not claim game runtime proven before user verification.
