@@ -1,0 +1,29 @@
+name: Validate V6 game experience overhaul (no deploy)
+on:
+  push:
+    branches: ['feature/v6-game-experience-overhaul']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-v6-games:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/verify-game-overhaul.mjs
+      - run: pnpm test
+      - run: node scripts/verify-creative-identity.mjs
+      - run: pnpm run build:github
+        env:
+          VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-gateway.pages.dev
+      - run: pnpm run build:github-api
