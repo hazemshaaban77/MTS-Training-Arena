@@ -1,0 +1,47 @@
+name: Arena V6 Real WebGL Wheel prototype CI
+on:
+  push:
+    branches: ['feature/v6-real-3d-wheel']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  real-3d-wheel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - name: Resolve Three.js dependencies and reproducible lockfile
+        run: pnpm install --no-frozen-lockfile
+      - name: Preserve lockfile on isolated feature branch only
+        working-directory: .
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work-site-recovery-v6/pnpm-lock.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(v6-3d): lock WebGL renderer dependencies [skip ci]"
+            git push origin HEAD:feature/v6-real-3d-wheel
+          fi
+      - name: Full V6 regression and rendering tests
+        run: pnpm test
+      - name: Validate V6 3D opt-in geometry contract
+        run: |
+          node scripts/verify-game-overhaul.mjs
+          node scripts/verify-creative-identity.mjs
+      - name: Production frontend bundle (not deployed)
+        run: pnpm run build:github
+        env:
+          VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-gateway.pages.dev
+      - name: Worker build regression (not deployed)
+        run: pnpm run build:github-api

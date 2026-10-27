@@ -1,3 +1,4 @@
+import {TAU,sectorAngle,forwardSweep,easedStop,wheelClock} from '../lib/arena-wheel3d-math';
 import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel,setMatchingPair,deleteMatchingPair} from '../lib/question-authoring';
 import {gameIntroBeats} from '../lib/arena-intro-beats';
 import {safeYouTubeEmbed,classifyMediaLink} from '../lib/media-url';
@@ -1785,4 +1786,57 @@ test('Projector repaired with full-width live-display flex instead of fixed-heig
  assert.match(css,/\.session-shell\.projector \.live-columns/);
  assert.match(css,/\.session-shell\.projector \.round-stage/);
  assert.match(css,/\.session-shell\.projector \.wheel-stage--forge/);
+});
+
+test('optional real WebGL wheel is a render-only layer and preserves existing server gameplay',()=>{
+ assert.equal(sectorAngle(2,8),Math.PI/2);
+ assert.equal(sectorAngle(8,8),0);
+ assert.equal(sectorAngle(-1,8),0);
+ for(let i=0;i<20;i++){
+  const target=sectorAngle(i,20),from=37.77,delta=forwardSweep(from,target);
+  assert.ok(delta>0&&delta<=TAU*1.001);
+  const err=((from+delta-target)%TAU+TAU)%TAU;
+  assert.ok(err<1e-9||Math.abs(err-TAU)<1e-9);
+ }
+ assert.equal(easedStop(0),0);assert.equal(easedStop(1),1);
+ assert.equal(wheelClock(1000,100,450),1350);
+ const source=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ const parent=readFileSync('components/arena/GamePlay.tsx','utf8');
+ assert.ok(source.includes("await import('three')"));
+ assert.ok(source.includes('new THREE.ExtrudeGeometry'));
+ assert.ok(source.includes('current.revealed&&Number.isInteger(current.index)'));
+ assert.ok(source.includes('if(now<(current.startsAt||0))'));
+ assert.ok(parent.includes("get('arena3d')"));
+ assert.ok(parent.includes('arena-v6-crown-wheel-3d-preview'));
+ assert.ok(parent.includes('onClick={()=>changeWheel3D(!wheel3DOptIn)}'));
+ assert.ok(parent.includes('wheel3DOptIn&&wheel3DAvailable?'));
+ assert.ok(parent.includes('setWheel3DAvailable(false)'));
+});
+
+test('Arena Crown wheel has original authored sector labels, mechanical bulbs and jewel pointer',()=>{
+ const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
+ assert.match(scene,/const labelText=String\(sectors\[i\]\.label/);
+ assert.match(scene,/new THREE\.InstancedMesh/);
+ assert.match(scene,/new THREE\.ExtrudeGeometry/);
+ assert.match(scene,/const pointerShape=new THREE\.Shape/);
+ assert.match(scene,/new THREE\.CanvasTexture/);
+ assert.match(scene,/Math\.min\(window\.devicePixelRatio/);
+ assert.match(scene,/wheel\.rotation\.z=angle/);
+ assert.match(scene,/onSpin/);
+ assert.match(scene,/current\.revealed&&Number\.isInteger\(current\.index\)/);
+ assert.match(scene,/if\(now<\(current\.startsAt\|\|0\)\)/);
+ assert.match(css,/arena-wheel3d--crown/);
+});
+
+test('Arena Crown trainer/projector visual-only switch persists through App navigation safely',()=>{
+ const parent=readFileSync('components/arena/GamePlay.tsx','utf8');
+ const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ assert.match(parent,/\(host\|\|display\)&&<div className="wheel-3d-mode-switch"/);
+ assert.match(parent,/localStorage\.setItem\(wheel3DStorageKey,enabled\?'1':'0'\)/);
+ assert.match(parent,/window\.addEventListener\('storage',onStorage\)/);
+ assert.match(parent,/wheel3DOptIn&&wheel3DAvailable\?<ArenaWheel3D/);
+ assert.match(parent,/onUnavailable=\{\(\)=>setWheel3DAvailable\(false\)\}/);
+ assert.doesNotMatch(scene,/probe\.getContext/);
+ assert.match(scene,/renderer=new THREE\.WebGLRenderer/);
 });
