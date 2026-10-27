@@ -74,8 +74,8 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
   setQuestions(old=>old.filter((_,i)=>i!==index));setActive(Math.max(0,index-1));}
  function chooseMode(value:'ladder'|'classic'){
   if(value==='ladder'&&mode!=='ladder'&&questions.some(q=>q.type!=='Quiz'||q.options?.length!==4)){
-   setError(t('نظام البطولة يتطلب أسئلة اختيار من متعدد بأربع اختيارات. غيّر الأنواع الأول أو استخدم قالب 5 مستويات؛ مش هنمسح أسئلتك تلقائيًا.',
-    'Championship requires four-choice multiple-choice questions. Change incompatible questions or use the 5-level template; existing questions will not be erased automatically.'));return;
+   setError(t('نظام البطولة يتطلب أسئلة اختيار من متعدد بأربع اختيارات. غيّر الأنواع الأول أو استخدم قالب 7 مستويات؛ مش هنمسح أسئلتك تلقائيًا.',
+    'Championship requires four-choice multiple-choice questions. Change incompatible questions or use the 7-level template; existing questions will not be erased automatically.'));return;
   }
   if(value==='ladder'&&mode!=='ladder'){
    const next=questions.map((x,i)=>({...x,points:prizes[Math.min(i,prizes.length-1)],speed:false,
