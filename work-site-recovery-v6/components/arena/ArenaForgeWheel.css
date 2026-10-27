@@ -38,8 +38,7 @@
  clip-path:polygon(4% 0,96% 0,50% 100%);filter:drop-shadow(0 5px 5px #000b)!important}
 .wheel-stage--forge .forge-wheel .wheel.in-spin{
  animation:arena-forge-roll var(--spin-duration,6s) cubic-bezier(.08,.55,.14,1) var(--spin-delay,0s) both!important}
-@keyframes arena-forge-roll{0%{transform:rotate(0)}18%{transform:rotate(580deg)}53%{transform:rotate(1550deg)}
- 84%{transform:rotate(2250deg)}100%{transform:rotate(2520deg)}}
+@keyframes arena-forge-roll{from{transform:rotate(0deg)}to{transform:rotate(var(--wheel-stop,2520deg))}}
 .wheel-stage--forge .forge-wheel .wheel.finished-spin{animation:none!important;
  transform:rotate(var(--wheel-stop))!important;transition:transform .28s ease-out!important}
 .wheel-stage--forge .wheel-tap-hint,.wheel-stage--forge .wheel-rolling-label{
