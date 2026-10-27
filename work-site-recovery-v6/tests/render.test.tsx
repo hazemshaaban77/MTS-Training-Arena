@@ -133,7 +133,7 @@ test('Futuristic Arena timer uses server remaining time in all roles and respect
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
 
-test('cinematic WebP art appears in every activity intro, trainer and bilingual trainee view',()=>{
+test('all ten game intros have live WebGL stages while WebP thumbnails remain valid in trainer library',()=>{
  const names=['Quiz','Wheel of Fortune','Ultimate Game Show','Meta Plan','Escape Room','Live Poll','Order It','Open the Box','Flashcards','Scenario Challenge'];
  for(const type of names){
   const id=type.toLowerCase().replaceAll(' ','-');
@@ -143,8 +143,9 @@ test('cinematic WebP art appears in every activity intro, trainer and bilingual 
   assert.equal(data.toString('ascii',8,12),'WEBP',type);
   for(const ar of [true,false]){
    const html=renderToStaticMarkup(<StageSplash type={type} label={type} ar={ar} durationMs={2100} onComplete={()=>{}}/>);
-   assert.ok(html.includes(expected),type);
-   assert.ok(html.includes('splash-activity-cover'),type);
+   assert.ok(html.includes('arena-world3d--intro'),type);
+   assert.ok(html.includes('arena-intro-world-frame'),type);
+   assert.ok(!html.includes('splash-activity-cover'),type);
    assert.ok(html.includes('<h2>'+type+'</h2>'),type);
    assert.ok(html.includes(ar?'لحظة انطلاق التحدّي':'THE CHALLENGE BEGINS'),type);
   }
@@ -535,19 +536,20 @@ test('Fortune Wheel stage artwork follows server selected sector and keeps game 
  const html=renderToStaticMarkup(<GamePlay s={base} ar={false} host={true}
   display={false} canAnswer={false} busy={false} onSubmit={()=>{}}
   onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(html.includes('wheel-wrap--grand'));
- assert.ok(html.includes('arena-wheel-gradient'),'Segments are painted from authored kinds');
+ assert.ok(html.includes('arena-wheel3d--crown'));
+ assert.ok(html.includes('aria-label="Arena Crown 3D Wheel"'),'Only the Crown WebGL wheel renders');
  assert.ok(html.includes('wheel-legend-winner'),'Server selected sector is highlighted');
  assert.ok(html.includes('aria-current="true"'),'Accessible winning section marker');
  assert.ok(html.includes('Participation star'),'Real server outcome label is displayed');
  assert.ok(html.includes('+200'),'Real server assigned points are displayed');
- assert.ok(html.includes('--wheel-stop'),'Wheel stop angle follows server index');
- assert.ok(html.includes('wheel-tap-surface'),'Wheel itself is the accessible trainer and player Spin control');
+ const model=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ assert.ok(model.includes('sectorAngle(current.index!,sectors.length)'),'Wheel stop angle follows official index');
+ assert.ok(html.includes('arena-wheel3d__tap'),'Crown wheel itself is the accessible trainer and player Spin control');
  const untouched=renderToStaticMarkup(<GamePlay s={{
   ...base,game:{...base.game,spin:null,outcome:null,turn:0,used:[]}
  }} ar={true} host={true} display={false} canAnswer={false} busy={false}
  onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
- assert.ok(untouched.includes('اضغط على العجلة لبدء اللف'));
+ assert.ok(untouched.includes('اضغط على مجسم عجلة الحظ لبدء اللف'));
  assert.ok(!untouched.includes('wheel-legend-winner'));
  const source=readFileSync('components/arena/GamePlay.tsx','utf8');
  assert.ok(source.includes("spin?.revealed&&spin.index===i"),'Winners must come from server spin, never client randomness');
@@ -1361,11 +1363,11 @@ test('ten game openings have unique visual motifs, independent notes, rhythms an
   const h=renderToStaticMarkup(<StageSplash type={type} label={type} ar={false}
    durationMs={3600} preview onComplete={()=>{}}/>);
   assert.ok(h.includes('intro-kind-'+identity.key),type);
-  assert.ok(h.includes('intro-scene--'+identity.key),type);
+  assert.ok(h.includes('arena-world3d--intro'),type);
   assert.ok(h.includes(identity.introEn),type);
   assert.ok(h.includes(identity.tagEn),type);
-  assert.ok(h.includes('splash-activity-cover'),type);
-  visuals.add('intro-scene--'+identity.key);
+  assert.ok(h.includes('arena-intro-world-frame'),type);
+  visuals.add('intro-kind-'+identity.key);
  }
  assert.equal(keys.size,10);
  assert.equal(songs.size,10,'No two game titles share the same soundtrack');
@@ -1446,13 +1448,13 @@ test('intro composition keeps game artwork and animated identity in distinct bou
  for(const game of games){
   const h=renderToStaticMarkup(<StageSplash type={game} label={game} ar={true}
    preview durationMs={4900} onComplete={()=>{}}/>);
-  const cover=h.indexOf('cinematic-art-frame splash-activity-cover');
-  const decoration=h.indexOf('cinematic-scene-badge');
+  const world=h.indexOf('cinematic-art-frame arena-intro-world-frame');
   const copy=h.indexOf('cinematic-copy');
   assert.ok(h.includes('cinematic-composed'),game);
   assert.ok(h.includes('cinematic-content-grid'),game);
-  assert.ok(cover>0&&decoration>cover&&copy>decoration,'visual identity must be separate from the artwork and copy in '+game);
-  assert.ok(h.includes('intro-scene--'+introIdentity(game).key),game);
+  assert.ok(world>0&&copy>world,'real 3D world must be separate from readable copy in '+game);
+  assert.ok(h.includes('arena-world3d--intro'),game);
+  assert.ok(h.includes('intro-kind-'+introIdentity(game).key),game);
   assert.ok(h.includes('cinematic-skip'),game);
   assert.ok(h.includes('العداد لم يبدأ'),game);
  }
@@ -1769,7 +1771,7 @@ test('v6 new 3D wheel and grading surfaces preserve server authority and contest
  assert.match(wheel,/wheel-stage--crown-real3d/);
  assert.match(wheel,/ArenaWheel3D/);
  assert.doesNotMatch(wheel,/forge-wheel|wheel-tap-surface/);
- assert.match(crown,/new THREE\\.InstancedMesh/);
+ assert.ok(crown.includes('new THREE.InstancedMesh'));
  assert.match(discovery,/onControl\('flashjudge',index/);
  assert.match(discovery,/flash-grade-console/);
  assert.match(discovery,/box-vault-turn--spotlight/);
