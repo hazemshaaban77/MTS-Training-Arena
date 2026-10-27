@@ -586,7 +586,7 @@ async function gameInteract(db, s, a, rt, p, b, now, host) {
       if (b.action === "box") {
         const i = b.index;
         if (!Number.isInteger(i) || i < 0 || i >= a.items.length || rt.used?.includes(i) && !a.repeatable) fail2("STATE", 409);
-        const box = a.boxes?.[i], id = crypto.randomUUID();
+        const box = a.boxes?.[i] || (!a.boxes ? { kind: "challenge", detail: a.items[i] } : void 0), id = crypto.randomUUID();
         rt = { ...rt, target, box: { id, index: i, target, done: !box?.question }, used: [...rt.used || [], i], turn: (rt.turn || 0) + 1 };
         const points = box?.kind === "surprise" && !box.question ? Math.round((box.points || 0) * (a.weight ?? 1)) : 0;
         const statements = [];
@@ -609,7 +609,7 @@ async function gameInteract(db, s, a, rt, p, b, now, host) {
   }
   if (["wheelaward", "boxaward"].includes(b.action)) {
     const isBox = b.action === "boxaward", item = isBox ? rt.box : rt.spin;
-    const challenge = isBox ? a.boxes?.[item?.index] : a.sectors?.[item?.index];
+    const challenge = isBox ? a.boxes?.[item?.index] || (!a.boxes ? { kind: "challenge" } : void 0) : a.sectors?.[item?.index];
     if (!host || (isBox ? a.type !== "Open the Box" : !["Wheel of Fortune", "Spin Wheel"].includes(a.type)))
       fail2("FORBIDDEN", 403);
     if (!item || !isBox && !item.revealed || challenge?.kind !== "challenge" || !item.target)
@@ -802,7 +802,7 @@ async function gameSnapshot(db, s, a, rt, p, host, now) {
     }
     if (rt.box) {
       const box = a.boxes?.[rt.box.index];
-      game.box = { id: rt.box.id, target: rt.box.target, index: rt.box.index, label: a.items[rt.box.index], kind: box?.kind, detail: box?.detail, question: box?.question ? publicActivity(box.question) : null, answered: !!d.boxes?.includes(rt.box.id) };
+      game.box = { id: rt.box.id, target: rt.box.target, index: rt.box.index, label: a.items[rt.box.index], kind: box?.kind || (!a.boxes ? "challenge" : void 0), detail: box?.detail, question: box?.question ? publicActivity(box.question) : null, answered: !!d.boxes?.includes(rt.box.id) };
     }
     game.manualJudgement = rt.judgements?.[(a.type === "Open the Box" ? rt.box?.id : rt.spin?.id) || ""] || null;
   }
