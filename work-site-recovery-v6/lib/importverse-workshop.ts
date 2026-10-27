@@ -7,7 +7,7 @@ import {importVerseQuestions} from './importverse-question-bank';
  * historical script material, NOT current legal or insurance advice.
  */
 export const importVerseSource={
- title:'ImportVerse Episodes 1–6 · 94 training questions · 60-minute workshop',
+ title:'ImportVerse Episodes 1–6 · 140 business knowledge questions · 60-minute workshop',
  url:'', episodesReviewed:[1,2,3,4,5,6], episodesPending:[],
  note:'Some spoken terminology and regulatory claims may be stale; cross-check with Nafeza.'
 };
@@ -30,15 +30,20 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
  const a=(s:string,e:string)=>yes?s:e;
  const deck:Activity[]=[
   {...sample('Quiz',language),prompt:a('ImportVerse | بوابة المعرفة: رحلة مالك من التسجيل للإفراج','ImportVerse | Importer journey knowledge gateway'),
-   questions:[bank[0],bank[3],bank[6],bank[9],bank[15],bank[17]].map(q=>({...q})),timer:40},
-  {...sample('Wheel of Fortune',language),prompt:a('عجلة ImportVerse | تحديات من الحلقات الستة','ImportVerse Wheel | Explain and perform'),
+   questions:[bank[0],bank[3],bank[6],bank[9],bank[15],bank[17],
+    ...['IV-TF-02','IV-TF-08','IV-DD-04','IV-MT-06','IV-OR-03','IV-FB-06'].map(id=>{
+     const q=importVerseQuestions.find(x=>x.id===id);
+     if(!q)throw Error('Missing mixed format question '+id);
+     return q.activity;
+    })].map(q=>({...q})),timer:40},
+  {...sample('Wheel of Fortune',language),prompt:a('عجلة المهارات | شرح إجراءات التجارة والاستيراد','ImportVerse Wheel | Trade procedure challenges'),
    points:1000,rounds:6,spinDuration:5,weight:1,sectors:[
    {label:a('التسجيل على نافذة','Nafeza registration'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 1: اشرح التسلسل من الحساب التجاري وتفعيل البريد والموبايل وحتى تفعيل الخدمات الإلكترونية. تقييم 0–10.','Episode 1: Explain business account setup and activation; trainer grades 0–10.')},
    {label:a('Incoterms','Incoterms'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 2: وضّح الفرق العملي بين EXW وFOB وCIF من حيث الالتزامات. تقييم 0–10.','Episode 2: Compare EXW, FOB and CIF responsibilities.')},
    {label:a('تفويض + ACID','Delegation + ACID'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 3: اشرح قبول التفويض وخطوات طلب ACID والبيانات الأساسية. تقييم 0–10.','Episode 3: Explain delegation and ACID request.')},
    {label:a('CargoX + التوقيع','CargoX + e-signature'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 4: اشرح KYC والـEnvelope والتوقيع الإلكتروني على المرفقات. تقييم 0–10.','Episode 4: Explain KYC, envelope and signed attachments.')},
    {label:a('دفتر 15 ودفتر 1','Pre-clearance vs regular'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 5: وضّح الفرق بين دفتر 15 للإفراج المسبق ودفتر 1 بعد الوصول حسب شرح الحلقة. تقييم 0–10.','Episode 5: Explain register 15 versus 1.')},
-   {label:a('الحاويات والبوليصة','Container and B/L'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 6: اختار الحاوية المناسبة لمعدات مالك، واشرح Shipper وConsignee وNotify Party وACID. تقييم 0–10.','Episode 6: Pick an equipment container and explain B/L parties and ACID.')}
+   {label:a('الحاويات والبوليصة','Container and B/L'),kind:'challenge',points:0,repeatable:true,detail:a('من الحلقة 6: اختار الحاوية المناسبة لشحنة معدات ثقيلة، واشرح Shipper وConsignee وNotify Party وACID. تقييم 0–10.','Episode 6: Pick an equipment container and explain B/L parties and ACID.')}
    ]},
   {...sample('Ultimate Game Show',language),showFormat:'championship',minimumLevels:7,participation:'individual',betEnabled:false,
    prompt:a('التحدي الكبير | ست حلقات وسبعة مستويات','Championship | Five episodes, seven levels'),timer:0,
@@ -48,18 +53,18 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
    timer:0,categories:[a('التسجيل والتعاقد','Registration and contract'),a('التفويض وACI','Delegation and ACI'),a('CargoX والإفراج','CargoX and clearance'),a('الشحن البحري','Marine logistics')],
    items:[a('تفعيل البريد والموبايل','Activate email and phone'),a('إصدار الفاتورة المبدئية','Create proforma invoice'),a('قبول شركة التخليص للتفويض','Agent accepts delegation'),a('إدراج بيانات المستورد والمصدر والشحنة','Enter parties and shipment'),a('رفع Envelope على CargoX','Upload CargoX envelope'),a('بدء الإجراءات الجمركية ورقم 46','Start declaration and obtain number 46'),a('اختيار نوع الحاوية وطلب Booking','Select equipment and booking')],
    assignments:[0,0,1,1,2,2,3]},
-  {...sample('Escape Room',language),prompt:a('غرفة الهروب | أنقذ رحلة مالك من خطأ المستندات','Escape Room | Rescue Malik’s shipment'),
+  {...sample('Escape Room',language),prompt:a('غرفة الهروب | صحّح أخطاء المستندات والإجراءات','Escape Room | Fix trade document errors'),
    rooms:[
    {title:a('باب التفويض','Delegation gate'),narrative:a('شركة التخليص اتفوضت لكن التفويض مش ساري. إيه الخطوة الناقصة؟','Broker delegation remains pending. Which step activates it?'),
      hint:a('شركة التخليص لازم تقبل التفويض من حسابها.','The broker must accept it.'),hintAfter:1,puzzles:[bank[6]]},
    {title:a('بوابة CargoX','CargoX gate'),narrative:a('المصدر رفع مستندات لكن المستورد مش عارف يوقّع. اختار الإجراء الصح.','Exporter uploaded docs; what must importer do to sign?'),
      hint:a('افتح المرفق وأكمل بياناته ثم استخدم eToken.','Open attachment and use eToken.'),hintAfter:1,
      puzzles:[bank[11]]},
-   {title:a('بوابة الشحن البحري','Ocean shipment gate'),narrative:a('مالك معه معدات ثقيلة ومحتاج يحجز ويختار الحاوية المناسبة.','Malik has heavy machinery and must choose proper container.'),hint:a('راجع الفرق بين 20 قدم للأوزان المركزة وHigh Cube للأحجام الكبيرة.','Consider 20-foot heavy cargo vs high-volume High Cube.'),hintAfter:1,puzzles:[bank[19]]}
+   {title:a('بوابة الشحن البحري','Ocean shipment gate'),narrative:a('مستورد لديه معدات ثقيلة ويحتاج حجز الشحن واختيار الحاوية المناسبة.','Malik has heavy machinery and must choose proper container.'),hint:a('راجع الفرق بين 20 قدم للأوزان المركزة وHigh Cube للأحجام الكبيرة.','Consider 20-foot heavy cargo vs high-volume High Cube.'),hintAfter:1,puzzles:[bank[19]]}
    ]},
   {...sample('Live Poll',language),prompt:a('من أي محور في حلقات ImportVerse الستة محتاج تدريب عملي أكتر؟','Which episode needs more hands-on practice?'),
    timer:30,pollKind:'choice',options:[a('حساب نافذة · 1','Account · 1'),a('العقد والاعتماد · 2','Contract · 2'),a('تفويض وACID · 3','ACI · 3'),a('CargoX والإفراج والشحن · 4–6','CargoX/Clearance · 4–6')]},
-  {...sample('Order It',language),prompt:a('رتّب رحلة مالك: التسجيل → التعاقد → تفويض → مستندات → إفراج','Put Malik’s import stages in order'),
+  {...sample('Order It',language),prompt:a('رتّب إجراءات الاستيراد: تسجيل → تعاقد → تفويض → مستندات → إفراج','Order the import workflow'),
    timer:75,items:[a('بدء الإجراءات الجمركية ورقم 46','Start customs declaration'),a('فتح حساب تجاري بنافذة','Open Nafeza business account'),
     a('إصدار فاتورة مبدئية وتعاقد','Agree proforma and contract'),a('رفع وتوقيع المرفقات عبر CargoX ونافذة','Upload and sign documents'),a('التفويض ثم طلب ACID','Delegate and request ACID')],
    order:[1,2,4,3,0]},
@@ -71,7 +76,7 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
     {kind:'challenge',points:0,detail:a('الحلقة 3: مثل دور المستورد وشركة التخليص في قبول تفويض نافذة.','Ep 3: Roleplay delegation acceptance.')},
     {kind:'challenge',points:0,detail:a('الحلقة 4: اشرح سلسلة رفع Envelope وتوقيع المستورد للمرفقات.','Ep 4: Explain CargoX and eToken.')},
     {kind:'challenge',points:0,detail:a('الحلقة 5: اشرح سيناريو بدء الإجراءات قبل الوصول وبعده، ودفتر 15/1.','Ep 5: Compare clearance timing and records.')},
-    {kind:'challenge',points:0,detail:a('الحلقة 6: امثل دور وكيل شحن يشرح لمالك اختيار الحاوية وأنواع البوليصة وأهمية التأمين البحري. الدرجة من 10.','Ep 6: Roleplay freight advisor on equipment, B/L and cargo cover.')}
+    {kind:'challenge',points:0,detail:a('الحلقة 6: امثل دور وكيل شحن يشرح للمستورد اختيار الحاوية وأنواع البوليصة وأهمية التأمين البحري. الدرجة من 10.','Ep 6: Roleplay freight advisor on equipment, B/L and cargo cover.')}
    ]},
   {...sample('Flashcards',language),prompt:a('بطاقات ImportVerse | راجع 6 مفاهيم أساسية','ImportVerse Flashcards | Five key concepts'),
    flipPermission:'host',trainingMode:'challenge',scored:true,points:1000,
@@ -85,7 +90,7 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
     a('بعد ما شركة التخليص تراجع التفويض وتقبل من حسابها.','After the broker accepts it.'),
     a('Envelope ظرف مستندات رقمي؛ KYC التحقق من هوية الشركة.','Digital document envelope; know your customer verification.'),
     a('بحسب سيناريو الحلقة: 15 إفراج مسبق قبل الوصول، و1 إفراج عادي بعد الوصول.','In the episode: 15 pre-arrival, 1 after arrival.'),a('الخط ناقل يملك السفينة، التوكيل يمثله محليًا، ووكيل الشحن ينسق عمليات وحجوزات العميل.','Line operates vessels; agent represents locally; forwarder coordinates bookings.')]},
-  {...sample('Scenario Challenge',language),prompt:a('تحدي المواقف | مالك قدام قرار مهم في CargoX والإفراج','Decision challenge | CargoX and clearance'),
+  {...sample('Scenario Challenge',language),prompt:a('تحدي المواقف | قرارات مهنية في CargoX والإفراج','Business decisions | CargoX and clearance'),
    start:'start',scored:true,timer:0,nodes:[
     {id:'start',text:a('وصل إشعار إن المصدر رفع المستندات على CargoX، بس البنك مش شايفها. إيه أول خطوة صحيحة؟','CargoX uploaded docs but bank cannot see them. What first?'),correctChoice:0,
      choices:[{label:a('أراجع وأوقّع المستندات وأبدأ الإجراءات البنكية','Review, sign and initiate banking'),next:'verified',points:200,consequence:a('قللت خطر نقل مستند غير مُراجع.','Risk reduced.')},
@@ -97,6 +102,6 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
     {id:'risk',ending:true,text:a('مسار غير آمن: عملية ناقصة أو بيانات غير موثقة.','Unsafe path: incomplete or unverified transfer.'),discussion:a('أين تتدخل لتصحيح القرار؟','Where should you intervene?')}
    ]}
  ];
- return deck.map((activity,i)=>({...activity,plannedMinutes:planned[i],contentSource:'ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms'}));
+ return deck.map((activity,i)=>({...activity,plannedMinutes:planned[i],contentSource:'ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 140 business questions · no fictional storyline · recheck current law and insurance terms'}));
 }
 export const importVersePlannedMinutes=planned.reduce((sum,n)=>sum+n,0);
