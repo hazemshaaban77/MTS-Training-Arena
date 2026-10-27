@@ -2,7 +2,7 @@
 // Every attempt begins at level one, even after a previous contestant exits.
 export const isChampionship=a=>a?.type==='Ultimate Game Show'&&a.showFormat==='championship';
 export function validateChampionship(a){
- if(!isChampionship(a)||!Array.isArray(a.questions)||a.questions.length<2||a.questions.length>20)throw Error('DECK');
+ if(!isChampionship(a)||!Array.isArray(a.questions)||a.questions.length<(a.minimumLevels===7?7:2)||a.questions.length>20)throw Error('DECK');
  const prizes=a.questions.map(q=>q.points);
  if(prizes.some((x,i)=>!Number.isInteger(x)||x<=0||x>10000||i>0&&x<=prizes[i-1]))throw Error('DECK');
  const safe=a.safeLevels||[];
@@ -85,7 +85,7 @@ export function showPublic(a,show,viewer,host=false){
    player:show.lastCompleted.player,cleared:show.lastCompleted.cleared,
    status:show.lastCompleted.status,earned:show.lastCompleted.earned}:null,
   question:q?{type:q.type,prompt:q.prompt,options:q.options,timer:q.timer}:null,
-  lifelines:mine?current.usedLifelines:[],eliminatedChoices:mine?eliminated:[],
+  lifelines:mine||host?current.usedLifelines:[],eliminatedChoices:mine?eliminated:[],
   audienceOpen:!!current?.usedLifelines.includes('audience'),
   audienceVotes:audienceCount,
   voted:viewer?show.audienceVotes?.[viewer]!==undefined:false,
