@@ -40,7 +40,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
  const [ladderAvailable,setLadderAvailable]=useState(false);
  const embeddedBank=importVerseQuestions.map(q=>({id:q.id,title:`ImportVerse · EP${q.episode} · ${q.prompt}`,payload:q.activity,visibility:'shared',source:q.explanation}));
  const [bank,setBank]=useState<any[]>(embeddedBank),formRef=useRef<HTMLDivElement|null>(null);
- useEffect(()=>{api('drafts?kind=question').then((r:any)=>setBank([...embeddedBank,...(Array.isArray(r?.items)?r.items:[])])).catch(()=>{setBank(embeddedBank)});},[]);
+ useEffect(()=>{api('drafts?kind=question').then((r:any)=>{const saved=Array.isArray(r?.items)?r.items:[];const savedKeys=new Set(saved.map((x:any)=>x.payload?.questionBankId));setBank([...saved,...embeddedBank.filter(x=>!savedKeys.has(x.payload.questionBankId))]);}).catch(()=>{setBank(embeddedBank)});},[]);
  useEffect(()=>{formRef.current?.scrollTo({top:0});},[active]);
  useEffect(()=>{let active=true;api('branding').then((value:any)=>{if(active)setLadderAvailable(value?.showRulesVersion===2);}).catch(()=>{if(active)setLadderAvailable(false);});return()=>{active=false;};},[]);
  const index=Math.min(active,Math.max(0,questions.length-1)),q=questions[index];
