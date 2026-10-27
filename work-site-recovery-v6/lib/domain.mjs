@@ -54,7 +54,12 @@ export function flattenDeck(activities){
 export function publicActivity(a,{closed=false,reveal=null,host=false}={}){
  if(!a)return null;const r=JSON.parse(JSON.stringify(a));
  for(const k of ['correct','order','pairs','assignments','backs','accepted','regions','nodes','rooms','sectors','boxes','questions','explanation'])delete r[k];
- if(a.sectors)r.sectors=a.sectors.map(s=>({label:s.label,kind:s.kind,repeatable:!!s.repeatable}));
+ if(a.sectors)r.sectors=a.sectors.map((s,i)=>({
+  label:host?s.label:String(i+1),kind:host?s.kind:'hidden',repeatable:!!s.repeatable
+ }));
+ // No item text leaks to a learner before a box/wheel is opened by the server.
+ if(!host&&['Wheel of Fortune','Spin Wheel','Open the Box'].includes(a.type)&&Array.isArray(r.items))
+  r.items=r.items.map((_,i)=>String(i+1));
  if(a.rooms)r.rooms=a.rooms.map(x=>({title:x.title,narrative:x.narrative,puzzles:x.puzzles.length}));
  if(closed)for(const k of ['correct','order','pairs','assignments','accepted','regions','explanation'])if(a[k]!==undefined)r[k]=a[k];
  if(a.type==='Flashcards'&&reveal!==null)r.revealed={front:a.fronts[reveal],back:a.backs[reveal]};
