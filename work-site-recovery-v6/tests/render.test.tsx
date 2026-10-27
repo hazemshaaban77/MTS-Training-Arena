@@ -1739,11 +1739,16 @@ test('ImportVerse evidence-marked sixty-minute preset contains all ten engines a
  assert.equal(deck[2].minimumLevels,7);
  assert.equal(deck[7].boxes.length,6);
  assert.ok(deck.every(a=>String(a.contentSource).includes('Episode 6')));
- assert.ok(deck.every(a=>String(a.contentSource).includes('94-question bank')));
+ assert.ok(deck.every(a=>String(a.contentSource).includes('140 business questions')));
  assert.ok(deck[2].questions.some((q:any)=>q.prompt.includes('الحلقة 4')));
- assert.equal(importVerseQuestions.length,94);
- assert.equal(new Set(importVerseQuestions.map(q=>q.prompt)).size,94);
- assert.ok(importVerseQuestions.every(q=>q.options.length===4&&q.options[q.correct]&&q.explanation.length>15));
+ assert.equal(importVerseQuestions.length,140);
+ assert.equal(new Set(importVerseQuestions.map(q=>q.prompt)).size,140);
+ assert.ok(importVerseQuestions.every(q=>q.explanation.length>15&&q.prompt.length>15));
+ assert.ok(importVerseQuestions.every(q=>!/مالك|قصة مالك|رحلة مالك/.test(q.prompt)));
+ assert.ok(importVerseQuestions.every(q=>{try{validateActivity(structuredClone(q.activity));return true;}catch{return false;}}));
+ assert.ok(['Quiz','True/False','Dropdown','Match It','Order It','Fill Blank'].every(t=>importVerseQuestions.some(q=>q.activity.type===t)));
+ assert.ok(deck[0].questions.some((q:any)=>q.type==='Match It'));
+ assert.ok(deck[0].questions.some((q:any)=>q.type==='True/False'));
  assert.equal(new Set(importVerseQuestions.map(q=>q.episode)).size,6);
  assert.equal(importVerseQuestions.filter(q=>q.episode===6).length,30);
  assert.ok(importVerseQuestions.filter(q=>q.episode===6).every(q=>q.source==='Episode 6 Word script'));
@@ -1769,4 +1774,15 @@ test('v6 new 3D wheel and grading surfaces preserve server authority and contest
  const worker=readFileSync('lib/session-games.ts','utf8');
  assert.match(worker,/if\(b.action==='flashjudge'\)/);
  assert.match(worker,/flashGrades/);
+});
+
+test('Projector repaired with full-width live-display flex instead of fixed-height cropped grid',()=>{
+ const css=readFileSync('components/arena/ArenaProjectorRepair.css','utf8');
+ const app=readFileSync('components/arena/Session.tsx','utf8');
+ assert.match(app,/import '.\/ArenaProjectorRepair.css'/);
+ assert.match(css,/grid-template-columns:none!important/);
+ assert.match(css,/overflow-y:auto!important/);
+ assert.match(css,/\.session-shell\.projector \.live-columns/);
+ assert.match(css,/\.session-shell\.projector \.round-stage/);
+ assert.match(css,/\.session-shell\.projector \.wheel-stage--forge/);
 });
