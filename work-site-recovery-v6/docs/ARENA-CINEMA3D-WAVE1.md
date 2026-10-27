@@ -13,7 +13,7 @@ Date: 2026-10-28. Source branch: feature/v6-full-3d-arena-stage.
 - [ ] Physical projector 1366x768 and 1920x1080 theatrical intro (no clipping or blank stage).
 - [ ] Android low end tests for dropped WebGL/context loss and accessible wheel server spin.
 - [ ] 60–80 simultaneous devices and reconnect during spin. CI and local simulator are not a substitute for real equipment tests.
-- [ ] Additional 3D in-play meshes for box, Escape Room, cards, scenario, and every activity. **Currently they have distinct real 3D opening worlds and global stage environment, but legacy HTML in-play controls remain.** Do not misreport as each game fully WebGL-native.
+- [ ] Additional true WebGL in-play mechanics for Escape Room, Game Show, Quiz, cards, Scenario, Meta Plan, Order It and Poll. **Only Wheel and Open the Box gameplay are currently genuine WebGL 3D; all ten intros/background worlds are real 3D, while essential HTML forms and controls remain.** Do not misreport all ten games as fully WebGL-native.
 - [ ] Trainer review and safe publishing of V6; **do not deploy simply because GitHub CI passed**.
 
 No modification to `main`, V5, Cloudflare secrets, D1 rows or live sessions.
