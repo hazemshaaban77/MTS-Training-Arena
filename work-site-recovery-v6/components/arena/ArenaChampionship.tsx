@@ -11,7 +11,7 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
  useEffect(()=>{setSelected(null);setConfirmAnswer(false);setConfirmWithdraw(false);},[show.level,show.contestant,show.phase]);
  const contestant=(s.players||[]).find((p:any)=>p.uid===show.contestant);
  const isActor=!!s.mine&&s.mine.id===show.contestant&&!host&&!display;
- const audience=!!s.mine&&!host&&!display&&!isActor;
+ const audience=!!s.mine&&!host&&!display&&!isActor&&s.mine.approval==='approved';
  const available=(s.players||[]).filter((p:any)=>p.approval==='approved'&&!(show.usedContestants||[]).includes(p.uid));
  const seconds=s.deadline?Math.max(0,Math.ceil((s.deadline-(s.clockNow||s.serverNow))/1000)):0;
  const remaining=show.ladder?.[Math.max(0,show.level-1)]||0;
@@ -76,6 +76,40 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
       <span>{t('المستوى','Level')} {show.level+1}/{show.total}</span>
       <span className="championship-stage__clock"><Clock3 size={17}/>{seconds}s</span>
      </div>
+     <section className="championship-stage__lifelines">
+      <h4>{t('وسائل المساعدة · مرة لكل محاولة · المدرب أو المتسابق يقدر يفعّلها','Lifelines · once per run · contestant or trainer may activate')}</h4>
+      <div>{[['fifty','50:50'],['audience',t('الجمهور','Audience')],['time','+30s']].map(([kind,label])=>{
+       const used=(show.lifelines||[]).includes(kind);
+       return <button key={kind} type="button" disabled={!(isActor||host)||used||busy||!seconds}
+        onClick={()=>host?onControl('showlifeline',undefined,{kind}):onInteract('showlifeline',{kind})} className={used?'used':''}>
+        {kind==='time'?<TimerReset size={20}/>:kind==='audience'?<Users size={20}/>:<ShieldCheck size={20}/>}
+        {label}{used&&<CheckCircle2 size={13}/>}</button>;
+      })}</div>
+      {show.audienceOpen&&<div className="championship-stage__audience">
+       <h4><Users size={17}/>{t('تصويت الجمهور الحقيقي','Live audience vote')}</h4>
+       <p>{show.audienceCount} {t('صوت مسجل على السيرفر','server-confirmed votes')}</p>
+       <div>{(q?.options||[]).map((x:string,i:number)=><span key={i}>
+        {String.fromCharCode(65+i)} · {show.audienceVotes?.[i]||0}</span>)}</div>
+       {audience&&s.mine.id!==show.contestant&&!show.voted&&<div className="championship-stage__audience-actions">
+        {(q?.options||[]).map((x:string,i:number)=><button key={i} className="btn secondary" disabled={busy}
+         onClick={()=>onInteract('showaudience',{choice:i})}>{String.fromCharCode(65+i)}</button>)}</div>}
+      </div>}
+      {isActor&&show.canWithdraw&&(confirmWithdraw
+       ?<div className="championship-answer-confirm" role="group" aria-label={t('تأكيد الانسحاب','Confirm withdrawal')}>
+        <p>{t('تنسحب وتحتفظ بجائزتك الحالية؟','Walk away with your current prize?')}
+         <strong>{remaining.toLocaleString()} {t('نقطة','points')}</strong></p>
+        <div><button className="btn secondary" type="button" disabled={busy} onClick={()=>setConfirmWithdraw(false)}>
+          {t('كمّل اللعب','Keep playing')}</button>
+         <button className="btn primary" type="button" disabled={busy}
+          onClick={()=>{setConfirmWithdraw(false);onInteract('showwithdraw');}}>
+          {t('تأكيد الانسحاب','Confirm withdrawal')}</button></div>
+       </div>
+       :<button type="button" className="btn secondary championship-stage__withdraw" disabled={busy}
+        onClick={()=>setConfirmWithdraw(true)}><LogOut size={17}/>
+        {t('انسحب واحتفظ بـ','Walk away with')} {remaining.toLocaleString()} {t('نقطة','points')}</button>)}
+      <small>{t('في حالة الخطأ تضمن جائزة آخر مستوى أمان: ','Wrong answer guarantees: ')}
+       {safeValue.toLocaleString()} {t('نقطة','points')}</small>
+     </section>
      <article className="championship-stage__question">
       <small>{t('سؤال الجائزة','PRIZE QUESTION')} · {possible.toLocaleString()} {t('نقطة','points')}</small>
       <h3>{q?.prompt||t('السؤال بيظهر بعد اختيار المتسابق','Question appears after casting')}</h3>
@@ -102,40 +136,7 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
        {t('إنت من الجمهور. تقدر تصوّت لو المتسابق طلب مساعدة الجمهور.',
         'You are in the audience. Vote if the contestant requests audience help.')}</p>}
      </article>
-     <section className="championship-stage__lifelines">
-      <h4>{t('وسائل المساعدة · مرة لكل محاولة · المدرب أو المتسابق يقدر يفعّلها','Lifelines · once per run · contestant or trainer may activate')}</h4>
-      <div>{[['fifty','50:50'],['audience',t('الجمهور','Audience')],['time','+30s']].map(([kind,label])=>{
-       const used=(show.lifelines||[]).includes(kind);
-       return <button key={kind} type="button" disabled={!(isActor||host)||used||busy||!seconds}
-        onClick={()=>host?onControl('showlifeline',undefined,{kind}):onInteract('showlifeline',{kind})} className={used?'used':''}>
-        {kind==='time'?<TimerReset size={20}/>:kind==='audience'?<Users size={20}/>:<ShieldCheck size={20}/>}
-        {label}{used&&<CheckCircle2 size={13}/>}</button>;
-      })}</div>
-      {show.audienceOpen&&<div className="championship-stage__audience">
-       <h4><Users size={17}/>{t('تصويت الجمهور الحقيقي','Live audience vote')}</h4>
-       <p>{show.audienceCount} {t('صوت مسجل على السيرفر','server-confirmed votes')}</p>
-       <div>{(q?.options||[]).map((x:string,i:number)=><span key={i}>
-        {String.fromCharCode(65+i)} · {show.audienceVotes?.[i]||0}</span>)}</div>
-       {audience&&!show.voted&&<div className="championship-stage__audience-actions">
-        {(q?.options||[]).map((x:string,i:number)=><button key={i} className="btn secondary" disabled={busy}
-         onClick={()=>onInteract('showaudience',{choice:i})}>{String.fromCharCode(65+i)}</button>)}</div>}
-      </div>}
-      {isActor&&show.canWithdraw&&(confirmWithdraw
-       ?<div className="championship-answer-confirm" role="group" aria-label={t('تأكيد الانسحاب','Confirm withdrawal')}>
-        <p>{t('تنسحب وتحتفظ بجائزتك الحالية؟','Walk away with your current prize?')}
-         <strong>{remaining.toLocaleString()} {t('نقطة','points')}</strong></p>
-        <div><button className="btn secondary" type="button" disabled={busy} onClick={()=>setConfirmWithdraw(false)}>
-          {t('كمّل اللعب','Keep playing')}</button>
-         <button className="btn primary" type="button" disabled={busy}
-          onClick={()=>{setConfirmWithdraw(false);onInteract('showwithdraw');}}>
-          {t('تأكيد الانسحاب','Confirm withdrawal')}</button></div>
-       </div>
-       :<button type="button" className="btn secondary championship-stage__withdraw" disabled={busy}
-        onClick={()=>setConfirmWithdraw(true)}><LogOut size={17}/>
-        {t('انسحب واحتفظ بـ','Walk away with')} {remaining.toLocaleString()} {t('نقطة','points')}</button>)}
-      <small>{t('في حالة الخطأ تضمن جائزة آخر مستوى أمان: ','Wrong answer guarantees: ')}
-       {safeValue.toLocaleString()} {t('نقطة','points')}</small>
-     </section>
+
     </>}
    </div>
   </div>
