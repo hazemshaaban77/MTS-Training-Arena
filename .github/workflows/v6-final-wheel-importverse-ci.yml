@@ -4,7 +4,7 @@ on:
     branches: ['feature/v6-final-wheel-projector-flashcards']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -28,3 +28,18 @@ jobs:
         env:
           VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-gateway.pages.dev
       - run: pnpm run build:github-api
+      - name: Compile the verified trainer draft and question bank
+        run: |
+          pnpm exec esbuild scripts/export-importverse-workshop.ts --bundle --platform=node --format=esm --outfile=/tmp/v6-importverse-export.mjs
+          node /tmp/v6-importverse-export.mjs
+      - name: Preserve tested Worker and workshop snapshot for deployment
+        working-directory: .
+        run: |
+          cp work-site-recovery-v6/dist-github-api/worker.mjs deployment-bundles/v6/worker.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-bundles/v6/worker.mjs deployment-bundles/v6/importverse-draft.json deployment-bundles/v6/importverse-question-bank.json
+          if ! git diff --cached --quiet; then
+            git commit -m "build(v6): verified trainer workshop snapshot and Worker [skip ci]"
+            git push origin HEAD:feature/v6-final-wheel-projector-flashcards
+          fi
