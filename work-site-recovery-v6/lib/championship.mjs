@@ -85,7 +85,7 @@ export function showPublic(a,show,viewer,host=false){
    player:show.lastCompleted.player,cleared:show.lastCompleted.cleared,
    status:show.lastCompleted.status,earned:show.lastCompleted.earned}:null,
   question:q?{type:q.type,prompt:q.prompt,options:q.options,timer:q.timer}:null,
-  lifelines:mine||host?current.usedLifelines:[],eliminatedChoices:mine?eliminated:[],
+  lifelines:mine||host?current.usedLifelines:[],eliminatedChoices:current?.usedLifelines.includes('fifty')?eliminated:[],
   audienceOpen:!!current?.usedLifelines.includes('audience'),
   audienceVotes:audienceCount,
   voted:viewer?show.audienceVotes?.[viewer]!==undefined:false,
