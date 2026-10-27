@@ -14,16 +14,17 @@ export default function MetaPlanDragBoard({ar,categories,items,selected,correct,
  const [dragged,setDragged]=useState<number|null>(null);
  const [point,setPoint]=useState<{x:number;y:number}|null>(null);
  const dragRef=useRef<{item:number;x:number;y:number}|null>(null);
+ const suppressClick=useRef(false);
  function begin(e:React.PointerEvent,item:number){
   if(!ready)return;
   dragRef.current={item,x:e.clientX,y:e.clientY};
   try{e.currentTarget.setPointerCapture(e.pointerId);}catch{}
-  setPoint(null);setChosen(item);
+  suppressClick.current=false;setPoint(null);
  }
  function track(e:React.PointerEvent){
   if(!dragRef.current)return;
   if(Math.abs(e.clientX-dragRef.current.x)+Math.abs(e.clientY-dragRef.current.y)>12){
-   setDragged(dragRef.current.item);
+   suppressClick.current=true;setDragged(dragRef.current.item);
    setPoint({x:e.clientX,y:e.clientY});
   }
  }
@@ -49,9 +50,9 @@ export default function MetaPlanDragBoard({ar,categories,items,selected,correct,
   draggable={ready} disabled={!ready&&!correct}
   className={'meta-drag-card'+(chosen===i?' is-selected':'')+(dragged===i?' is-dragging':'')}
   aria-label={t('اسحب أو اختار بطاقة ','Drag or select card ')+label}
-  aria-pressed={chosen===i} onClick={()=>{if(ready)setChosen(x=>x===i?null:i);}}
+  aria-pressed={chosen===i} onClick={()=>{if(suppressClick.current){suppressClick.current=false;return;}if(ready)setChosen(x=>x===i?null:i);}}
   onPointerDown={e=>begin(e,i)} onPointerMove={track} onPointerUp={finish}
-  onPointerCancel={()=>{dragRef.current=null;setDragged(null);setPoint(null);}}
+  onPointerCancel={()=>{dragRef.current=null;setDragged(null);setPoint(null);suppressClick.current=false;}}
   onDragStart={e=>{if(!ready){e.preventDefault();return;}e.dataTransfer.setData('text/plain',String(i));e.dataTransfer.effectAllowed='move';setDragged(i);}}
   onDragEnd={()=>{setDragged(null);setPoint(null);}}>
   <GripVertical size={18}/><strong>{label}</strong>
