@@ -622,7 +622,7 @@ export const importVerseQuestions:ImportVerseQuestion[]=sections.flatMap(section
  const options=[...other]; options.splice(position,0,correctAnswer);
  const id='IV-E'+section.episode+'-'+String(i+1).padStart(2,'0');
  return {id,episode:section.episode,topic:section.title,level,prompt,options,correct:position,explanation,
- source:'MP3 transcript' as const,activity:{type:'Quiz',prompt,options,correct:position,timer:40,points:1000,speed:false,
+ source:'MP3 transcript' as const,activity:{type:'Quiz',prompt:'الحلقة '+section.episode+': '+prompt,options,correct:position,timer:40,points:1000,speed:false,
  sourceEpisode:section.episode,questionBankId:id,explanation}};
 }));
 export function importVerseEpisodeQuestions(episode:number){return importVerseQuestions.filter(q=>q.episode===episode);}
