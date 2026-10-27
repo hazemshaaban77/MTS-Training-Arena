@@ -25,7 +25,8 @@ import SessionEntryFeedback from '../components/arena/SessionEntryFeedback';
 import TrainerReadiness from '../components/arena/TrainerReadiness';
 import {estimateSessionAgenda} from '../lib/session-planning';
 import {makeSessionStarter,sessionTemplateOptions} from '../lib/session-templates';
-import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder from '../components/arena/Builder';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity,validateActivity} from '../lib/domain.mjs';
+import TraineeFinish,{ownSessionResult} from '../components/arena/TraineeFinish';import {resolveArenaMediaUrl} from '../lib/client';import Session from '../components/arena/Session';import Builder,{newSessionActivity} from '../components/arena/Builder';
+import {makeImportVerseWorkshop,importVersePlannedMinutes} from '../lib/importverse-workshop';import Login from '../components/arena/Login';import {sample,types} from '../lib/catalog';import {publicActivity,validateActivity,validateDeck} from '../lib/domain.mjs';
 test('each stage renders Arabic/English trainer, projector and participant semantic markup',()=>{for(const ar of [true,false])for(const type of types)for(const role of ['host','display','play']){const a=sample(type,ar?'ar':'en'),activity=publicActivity(a),mine={id:'one',name:'Person',eligible:true,approval:'approved'},s:any={activity,players:[{uid:'one',name:'Person'}],individual:[{uid:'one',score:0}],status:'question',serverNow:Date.now(),current:0,runtime:{phase:'answering'},mine:role==='play'?mine:null,game:{target:'one',turn:0,rounds:3,used:[],escape:{room:0,puzzle:0,totalRooms:2,question:publicActivity(sample('Quiz')),title:'Room',narrative:'Mission'},scenario:{text:'Choose',choices:[{label:'Continue'}],path:[]}}};const html=renderToStaticMarkup(<GamePlay s={s} ar={ar} host={role==='host'} display={role==='display'} canAnswer={role==='play'} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);assert.ok(html.length>100,`${type} ${role}`);assert.ok(!html.includes('undefined'));}});
 test('sign-in retains original proportional logo assets and accessible credential fields',()=>{const html=renderToStaticMarkup(<Login ar={true} toggleLanguage={()=>{}} identity={null} loading={false} onEnter={()=>{}} onSignIn={async()=>{}} onSignOut={async()=>{}} onRetryAuth={async()=>{}} authError="" onJoin={()=>{}}/>);assert.ok(html.includes('/mts-transparent.png'));assert.ok(html.includes('/training-transparent.png'));assert.ok(html.includes('type="email"'));assert.ok(html.includes('current-password'));});
 
@@ -460,7 +461,7 @@ test('trainer session builder supports safe blank vs sample deck and honest timi
  }
  const src=readFileSync('components/arena/Builder.tsx','utf8');
  assert.ok(src.includes('if(deck.length&&!window.confirm('));
- assert.ok(src.includes('setDeck(blank?[]:types.map(type=>sample(type,lang)))'));
+  assert.ok(src.includes('setDeck(blank?[]:types.map(type=>newSessionActivity('));
  assert.ok(src.includes('disabled={busy||!deck.length}'));
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(css.includes('.builder-starter-panel'));
@@ -615,7 +616,7 @@ test('Knowledge Flashcards flip only on server reveal and keep self-review unsco
 });
 
 test('facilitator starter templates preserve the original session editor and required registration fields',()=>{
- assert.deepEqual(sessionTemplateOptions.map(x=>x.targetMinutes),[15,30,60]);
+ assert.deepEqual(sessionTemplateOptions.map(x=>x.targetMinutes),[60,15,30,60]);
  for(const language of ['ar','en'] as const){
   for(const [id,count] of [['warmup',3],['workshop',4],['full',7]] as const){
    const deck=makeSessionStarter(id,language);
@@ -1681,8 +1682,8 @@ test('practical Wheel award cannot be automatic and only host-authorized score e
  const game=readFileSync('lib/session-games.ts','utf8');
  assert.ok(game.includes("['wheelaward','boxaward'].includes(b.action)"),'Both practical games share the strict host-scoring endpoint');
  assert.ok(game.includes("'wheel-judge'"));
- assert.ok(game.includes("['question','challenge'].includes(sector?.kind)?0"));
- assert.ok(game.includes('revealAt:now+3000+duration+150'),'No 2-second reveal gap');
+ assert.ok(game.includes("['question','challenge','penalty'].includes(sector?.kind)?0"));
+ assert.ok(game.includes('revealAt:now+450+duration'),'Reveal begins at wheel landing rather than waiting after spin');
  const service=readFileSync('lib/service.ts','utf8');
  assert.ok(service.includes("'wheelaward'"));
 });
@@ -1722,4 +1723,25 @@ test('Flashcard Trainer-only permission is authorable, validated and enforced on
  const src=readFileSync('components/arena/ArenaDiscoveryGames.tsx','utf8');
  assert.ok(src.includes("const hostOnly=a.flipPermission==='host'"));
  assert.ok(src.includes('actor?usable&&!hostOnly'));
+});
+
+test('ImportVerse evidence-marked sixty-minute preset contains all ten engines and seven graded championship levels',()=>{
+ const deck=makeImportVerseWorkshop('ar');
+ assert.equal(importVersePlannedMinutes,60);
+ assert.equal(deck.length,10);
+ assert.deepEqual(deck.map(a=>a.type),types);
+ assert.doesNotThrow(()=>validateDeck(structuredClone(deck)));
+ assert.equal(estimateSessionAgenda(deck).totalSeconds,60*60);
+ assert.equal(deck[1].sectors.length,4);
+ assert.ok(deck[1].sectors.every((s:any)=>s.kind==='challenge'&&s.points===0));
+ assert.equal(deck[2].questions.length,7);
+ assert.equal(deck[2].minimumLevels,7);
+ assert.equal(deck[7].boxes.length,4);
+ assert.ok(deck.every(a=>String(a.contentSource).includes('not video-verified')),'Unreviewed video material must not be presented as verified');
+ const fresh=newSessionActivity('Ultimate Game Show','ar');
+ assert.equal(fresh.questions.length,7);
+ assert.equal(fresh.showFormat,'championship');
+ assert.doesNotThrow(()=>validateActivity(structuredClone(fresh)));
+ const old=sample('Ultimate Game Show','ar');
+ assert.equal(old.questions,undefined,'legacy seeds stay backward compatible');
 });

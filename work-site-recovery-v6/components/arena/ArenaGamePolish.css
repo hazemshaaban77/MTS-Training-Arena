@@ -183,3 +183,97 @@
 .arena-rubric-confirmed{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
  border:1px solid #86dabc;background:#14684835;padding:20px;border-radius:13px;color:#c9ffdb}
 .arena-rubric-confirmed strong{font-size:22px}
+
+/* V6 chosen design 03: deep-dished metal wheel with embossed numbered sections.
+   The permanent pointer and one-touch trigger remain outside the rotating disc. */
+html body .wheel-wrap--3d.wheel-wrap--showtime {
+ --wheel-label-radius:clamp(102px,14vw,169px);
+ perspective:1350px!important;isolation:isolate;
+ filter:drop-shadow(0 30px 19px #000d) drop-shadow(0 0 30px #e4ae5763)!important;
+}
+html body .wheel-wrap--3d.wheel-wrap--showtime .wheel-tap-surface {
+ transform:rotateX(12deg) translateZ(0)!important;
+ box-shadow:0 4px 0 #ffeab0,0 10px 0 #be913b,0 17px 0 #5b3d1a,
+   0 25px 18px #000b,0 0 0 10px #e5ad50,0 0 0 15px #1b304b,
+   0 0 37px 12px #a7ddfa50!important;
+}
+html body .wheel-wrap--3d.wheel-wrap--showtime .wheel.cinematic-wheel {
+ border:clamp(12px,1.5vw,19px) ridge #f9d98c!important;
+ background:var(--arena-wheel-gradient)!important;
+ box-shadow:inset 0 0 0 4px #fff1b4b9,inset 0 0 0 9px #252437a0,
+ inset 0 0 45px #0008,0 0 0 3px #ffcf7d,0 0 20px #daa24387!important;
+}
+html body .wheel-wrap--3d.wheel-wrap--showtime .wheel-center{
+ inset:37%!important;border:5px ridge #fff5c4!important;
+ background:radial-gradient(circle at 28% 20%,#fff7d1,#f1c56b 45%,#9d662a 75%,#4d2b13)!important;
+ box-shadow:inset -4px -10px 12px #38270e99,0 5px 11px #0009,0 0 0 4px #a47432!important;
+}
+html body .wheel-wrap--3d.wheel-wrap--showtime .wheel.in-spin,
+html body .effects-light .wheel-wrap--3d.wheel-wrap--showtime .wheel.in-spin{
+ animation:arena-real-wheel-spin var(--spin-duration,5s) cubic-bezier(.06,.54,.11,1)
+ var(--spin-delay,0s) both!important;
+ will-change:transform!important;
+}
+html body .wheel-wrap--3d.wheel-wrap--showtime .wheel.finished-spin{
+ animation:none!important;transform:rotate(var(--wheel-stop))!important;
+ transition:none!important;
+}
+html body .wheel-wrap--3d.wheel-wrap--showtime .wheel.cinematic-wheel>span{
+ background:radial-gradient(circle,#192a488a,transparent 73%);border-radius:50%;
+ color:#fff4de!important;font-size:clamp(16px,2.1vw,26px)!important;
+ font-weight:950!important;
+}
+@media(max-width:700px){
+ html body .wheel-wrap--3d.wheel-wrap--showtime{--wheel-label-radius:clamp(86px,28vw,116px)}
+}
+/* No hidden content / collapsed workspace on the projector: fit the usable area
+   and allow vertical scrolling rather than clipping entire game components. */
+html body .session-shell.projector{
+ min-height:100dvh!important;width:100%!important;max-width:none!important;
+ overflow-x:hidden!important;overflow-y:auto!important;
+}
+html body .session-shell.projector .live-workspace{
+ min-width:0!important;max-width:100%!important;height:auto!important;
+ min-height:calc(100dvh - 80px)!important;overflow:visible!important;
+}
+html body .session-shell.projector .live-columns,
+html body .session-shell.projector .main-stage{
+ min-width:0!important;max-width:100%!important;
+ min-height:0!important;overflow:visible!important;
+}
+html body .session-shell.projector .round-stage{
+ min-width:0!important;width:100%!important;max-width:none!important;
+ overflow:visible!important;min-height:580px!important;
+ padding:clamp(10px,1.6vw,22px)!important;
+}
+html body .session-shell.projector .championship-stage,
+html body .session-shell.projector .arena-tv-show,
+html body .session-shell.projector .round-stage .arena-escape-vault,
+html body .session-shell.projector .round-stage .flash-stage--academy,
+html body .session-shell.projector .round-stage .box-stage--vault,
+html body .session-shell.projector .round-stage .arena-scenario,
+html body .session-shell.projector .round-stage .arena-quiz-show{
+ overflow:visible!important;max-height:none!important;height:auto!important;
+}
+html body .session-shell.projector .championship-stage__ladder{
+ max-height:none!important;height:auto!important;overflow:visible!important;
+}
+html body .session-shell.projector .championship-stage__question{
+ max-height:none!important;overflow:visible!important;
+}
+html body .session-shell.projector .championship-stage__options button{
+ min-height:clamp(54px,9vh,86px)!important;
+}
+html body .session-shell.projector .round-stage .wheel-wrap--grand{
+ width:clamp(330px,35vw,550px)!important;
+}
+html body .session-shell.trainee .trainee-score-hero{
+ min-width:180px;padding:10px 20px!important;box-shadow:0 0 28px #e6b75b49!important;
+ border:2px solid #f0c96b!important;
+}
+html body .session-shell.trainee .trainee-score-hero>strong{
+ font-size:clamp(32px,8vw,53px)!important;
+}
+html body .session-shell.trainee .trainee-score-burst{
+ font-size:clamp(24px,6vw,43px)!important;z-index:40!important;
+}

@@ -28,7 +28,7 @@ export function validateActivity(a,depth=0){
  else if(type==='Match It')ok(list(a.left,2,20)&&list(a.right,2,20)&&a.left.length===a.right.length&&permutation(a.pairs,a.left.length));
  else if(['Meta Plan','Categorize'].includes(type)){ok(list(a.items,1,100)&&list(a.categories,2,20)&&Array.isArray(a.assignments)&&a.assignments.length===a.items.length&&a.assignments.every(x=>idx(x,a.categories.length)));a.timer=0;a.scored=false;}
  else if(type==='Live Poll'){ok(['choice','rating','word','priority',undefined].includes(a.pollKind));if(!['word','rating'].includes(a.pollKind))ok(list(a.options,2,20));ok(a.correct==null);a.scored=false;}
- else if(type==='Flashcards'){ok(list(a.fronts,1,500)&&list(a.backs,1,500)&&a.fronts.length===a.backs.length);ok(['host','learner',undefined].includes(a.flipPermission));a.timer=0;a.scored=false;}
+ else if(type==='Flashcards'){ok(list(a.fronts,1,500)&&list(a.backs,1,500)&&a.fronts.length===a.backs.length);ok(['host','learner',undefined].includes(a.flipPermission));ok(['practice','challenge',undefined].includes(a.trainingMode));a.timer=0;a.scored=a.trainingMode==='challenge';}
  else if(['Wheel of Fortune','Spin Wheel'].includes(type)){
   if(a.sectors){ok(Array.isArray(a.sectors)&&a.sectors.length>=2&&a.sectors.length<=20);for(const s of a.sectors){ok(str(s.label,100)&&['question','prize','penalty','mystery','challenge'].includes(s.kind)&&Number.isInteger(s.points??0)&&Math.abs(s.points??0)<=10000);if(s.kind==='question'){ok(Array.isArray(s.questions)&&s.questions.length>0&&s.questions.length<=30);s.questions.forEach(q=>validateActivity(q,depth+1));}}}
   else ok(list(a.items,2,20));a.timer=0;ok(Number.isInteger(a.rounds??1)&&(a.rounds??1)>=1&&(a.rounds??1)<=50);ok((a.spinDuration??6)>=4&&(a.spinDuration??6)<=12);

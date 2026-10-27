@@ -1,0 +1,13 @@
+import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {validateDeck,flattenDeck} from '../lib/domain.mjs';
+const value=JSON.parse(readFileSync('content/importverse-60m-session.json','utf8'));
+const activities=validateDeck(value.activities);
+assert.equal(activities.length,10);
+assert.equal(new Set(activities.map(a=>a.type)).size,10);
+assert.equal(value.agenda.reduce((sum,a)=>sum+a.minutes,0),60);
+assert.equal(activities[2].questions.length,7);
+assert.equal(activities[2].minimumLevels,7);
+assert.ok(flattenDeck(activities).length>=10);
+assert.equal(value.contentStatus,'pending-verbatim-video-review');
+console.log('IMPORTVERSE SESSION READY FOR REVIEW',JSON.stringify({activities:activities.length,minutes:60,questions:activities[2].questions.length}));

@@ -131,8 +131,9 @@ function validateActivity2(a, depth = 0) {
   } else if (type === "Flashcards") {
     ok(list(a.fronts, 1, 500) && list(a.backs, 1, 500) && a.fronts.length === a.backs.length);
     ok(["host", "learner", void 0].includes(a.flipPermission));
+    ok(["practice", "challenge", void 0].includes(a.trainingMode));
     a.timer = 0;
-    a.scored = false;
+    a.scored = a.trainingMode === "challenge";
   } else if (["Wheel of Fortune", "Spin Wheel"].includes(type)) {
     if (a.sectors) {
       ok(Array.isArray(a.sectors) && a.sectors.length >= 2 && a.sectors.length <= 20);
@@ -540,7 +541,7 @@ async function saveProgress(db, s, actor, old, data, events = [], now = Date.now
 }
 async function settleWheel(db, s, a, rt, now) {
   if (!rt.spin || rt.spin.revealed || rt.spin.revealAt > now) return;
-  const spin = { ...rt.spin, revealed: true }, sector = a.sectors?.[spin.index], points = ["question", "challenge"].includes(sector?.kind) ? 0 : Math.round((sector?.points ?? 0) * (a.weight ?? 1));
+  const spin = { ...rt.spin, revealed: true }, sector = a.sectors?.[spin.index], points = ["question", "challenge", "penalty"].includes(sector?.kind) ? 0 : Math.round((sector?.points ?? 0) * (a.weight ?? 1));
   const next = { ...rt, spin, used: sector?.repeatable ? rt.used : [.../* @__PURE__ */ new Set([...rt.used || [], spin.index])], turn: (rt.turn || 0) + 1, target: null };
   const statements = [];
   if (spin.target) statements.push(db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? FROM sessions WHERE code=? AND revision=?").bind(s.code, `wheel:${s.current}:${spin.id}`, spin.target, s.current, "wheel", points, JSON.stringify({ sector: spin.index, turn: rt.turn }), now, s.code, s.revision));
@@ -600,11 +601,30 @@ async function gameInteract(db, s, a, rt, p, b, now, host) {
         const available = sectors.map((_, i) => i).filter((i) => sectors[i].repeatable || !rt.used?.includes(i));
         if (!available.length) fail2("ROUNDS_COMPLETE", 409);
         const index = available[fairIndex(available.length)], id = crypto.randomUUID(), duration = (a.spinDuration ?? 6) * 1e3;
-        rt = { ...rt, target, spin: { id, index, target, startsAt: now + 3e3, stopsAt: now + 3e3 + duration, revealAt: now + 3e3 + duration + 150, revealed: false } };
+        rt = { ...rt, target, spin: { id, index, target, startsAt: now + 450, stopsAt: now + 450 + duration, revealAt: now + 450 + duration, revealed: false } };
       }
     }
     const r = await writeSession(db, s, { ...s, runtime: JSON.stringify(rt), revision: s.revision + 1 });
     if (!r.meta.changes) fail2("STALE", 409);
+    return { ok: true };
+  }
+  if (b.action === "flashjudge") {
+    if (!host || a.type !== "Flashcards" || a.trainingMode !== "challenge") fail2("FORBIDDEN", 403);
+    const ix = b.index, playerId = b.player, grade2 = b.grade, delta = b.delta;
+    if (!Number.isInteger(ix) || ix < 0 || ix >= a.fronts.length || !Number.isInteger(grade2) || grade2 < 0 || grade2 > 10 || ![1, -1].includes(b.direction) || !Number.isInteger(delta) || delta !== b.direction * Math.min(1e4, Math.round(grade2 * Number(a.points ?? 1e3) * Number(a.weight ?? 1) / 10)))
+      fail2("AWARD", 400);
+    const validPlayer = await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'").bind(s.code, playerId).first();
+    if (!validPlayer) fail2("PLAYER", 404);
+    const key = ix + ":" + playerId, grades = rt.flashGrades || {};
+    if (grades[key]) fail2("ALREADY_GRADED", 409);
+    const id = "flashjudge:" + s.current + ":" + key;
+    const updated = { ...rt, flashTarget: playerId, flashGrades: { ...grades, [key]: { grade: grade2, delta, player: playerId, index: ix } } };
+    const results = await batch(db, [
+      db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')").bind(s.code, id, playerId, s.current, "flash-judge", delta, JSON.stringify({ grade: grade2, index: ix }), now, s.code, s.revision),
+      db.prepare("UPDATE sessions SET runtime=?,revision=revision+1 WHERE code=? AND revision=? AND status='question'").bind(JSON.stringify(updated), s.code, s.revision)
+    ]);
+    if (!results[0]?.meta.changes || !results[1]?.meta.changes) fail2("STALE", 409);
+    await audit(db, s.owner, s.code, "flash-judge", { player: playerId, grade: grade2, delta, index: ix });
     return { ok: true };
   }
   if (["wheelaward", "boxaward"].includes(b.action)) {
@@ -612,11 +632,11 @@ async function gameInteract(db, s, a, rt, p, b, now, host) {
     const challenge = isBox ? a.boxes?.[item?.index] || (!a.boxes ? { kind: "challenge" } : void 0) : a.sectors?.[item?.index];
     if (!host || (isBox ? a.type !== "Open the Box" : !["Wheel of Fortune", "Spin Wheel"].includes(a.type)))
       fail2("FORBIDDEN", 403);
-    if (!item || !isBox && !item.revealed || challenge?.kind !== "challenge" || !item.target)
+    if (!item || !isBox && !item.revealed || !["challenge", "penalty"].includes(challenge?.kind) || !item.target)
       fail2("STATE", 409);
     if (rt.judgements?.[item.id]) fail2("ALREADY_GRADED", 409);
-    const reason = String(b.reason || "").trim(), awardId = b.adjustmentId;
-    if (reason.length < 5 || reason.length > 280 || typeof awardId !== "string" || !/^[0-9a-fA-F-]{36}$/.test(awardId)) fail2("AWARD");
+    const reason = String(b.reason || "").trim() || "Trainer performance grade / 10", awardId = b.adjustmentId;
+    if (reason.length > 280 || typeof awardId !== "string" || !/^[0-9a-fA-F-]{36}$/.test(awardId)) fail2("AWARD");
     const grade2 = b.grade === void 0 ? null : b.grade;
     if (isBox && grade2 === null) fail2("AWARD");
     if (grade2 !== null && (!Number.isInteger(grade2) || grade2 < 0 || grade2 > 10 || ![1, -1].includes(b.direction))) fail2("AWARD");
@@ -805,6 +825,10 @@ async function gameSnapshot(db, s, a, rt, p, host, now) {
       game.box = { id: rt.box.id, target: rt.box.target, index: rt.box.index, label: a.items[rt.box.index], kind: box?.kind || (!a.boxes ? "challenge" : void 0), detail: box?.detail, question: box?.question ? publicActivity(box.question) : null, answered: !!d.boxes?.includes(rt.box.id) };
     }
     game.manualJudgement = rt.judgements?.[(a.type === "Open the Box" ? rt.box?.id : rt.spin?.id) || ""] || null;
+  }
+  if (a.type === "Flashcards" && a.trainingMode === "challenge") {
+    game.flashTarget = rt.flashTarget || null;
+    game.flashGrades = host ? rt.flashGrades || {} : p ? Object.fromEntries(Object.entries(rt.flashGrades || {}).filter(([key]) => key.endsWith(":" + p.id))) : {};
   }
   if (a.type === "Flashcards" && p) {
     game.card = d.card ?? 0;
@@ -1294,7 +1318,7 @@ async function service(db, req, owner, ctx = {}) {
       await audit(db, owner, code, b.action, b.action === "notes" ? { notes: rt.notes } : b.action === "stagecast" ? { round: s.current, players: rt.targets } : { round: s.current });
       return { ok: true };
     }
-    if (["selectturn", "spin", "respin", "box", "override", "hint", "wheelaward", "boxaward"].includes(b.action)) return gameInteract(db, s, active(), rt, null, b, now, true);
+    if (["selectturn", "spin", "respin", "box", "override", "hint", "wheelaward", "boxaward", "flashjudge"].includes(b.action)) return gameInteract(db, s, active(), rt, null, b, now, true);
     if (b.action === "finish" && s.survey && !rt.surveyFinished) {
       const survey = JSON.parse(s.survey);
       if (survey.stage === "before-ceremony") {
@@ -1305,6 +1329,7 @@ async function service(db, req, owner, ctx = {}) {
       rt.surveyOpen = true;
     }
     if (b.action === "close" && isChampionship(active())) fail2("SHOW_STATE", 409);
+    if (b.action === "reveal" && active()?.type === "Flashcards" && active()?.trainingMode === "challenge" && !rt.flashGrades?.[String(b.index) + ":" + String(rt.flashTarget)]) fail2("GRADE_REQUIRED", 409);
     let index = b.index;
     if (b.action === "reveal" && active()?.type === "Spin Wheel") index = fairIndex(active().items.length);
     let n;

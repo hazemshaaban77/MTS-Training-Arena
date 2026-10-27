@@ -17,6 +17,12 @@ export function estimateSessionAgenda(deck:Activity[]){
   }
  };
  for(const activity of deck){
+  const planned=Number((activity as any).plannedMinutes);
+  if(Number.isFinite(planned)&&planned>=1&&planned<=120){
+   timedSeconds+=Math.round(planned*60);
+   steps++;
+   continue;
+  }
   const nested=activity.questions?.length?activity.questions:
    activity.rooms?.length?activity.rooms.flatMap((room:any)=>room.puzzles||[]):[activity];
   const content=nested.length?nested:[activity];
@@ -32,7 +38,7 @@ export function estimateSessionAgenda(deck:Activity[]){
    discussionSeconds+=estimateUntimed(activity);
   }
  }
- const transitionSeconds=deck.length*30;
+ const transitionSeconds=deck.filter(x=>!Number.isFinite(Number((x as any).plannedMinutes))||Number((x as any).plannedMinutes)<1).length*30;
  return {timedSeconds,discussionSeconds,transitionSeconds,
   totalSeconds:timedSeconds+discussionSeconds+transitionSeconds,untimedSteps,steps};
 }

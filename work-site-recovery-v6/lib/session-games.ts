@@ -15,7 +15,7 @@ async function saveProgress(db:D1Database,s:any,actor:string,old:any,data:any,ev
 }
 export async function settleWheel(db:D1Database,s:any,a:any,rt:any,now:number){
  if(!rt.spin||rt.spin.revealed||rt.spin.revealAt>now)return;
- const spin={...rt.spin,revealed:true},sector=a.sectors?.[spin.index],points=['question','challenge'].includes(sector?.kind)?0:Math.round((sector?.points??0)*(a.weight??1));
+ const spin={...rt.spin,revealed:true},sector=a.sectors?.[spin.index],points=['question','challenge','penalty'].includes(sector?.kind)?0:Math.round((sector?.points??0)*(a.weight??1));
  const next={...rt,spin,used:sector?.repeatable?rt.used:[...new Set([...(rt.used||[]),spin.index])],turn:(rt.turn||0)+1,target:null};
  const statements:D1PreparedStatement[]=[];
  if(spin.target)statements.push(db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? FROM sessions WHERE code=? AND revision=?").bind(s.code,`wheel:${s.current}:${spin.id}`,spin.target,s.current,'wheel',points,JSON.stringify({sector:spin.index,turn:rt.turn}),now,s.code,s.revision));
@@ -44,21 +44,44 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
     statements.push(db.prepare('UPDATE sessions SET runtime=?,reveal=?,revision=revision+1 WHERE code=? AND revision=?').bind(JSON.stringify(rt),i,s.code,s.revision));const result=await batch(db,statements);if(!result.at(-1)?.meta.changes)fail('STALE',409);return {ok:true};
    }else if(b.action!=='selectturn'){
     const sectors=a.sectors||a.items.map((label:string)=>({label,repeatable:true}));const available=sectors.map((_:any,i:number)=>i).filter((i:number)=>sectors[i].repeatable||!rt.used?.includes(i));if(!available.length)fail('ROUNDS_COMPLETE',409);
-    const index=available[fairIndex(available.length)],id=crypto.randomUUID(),duration=(a.spinDuration??6)*1000;rt={...rt,target,spin:{id,index,target,startsAt:now+3000,stopsAt:now+3000+duration,revealAt:now+3000+duration+150,revealed:false}};
+    const index=available[fairIndex(available.length)],id=crypto.randomUUID(),duration=(a.spinDuration??6)*1000;rt={...rt,target,spin:{id,index,target,startsAt:now+450,stopsAt:now+450+duration,revealAt:now+450+duration,revealed:false}};
    }
   }
   const r=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!r.meta.changes)fail('STALE',409);return {ok:true};
+ }
+ if(b.action==='flashjudge'){
+  if(!host||a.type!=='Flashcards'||a.trainingMode!=='challenge')fail('FORBIDDEN',403);
+  const ix=b.index,playerId=b.player,grade=b.grade,delta=b.delta;
+  if(!Number.isInteger(ix)||ix<0||ix>=a.fronts.length||
+   !Number.isInteger(grade)||grade<0||grade>10||![1,-1].includes(b.direction)||
+   !Number.isInteger(delta)||delta!==b.direction*Math.min(10000,Math.round(grade*Number(a.points??1000)*Number(a.weight??1)/10)))
+   fail('AWARD',400);
+  const validPlayer:any=await db.prepare("SELECT id FROM players WHERE session=? AND id=? AND approval='approved'")
+   .bind(s.code,playerId).first();
+  if(!validPlayer)fail('PLAYER',404);
+  const key=ix+':'+playerId,grades=rt.flashGrades||{};
+  if(grades[key])fail('ALREADY_GRADED',409);
+  const id='flashjudge:'+s.current+':'+key;
+  const updated={...rt,flashTarget:playerId,flashGrades:{...grades,[key]:{grade,delta,player:playerId,index:ix}}};
+  const results=await batch(db,[
+   db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')")
+    .bind(s.code,id,playerId,s.current,'flash-judge',delta,JSON.stringify({grade,index:ix}),now,s.code,s.revision),
+   db.prepare("UPDATE sessions SET runtime=?,revision=revision+1 WHERE code=? AND revision=? AND status='question'")
+    .bind(JSON.stringify(updated),s.code,s.revision)
+  ]);
+  if(!results[0]?.meta.changes||!results[1]?.meta.changes)fail('STALE',409);
+  await audit(db,s.owner,s.code,'flash-judge',{player:playerId,grade,delta,index:ix});return {ok:true};
  }
  if(['wheelaward','boxaward'].includes(b.action)){
   const isBox=b.action==='boxaward',item=isBox?rt.box:rt.spin;
   const challenge=isBox?(a.boxes?.[item?.index]||(!a.boxes?{kind:'challenge'}:undefined)):a.sectors?.[item?.index];
   if(!host||(isBox?a.type!=='Open the Box':!['Wheel of Fortune','Spin Wheel'].includes(a.type)))
    fail('FORBIDDEN',403);
-  if(!item||(!isBox&&!item.revealed)||challenge?.kind!=='challenge'||!item.target)
+  if(!item||(!isBox&&!item.revealed)||!['challenge','penalty'].includes(challenge?.kind)||!item.target)
    fail('STATE',409);
   if(rt.judgements?.[item.id])fail('ALREADY_GRADED',409);
-  const reason=String(b.reason||'').trim(),awardId=b.adjustmentId;
-  if(reason.length<5||reason.length>280||typeof awardId!=='string'||
+  const reason=String(b.reason||'').trim()||'Trainer performance grade / 10',awardId=b.adjustmentId;
+  if(reason.length>280||typeof awardId!=='string'||
     !/^[0-9a-fA-F-]{36}$/.test(awardId))fail('AWARD');
   const grade=b.grade===undefined?null:b.grade; // permit legacy wheel clients
   if(isBox&&grade===null)fail('AWARD');
@@ -148,6 +171,11 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   if(rt.spin){game.spinTarget=rt.spin.target;game.spin={id:rt.spin.id,startsAt:rt.spin.startsAt,stopsAt:rt.spin.stopsAt,revealAt:rt.spin.revealAt,revealed:!!rt.spin.revealed,index:now>=rt.spin.stopsAt?rt.spin.index:null};if(rt.spin.revealed){const sector=a.sectors?.[rt.spin.index];game.outcome=sector?{label:sector.label,kind:sector.kind,detail:sector.detail,points:sector.points||0}:a.items[rt.spin.index];if(sector?.kind==='question'){const md=await read(db,s,`wheel:${rt.spin.id}:${rt.spin.target}`),q=sector.questions[md.data.step||0];game.mini={version:md.version,step:md.data.step||0,total:sector.questions.length,question:q?publicActivity(q):null,deadline:q?(md.data.clock||rt.spin.revealAt-(rt.pausedTotal||0))+q.timer*1000+(rt.pausedTotal||0):null,lastCorrect:md.data.lastCorrect};}}}
   if(rt.box){const box=a.boxes?.[rt.box.index];game.box={id:rt.box.id,target:rt.box.target,index:rt.box.index,label:a.items[rt.box.index],kind:box?.kind||(!a.boxes?'challenge':undefined),detail:box?.detail,question:box?.question?publicActivity(box.question):null,answered:!!d.boxes?.includes(rt.box.id)};}
   game.manualJudgement=rt.judgements?.[(a.type==='Open the Box'?rt.box?.id:rt.spin?.id)||'']||null;
+ }
+ if(a.type==='Flashcards'&&a.trainingMode==='challenge'){
+  game.flashTarget=rt.flashTarget||null;
+  game.flashGrades=host?rt.flashGrades||{}:p?
+   Object.fromEntries(Object.entries(rt.flashGrades||{}).filter(([key]:any)=>key.endsWith(':'+p.id))):{};
  }
  if(a.type==='Flashcards'&&p){game.card=d.card??0;game.flipped=!!d.flipped;game.back=d.flipped?a.backs[d.card??0]:null;game.reviewed=d.reviewed||[];game.assessment=d.assessment||{};}
  if(a.type==='Escape Room'){
