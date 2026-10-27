@@ -69,7 +69,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
  }
  if(url.pathname==='/api/control'&&method==='POST'){
   requireHost();if(b.revision!==s.revision)fail('STALE',409);
-  if(['showcast','showfinish'].includes(b.action)&&isChampionship(active())){
+  if(['showcast','showfinish','showlifeline'].includes(b.action)&&isChampionship(active())){
    if(b.action==='showfinish'){
     if(s.status!=='question'||rt.show?.phase==='answering')fail('SHOW_STATE',409);
     const n=nextState(s,'close',now);n.deadline=null;
