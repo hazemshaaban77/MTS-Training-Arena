@@ -192,11 +192,18 @@ export function ActivityEditor({ar,activity,onCancel,onSave,onSimulate}:{ar:bool
  {d.type==='Live Poll'&&<><label>{t('نوع التصويت','Poll format')}<select value={d.pollKind||'choice'} onChange={e=>put('pollKind',e.target.value)}><option value="choice">{t('اختيار واحد','Single choice')}</option><option value="rating">{t('تقييم من 1 إلى 5','Rating 1–5')}</option><option value="word">{t('سحابة كلمات','Word cloud')}</option><option value="priority">{t('ترتيب الأولويات','Prioritization')}</option></select></label>{[['anonymous',t('مجهول الهوية','Anonymous')],['allowChanges',t('السماح بتغيير التصويت','Allow vote changes')],['liveResults',t('إظهار النتائج أثناء التصويت','Show results while voting')]].map(([k,l])=><label className="checkbox-label" key={k}><input type="checkbox" checked={!!d[k]} onChange={e=>put(k,e.target.checked)}/>{l}</label>)}</>}
  {d.type==='Flashcards'&&<>
  <div className="design-fieldset flashcard-permissions">
+  <h4>{t('نوع نشاط البطاقات','Flashcard training mode')}</h4>
+  <label><input type="radio" name="flashMode" checked={(d.trainingMode||'practice')==='practice'} onChange={()=>put('trainingMode','practice')}/>
+  {t('مراجعة تدريبية — بدون نقاط','Practice — unscored learning')}</label>
+  <label><input type="radio" name="flashMode" checked={d.trainingMode==='challenge'} onChange={()=>setD({...d,trainingMode:'challenge',flipPermission:'host',scored:true})}/>
+  {t('تحدّي تقييمي — المدرب يدي درجة من 10 قبل كشف الإجابة','Scored challenge — trainer grades out of 10 before revealing')}</label>
+ </div>
+ <div className="design-fieldset flashcard-permissions">
   <h4>{t('مين يقدر يقلب الكارت؟','Who can flip knowledge cards?')}</h4>
   <label><input type="radio" name="flashFlipPermission" checked={(d.flipPermission||'learner')==='host'}
    onChange={()=>put('flipPermission','host')}/>
    {t('المدرب فقط — الطلاب يشوفوا الكشف لما المدرب يقلب','Trainer only — learners see the card after trainer reveal')}</label>
-  <label><input type="radio" name="flashFlipPermission" checked={(d.flipPermission||'learner')==='learner'}
+  <label><input type="radio" name="flashFlipPermission" checked={(d.flipPermission||'learner')==='learner'} disabled={d.trainingMode==='challenge'}
    onChange={()=>put('flipPermission','learner')}/>
    {t('المتدرب — كل متدرب يقدر يقلب كروته بنفسه','Learners — each learner may flip their own cards')}</label>
  </div>
