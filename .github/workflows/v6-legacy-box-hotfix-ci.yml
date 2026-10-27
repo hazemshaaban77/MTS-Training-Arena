@@ -3,7 +3,7 @@ on:
   push:
     branches: ['fix/v6-legacy-box-judging']
 permissions:
-  contents: read
+  contents: write
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -25,3 +25,15 @@ jobs:
         env:
           VITE_ARENA_API_ORIGIN: https://mts-training-arena-v6-gateway.pages.dev
       - run: pnpm run build:github-api
+      - name: Package tested worker for rollback-ready deployment
+        working-directory: .
+        run: |
+          mkdir -p deployment-bundles/v6
+          cp work-site-recovery-v6/dist-github-api/worker.mjs deployment-bundles/v6/worker.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-bundles/v6/worker.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "build(v6): legacy box fix Worker bundle [skip ci]"
+            git push origin HEAD:fix/v6-legacy-box-judging
+          fi
