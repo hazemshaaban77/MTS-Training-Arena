@@ -1,7 +1,7 @@
 import {writeFileSync,mkdirSync} from 'node:fs';
 import {makeImportVerseWorkshop,importVersePlannedMinutes} from '../lib/importverse-workshop';
 import {importVerseQuestions} from '../lib/importverse-question-bank';
-import {validateDeck} from '../lib/domain.mjs';
+import {validateDeck,validateActivity} from '../lib/domain.mjs';
 
 const activities=validateDeck(makeImportVerseWorkshop('ar'));
 if(activities.length!==10||importVersePlannedMinutes!==60||importVerseQuestions.length!==140)throw Error('Incomplete ImportVerse 60-minute workshop');
