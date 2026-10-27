@@ -43,6 +43,21 @@ export default function ArenaScenario({s,ar,host,display,actor,usable,busy,close
     {t('اسأل المشاركين: إيه المعلومات اللي اعتمدتوا عليها؟ وإيه العواقب اللي شفتوها؟ بعد ما تقفل الجولة ناقش اختلاف المسارات.',
        'Ask: What information shaped your decision? Which consequences did you see? Compare participant routes once the round closes.')}
    </span></aside>}
+   {closed&&g?.scenarioMap&&<div className="arena-scenario__mind-map" role="region"
+    aria-label={t('خريطة المسار الصحيح','Canonical decision mind map')}>
+    <h3><MapPinned size={24}/>{t('الخريطة النهائية للمسار الصحيح','THE CORRECT DECISION PATH')}</h3>
+    {g.scenarioMap.path?.length? <ol>{g.scenarioMap.path.map((node:any,i:number)=>
+      <li key={node.id||i} className={node.ending?'is-ending':''}>
+       <span className="arena-scenario__mind-index">{i+1}</span>
+       <div><b>{node.text}</b>
+        {node.choice&&<strong><CheckCircle2 size={16}/>{node.choice}</strong>}
+        {node.consequence&&<small>{node.consequence}</small>}
+        {node.ending&&<span><Flag size={15}/>{t('النهاية الصحيحة','Correct ending')}</span>}
+       </div>
+      </li>)}</ol>:null}
+    {!g.scenarioMap.complete&&<p>{t('المسار الصحيح غير مكتمل الإعداد. حدّد اختيارًا صحيحًا لكل عقدة داخل الاستوديو.',
+      'Correct path is not fully authored. Mark a correct choice for every decision node in Studio.')}</p>}
+   </div>}
    <div className="arena-scenario__stage-footer"><ShieldCheck size={16}/>{t('نتائج كل مسار خاصة بصاحب القرار؛ لا نعرض اختيارات فردية على البروجيكتور.',
     'Individual decision paths stay private and are not exposed on the projector.')}</div>
   </section>;
