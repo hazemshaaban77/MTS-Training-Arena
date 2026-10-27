@@ -1742,7 +1742,7 @@ test('ImportVerse evidence-marked sixty-minute preset contains all ten engines a
  assert.ok(deck.every(a=>String(a.contentSource).includes('94-question bank')));
  assert.ok(deck[2].questions.some((q:any)=>q.prompt.includes('الحلقة 4')));
  assert.equal(importVerseQuestions.length,94);
- assert.equal(new Set(importVerseQuestions.map(q=>q.prompt)).size,64);
+ assert.equal(new Set(importVerseQuestions.map(q=>q.prompt)).size,94);
  assert.ok(importVerseQuestions.every(q=>q.options.length===4&&q.options[q.correct]&&q.explanation.length>15));
  assert.equal(new Set(importVerseQuestions.map(q=>q.episode)).size,6);
  assert.equal(importVerseQuestions.filter(q=>q.episode===6).length,30);
