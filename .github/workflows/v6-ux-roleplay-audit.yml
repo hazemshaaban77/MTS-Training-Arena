@@ -24,7 +24,7 @@ jobs:
       - name: Install isolated browser driver
         run: |
           npm install -g playwright@1.58.2
-          playwright install --with-deps chromium
+          if command -v google-chrome >/dev/null || command -v chromium >/dev/null; then echo 'Using preinstalled GitHub runner Chrome'; else playwright install chromium; fi
       - name: Start local client (no API credentials)
         run: |
           pnpm exec vite --config vite.github.config.ts --host 127.0.0.1 --port 4173 --base / > /tmp/mts-arena-roleplay-vite.log 2>&1 &
