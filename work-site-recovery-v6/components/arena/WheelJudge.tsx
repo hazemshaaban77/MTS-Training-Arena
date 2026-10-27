@@ -25,6 +25,7 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
  const valid=Number.isInteger(grade)&&grade>=0&&grade<=10&&Number.isFinite(points)&&
   reason.trim().length>=5&&reason.trim().length<=280;
  useEffect(()=>{setPending(false);setReason('');setGrade(7);setDirection(1);},[reveal?.id]);
+ useEffect(()=>{if(!busy)setPending(false);},[busy,session.revision]);
  if(!shown)return null;
  function submit(){
   if(!valid||busy||pending||rated)return;
