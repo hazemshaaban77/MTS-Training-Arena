@@ -1678,7 +1678,7 @@ test('practical Wheel award cannot be automatic and only host-authorized score e
   canAnswer={false} busy={false} onSubmit={()=>{}} onInteract={()=>{}} onControl={()=>{}}/>);
  assert.ok(!guest.includes('wheel-judge__direction'),'Projector never has scoring controls');
  const game=readFileSync('lib/session-games.ts','utf8');
- assert.ok(game.includes("b.action==='wheelaward'"));
+ assert.ok(game.includes("['wheelaward','boxaward'].includes(b.action)"),'Both practical games share the strict host-scoring endpoint');
  assert.ok(game.includes("'wheel-judge'"));
  assert.ok(game.includes("['question','challenge'].includes(sector?.kind)?0"));
  assert.ok(game.includes('revealAt:now+3000+duration+150'),'No 2-second reveal gap');
