@@ -62,7 +62,7 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   const key=ix+':'+playerId,grades=rt.flashGrades||{};
   if(grades[key])fail('ALREADY_GRADED',409);
   const id='flashjudge:'+s.current+':'+key;
-  const updated={...rt,flashGrades:{...grades,[key]:{grade,delta,player:playerId,index:ix}}};
+  const updated={...rt,flashTarget:playerId,flashGrades:{...grades,[key]:{grade,delta,player:playerId,index:ix}}};
   const results=await batch(db,[
    db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')")
     .bind(s.code,id,playerId,s.current,'flash-judge',delta,JSON.stringify({grade,index:ix}),now,s.code,s.revision),
@@ -173,6 +173,7 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   game.manualJudgement=rt.judgements?.[(a.type==='Open the Box'?rt.box?.id:rt.spin?.id)||'']||null;
  }
  if(a.type==='Flashcards'&&a.trainingMode==='challenge'){
+  game.flashTarget=rt.flashTarget||null;
   game.flashGrades=host?rt.flashGrades||{}:p?
    Object.fromEntries(Object.entries(rt.flashGrades||{}).filter(([key]:any)=>key.endsWith(':'+p.id))):{};
  }
