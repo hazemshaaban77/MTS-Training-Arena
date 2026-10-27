@@ -1,5 +1,5 @@
 {
-  "title": "ImportVerse — The Ultimate Import Challenge | 60 دقيقة | 5 حلقات مؤكدة",
+  "title": "ImportVerse — The Ultimate Import Challenge | 60 دقيقة | الحلقات الستة",
   "language": "ar",
   "teams": false,
   "settings": {
@@ -109,16 +109,33 @@
           "sourceEpisode": 5,
           "questionBankId": "IV-E5-03",
           "explanation": "الحلقة الخامسة تشرح تسجيل حالة الإفراج المسبق في دفتر 15."
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 6: مين الناقل الفعلي اللي يمتلك السفن والحاويات وفق تعريف الحلقة؟",
+          "options": [
+            "التوكيل الملاحي Shipping Agent",
+            "وكيل الشحن Freight Forwarder",
+            "المخلص الجمركي",
+            "الخط الملاحي Shipping Line"
+          ],
+          "correct": 3,
+          "timer": 40,
+          "points": 1000,
+          "speed": false,
+          "sourceEpisode": 6,
+          "questionBankId": "IV-E6-02",
+          "explanation": "المشهد الثاني يفرق بين الناقل الفعلي وممثله المحلي ووسيط الشحن."
         }
       ],
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     },
     {
       "type": "Wheel of Fortune",
-      "prompt": "عجلة ImportVerse | تحديات أداء من الحلقات 1–5",
+      "prompt": "عجلة ImportVerse | تحديات من الحلقات الستة",
       "timer": 0,
-      "rounds": 5,
+      "rounds": 6,
       "spinDuration": 5,
       "sectors": [
         {
@@ -155,16 +172,23 @@
           "points": 0,
           "repeatable": true,
           "detail": "من الحلقة 5: وضّح الفرق بين دفتر 15 للإفراج المسبق ودفتر 1 بعد الوصول حسب شرح الحلقة. تقييم 0–10."
+        },
+        {
+          "label": "الحاويات والبوليصة",
+          "kind": "challenge",
+          "points": 0,
+          "repeatable": true,
+          "detail": "من الحلقة 6: اختار الحاوية المناسبة لمعدات مالك، واشرح Shipper وConsignee وNotify Party وACID. تقييم 0–10."
         }
       ],
       "points": 1000,
       "weight": 1,
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     },
     {
       "type": "Ultimate Game Show",
-      "prompt": "التحدي الكبير | خمس حلقات وسبعة مستويات",
+      "prompt": "التحدي الكبير | ست حلقات وسبعة مستويات",
       "timer": 0,
       "options": [
         "المراجعة قبل الإرسال",
@@ -238,24 +262,6 @@
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 3: طلب ACID في القصة بيحتوي على أي مجموعات أساسية من البيانات؟",
-          "options": [
-            "اسم المدرب والتوقيت فقط",
-            "بيانات المستورد والمصدر والشحنة",
-            "المخلص والتوكيل فقط",
-            "المخزن والسائق فقط"
-          ],
-          "correct": 1,
-          "timer": 45,
-          "points": 1000,
-          "speed": false,
-          "sourceEpisode": 3,
-          "questionBankId": "IV-E3-03",
-          "explanation": "تظهر ثلاثة أقسام أساسية في نموذج الطلب.",
-          "section": "المستوى 4"
-        },
-        {
-          "type": "Quiz",
           "prompt": "الحلقة 4: KYC في تسجيل CargoX معناه إيه؟",
           "options": [
             "Know Your Customer والتحقق من بيانات الشركة",
@@ -265,52 +271,70 @@
           ],
           "correct": 0,
           "timer": 45,
-          "points": 2000,
+          "points": 1000,
           "speed": false,
           "sourceEpisode": 4,
           "questionBankId": "IV-E4-01",
           "explanation": "KYC توثيق الكيان الاقتصادي.",
+          "section": "المستوى 4"
+        },
+        {
+          "type": "Quiz",
+          "prompt": "الحلقة 5: لو بدأت الإجراءات قبل وصول السفينة، في أي دفتر قُيّدت شهادة الإفراج المسبق في مثال الحلقة؟",
+          "options": [
+            "دفتر 1",
+            "دفتر حضور المتدربين",
+            "دفتر اعتماد البنك",
+            "دفتر 15"
+          ],
+          "correct": 3,
+          "timer": 45,
+          "points": 2000,
+          "speed": false,
+          "sourceEpisode": 5,
+          "questionBankId": "IV-E5-03",
+          "explanation": "الحلقة الخامسة تشرح تسجيل حالة الإفراج المسبق في دفتر 15.",
           "section": "المستوى 5"
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 4: قبل التوقيع على مرفقات نافذة، المستورد بيعمل إيه؟",
+          "prompt": "الحلقة 6: بوليصة الشحن Bill of Lading لها إيه من وظائف في السكريبت؟",
           "options": [
-            "يحذف الفاتورة",
-            "يستخرج رقم 46 دون مستندات",
-            "يفتح المرفق ويعرضه ويدخل PIN الخاص بالتوقيع",
-            "يختار نتيجة العجلة"
+            "إيصال استلام وعقد نقل وقد تؤدي وظيفة سند ملكية",
+            "فاتورة ضريبية فقط",
+            "إذن تفتيش جمركي فقط",
+            "شهادة منشأ"
           ],
-          "correct": 2,
+          "correct": 0,
           "timer": 45,
           "points": 3500,
           "speed": false,
-          "sourceEpisode": 4,
-          "questionBankId": "IV-E4-03",
-          "explanation": "التوقيع الإلكتروني مرتبط بعرض المرفق ثم eToken وPIN.",
+          "sourceEpisode": 6,
+          "questionBankId": "IV-E6-15",
+          "explanation": "المشهد الخامس يذكر وظائف البوليصة الثلاث.",
           "section": "المستوى 6"
         },
         {
           "type": "Quiz",
-          "prompt": "الحلقة 5: الإفراج العادي بعد وصول السفينة وربط إذن التسليم في المثال مربوط بإيه؟",
+          "prompt": "الحلقة 6: إيه أول خطوة في المراحل الست للشحن البحري في الحلقة؟",
           "options": [
-            "دفتر 1",
-            "دفتر 15 دائمًا",
-            "دفتر تسجيل المصدر",
-            "قائمة المرفقات"
+            "الوصول والتخليص",
+            "تحميل السفينة مباشرة",
+            "دفع رسوم التأخير",
+            "طلب عرض سعر Quotation"
           ],
-          "correct": 0,
+          "correct": 3,
           "timer": 45,
           "points": 5000,
           "speed": false,
-          "sourceEpisode": 5,
-          "questionBankId": "IV-E5-04",
-          "explanation": "السيناريو الثاني في الحلقة: الإفراج العادي، دفتر 1.",
+          "sourceEpisode": 6,
+          "questionBankId": "IV-E6-26",
+          "explanation": "مراحل الحلقة تبدأ بطلب عرض سعر ثم Booking وتجهيز ونقل ثم تخليص صادر وتحميل ووصول.",
           "section": "المستوى 7"
         }
       ],
       "plannedMinutes": 10,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     },
     {
       "type": "Meta Plan",
@@ -319,7 +343,8 @@
       "categories": [
         "التسجيل والتعاقد",
         "التفويض وACI",
-        "CargoX والإفراج"
+        "CargoX والإفراج",
+        "الشحن البحري"
       ],
       "items": [
         "تفعيل البريد والموبايل",
@@ -327,7 +352,8 @@
         "قبول شركة التخليص للتفويض",
         "إدراج بيانات المستورد والمصدر والشحنة",
         "رفع Envelope على CargoX",
-        "بدء الإجراءات الجمركية ورقم 46"
+        "بدء الإجراءات الجمركية ورقم 46",
+        "اختيار نوع الحاوية وطلب Booking"
       ],
       "assignments": [
         0,
@@ -335,11 +361,12 @@
         1,
         1,
         2,
-        2
+        2,
+        3
       ],
       "autoClose": true,
       "plannedMinutes": 5,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations",
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms",
       "scored": false
     },
     {
@@ -399,24 +426,49 @@
               "explanation": "التوقيع الإلكتروني مرتبط بعرض المرفق ثم eToken وPIN."
             }
           ]
+        },
+        {
+          "title": "بوابة الشحن البحري",
+          "narrative": "مالك معه معدات ثقيلة ومحتاج يحجز ويختار الحاوية المناسبة.",
+          "hint": "راجع الفرق بين 20 قدم للأوزان المركزة وHigh Cube للأحجام الكبيرة.",
+          "hintAfter": 1,
+          "puzzles": [
+            {
+              "type": "Quiz",
+              "prompt": "الحلقة 6: لو عندك ماكينة أطول من سقف الحاوية العادية وممكن تُحمّل من أعلى، تختار إيه؟",
+              "options": [
+                "ISO Tank",
+                "Open Top",
+                "Ventilated",
+                "High Cube بالضرورة"
+              ],
+              "correct": 1,
+              "timer": 40,
+              "points": 1000,
+              "speed": false,
+              "sourceEpisode": 6,
+              "questionBankId": "IV-E6-08",
+              "explanation": "Open Top بدون سقف صلب وتُحمّل من أعلى في المثال."
+            }
+          ]
         }
       ],
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     },
     {
       "type": "Live Poll",
-      "prompt": "من أي حلقة حاسس إنك محتاج تدريب عملي أكتر؟",
+      "prompt": "من أي محور في حلقات ImportVerse الستة محتاج تدريب عملي أكتر؟",
       "timer": 30,
       "options": [
         "حساب نافذة · 1",
         "العقد والاعتماد · 2",
         "تفويض وACID · 3",
-        "CargoX أو الإفراج · 4–5"
+        "CargoX والإفراج والشحن · 4–6"
       ],
       "pollKind": "choice",
       "plannedMinutes": 4,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations",
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms",
       "scored": false
     },
     {
@@ -438,19 +490,20 @@
         0
       ],
       "plannedMinutes": 5,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     },
     {
       "type": "Open the Box",
-      "prompt": "افتح الصندوق | خمس حلقات وتحديات الشرح",
+      "prompt": "افتح الصندوق | ست حلقات وتحديات الشرح",
       "timer": 0,
-      "rounds": 5,
+      "rounds": 6,
       "items": [
         "التسجيل",
         "Incoterms",
         "تفويض",
         "CargoX",
-        "الإفراج"
+        "الإفراج",
+        "الشحن والتأمين"
       ],
       "points": 1000,
       "boxes": [
@@ -478,14 +531,19 @@
           "kind": "challenge",
           "points": 0,
           "detail": "الحلقة 5: اشرح سيناريو بدء الإجراءات قبل الوصول وبعده، ودفتر 15/1."
+        },
+        {
+          "kind": "challenge",
+          "points": 0,
+          "detail": "الحلقة 6: امثل دور وكيل شحن يشرح لمالك اختيار الحاوية وأنواع البوليصة وأهمية التأمين البحري. الدرجة من 10."
         }
       ],
       "plannedMinutes": 6,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     },
     {
       "type": "Flashcards",
-      "prompt": "بطاقات ImportVerse | راجع 5 مفاهيم أساسية",
+      "prompt": "بطاقات ImportVerse | راجع 6 مفاهيم أساسية",
       "timer": 0,
       "flipPermission": "host",
       "fronts": [
@@ -493,20 +551,22 @@
         "الحلقة 2: إيه المقصود بـ Incoterms؟",
         "الحلقة 3: التفويض بيسري إمتى؟",
         "الحلقة 4: إيه معنى Envelope وKYC؟",
-        "الحلقة 5: الفرق بين دفتر 15 ودفتر 1؟"
+        "الحلقة 5: الفرق بين دفتر 15 ودفتر 1؟",
+        "الحلقة 6: الفرق بين الخط الملاحي والتوكيل ووكيل الشحن؟"
       ],
       "backs": [
         "تسجيل الدخول وتفعيل الموبايل ثم الخدمات الإلكترونية.",
         "شروط غرفة التجارة الدولية لتوزيع مسؤوليات النقل والتكاليف.",
         "بعد ما شركة التخليص تراجع التفويض وتقبل من حسابها.",
         "Envelope ظرف مستندات رقمي؛ KYC التحقق من هوية الشركة.",
-        "بحسب سيناريو الحلقة: 15 إفراج مسبق قبل الوصول، و1 إفراج عادي بعد الوصول."
+        "بحسب سيناريو الحلقة: 15 إفراج مسبق قبل الوصول، و1 إفراج عادي بعد الوصول.",
+        "الخط ناقل يملك السفينة، التوكيل يمثله محليًا، ووكيل الشحن ينسق عمليات وحجوزات العميل."
       ],
       "trainingMode": "challenge",
       "scored": true,
       "points": 1000,
       "plannedMinutes": 5,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     },
     {
       "type": "Scenario Challenge",
@@ -567,11 +627,11 @@
         }
       ],
       "plannedMinutes": 7,
-      "contentSource": "ImportVerse Episodes 1–5 MP3 extracted transcript · 64-question bank; episode 6 pending; verify changing regulations"
+      "contentSource": "ImportVerse Episodes 1–5 audio transcripts + Episode 6 user Word script · 94-question bank · verify any changing rules and insurance terms"
     }
   ],
   "survey": null,
-  "sourceNote": "MP3 transcripts from episodes 1–5. Episode 6 unavailable for text extraction. Customs regulations require current authoritative verification.",
-  "bankCount": 64,
+  "sourceNote": "Episodes 1–5: MP3 text extracts. Episode 6: user-uploaded shipping and marine insurance Word script. Technical, legal and insurance terms must be separately reviewed against current primary sources.",
+  "bankCount": 94,
   "plannedMinutes": 60
 }
