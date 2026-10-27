@@ -33,6 +33,7 @@ assert.doesNotThrow(()=>validateActivity(structuredClone(legacy)));
 const start=showCommand(show,showStart(),'cast',{player:'candidate',attemptId:'attempt1'},1000,0);
 const aided=showCommand(show,start.show,'lifeline',{kind:'fifty',player:'candidate'},1100,start.deadline);
 assert.equal(aided.show.current.usedLifelines[0],'fifty');
-assert.equal(showPublic(show,aided.show,'audience').eliminatedChoices.length,2);
+assert.equal(showPublic(show,aided.show,'audience').eliminatedChoices.length,0,'Audience must not receive the contestant’s private removal hints');
+assert.equal(showPublic(show,aided.show,'candidate').eliminatedChoices.length,2);
 assert.throws(()=>showCommand(show,aided.show,'lifeline',{kind:'fifty'},1300,aided.deadline));
 console.log('GAME UPGRADE SAFETY PASS: wheel, grading, touch, championship and scenario contracts.');
