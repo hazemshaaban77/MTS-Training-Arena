@@ -7,7 +7,8 @@ fs.mkdirSync(root,{recursive:true});
 const base='http://127.0.0.1:4173/audit-browser.html';
 const games=['Quiz','Wheel of Fortune','Ultimate Game Show','Meta Plan','Escape Room','Live Poll','Order It','Open the Box','Flashcards','Scenario Challenge'];
 (async()=>{
- const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(fs.existsSync);
+ const browser=await chromium.launch({headless:true,...(chrome?{executablePath:chrome}:{}),args:['--no-sandbox','--disable-dev-shm-usage']});
  const cases=[],runtimeErrors=[];
  const targets=[
   {name:'trainer',size:{width:1440,height:900},role:'المدرب'},
