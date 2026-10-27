@@ -19,6 +19,7 @@ import SessionEntryFeedback from './SessionEntryFeedback';
 import TrainerReadiness from './TrainerReadiness';
 import TrainerDirectorDashboard from './TrainerDirectorDashboard';
 import {useProjectorFit} from './useProjectorFit';
+import './ArenaProjectorRepair.css';
 import TraineeFinish from './TraineeFinish';
 import ActivityArt from './ActivityArt';
 type Props={ar:boolean;view:string;code:string;navigate:(view:string,code?:string)=>void;toggleLanguage:()=>void};
