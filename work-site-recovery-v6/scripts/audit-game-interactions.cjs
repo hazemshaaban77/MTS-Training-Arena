@@ -111,7 +111,9 @@ const short=x=>String(x||'').replace(/\s+/g,' ').slice(0,220);
       if(!rec.observations.reordered&&await grips.count()>1){
        // Real touch device event rather than synthetic mouse, using the same
        // touch-action and pointer-capture path as Android Chrome.
+       await grips.nth(0).scrollIntoViewIfNeeded();
        const p=await grips.nth(0).boundingBox(),dest=await steps.nth(1).boundingBox();
+       rec.observations.dragGeometry={handle:!!p,target:!!dest};
        if(p&&dest){
         const sx=p.x+p.width/2,sy=p.y+p.height/2,ex=dest.x+dest.width/2,ey=dest.y+dest.height/2;
         const cdp=await ctx.newCDPSession(page);
@@ -123,13 +125,15 @@ const short=x=>String(x||'').replace(/\s+/g,' ').slice(0,220);
         rec.observations.realTouchReordered=JSON.stringify(rec.observations.afterRealTouch)!==JSON.stringify(rec.observations.after);
        }
       }
-      await activate(page,'button:has-text("ثبّت ترتيب الخطوات")','submit order',rec);
       const down=page.locator('.arena-sequence__step-actions button[aria-label*="لأسفل"]').first();
+      rec.observations.downButtonCount=await down.count();
       if(await down.count()&&await down.isEnabled()){
        await down.click();
+       rec.actions.push('move step down:clicked');
        rec.observations.afterArrow=(await steps.allTextContents()).map(short);
-       rec.observations.arrowReordered=JSON.stringify(rec.observations.afterArrow)!==JSON.stringify(rec.observations.after);
+       rec.observations.arrowReordered=JSON.stringify(rec.observations.afterArrow)!==JSON.stringify(rec.observations.afterRealTouch||rec.observations.after);
       }
+      await activate(page,'button:has-text("ثبّت ترتيب الخطوات")','submit order',rec);
       rec.passed=!!(rec.observations.grips&&rec.observations.arrowReordered);break;
      }
      case 'Open the Box':{
