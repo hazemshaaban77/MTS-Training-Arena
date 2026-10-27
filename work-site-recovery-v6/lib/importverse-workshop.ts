@@ -54,16 +54,16 @@ export function makeImportVerseWorkshop(language:'ar'|'en'='ar'):Activity[]{
      hint:a('شركة التخليص لازم تقبل التفويض من حسابها.','The broker must accept it.'),hintAfter:1,puzzles:[bank[6]]},
    {title:a('بوابة CargoX','CargoX gate'),narrative:a('المصدر رفع مستندات لكن المستورد مش عارف يوقّع. اختار الإجراء الصح.','Exporter uploaded docs; what must importer do to sign?'),
      hint:a('افتح المرفق وأكمل بياناته ثم استخدم eToken.','Open attachment and use eToken.'),hintAfter:1,
-     puzzles:[bank[11]]}
+     puzzles:[bank[11]]},
    {title:a('بوابة الشحن البحري','Ocean shipment gate'),narrative:a('مالك معه معدات ثقيلة ومحتاج يحجز ويختار الحاوية المناسبة.','Malik has heavy machinery and must choose proper container.'),hint:a('راجع الفرق بين 20 قدم للأوزان المركزة وHigh Cube للأحجام الكبيرة.','Consider 20-foot heavy cargo vs high-volume High Cube.'),hintAfter:1,puzzles:[bank[19]]}
    ]},
   {...sample('Live Poll',language),prompt:a('من أي محور في حلقات ImportVerse الستة محتاج تدريب عملي أكتر؟','Which episode needs more hands-on practice?'),
-   timer:30,pollKind:'choice',options:[a('حساب نافذة · 1','Account · 1'),a('العقد والاعتماد · 2','Contract · 2'),a('تفويض وACID · 3','ACI · 3'),a('CargoX والإفراج والشحن · 4–6','CargoX/Clearance · 4–5')]},
+   timer:30,pollKind:'choice',options:[a('حساب نافذة · 1','Account · 1'),a('العقد والاعتماد · 2','Contract · 2'),a('تفويض وACID · 3','ACI · 3'),a('CargoX والإفراج والشحن · 4–6','CargoX/Clearance · 4–6')]},
   {...sample('Order It',language),prompt:a('رتّب رحلة مالك: التسجيل → التعاقد → تفويض → مستندات → إفراج','Put Malik’s import stages in order'),
    timer:75,items:[a('بدء الإجراءات الجمركية ورقم 46','Start customs declaration'),a('فتح حساب تجاري بنافذة','Open Nafeza business account'),
     a('إصدار فاتورة مبدئية وتعاقد','Agree proforma and contract'),a('رفع وتوقيع المرفقات عبر CargoX ونافذة','Upload and sign documents'),a('التفويض ثم طلب ACID','Delegate and request ACID')],
    order:[1,2,4,3,0]},
-  {...sample('Open the Box',language),prompt:a('افتح الصندوق | ست حلقات وتحديات الشرح','Open the Box | Explain five episode concepts'),
+  {...sample('Open the Box',language),prompt:a('افتح الصندوق | ست حلقات وتحديات الشرح','Open the Box | Explain all six episodes'),
    timer:0,points:1000,rounds:6,items:[a('التسجيل','Registration'),a('Incoterms','Incoterms'),a('تفويض','Delegation'),a('CargoX','CargoX'),a('الإفراج','Clearance'),a('الشحن والتأمين','Shipping and insurance')],
    boxes:[
     {kind:'challenge',points:0,detail:a('الحلقة 1: اعرض على زملائك خطوات إنشاء حساب تجاري وتفعيل الخدمات الإلكترونية.','Ep 1: Show business account activation.')},
