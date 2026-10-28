@@ -211,6 +211,7 @@ try:
     haz=bpy.context.object;haz.dimensions=(28,24,16)
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     register(haz,'low density actual volumetric atmosphere',vol)
+    haz.hide_render=True  # geometry retained but no costly path tracing for art QA
 except Exception as exc:
     print('V6_HAZE_UNAVAILABLE',str(exc),flush=True)
 for n in range(10):
@@ -227,9 +228,9 @@ for ob in scene.objects:
 cam.location=(0,-25.5,6.0)
 aim(cam,(0,-.9,4.84))
 cam.data.lens=37
-scene.render.resolution_x=1440
-scene.render.resolution_y=810
-scene.cycles.samples=28
+scene.render.resolution_x=1280
+scene.render.resolution_y=720
+scene.cycles.samples=20
 scene.cycles.volume_bounces=1
 scene.view_settings.exposure=-.43
 try:
