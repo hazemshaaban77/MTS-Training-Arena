@@ -6,16 +6,11 @@
  */
 import {useEffect,useRef} from 'react';
 import {TAU,sectorAngle,forwardSweep,easedStop,wheelClock} from '../../lib/arena-wheel3d-math';
+import {ARENA_CINEMA_B,sectorCorporateColor,visibleWheelLabel} from '../../lib/arena-wheel-theme';
 import './ArenaWheel3D.css';
 type Sector={label?:string;kind?:string};
 type Spin={id?:string;startsAt?:number;stopsAt?:number;index?:number;revealed?:boolean};
 type Props={sectors:Sector[];spin?:Spin|null;serverNow:number;canSpin:boolean;onSpin:()=>void;ar:boolean;countdown:number;onUnavailable:()=>void};
-const palette:Record<string,number[]>={
- question:[0xe8a82f,0xc78318],prize:[0x7f33c1,0x522199],
- penalty:[0xa32b49,0xd23b60],mystery:[0x8b30c2,0xa047d6],
- challenge:[0x008c99,0x047288]
-};
-const fallback=[0xb02b3d,0xdb9d24,0x0492b1,0x8133b2,0x007e79,0xc84265,0x6144b3,0x086c91];
 const kindIcons:Record<string,string>={question:'?',prize:'★',penalty:'↺',mystery:'✦',challenge:'◆'};
 export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,countdown,onUnavailable}:Props){
  const mount=useRef<HTMLDivElement>(null);
@@ -33,6 +28,8 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
   let onLost:(e:Event)=>void=()=>{};
   const initialize=async()=>{
    try{
+    // The local Cairo font must finish loading before canvas labels become WebGL textures.
+    await document.fonts?.load('800 48px Cairo','سؤال وتحدي').catch(()=>[]);
     const THREE=await import('three');
     if(removed)return;
     // WebGLRenderer probes support itself. Avoid allocating a second GPU context.
@@ -40,26 +37,26 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,coarse?1.3:1.75));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure=1.53;
+    renderer.toneMappingExposure=1.28;
     const canvas=renderer.domElement;
     canvas.setAttribute('aria-hidden','true');
     root.appendChild(canvas);
     const scene=new THREE.Scene();
     const camera=new THREE.PerspectiveCamera(34,1,.1,100);
     camera.position.set(0,-.15,11.7);
-    scene.add(new THREE.HemisphereLight(0xbde7ff,0x191123,2.9));
-    const key=new THREE.SpotLight(0xffda90,150,40,Math.PI/4,.65,1.7);
+    scene.add(new THREE.HemisphereLight(0xe3f5ff,0x07172b,2.8));
+    const key=new THREE.SpotLight(0xf5fbff,145,40,Math.PI/4,.65,1.7);
     key.position.set(-4,5,9);scene.add(key);
     const rimLight=new THREE.PointLight(0x55d2ff,110,30);
     rimLight.position.set(4,-1.2,6.5);scene.add(rimLight);
-    const violet=new THREE.PointLight(0x7846d1,72,30);
+    const violet=new THREE.PointLight(0x35e78c,65,30);
     violet.position.set(-5,-1.5,2.2);scene.add(violet);
-    const brass=new THREE.MeshStandardMaterial({color:0xd6a64d,metalness:.78,roughness:.21});
-    const bright=new THREE.MeshStandardMaterial({color:0xffdf91,metalness:.56,roughness:.18,emissive:0xbc7620,emissiveIntensity:.25});
-    const bronze=new THREE.MeshStandardMaterial({color:0x684424,metalness:.8,roughness:.30});
-    const graphite=new THREE.MeshStandardMaterial({color:0x0c1829,metalness:.7,roughness:.24});
-    const sapphire=new THREE.MeshStandardMaterial({color:0x063655,metalness:.58,roughness:.24,emissive:0x044c69,emissiveIntensity:.38});
-    const halo=new THREE.MeshBasicMaterial({color:0x24bade});
+    const brass=new THREE.MeshStandardMaterial({color:ARENA_CINEMA_B.chrome,metalness:.83,roughness:.19});
+    const bright=new THREE.MeshStandardMaterial({color:0xf4f9ff,metalness:.65,roughness:.15,emissive:0x1277cc,emissiveIntensity:.25});
+    const bronze=new THREE.MeshStandardMaterial({color:0x648ba7,metalness:.82,roughness:.26});
+    const graphite=new THREE.MeshStandardMaterial({color:0x092343,metalness:.7,roughness:.24});
+    const sapphire=new THREE.MeshStandardMaterial({color:0x064a86,metalness:.58,roughness:.24,emissive:0x028dca,emissiveIntensity:.32});
+    const halo=new THREE.MeshBasicMaterial({color:0x39d887});
     disposables.push(brass,bright,bronze,graphite,sapphire,halo);
     const stage=new THREE.Group();stage.position.y=.29;scene.add(stage);
     const tilt=new THREE.Group();tilt.rotation.x=-.095;stage.add(tilt);
@@ -87,8 +84,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
       }
       shape.closePath();
       const geometry=new THREE.ExtrudeGeometry(shape,{depth:.24,bevelEnabled:true,bevelThickness:.016,bevelSize:.012,bevelSegments:2,steps:1});
-      const kinds=palette[sectors[i].kind||''];
-      const color=kinds?kinds[i%kinds.length]:fallback[i%fallback.length];
+      const color=sectorCorporateColor(sectors[i].kind,i);
       const material=new THREE.MeshStandardMaterial({color,roughness:.29,metalness:.37,side:THREE.DoubleSide});
       disposables.push(material);
       mesh(geometry,material,wheel,0,0,.10);
@@ -98,19 +94,19 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
       wheel.add(edge);disposables.push(edge.geometry);
       const mid=Math.PI/2-i*step;
       // Canvas supports connected Arabic glyphs; labels come from the authored game.
-      const labelText=String(sectors[i].label||'').trim().slice(0,50);
+      const labelText=visibleWheelLabel(sectors[i],i,sectors.length);
       const canPrintFull=sectors.length<=10;
       const face=document.createElement('canvas');face.width=512;face.height=256;
       const ctx=face.getContext('2d');
       if(ctx){
         ctx.clearRect(0,0,512,256);
-        ctx.textAlign='center';ctx.textBaseline='middle';ctx.direction='rtl';
+        ctx.textAlign='center';ctx.textBaseline='middle';ctx.direction=ar?'rtl':'ltr';
         ctx.shadowColor='#041022';ctx.shadowBlur=10;
-        ctx.fillStyle='#fff6e0';ctx.font='bold 56px Tahoma,Arial,sans-serif';
+        ctx.fillStyle=color===0xf3f8ff||color===0xf1f6ff?'#07345b':'#f9fcff';ctx.font='800 56px Cairo,Arial,sans-serif';
         const symbol=kindIcons[sectors[i].kind||'']||'✦';
-        ctx.font='bold 91px Arial,sans-serif';ctx.fillText(symbol,256,60);
+        ctx.font='800 91px Cairo,Arial,sans-serif';ctx.fillText(symbol,256,60);
         if(canPrintFull&&labelText){
-          ctx.font='bold 47px Tahoma,Arial,sans-serif';
+          ctx.font='800 47px Cairo,Arial,sans-serif';
           const words=labelText.split(/\s+/),rows:string[]=[];let line='';
           for(const word of words){
             const candidate=line?line+' '+word:word;
@@ -119,12 +115,12 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
           if(line)rows.push(line);
           if(rows.length>2)rows[1]=rows.slice(1).join(' ').slice(0,18)+'…';
           rows.slice(0,2).forEach((row,index)=>{
-            let size=47;while(size>28&&ctx.measureText(row).width>455){size-=2;ctx.font='bold '+size+'px Tahoma,Arial,sans-serif';}
+            let size=47;while(size>28&&ctx.measureText(row).width>455){size-=2;ctx.font='800 '+size+'px Cairo,Arial,sans-serif';}
             ctx.fillText(row,256,145+index*65);
-            ctx.font='bold 47px Tahoma,Arial,sans-serif';
+            ctx.font='800 47px Cairo,Arial,sans-serif';
           });
         }else{
-          ctx.font='900 95px Arial,sans-serif';ctx.fillText(String(i+1).padStart(2,'0'),256,171);
+          ctx.font='800 95px Cairo,Arial,sans-serif';ctx.fillText(String(i+1).padStart(2,'0'),256,171);
         }
         const texture=new THREE.CanvasTexture(face);texture.colorSpace=THREE.SRGBColorSpace;
         const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:true,depthWrite:false});
@@ -144,7 +140,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     ring(2.59,.035,.15,graphite);
     ring(2.66,.018,-.10,halo,tilt);
     const bulbs=48,orbGeo=new THREE.SphereGeometry(.046,9,7);
-    const lightMaterial=new THREE.MeshStandardMaterial({color:0xffdda0,emissive:0xffae48,emissiveIntensity:2.1,roughness:.12});
+    const lightMaterial=new THREE.MeshStandardMaterial({color:0xe6f6ff,emissive:0x1d9cf1,emissiveIntensity:1.8,roughness:.12});
     const bulbsMesh=new THREE.InstancedMesh(orbGeo,lightMaterial,bulbs);
     const dummy=new THREE.Object3D();
     for(let i=0;i<bulbs;i++){
@@ -164,9 +160,9 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     if(crestCtx){
       crestCtx.clearRect(0,0,512,320);
       crestCtx.textAlign='center';crestCtx.textBaseline='middle';
-      crestCtx.fillStyle='#f6cf74';crestCtx.shadowColor='#b07632';crestCtx.shadowBlur=11;
-      crestCtx.font='900 142px Arial,sans-serif';crestCtx.fillText('MTS',256,143);
-      crestCtx.shadowBlur=0;crestCtx.fillStyle='#f4e9d6';crestCtx.font='bold 36px Arial,sans-serif';
+      crestCtx.fillStyle='#f6fcff';crestCtx.shadowColor='#0286e0';crestCtx.shadowBlur=11;
+      crestCtx.font='800 142px Cairo,Arial,sans-serif';crestCtx.fillText('MTS',256,143);
+      crestCtx.shadowBlur=0;crestCtx.fillStyle='#57d98d';crestCtx.font='800 36px Cairo,Arial,sans-serif';
       crestCtx.fillText('TRAINING ARENA',256,235);
       const texture=new THREE.CanvasTexture(crest);texture.colorSpace=THREE.SRGBColorSpace;
       const mat=new THREE.SpriteMaterial({map:texture,transparent:true});
@@ -179,7 +175,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     pointerShape.lineTo(.18,2.66);pointerShape.lineTo(0,2.38);
     pointerShape.lineTo(-.18,2.66);pointerShape.closePath();
     const pointer=mesh(new THREE.ExtrudeGeometry(pointerShape,{depth:.16,bevelEnabled:true,bevelSegments:2,bevelSize:.025,bevelThickness:.035}),bright,stage,0,0,.81);
-    const jewel=mesh(new THREE.OctahedronGeometry(.16,0),new THREE.MeshStandardMaterial({color:0xf0444a,metalness:.28,roughness:.10,emissive:0x8d0c1b,emissiveIntensity:.23}),stage,0,2.78,1.03);
+    const jewel=mesh(new THREE.OctahedronGeometry(.16,0),new THREE.MeshStandardMaterial({color:0x35de83,metalness:.28,roughness:.10,emissive:0x026b4e,emissiveIntensity:.23}),stage,0,2.78,1.03);
     disposables.push(jewel.material);
     jewel.scale.y=.85;
     // Sculpted stand / base with stage halo.
@@ -236,7 +232,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     };
     resize();raf=requestAnimationFrame(render);
    }catch(error){
-    if(!removed){console.warn('Arena Crown Wheel: WebGL unavailable; original wheel restored.',error);failRef.current();}
+    if(!removed){console.warn('Arena Cinematic B Wheel: WebGL unavailable; accessible action displayed.',error);failRef.current();}
    }
   };
   void initialize();
@@ -245,14 +241,14 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
    for(const asset of disposables)try{asset.dispose();}catch{/* dispose resource */}
   };
  },[sectorsKey]);
- return <div className="arena-wheel3d arena-wheel3d--crown" data-testid="arena-wheel3d" aria-label={ar?'عجلة الحظ الملكية ثلاثية الأبعاد':'Arena Crown 3D Wheel'}>
+ return <div className="arena-wheel3d arena-wheel3d--crown arena-wheel3d--cinematic-b" data-testid="arena-wheel3d" aria-label={ar?'عجلة الحظ ثلاثية الأبعاد':'Arena Cinematic B Wheel'}>
   <div className="arena-wheel3d__canvas" ref={mount} aria-hidden="true"/>
   <div className="arena-wheel3d__ambient" aria-hidden="true"/>
   <button type="button" className="arena-wheel3d__tap" disabled={!canSpin}
-   aria-label={ar?'اضغط على مجسم عجلة الحظ لبدء اللف':'Tap the Arena Crown 3D wheel to spin'}
+   aria-label={ar?'اضغط على مجسم عجلة الحظ لبدء اللف':'Tap the Arena Cinematic B wheel to spin'}
    title={ar?'لف عجلة الحظ':'Spin the wheel'} onClick={onSpin}/>
   {countdown>0&&countdown<=3&&<div className="arena-wheel3d__countdown" aria-live="polite">{countdown}</div>}
-  <div className="arena-wheel3d__status">MTS · CROWN WHEEL 3D</div>
+  <div className="arena-wheel3d__status">MTS · CINEMATIC B 3D</div>
   <div className="arena-wheel3d__pill">{canSpin?(ar?'المس العجلة لبدء التحدي':'TOUCH THE WHEEL TO SPIN'):(spin&&!spin.revealed?(ar?'لحظة الحظ… العجلة بتلف':'THE WHEEL IS SPINNING…'):(ar?'عجلة الحظ':'FORTUNE WHEEL'))}</div>
  </div>;
 }

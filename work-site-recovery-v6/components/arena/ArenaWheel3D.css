@@ -17,3 +17,12 @@
 .wheel-3d-mode-switch .btn.is-active{box-shadow:0 0 12px #f9ba494d;border-color:#f2c276}
 .wheel-3d-mode-switch span{font-size:11px;color:#c4cbd5}
 @media(max-width:600px){.wheel-3d-mode-switch span{display:none}.wheel-3d-mode-switch .btn{min-height:44px}}
+
+/* Approved corporate identity: Cinematic B, Cairo, blue / emerald / silver only. */
+.arena-wheel3d--cinematic-b{font-family:"Cairo","Segoe UI",sans-serif;background:radial-gradient(ellipse at 50% 42%,#115ca658,#071b38 55%,#021027 92%);border:1px solid #7ec4e65a;box-shadow:inset 0 0 75px #010b1d,0 0 32px #1d87cf23}
+.arena-wheel3d--cinematic-b:before{background:radial-gradient(circle at 51% 73%,#27cd7c36,transparent 38%),repeating-linear-gradient(90deg,transparent 0 83px,#4ccaff08 84px 85px)}
+.arena-wheel3d--cinematic-b .arena-wheel3d__ambient{background:radial-gradient(ellipse,#2bce8a62,transparent 68%)}
+.arena-wheel3d--cinematic-b .arena-wheel3d__pill{font-family:"Cairo",sans-serif;letter-spacing:0;color:#f2fbff;background:#052342ed;border-color:#4dcdb79c;box-shadow:0 4px 22px #0009,0 0 21px #26cc9250}
+.arena-wheel3d--cinematic-b .arena-wheel3d__status{font-family:"Cairo",sans-serif;color:#c6eeff;border-color:#55cbe28c;letter-spacing:.035em}
+.arena-wheel3d--cinematic-b .arena-wheel3d__countdown{font-family:"Cairo",sans-serif;color:#f3fbff;border-color:#4ed3a0;background:#052746;box-shadow:0 0 28px #21d18b7a}
+.arena-wheel3d--cinematic-b .arena-wheel3d__tap:focus-visible{outline-color:#47e3ac}

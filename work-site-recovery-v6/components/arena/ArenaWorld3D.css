@@ -39,3 +39,12 @@
 .arena-wheel-webgl-unavailable button{font-size:17px;padding:14px 32px}
 @media(max-width:780px){.arena-cinematic-intro.arena-intro-real3d .cinematic-content-grid{grid-template-columns:1fr!important;grid-template-rows:minmax(175px,.82fr) minmax(0,1fr)!important}.arena-cinematic-intro.arena-intro-real3d .cinematic-visual-zone{height:min(35dvh,310px)!important}.arena-hero-world{opacity:.55!important}}
 @media(prefers-reduced-motion:reduce){.arena-world3d__curtain,.arena-world3d__rays i{animation:none!important;opacity:0!important}}
+
+/* Cinematic Entrance B: brand blue/green/white and Cairo, no brass/purple theme. */
+.arena-cinematic-intro.intro-kind-wheel.arena-intro-real3d{font-family:"Cairo","Segoe UI",Tahoma,sans-serif!important;background:radial-gradient(ellipse at center,#0d355e,#05152d 75%,#020d1b)!important}
+.arena-cinematic-intro.intro-kind-wheel .arena-intro-world-frame{border:1px solid #78c5e76b!important;box-shadow:0 0 54px #1a92da3d,inset 0 0 50px #010a18!important}
+.arena-cinematic-intro.intro-kind-wheel .cinematic-caption{color:#64e6ad!important;text-shadow:0 0 22px #30d98f5c!important;font-family:"Cairo",sans-serif!important;letter-spacing:0!important}
+.arena-cinematic-intro.intro-kind-wheel .cinematic-copy,.arena-cinematic-intro.intro-kind-wheel h2,.arena-cinematic-intro.intro-kind-wheel .cinematic-beat,.arena-cinematic-intro.intro-kind-wheel .cinematic-kicker{font-family:"Cairo",sans-serif!important}
+.arena-cinematic-intro.intro-kind-wheel .cinematic-start-label{background:linear-gradient(120deg,#0d579d,#0d654c)!important;color:#f4fbff!important;border-color:#39df9d82!important}
+.arena-cinematic-intro.intro-kind-wheel .cinematic-art-frame .arena-world3d{background:radial-gradient(ellipse at 48% 45%,#185d96,#0c305b 43%,#031329 93%)}
+.arena-cinematic-intro.intro-kind-wheel .cinematic-lights i{background:linear-gradient(180deg,#5edbff99,transparent 90%)!important}
