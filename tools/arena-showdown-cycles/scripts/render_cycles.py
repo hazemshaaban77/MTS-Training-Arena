@@ -338,9 +338,12 @@ if REAL_MODEL:
     exec(compile((PROJECT / "scripts" / "showdown_v5_finishing.py").read_text(encoding="utf-8"),
                  "showdown_v5_finishing.py", "exec"), globals())
 
-blend=OUTPUT / ("Arena_Showdown_V5_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
+    exec(compile((PROJECT / "scripts" / "showdown_v5_2_hero.py").read_text(encoding="utf-8"),
+                 "showdown_v5_2_hero.py", "exec"), globals())
+
+blend=OUTPUT / ("Arena_Showdown_V5_2_Hero_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
-scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V5_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
+scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V5_2_Hero_Cycles.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
 if REAL_MODEL and os.getenv("ARENA_ART_SINGLE_FRAME") != "1":
     cam.location=(-6.5,-24.0,8.5); aim(cam, aim_target)
@@ -352,4 +355,4 @@ if REAL_MODEL and os.getenv("ARENA_ART_SINGLE_FRAME") != "1":
     cam.data.lens=46
     scene.render.filepath=str(OUTPUT / "Arena_Showdown_V5_Cycles_Wheel.png")
     bpy.ops.render.render(write_still=True)
-print("ARENA_CYCLES_COMPLETE:", "ART_V5_REAL_MODEL" if REAL_MODEL else "CALIBRATION_ONLY", flush=True)
+print("ARENA_CYCLES_COMPLETE:", "ART_V5_2_HERO_REAL_MODEL" if REAL_MODEL else "CALIBRATION_ONLY", flush=True)

@@ -1,7 +1,7 @@
-name: Arena Showdown V5.1 Art-First Cycles Review (NO DEPLOY)
+name: Arena Showdown V5.2 Premium Hero Cycles Review (NO DEPLOY)
 on:
   push:
-    branches: [feature/arena-showdown-art-v5-1-screen-review]
+    branches: [feature/arena-showdown-art-v5-2-premium-hero]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,6 +17,9 @@ jobs:
           cd tools/arena-showdown-cycles/models
           echo "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba  Arena_Showdown_Stage1_v3.glb" | sha256sum -c -
           test "$(wc -c < Arena_Showdown_Stage1_v3.glb)" -eq 2787288
+      - name: Syntax check for editable staged modeling scripts
+        run: |
+          python3 -m py_compile tools/arena-showdown-cycles/scripts/render_cycles.py tools/arena-showdown-cycles/scripts/showdown_v5_finishing.py tools/arena-showdown-cycles/scripts/showdown_v5_2_hero.py
       - name: Download official Blender 4.5.15 LTS x64 and verify publisher checksum
         run: |
           set -euo pipefail
@@ -30,7 +33,7 @@ jobs:
           test -n "$BIN"
           "$BIN" --version | head -n 3
           "$BIN" -b --python-expr "import numpy; print('BUNDLED_NUMPY_OK')"
-      - name: Render corrected V5.1 HERO lookdev frame and verify Blender outputs
+      - name: Render real editable V5.2 premium HERO wheel and architecture
         working-directory: tools/arena-showdown-cycles
         run: |
           set -uo pipefail
@@ -38,22 +41,23 @@ jobs:
           BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
           test -n "$BIN" || exit 1
           set +e
-          ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/v5_cycles.log
+          ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/v5_2_cycles.log
           code=${PIPESTATUS[0]}
           set -e
-          grep -q 'V5_ACTUAL_NEW_GEOMETRY' renders/v5_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
-          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_REAL_MODEL' renders/v5_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
-          for shot in Hero; do
-            file "renders/Arena_Showdown_V5_Cycles_$shot.png" | grep -q 'PNG image data, 1152 x 648' || { echo "::error::Invalid or missing $shot"; exit 1; }
-          done
-          test -s renders/Arena_Showdown_V5_Art_Review.blend || exit 1
-          test "$(head -c 7 renders/Arena_Showdown_V5_Art_Review.blend)" = "BLENDER" || exit 1
-          echo "ARENA_V5_3D_PHYSICAL_RENDER_ARTIFACTS_VERIFIED=1"
+          grep -q 'V52_REAL_EDITABLE_NEW_OBJECTS' renders/v5_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
+          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_2_HERO_REAL_MODEL' renders/v5_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
+          grep -q 'V52_REAL_WHEEL_SECTORS 8' renders/v5_2_cycles.log || { echo "::error::Editable real sector-shell geometry missing"; exit 1; }
+          grep -q 'V52_CAIRO_NEUTRAL_SECTOR_LABELS 8' renders/v5_2_cycles.log || { echo "::error::Cairo 3D neutral labels missing"; exit 1; }
+          grep -q 'V5_APPROVED_LOGO_PBR_TEXTURE_FOUND' renders/v5_2_cycles.log || { echo "::error::Approved Arena logo texture missing"; exit 1; }
+          file renders/Arena_Showdown_V5_2_Hero_Cycles.png | grep -q 'PNG image data, 1152 x 648' || { echo "::error::Missing or invalid hero frame"; exit 1; }
+          test -s renders/Arena_Showdown_V5_2_Hero_Art_Review.blend || exit 1
+          test "$(head -c 7 renders/Arena_Showdown_V5_2_Hero_Art_Review.blend)" = "BLENDER" || exit 1
+          echo "ARENA_V5_2_HERO_MODEL_ARTIFACTS_VERIFIED=1"
       - name: Save visual evidence and editable scene, even on errors
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arena-showdown-v5-1-hero-physical-lookdev
+          name: arena-showdown-v5-2-premium-hero-real-cycles
           path: tools/arena-showdown-cycles/renders/
           retention-days: 14
           if-no-files-found: warn
