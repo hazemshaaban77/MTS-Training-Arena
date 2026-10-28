@@ -192,10 +192,10 @@ area("V6 stage depth green rake",(8,2.5,7.0),(0,-2,3.4),(.36,1,.69),520,4,5)
 cam.location=(0,-21.5,6.00)
 aim(cam,(0,-.60,4.15))
 cam.data.lens=37
-scene.cycles.samples=48
+scene.cycles.samples=24
 scene.cycles.use_denoising=True
 bpy.context.view_layer.cycles.use_denoising=True
-scene.render.resolution_x=1408
-scene.render.resolution_y=792
+scene.render.resolution_x=1152
+scene.render.resolution_y=648
 print("ARENA_V6_ART_HERO_ACTUAL_3D_OBJECTS",len(scene.objects)-before,flush=True)
 print("ARENA_V6_ART_SOURCE_IS_UNCHANGED_GLB",flush=True)

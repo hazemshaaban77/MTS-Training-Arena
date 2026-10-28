@@ -49,7 +49,7 @@ jobs:
           grep -q 'ARENA_V6_ART_HERO_ACTUAL_3D_OBJECTS' renders/v6_hero_cycles.log || { echo "::error::True 3D hero art not created"; exit 1; }
           grep -q 'V6_APPROVED_LOGO_SOURCE_TEXTURE_REUSED' renders/v6_hero_cycles.log || { echo "::error::Original approved logo not used"; exit 1; }
           grep -q 'ARENA_CYCLES_COMPLETE: ART_V6_REAL_MODEL' renders/v6_hero_cycles.log || { echo "::error::Cycles rendering incomplete: $code"; exit 1; }
-          file renders/Arena_Showdown_V6_Cycles_Hero.png | grep -q 'PNG image data, 1408 x 792' || { echo "::error::Missing 16:9 physical Cycles hero"; exit 1; }
+          file renders/Arena_Showdown_V6_Cycles_Hero.png | grep -q 'PNG image data, 1152 x 648' || { echo "::error::Missing 16:9 physical Cycles hero"; exit 1; }
           test -s renders/Arena_Showdown_V6_Hero_Art_Review.blend || exit 1
           echo "V6_PHYSICAL_HERO_RENDER_VERIFIED=1"
       - name: Preserve actual render and editable Blender model
