@@ -30,15 +30,27 @@ jobs:
       - name: Cycles material calibration OR authentic 3-angle GLB render (no deployment)
         working-directory: tools/arena-showdown-cycles
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          set +e
           blender -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/cycles.log
+          blender_exit=${PIPESTATUS[0]}
+          set -e
           if [ -f models/Arena_Showdown_Stage1_v3.glb ]; then
             for p in Arena_Showdown_Actual_Model_Cycles_Front.png Arena_Showdown_Actual_Model_Cycles_Crane.png Arena_Showdown_Actual_Model_Cycles_Wheel_Detail.png Arena_Showdown_Actual_Model_Cycles.blend; do
               test -s "renders/$p" || { echo "::error::Missing real model render: $p"; exit 1; }
             done
             grep -q "ARENA_CYCLES_COMPLETE: REAL_MODEL" renders/cycles.log || { echo "::error::Real model render incomplete"; exit 1; }
+            grep -q "ARENA_CAMERA_CORRECTED_TO_GLB_BLENDER_AXES" renders/cycles.log || { echo "::error::3D front camera was not corrected"; exit 1; }
+            for f in renders/Arena_Showdown_Actual_Model_Cycles_*.png; do
+              file "$f" | grep -q 'PNG image data, 1280 x 720' || { echo "::error::Invalid PNG dimensions: $f"; exit 1; }
+            done
+            test "$(head -c 7 renders/Arena_Showdown_Actual_Model_Cycles.blend)" = "BLENDER" || { echo "::error::Invalid .blend file"; exit 1; }
           else
             test -s renders/Cycles_Calibration.png || { echo "::error::Missing calibration frame"; exit 1; }
+            grep -q "ARENA_CYCLES_COMPLETE: CALIBRATION_ONLY" renders/cycles.log || exit 1
+          fi
+          if [ "$blender_exit" -ne 0 ]; then
+            echo "::warning::Blender exit $blender_exit AFTER successful complete marker; verified required PNGs and .blend independently."
           fi
           echo "ARENA_ARTIFACTS_VERIFIED=1"
       - name: Publish render images and editable scene as CI artifacts

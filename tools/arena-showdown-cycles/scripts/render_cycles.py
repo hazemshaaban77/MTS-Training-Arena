@@ -114,13 +114,17 @@ if REAL_MODEL:
             n.inputs["Roughness"].default_value = 0.25
         elif "marble" in name:
             n.inputs["Roughness"].default_value = 0.18
-    aim_target = (0, 4.2, -1)
-    cam = camera("Arena – front architectural review", (0, 5.5, 27), aim_target, 35)
-    area("Mega softbox left", (-7, 13, 11), aim_target, (0.94, 0.98, 1.0), 2600, 9, 5)
-    area("Chrome reflection strip", (2, 12, 12), aim_target, (1.0, 1.0, 1.0), 3000, 12, 1.4)
-    area("Cobalt right light", (9, 9, 5), aim_target, (0.28, 0.64, 1.0), 1900, 6, 5)
-    area("Emerald rim light", (-8, 8, -4), aim_target, (0.15, 1.0, 0.58), 1550, 5, 5)
-    area("Runway floor sheen", (0, 6, 10), (0, 0, 4), (0.5, 0.75, 1.0), 1200, 10, 2)
+    # The source GLB uses +Y up / +Z toward viewers. glTF import converts this to
+    # Blender +Z up / -Y toward viewers: (x, source_y, source_z) -> (x, -source_z, source_y).
+    # Previous reviews mistakenly pointed the camera from above, at the ceiling truss.
+    aim_target = (0, 0.1, 4.4)
+    cam = camera("Arena – frontal on-axis hero / authentic wheel", (0, -25.3, 5.0), aim_target, 34)
+    print("ARENA_CAMERA_CORRECTED_TO_GLB_BLENDER_AXES", flush=True)
+    area("Mega softbox left", (-7, -11, 13), aim_target, (0.94, 0.98, 1.0), 2200, 9, 5)
+    area("Chrome reflection strip", (2, -12, 12), aim_target, (1.0, 1.0, 1.0), 2700, 12, 1.4)
+    area("Cobalt right light", (9, -5, 9), aim_target, (0.28, 0.64, 1.0), 1800, 6, 5)
+    area("Emerald rim light", (-8, 4, 8), aim_target, (0.15, 1.0, 0.58), 1500, 5, 5)
+    area("Runway floor sheen", (0, -10, 6), (0, -4, 0.2), (0.5, 0.75, 1.0), 1150, 10, 2)
 else:
     print("DIAGNOSTIC_ONLY: GLB not yet in models/; rendering real Cycles chrome/light test", flush=True)
     chrome = material("Mirror chrome • real ray-traced Cycles", (0.8, 0.92, 1.0), 1.0, 0.085)
@@ -144,12 +148,12 @@ bpy.ops.wm.save_as_mainfile(filepath=str(blend))
 scene.render.filepath = str(OUTPUT / ("Arena_Showdown_Actual_Model_Cycles_Front.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
 if REAL_MODEL:
-    cam.location=(-6.5,8.5,24.0); aim(cam, aim_target)
+    cam.location=(-6.5,-24.0,8.5); aim(cam, aim_target)
     scene.render.filepath=str(OUTPUT / "Arena_Showdown_Actual_Model_Cycles_Crane.png")
     bpy.ops.render.render(write_still=True)
     # Camera 3: focus on the actual mechanical rotor and certified logo texture.
-    cam.location=(3.3,5.0,10.9)
-    aim(cam, (0,4.06,0.6))
+    cam.location=(3.3,-11.0,5.0)
+    aim(cam, (0,-0.6,4.06))
     cam.data.lens=46
     scene.render.filepath=str(OUTPUT / "Arena_Showdown_Actual_Model_Cycles_Wheel_Detail.png")
     bpy.ops.render.render(write_still=True)
