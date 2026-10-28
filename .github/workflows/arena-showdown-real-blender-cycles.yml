@@ -15,8 +15,9 @@ jobs:
       - name: Install actual Blender renderer (Ubuntu universe package)
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends blender
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
           blender --version
+          blender -b --python-expr "import numpy; print('BLENDER_NUMPY_READY', numpy.__version__)"
       - name: Verify original GLB SHA256 and distinguish demo from actual model
         run: |
           if [ -f tools/arena-showdown-cycles/models/Arena_Showdown_Stage1_v3.glb ]; then
@@ -28,7 +29,18 @@ jobs:
           fi
       - name: Cycles material calibration OR authentic 3-angle GLB render (no deployment)
         working-directory: tools/arena-showdown-cycles
-        run: blender -b -t 2 --python scripts/render_cycles.py
+        run: |
+          set -euo pipefail
+          blender -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/cycles.log
+          if [ -f models/Arena_Showdown_Stage1_v3.glb ]; then
+            for p in Arena_Showdown_Actual_Model_Cycles_Front.png Arena_Showdown_Actual_Model_Cycles_Crane.png Arena_Showdown_Actual_Model_Cycles_Wheel_Detail.png Arena_Showdown_Actual_Model_Cycles.blend; do
+              test -s "renders/$p" || { echo "::error::Missing real model render: $p"; exit 1; }
+            done
+            grep -q "ARENA_CYCLES_COMPLETE: REAL_MODEL" renders/cycles.log || { echo "::error::Real model render incomplete"; exit 1; }
+          else
+            test -s renders/Cycles_Calibration.png || { echo "::error::Missing calibration frame"; exit 1; }
+          fi
+          echo "ARENA_ARTIFACTS_VERIFIED=1"
       - name: Publish render images and editable scene as CI artifacts
         if: always()
         uses: actions/upload-artifact@v4
