@@ -1,36 +1,41 @@
-name: Arena Showdown V5.1 Art-First Cycles Review (NO DEPLOY)
+name: Arena Showdown Stage 1 HERO V6 Art Review (NO DEPLOY)
 on:
   push:
-    branches: [feature/arena-showdown-art-v5-1-screen-review]
+    branches: [feature/arena-showdown-stage1-hero-v6]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  art-review:
+  hero-review:
     runs-on: ubuntu-24.04
-    timeout-minutes: 28
+    timeout-minutes: 27
     steps:
       - uses: actions/checkout@v4
-      - name: Verify original V3 GLB is unchanged
+      - name: Verify unchanged original art source
         run: |
           set -euo pipefail
           cd tools/arena-showdown-cycles/models
           echo "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba  Arena_Showdown_Stage1_v3.glb" | sha256sum -c -
-          test "$(wc -c < Arena_Showdown_Stage1_v3.glb)" -eq 2787288
-      - name: Download official Blender 4.5.15 LTS x64 and verify publisher checksum
+      - name: Install native Cairo Arabic shaping and generate authentic sector text textures
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends python3-pil libraqm0
+          /usr/bin/python3 tools/arena-showdown-cycles/scripts/generate_cairo_labels.py
+          test "$(find tools/arena-showdown-cycles/textures/cairo_sector_labels -name 'sector_*.png' | wc -l)" -eq 6
+      - name: Get checksum-verified official Blender 4.5.15 LTS
         run: |
           set -euo pipefail
           mkdir -p .blender
           cd .blender
-          curl -fLSs --retry 3 --retry-delay 3 -o blender.tar.xz https://download.blender.org/release/Blender4.5/blender-4.5.15-linux-x64.tar.xz
-          curl -fLSs --retry 3 --retry-delay 3 -o release.sha256 https://download.blender.org/release/Blender4.5/blender-4.5.15.sha256
+          curl -fLSs --retry 3 --retry-delay 2 -o blender.tar.xz https://download.blender.org/release/Blender4.5/blender-4.5.15-linux-x64.tar.xz
+          curl -fLSs --retry 3 --retry-delay 2 -o release.sha256 https://download.blender.org/release/Blender4.5/blender-4.5.15.sha256
           grep 'blender-4.5.15-linux-x64.tar.xz' release.sha256 | sed 's@blender-4.5.15-linux-x64.tar.xz@blender.tar.xz@' | sha256sum -c -
           tar -xf blender.tar.xz
           BIN="$(find "$PWD" -type f -name blender -executable -print -quit)"
           test -n "$BIN"
           "$BIN" --version | head -n 3
-          "$BIN" -b --python-expr "import numpy; print('BUNDLED_NUMPY_OK')"
-      - name: Render corrected V5.1 HERO lookdev frame and verify Blender outputs
+      - name: Real Cycles hero with approved logo and readable Cairo sector faces
         working-directory: tools/arena-showdown-cycles
         run: |
           set -uo pipefail
@@ -38,22 +43,20 @@ jobs:
           BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
           test -n "$BIN" || exit 1
           set +e
-          ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/v5_cycles.log
+          ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/v6_hero_cycles.log
           code=${PIPESTATUS[0]}
           set -e
-          grep -q 'V5_ACTUAL_NEW_GEOMETRY' renders/v5_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
-          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_REAL_MODEL' renders/v5_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
-          for shot in Hero; do
-            file "renders/Arena_Showdown_V5_Cycles_$shot.png" | grep -q 'PNG image data, 1152 x 648' || { echo "::error::Invalid or missing $shot"; exit 1; }
-          done
-          test -s renders/Arena_Showdown_V5_Art_Review.blend || exit 1
-          test "$(head -c 7 renders/Arena_Showdown_V5_Art_Review.blend)" = "BLENDER" || exit 1
-          echo "ARENA_V5_3D_PHYSICAL_RENDER_ARTIFACTS_VERIFIED=1"
-      - name: Save visual evidence and editable scene, even on errors
+          grep -q 'ARENA_V6_ART_HERO_ACTUAL_3D_OBJECTS' renders/v6_hero_cycles.log || { echo "::error::True 3D hero art not created"; exit 1; }
+          grep -q 'V6_APPROVED_LOGO_SOURCE_TEXTURE_REUSED' renders/v6_hero_cycles.log || { echo "::error::Original approved logo not used"; exit 1; }
+          grep -q 'ARENA_CYCLES_COMPLETE: ART_V6_REAL_MODEL' renders/v6_hero_cycles.log || { echo "::error::Cycles rendering incomplete: $code"; exit 1; }
+          file renders/Arena_Showdown_V6_Cycles_Hero.png | grep -q 'PNG image data, 1408 x 792' || { echo "::error::Missing 16:9 physical Cycles hero"; exit 1; }
+          test -s renders/Arena_Showdown_V6_Hero_Art_Review.blend || exit 1
+          echo "V6_PHYSICAL_HERO_RENDER_VERIFIED=1"
+      - name: Preserve actual render and editable Blender model
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arena-showdown-v5-1-hero-physical-lookdev
+          name: showdown-stage1-v6-physical-hero-review
           path: tools/arena-showdown-cycles/renders/
           retention-days: 14
           if-no-files-found: warn
