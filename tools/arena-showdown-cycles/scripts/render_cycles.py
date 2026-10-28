@@ -293,7 +293,7 @@ if REAL_MODEL:
 
 blend=OUTPUT / ("Arena_Showdown_V4_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
-scene.render.filepath = str(OUTPUT / ("Arena_Showdown_Actual_Model_Cycles_Front.png" if REAL_MODEL else "Cycles_Calibration.png"))
+scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V4_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
 if REAL_MODEL:
     cam.location=(-6.5,-24.0,8.5); aim(cam, aim_target)
