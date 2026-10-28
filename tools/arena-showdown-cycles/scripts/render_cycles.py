@@ -266,7 +266,7 @@ if REAL_MODEL:
         sphere('ceiling spotlight lens',(4.20*math.cos(a),1.8+4.20*math.sin(a),8.15),.065,ice)
 
     # Cairo typeface from V6 is used for the front-facing 3D art title; logos stay original.
-    fontpath=ROOT.parent.parent/'work-site-recovery-v6'/'public'/'fonts'/'cairo-800.ttf'
+    fontpath=PROJECT.parent.parent/'work-site-recovery-v6'/'public'/'fonts'/'cairo-800.ttf'
     if fontpath.is_file():
         cafont=bpy.data.fonts.load(str(fontpath))
         textdat=bpy.data.curves.new('Arena Cairo brand title','FONT')
