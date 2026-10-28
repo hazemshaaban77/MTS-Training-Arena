@@ -7,6 +7,7 @@
 import {useEffect,useRef,useState} from 'react';
 import './ArenaWorld3D.css';
 import {ARENA_CINEMA_B,sectorCorporateColor,visibleWheelLabel} from '../../lib/arena-wheel-theme';
+import {addArenaBArchitecture} from '../../lib/arena-b-stage';
 type WheelIntroSector={label?:string;kind?:string};
 type Props={kind?:string;mode?:'intro'|'ambient';light?:boolean;ar?:boolean;sectors?:WheelIntroSector[]};
 const KIND:Record<string,string>={
@@ -59,7 +60,9 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
     const ring=(r:number,t:number,z:number,mat:any,parent:any=group)=>{
       return put(new T.TorusGeometry(r,t,10,96),mat,parent,0,0,z);
     };
+    const designB=key==='wheel'?addArenaBArchitecture(T,scene,assets,true):null;
     // Stage, concentric LED runways and overhead crown arcs are true 3D.
+    if(key!=='wheel'){
     const floor=put(new T.CylinderGeometry(4.45,4.7,.19,80),noir,group,0,-2.35,-1.3);
     const goldBase=put(new T.TorusGeometry(4.24,.045,12,100),gold,group,0,-2.22,-1.3);goldBase.rotation.x=Math.PI/2;
     const ledBase=put(new T.TorusGeometry(3.76,.042,12,100),halo,group,0,-2.19,-1.3);ledBase.rotation.x=Math.PI/2;
@@ -74,6 +77,7 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
     arch.rotation.z=-.12;
     const luminous=put(new T.TorusGeometry(4.18,.023,9,90,Math.PI*1.28),halo,group,0,.84,-3.24);
     luminous.rotation.z=-.12;
+    }
     // Motifs distinguish ten game identities; no answers/players copied into WebGL.
     const actor=new T.Group();group.add(actor);actor.position.y=.1;
     if(key==='wheel'){
@@ -212,6 +216,7 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
       const elapsed=(frame-begin)*.001;
       // Real 3D light cue: blackout -> individual practical spotlights -> full reveal.
       const reveal=mode==='intro'&&!reduced?Math.max(0,Math.min(1,(elapsed-.38)/1.6)):1;
+      if(designB)designB.illuminate(reveal);
       const burst=mode==='intro'&&!reduced&&elapsed>1.55&&elapsed<2.1?1.45:1;
       keySpot.intensity=(light?19:100)*reveal*burst;
       cyan.intensity=(light?13:80)*reveal*burst;
@@ -224,7 +229,7 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
       }
       const cameraProgress=mode==='intro'&&!reduced?Math.max(0,Math.min(1,elapsed/2.6)):1;
       const eased=1-Math.pow(1-cameraProgress,3);
-      camera.position.set(2.9*(1-eased),1.0*(1-eased)+.1, (light?12.8:9.6)+3.4*(1-eased));
+      camera.position.set(2.9*(1-eased),1.0*(1-eased)+.1, key==='wheel'?14.1+2.5*(1-eased):(light?12.8:9.6)+3.4*(1-eased));
       camera.lookAt(0,-.08,-.05);
       resize();renderer.render(scene,camera);
     };

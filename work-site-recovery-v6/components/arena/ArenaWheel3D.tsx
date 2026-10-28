@@ -7,6 +7,7 @@
 import {useEffect,useRef} from 'react';
 import {TAU,sectorAngle,forwardSweep,easedStop,wheelClock} from '../../lib/arena-wheel3d-math';
 import {ARENA_CINEMA_B,sectorCorporateColor,visibleWheelLabel} from '../../lib/arena-wheel-theme';
+import {addArenaBArchitecture} from '../../lib/arena-b-stage';
 import './ArenaWheel3D.css';
 type Sector={label?:string;kind?:string};
 type Spin={id?:string;startsAt?:number;stopsAt?:number;index?:number;revealed?:boolean};
@@ -59,6 +60,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     const halo=new THREE.MeshBasicMaterial({color:0x39d887});
     disposables.push(brass,bright,bronze,graphite,sapphire,halo);
     const stage=new THREE.Group();stage.position.y=.29;scene.add(stage);
+    const designB=addArenaBArchitecture(THREE,scene,disposables,false);
     const tilt=new THREE.Group();tilt.rotation.x=-.095;stage.add(tilt);
     const wheel=new THREE.Group();tilt.add(wheel);
     const mesh=(geo:any,mat:any,parent:any,x=0,y=0,z=0)=>{
@@ -196,7 +198,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
       width=w;height=h;renderer.setSize(w,h,false);
       camera.aspect=w/h;
       camera.fov=w<520?39:34;
-      camera.position.z=w<520?16.3:w<850?14.1:11.7;
+      camera.position.z=w<520?18.2:w<850?16.0:14.4;
       camera.updateProjectionMatrix();
     };
     onLost=(e:Event)=>{e.preventDefault();failRef.current();};
@@ -227,7 +229,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
       wheel.rotation.z=angle;
       if(!reduced&&!coarse)stage.rotation.y=-.045+Math.sin(frame*.00027)*.035;
       if(!reduced)key.intensity=148+5*Math.sin(frame*.0016);
-      camera.lookAt(0,-.23,0);
+      camera.lookAt(0,-.12,0);
       renderer.render(scene,camera);
     };
     resize();raf=requestAnimationFrame(render);

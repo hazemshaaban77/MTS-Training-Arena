@@ -1902,3 +1902,16 @@ test('Cinematic Entrance B keeps Cairo and renders the trainer-authored wheel se
  assert.ok(markup.includes('arena-world3d--intro'));
  assert.ok(markup.includes('عجلة الحظ'));
 });
+
+test('Chosen design B shared 3D set is present in both wheel intro and live gameplay, not just new paint colors',()=>{
+ const geometry=readFileSync('lib/arena-b-stage.ts','utf8');
+ const world=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
+ const wheel=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ assert.match(geometry,/Two enormous silver architectural rings/);
+ assert.match(geometry,/White elevated identity monolith/);
+ assert.match(geometry,/Layered circular platform/);
+ assert.match(geometry,/new T\.TorusGeometry/);
+ assert.match(geometry,/new T\.CylinderGeometry/);
+ assert.match(world,/addArenaBArchitecture\(T,scene,assets,true\)/);
+ assert.match(wheel,/addArenaBArchitecture\(THREE,scene,disposables,false\)/);
+});
