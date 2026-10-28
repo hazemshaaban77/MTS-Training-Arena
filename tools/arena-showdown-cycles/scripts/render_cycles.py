@@ -334,18 +334,147 @@ if REAL_MODEL:
     print('ART_V4_ACTUAL_ADDED_MESHES',len(objects),flush=True)
     print('ART_V4_PRESERVED_EMBEDDED_ARENA_LOGO_AND_CAIRO',flush=True)
 
-blend=OUTPUT / ("Arena_Showdown_V4_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
+
+if REAL_MODEL:
+    # V5: ART-DIRECTION PASS: not a pixel repaint; every scenic element is actual
+    # Blender 3D, while the raised MTS emblem uses the EXACT source GLB texture.
+    from mathutils import Vector
+    def refined(name,color,metal=0,rough=.3,emit=None,strength=0):
+        m=bpy.data.materials.new('ART-V5:'+name)
+        m.use_nodes=True
+        n=m.node_tree.nodes.get('Principled BSDF')
+        n.inputs['Base Color'].default_value=(*color,1)
+        n.inputs['Metallic'].default_value=metal
+        n.inputs['Roughness'].default_value=rough
+        if emit:
+            n.inputs['Emission Color'].default_value=(*emit,1)
+            n.inputs['Emission Strength'].default_value=strength
+        if metal>.60:
+            tex=m.node_tree.nodes.new('ShaderNodeTexNoise')
+            tex.inputs['Scale'].default_value=165.0
+            tex.inputs['Detail'].default_value=2.
+            ramp=m.node_tree.nodes.new('ShaderNodeValToRGB')
+            ramp.color_ramp.elements[0].position=.15
+            ramp.color_ramp.elements[0].color=(min(1,rough*.80),)*3+(1,)
+            ramp.color_ramp.elements[1].position=.85
+            ramp.color_ramp.elements[1].color=(min(1,rough*1.35),)*3+(1,)
+            links=m.node_tree.links
+            links.new(tex.outputs['Fac'],ramp.inputs['Fac'])
+            links.new(ramp.outputs['Color'],n.inputs['Roughness'])
+        return m
+    platinum=refined('brushed platinum',(.70,.80,.88),.93,.20)
+    titanium=refined('dark titanium',(.16,.23,.35),.89,.29)
+    diamond=refined('clean bright led',(.64,.83,1),.06,.25,(.72,.95,1),1.20)
+    lumiblue=refined('blue linear light',(.013,.18,.72),.04,.24,(.015,.33,1),1.60)
+    lumiemerald=refined('green linear light',(.02,.34,.18),.05,.25,(.02,.95,.48),1.40)
+    blackglass=refined('black broadcast glass',(.005,.015,.035),.30,.24)
+    panelblue=refined('indigo illuminated screen',(.016,.06,.18),.04,.48,(.025,.09,.3),.45)
+    audiencecloth=refined('dark suit fabric',(.007,.018,.045),.0,.75)
+    # Original GLB logo is extracted from its IMAGE node; no wordmark repaint
+    # and no image generated to masquerade as an actual approved brand asset.
+    src=next((m for m in bpy.data.materials if 'V3_APPROVED_LOGO_MASTHEAD' in m.name),None)
+    logo_image=next((node.image for node in src.node_tree.nodes if node.type=='TEX_IMAGE' and node.image),None) if src and src.use_nodes else None
+    if logo_image is None:
+        raise RuntimeError('Approved Arena logo texture not found in source GLB. Refusing to generate fake logo.')
+    litlogo=bpy.data.materials.new('ART-V5:ORIGINAL_ARENA_LOGO_UNCHANGED')
+    litlogo.use_nodes=True
+    nodes=litlogo.node_tree.nodes;nodes.clear()
+    out=nodes.new('ShaderNodeOutputMaterial')
+    light=nodes.new('ShaderNodeEmission')
+    image=nodes.new('ShaderNodeTexImage')
+    image.image=logo_image
+    image.interpolation='Linear'
+    light.inputs['Strength'].default_value=1.0
+    litlogo.node_tree.links.new(image.outputs['Color'],light.inputs['Color'])
+    litlogo.node_tree.links.new(light.outputs['Emission'],out.inputs['Surface'])
+    # Raised fascia in FRONT of top steel canopy to preserve silhouette and legibility.
+    box('cinematic monumental logo enclosure',(0,-6.68,9.55),(5.2,.23,2.92),blackglass,.12)
+    box('cinematic logo silver crown',(0,-6.89,11.03),(5.36,.18,.10),platinum,.025)
+    box('cinematic logo silver base',(0,-6.89,8.06),(5.36,.18,.11),platinum,.025)
+    box('cinematic logo emerald underline',(0,-6.96,7.99),(5.14,.07,.048),lumiemerald,.014)
+    box('cinematic logo left edge',(-2.66,-6.86,9.56),(.09,.11,2.87),platinum,.02)
+    box('cinematic logo right edge',(2.66,-6.86,9.56),(.09,.11,2.87),platinum,.02)
+    # The original MTS Training Arena logo displays on its actual 3D mesh,
+    # with UVs and an image texture. It is not painted onto a screenshot.
+    bpy.ops.mesh.primitive_plane_add(size=1,location=(0,-6.94,9.56))
+    logo_plane=bpy.context.object
+    logo_plane.name='ART-V5-APPROVED-ARENA-ORIGINAL-LOGO-PHYSICAL-SIGN'
+    logo_plane.rotation_euler=(math.pi/2,0,0)
+    logo_plane.scale=(4.94,2.81,1)
+    logo_plane.data.materials.append(litlogo)
+    objects.append(logo_plane)
+    print('ARENA_V5_APPROVED_LOGO_IMAGE_PIXELS',logo_image.size[:],flush=True)
+    # Two major immersive LED broadcast wings — actual geometry and luminance.
+    # Media is intentional procedural lighting graphics; it is not an AI backdrop.
+    import math,random
+    random.seed(426)
+    for side in (-1,1):
+        x=side*8.0
+        box('broadcast wing broadcast bezel',(x,-4.93,4.25),(4.35,.23,5.95),platinum,.13)
+        box('broadcast wing glass panel',(x,-5.06,4.25),(4.15,.08,5.78),panelblue,.06)
+        box('wing emerald left lumen',(x-side*2.23,-5.13,4.27),(.11,.10,6),lumiemerald,.025)
+        box('wing white right lumen',(x+side*2.22,-5.13,4.27),(.08,.10,6),diamond,.022)
+        # Skyline elements behind glass, modelling practical LED content.
+        for i in range(31):
+            px=x-1.98+i*.132
+            h=.9+random.random()*3.2
+            box('wing silhouette skyscraper',(px,-5.20,1.42+h/2),(.096,.045,h),blackglass)
+            if i%5==0:
+                pipe('wing media antenna',(px,-5.19,1.42+h),(px,-5.19,1.72+h),.008,platinum)
+            for j in range(int(h/.4)):
+                if random.random()<.54:
+                    box('wing small warm night-window',(px,-5.255,1.63+j*.39),(.022,.017,.035),
+                        diamond if random.random()<.15 else lumiblue)
+        # Physically modelled optic strips and joinery — silver, no new colors.
+        for yy in (1.22,7.26):
+            box('broadcast chrome bracket',(x,-5.08,yy),(4.44,.19,.09),titanium,.028)
+        for iy in range(10):
+            rr=1.58+iy*.43
+            box('vertical guide led',(x-side*2.05,-5.17,rr),(.020,.026,.20),diamond,.005)
+    # Clamped cinematic floor halo in foreground: arcing chrome, not another opaque disc.
+    for rad,mt in [(6.5,platinum),(6.26,lumiblue),(6.04,blackglass),(5.65,lumiemerald)]:
+        ring('hero foreground real photometric floor arc',(0,-11,-.070),rad,.042,mt)
+    # Wheel closeup: perforated titanium rim and machined 3D trim, preserving
+    # V3's sector mesh and all actual source textures for future dynamic labels.
+    for radius,zdepth,mat,thick in [(2.77,-1.74,titanium,.055),(2.73,-1.79,platinum,.03),
+                                    (2.68,-1.81,diamond,.016)]:
+        ring('stainless wheel outer bezel',(0,zdepth,4.06),radius,thick,mat,True)
+    for j in range(24):
+        a=math.tau*j/24
+        px,pz=2.77*math.cos(a),4.06+2.77*math.sin(a)
+        sphere('wheel physical sapphire rivet',(px,-1.77,pz),.047,platinum)
+    # Production photo-lighting: neutral white creates readable sheen,
+    # blue/green source lights supply the approved chromatic identity.
+    area('Arena V5 face fill',(0,-16,10),(0,-2,4.0),(1.,.97,.94),1700,12,8)
+    area('Arena V5 wheel reflective strip',(-4,-8,6),(0,-1.5,4.0),(.83,.94,1.),700,2.5,9)
+    area('Arena V5 side green', (10,-1,8),(2,-1.5,4),(.32,1,.68),530,5,8)
+    # Improved texture detail by LTS bundled OIDN, never pretend 32 noisy samples
+    # are a cinematic final. 64 CPU samples + denoising is still a review render.
+    scene.cycles.samples=64
+    try:
+        bpy.context.view_layer.cycles.use_denoising=True
+        print('ARENA_V5_OIDN_DENOISER_ENABLED',flush=True)
+    except (TypeError,AttributeError,RuntimeError):
+        print('ARENA_V5_OIDN_UNAVAILABLE',flush=True)
+    scene.view_settings.exposure=-.20
+    cam.location=(0,-28.5,6.1)
+    aim_target=(0,-2.6,5.07)
+    aim(cam,aim_target)
+    cam.data.lens=38
+    print('ARENA_V5_TRUE_3D_HERO_ASSETS',len(objects),'ORIGINAL_BRAND=YES',flush=True)
+
+blend=OUTPUT / ("Arena_Showdown_V5_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
-scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V4_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
+scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V5_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
 if REAL_MODEL:
-    cam.location=(-6.5,-24.0,8.5); aim(cam, aim_target)
-    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V4_Cycles_Crane.png")
+    cam.location=(-6.5,-26.0,9.0); aim(cam, aim_target)
+    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V5_Cycles_Crane.png")
     bpy.ops.render.render(write_still=True)
     # Camera 3: focus on the actual mechanical rotor and certified logo texture.
-    cam.location=(3.3,-11.0,5.0)
+    cam.location=(3.3,-12.0,5.3)
     aim(cam, (0,-0.6,4.06))
-    cam.data.lens=46
-    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V4_Cycles_Wheel.png")
+    cam.data.lens=43
+    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V5_Cycles_Wheel.png")
     bpy.ops.render.render(write_still=True)
-print("ARENA_CYCLES_COMPLETE:", "ART_V4_REAL_MODEL" if REAL_MODEL else "CALIBRATION_ONLY", flush=True)
+print("ARENA_CYCLES_COMPLETE:", "ART_V5_REAL_MODEL" if REAL_MODEL else "CALIBRATION_ONLY", flush=True)
