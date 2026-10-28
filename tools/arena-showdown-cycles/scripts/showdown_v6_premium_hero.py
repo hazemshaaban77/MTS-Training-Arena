@@ -169,12 +169,12 @@ for ob in scene.objects:
         if "Chrome reflection strip" in ob.name:ob.data.energy=850
         if "overhead broad reflection" in ob.name:ob.data.energy=1050
         if "V5 left warm-white TV key" in ob.name:ob.data.energy=900
-scene.view_settings.exposure=-.28
+scene.view_settings.exposure=-.08
 # Distinct camera composition; clean 16:9 full-screen projector safe margins.
 cam.location=(0,-26.6,6.55)
 aim(cam,(0,-.5,4.90))
 cam.data.lens=33
-scene.cycles.samples=64
+scene.cycles.samples=32
 scene.render.resolution_x=1280;scene.render.resolution_y=720
 print(ART_NAME,"ART_OBJECTS",len(objects)-starter,"HIDDEN_OLD_SIGNAGE",hidden,flush=True)
 print("ARENA_V6_HERO_ART_COMPLETE",flush=True)
