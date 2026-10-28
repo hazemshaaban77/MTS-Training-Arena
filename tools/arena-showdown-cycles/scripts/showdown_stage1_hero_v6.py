@@ -204,7 +204,7 @@ try:
     vol=bpy.data.materials.new('PREMIUM HERO cinematic stage haze');vol.use_nodes=True
     nodes=vol.node_tree.nodes;nodes.clear()
     output=nodes.new('ShaderNodeOutputMaterial')
-    pv=nodes.new('ShaderNodeVolumePrincipled');pv.inputs['Density'].default_value=.009
+    pv=nodes.new('ShaderNodeVolumePrincipled');pv.inputs['Density'].default_value=.004
     pv.inputs['Anisotropy'].default_value=.30
     vol.node_tree.links.new(pv.outputs['Volume'],output.inputs['Volume'])
     bpy.ops.mesh.primitive_cube_add(size=1,location=(0,0,6))
@@ -227,9 +227,10 @@ for ob in scene.objects:
 cam.location=(0,-25.5,6.0)
 aim(cam,(0,-.9,4.84))
 cam.data.lens=37
-scene.render.resolution_x=1600
-scene.render.resolution_y=900
-scene.cycles.samples=40
+scene.render.resolution_x=1440
+scene.render.resolution_y=810
+scene.cycles.samples=28
+scene.cycles.volume_bounces=1
 scene.view_settings.exposure=-.43
 try:
     scene.cycles.use_denoising=True
