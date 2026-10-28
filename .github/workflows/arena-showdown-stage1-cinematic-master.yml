@@ -1,0 +1,68 @@
+name: Stage 1 • Arena Showdown Premium 3D Art Review (NEVER DEPLOY)
+on:
+  push:
+    branches: [feature/arena-showdown-stage1-cinematic-master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage1-premium-render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm source GLB matches the approved original
+        run: |
+          set -euo pipefail
+          cd tools/arena-showdown-cycles/models
+          echo "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba  Arena_Showdown_Stage1_v3.glb" | sha256sum -c -
+      - name: Install publisher-verified Blender LTS
+        run: |
+          set -euo pipefail
+          mkdir -p .blender && cd .blender
+          curl -fLSs --retry 3 --retry-delay 3 -o blender.tar.xz https://download.blender.org/release/Blender4.5/blender-4.5.15-linux-x64.tar.xz
+          curl -fLSs --retry 3 --retry-delay 3 -o release.sha256 https://download.blender.org/release/Blender4.5/blender-4.5.15.sha256
+          grep 'blender-4.5.15-linux-x64.tar.xz' release.sha256 | sed 's@blender-4.5.15-linux-x64.tar.xz@blender.tar.xz@' | sha256sum -c -
+          tar -xf blender.tar.xz
+          BIN="$(find "$PWD" -type f -name blender -executable -print -quit)"
+          test -n "$BIN"
+          "$BIN" --version | head -n 3
+      - name: Create physically displayed Cairo RTL labels and LED panorama photo
+        run: |
+          set -euo pipefail
+          python3 -m venv .art-venv
+          .art-venv/bin/pip -q install --disable-pip-version-check Pillow
+          mkdir -p tools/arena-showdown-cycles/assets/premium
+          curl -fLSs --connect-timeout 12 --max-time 25 --retry 1 -o tools/arena-showdown-cycles/assets/premium/pexels_source.jpg 'https://images.pexels.com/photos/17877152/pexels-photo-17877152.jpeg?auto=compress&cs=tinysrgb&w=1600' || rm -f tools/arena-showdown-cycles/assets/premium/pexels_source.jpg
+          .art-venv/bin/python tools/arena-showdown-cycles/scripts/make_premium_assets.py
+          test -s tools/arena-showdown-cycles/assets/premium/sector_00.png
+          test -s tools/arena-showdown-cycles/assets/premium/night_city.jpg
+      - name: True physical studio, full Cinema Hero, Wheel and Entrance
+        working-directory: tools/arena-showdown-cycles
+        run: |
+          set -uo pipefail
+          mkdir -p renders/premium
+          BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
+          test -x "$BIN" || exit 1
+          set +e
+          ARENA_RENDER_MODE=all "$BIN" -b -t 3 --python scripts/premium_stage1.py 2>&1 | tee renders/premium/cycles.log
+          code=${PIPESTATUS[0]}
+          set -e
+          grep -q "ARENA_STAGE1_MASTER_RENDER_COMPLETE 3" renders/premium/cycles.log || { echo "::error::Stage 1 render incomplete, Blender exit $code"; exit 1; }
+          grep -q "ARENA_LOGO_SOURCE_UNCHANGED" renders/premium/cycles.log || { echo "::error::Original approved logo not reused"; exit 1; }
+          grep -q "ARENA_CAIRO_RAQM_TEXTURES 6" renders/premium/cycles.log || { echo "::error::Cairo textures not loaded"; exit 1; }
+          for shot in Hero Wheel Entrance; do
+            test -s "renders/premium/Arena_Showdown_Master_$shot.png" || { echo "::error::Missing authentic $shot image"; exit 1; }
+            file "renders/premium/Arena_Showdown_Master_$shot.png" | grep -q 'PNG image data, 1280 x 720' || { echo "::error::Bad $shot frame"; exit 1; }
+          done
+          test -s renders/premium/Arena_Showdown_Stage1_Master.blend || exit 1
+          test "$(head -c 7 renders/premium/Arena_Showdown_Stage1_Master.blend)" = "BLENDER" || exit 1
+          echo "REAL_STAGE1_CYCLES_RENDER_ARTIFACTS_VERIFIED=1"
+      - name: Upload actual renders and editable geometry regardless of script errors
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-showdown-stage1-master-real-cycles
+          path: tools/arena-showdown-cycles/renders/premium/
+          retention-days: 14
+          if-no-files-found: warn
