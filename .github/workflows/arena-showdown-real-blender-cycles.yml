@@ -45,7 +45,7 @@ jobs:
           grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_REAL_MODEL' renders/premium_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
           file "renders/Arena_Showdown_Premium_Stage1_Hero.png" | grep -q 'PNG image data, 1440 x 810' || { echo "::error::Premium Hero PNG missing or invalid dimensions"; exit 1; }
           test -s renders/Arena_Showdown_Premium_Stage1.blend || exit 1
-          test "$(head -c 7 renders/Arena_Showdown_V5_Art_Review.blend)" = "BLENDER" || exit 1
+          test "$(head -c 7 renders/Arena_Showdown_Premium_Stage1.blend)" = "BLENDER" || exit 1
           echo "PREMIUM_STAGE1_HERO_ACTUAL_BLENDER_FRAME_VERIFIED=1"
       - name: Save visual evidence and editable scene, even on errors
         if: always()

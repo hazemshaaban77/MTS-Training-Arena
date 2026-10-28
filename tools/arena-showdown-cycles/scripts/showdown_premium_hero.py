@@ -14,9 +14,11 @@ def cylinder(name,where,radius,depth,mat,vertices=96):
     ob.data.materials.append(mat);objects.append(ob);return ob
 
 # Remove the procedural visual clutter from earlier iterations; original GLB stays in .blend.
-hidden_prefixes=("V4_audience","V4_theater","V5 hero-logo","V5 large porcelain",
-                 "V5 blue fascia","V5 slim green","V5 side brushed",
-                 "V5 chrome fascia","V4_branded masthead","V4_masthead",
+hidden_prefixes=("V4_audience","V4_theater","V4_V5 hero-logo","V4_V5 large porcelain",
+                 "V4_V5 blue fascia","V4_V5 slim green","V4_V5 side brushed",
+                 "V4_V5 chrome fascia","V4_branded masthead","V4_masthead",
+                 "V3_APPROVED_LOGO_MASTHEAD","V4_Original_Arena",
+                 "AUDIENCE_SEAT_","THEATER_BANK_",
                  "V4_large curved media wing","V4_studio city silhouette")
 for ob in scene.objects:
     if ob.name.startswith(hidden_prefixes):
@@ -67,15 +69,15 @@ for k in range(22):
 
 # Preserve exact approved logo texture from source: move prior brand plane onto
 # the new physical broad canopy hero plaque rather than inventing a new wordmark.
-box("PREMIUM original-logo 3D porcelain signage",(0,-5.56,9.58),(4.82,.18,1.80),bright,.14)
-box("PREMIUM sapphire banner inset",(0,-5.665,9.58),(4.59,.027,1.59),ink,.09)
+box("PREMIUM original-logo 3D porcelain signage",(0,-5.56,9.58),(4.32,.18,1.82),blueblack,.11)
+box("PREMIUM sapphire banner inset",(0,-5.665,9.58),(4.16,.027,1.66),ink,.05)
 logo_found=False
 for ob in scene.objects:
     if "V5 ORIGINAL APPROVED Arena logo full pixels" in ob.name:
         ob.hide_render=False
         ob.hide_set(False)
-        ob.location=(0,-5.71,9.57)
-        ob.scale=(3.58,1.56,1)
+        ob.location=(0,-5.74,9.57)
+        ob.scale=(3.70,1.59,1)
         logo_found=True
         break
 print("PREMIUM_EXACT_APPROVED_LOGO_FROM_SOURCE",logo_found,flush=True)
@@ -100,9 +102,9 @@ for sign in (-1,1):
             if random.random()>.57:
                 box("PREMIUM real city luminous slot",(x,6.051,1.03+.27*q),(.075,.012,.054),cobalt if q%5 else warm)
     # Real podium desks and sculpted soft edges; not cardboard bleachers.
-    for side_depth in range(2):
+    for side_depth in range(1):
         x=sign*(9.0+side_depth*.73)
-        for i in range(4):
+        for i in range(2):
             yy=-3.9+i*1.1
             ob=box("PREMIUM contestants workstation",(x,yy,.57),(.69,.58,.82),blueblack,.12)
             box("PREMIUM chrome workstation top",(x,yy-.03,1.03),(.81,.65,.052),bright,.025)
@@ -181,12 +183,12 @@ scene.world.node_tree.nodes.get("Background").inputs["Strength"].default_value=.
 scene.view_settings.exposure=-.42
 
 # Larger wheel and physically suspended canopy in one 16:9 composition.
-cam.location=(0,-21.9,6.45)
-aim(cam,(0,-.55,5.1))
-cam.data.lens=33
+cam.location=(0,-26.6,6.35)
+aim(cam,(0,-.55,5.35))
+cam.data.lens=31
 scene.render.resolution_x=1440
 scene.render.resolution_y=810
-scene.cycles.samples=64
+scene.cycles.samples=48
 try:
     scene.cycles.use_denoising=True
     bpy.context.view_layer.cycles.use_denoising=True
