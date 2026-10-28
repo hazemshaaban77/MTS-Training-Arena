@@ -23,7 +23,7 @@ v5_navy=v5_material("ink blue architectural lacquer",(.009,.033,.078),.38,.27)
 v5_green=v5_material("green vitreous LED",(.024,.33,.18),.18,.28,(.027,.78,.34),.8)
 v5_blue=v5_material("blue vitreous LED",(.025,.15,.39),.18,.22,(.05,.34,.84),.9)
 v5_white=v5_material("large matte porcelain white",(.91,.96,1),.12,.29)
-v5_window=v5_material("blue luminous wall",(.07,.23,.55),.13,.46,(.08,.33,.72),.56)
+v5_window=v5_material("night-blue rear media glass",(.004,.026,.078),.20,.27,(.005,.055,.17),.13)
 v5_podium=v5_material("near-black reflecting glass",(.013,.028,.06),.62,.14)
 
 # Use the original functions box, ring, pipe from the parent source script,
@@ -70,11 +70,11 @@ else:
 # These are separate camera-visible 3D components, not images overlaid onto the render.
 for side in (-1,1):
     x=side*9.2
-    box("V5 panoramic emissive media wing",(x,-1.53,4.3),(3.66,.13,5.64),v5_window,.12)
-    box("V5 wing chrome upper bezel",(x,-1.65,7.13),(3.77,.16,.10),v5_silver,.018)
-    box("V5 wing chrome lower bezel",(x,-1.65,1.47),(3.77,.16,.10),v5_silver,.018)
+    box("V5 panoramic media rear-wall behind modeled skyline",(x,6.47,4.3),(3.66,.13,5.64),v5_window,.12)
+    box("V5 wing chrome upper bezel",(x,6.24,7.13),(3.77,.16,.10),v5_silver,.018)
+    box("V5 wing chrome lower bezel",(x,6.24,1.47),(3.77,.16,.10),v5_silver,.018)
     for yoff in (0,.17):
-        box("V5 wing emerald live edge",(x-side*1.83,-1.73-yoff,4.25),(.058,.055,5.45),v5_green)
+        box("V5 wing emerald live edge",(x-side*1.83,6.15-yoff,4.25),(.058,.055,5.45),v5_green)
     # physically separate curved arch ribs frame center rotor
     for arc_radius,mat in [(3.56,v5_silver),(3.73,v5_trim),(3.90,v5_blue)]:
         # Curved arch with partial pipe sweep in XZ plane.
@@ -128,11 +128,11 @@ for ob in scene.objects:
         ob.data.energy*=.72
 
 # A clean broadcast-wide lens. Keep a readable top masthead, central wheel and front stage.
-cam.location=(0,-29.8,6.55)
-aim(cam,(0,-.45,4.85))
+cam.location=(0,-26.5,6.20)
+aim(cam,(0,-.45,4.52))
 cam.data.lens=34
 scene.view_settings.exposure=-.35
-scene.cycles.samples=48
+scene.cycles.samples=32
 try:
     scene.cycles.use_denoising=True
     bpy.context.view_layer.cycles.use_denoising=True

@@ -342,7 +342,7 @@ blend=OUTPUT / ("Arena_Showdown_V5_Art_Review.blend" if REAL_MODEL else "Cycles_
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
 scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V5_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
-if REAL_MODEL:
+if REAL_MODEL and os.getenv("ARENA_ART_SINGLE_FRAME") != "1":
     cam.location=(-6.5,-24.0,8.5); aim(cam, aim_target)
     scene.render.filepath=str(OUTPUT / "Arena_Showdown_V5_Cycles_Crane.png")
     bpy.ops.render.render(write_still=True)
