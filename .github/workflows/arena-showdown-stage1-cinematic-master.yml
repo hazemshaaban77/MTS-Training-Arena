@@ -58,6 +58,20 @@ jobs:
           test -s renders/premium/Arena_Showdown_Stage1_Master.blend || exit 1
           test "$(head -c 7 renders/premium/Arena_Showdown_Stage1_Master.blend)" = "BLENDER" || exit 1
           echo "REAL_STAGE1_CYCLES_RENDER_ARTIFACTS_VERIFIED=1"
+      - name: Genuine 3D studio lights and moving cinematic camera preview
+        working-directory: tools/arena-showdown-cycles
+        run: |
+          set -uo pipefail
+          BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
+          set +e
+          "$BIN" -b -t 3 --python scripts/premium_camera_reveal.py 2>&1 | tee renders/premium/camera_sequence.log
+          code=${PIPESTATUS[0]}
+          set -e
+          grep -q 'ARENA_CAMERA_SEQUENCE_COMPLETE' renders/premium/camera_sequence.log || { echo "::error::Cinematic stage preview failed, Blender exit $code"; exit 1; }
+          test "$(find renders/premium/camera_sequence -maxdepth 1 -name 'frame_*.png' | wc -l)" -ge 35 || { echo "::error::Too few real Blender frames"; exit 1; }
+          ffmpeg -hide_banner -loglevel error -y -framerate 10 -pattern_type glob -i 'renders/premium/camera_sequence/frame_*.png' -c:v libx264 -pix_fmt yuv420p -crf 23 -movflags +faststart renders/premium/Arena_Showdown_Stage1_Cinematic_Entrance.mp4
+          test -s renders/premium/Arena_Showdown_Stage1_Cinematic_Entrance.mp4
+          echo 'ARENA_3D_CINEMA_LIGHT_CAMERA_ANIMATION_VERIFIED=1'
       - name: Upload actual renders and editable geometry regardless of script errors
         if: always()
         uses: actions/upload-artifact@v4

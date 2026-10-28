@@ -133,7 +133,7 @@ def image_material(name,im):
  out=nt.nodes.new("ShaderNodeOutputMaterial")
  image=nt.nodes.new("ShaderNodeTexImage");image.image=im
  emission=nt.nodes.new("ShaderNodeEmission")
- emission.inputs["Strength"].default_value=.9
+ emission.inputs["Strength"].default_value=1.55 if "city scene" in name else .9
  nt.links.new(image.outputs["Color"],emission.inputs["Color"])
  nt.links.new(emission.outputs[0],out.inputs["Surface"])
  return m
@@ -374,13 +374,14 @@ def camera(n,xyz,target,lens):
  d=bpy.data.cameras.new(n);o=bpy.data.objects.new(n,d);scene.collection.objects.link(o)
  o.location=xyz;o.rotation_euler=(Vector(target)-o.location).to_track_quat("-Z","Y").to_euler()
  d.lens=lens;d.type="PERSP";return o
-hero=camera("CINEMA / approved Showdown hero",(0,-27.2,6.1),(0,-.3,5.0),42)
+hero=camera("CINEMA / approved Showdown hero",(0,-28.0,6.25),(0,-.3,5.0),36.5)
 detail=camera("CINEMA / mechanical wheel closeup",(4.5,-14.3,5.6),(0,-1.2,4.7),49)
 entrance=camera("CINEMA / prestige reveal wide",(-9,-32,9),(0,.6,5.0),36)
 scene.camera=hero
 print("ARENA_STAGE_MASTER_GEOMETRY_OBJECTS",num,flush=True)
 print("ARENA_CAIRO_RAQM_TEXTURES",len(demo_names),flush=True)
 blend=OUT/"Arena_Showdown_Stage1_Master.blend"
+bpy.ops.file.pack_all()
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
 MODE=os.getenv("ARENA_RENDER_MODE","hero")
 shots=[("Hero",hero)] if MODE=="hero" else [("Hero",hero),("Wheel",detail),("Entrance",entrance)]

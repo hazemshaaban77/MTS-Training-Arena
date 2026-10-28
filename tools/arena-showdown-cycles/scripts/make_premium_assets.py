@@ -18,7 +18,7 @@ glyphs=["؟","✦","✓","★","✧","!"]
 for i,word in enumerate(names):
  im=Image.new("RGBA",(768,384),(0,0,0,0))
  dr=ImageDraw.Draw(im)
- face=ImageFont.truetype(str(fontpath),112,layout_engine=ImageFont.Layout.RAQM)
+ face=ImageFont.truetype(str(fontpath),142,layout_engine=ImageFont.Layout.RAQM)
  icon_font=ImageFont.truetype(str(fontpath),72,layout_engine=ImageFont.Layout.RAQM)
  color=(9,47,84,255) if i in (1,4) else (255,255,255,255)
  edge=(240,250,255,210) if i not in (1,4) else (220,240,252,230)
@@ -29,7 +29,7 @@ for i,word in enumerate(names):
  im.alpha_composite(shadow)
  dr=ImageDraw.Draw(im)
  dr.text((384,191),word,font=face,fill=color,stroke_width=2,stroke_fill=edge,anchor="mm",direction="rtl")
- dr.text((384,87),glyphs[i],font=icon_font,fill=color,stroke_width=1,stroke_fill=edge,anchor="mm")
+ 
  im.save(out/("sector_%02d.png"%i))
 print("CAIRO_RAQM_LABELS_RENDERED",len(names))
 cityfile=out/"night_city.jpg"
