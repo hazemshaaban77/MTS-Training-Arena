@@ -50,6 +50,9 @@ scene.render.engine="CYCLES"
 scene.cycles.device="CPU"
 scene.render.resolution_x=1440;scene.render.resolution_y=810;scene.render.resolution_percentage=100
 scene.render.image_settings.file_format="PNG"
+# Embed all photo, Cairo and original-brand textures in the editable final .blend.
+bpy.ops.file.pack_all()
+print("STAGE1_FINAL_EDITABLE_TEXTURES_PACKED",flush=True)
 blend=OUTPUT/"Arena_Showdown_Stage1_Final_Hero.blend"
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
 scene.render.filepath=str(OUTPUT/"Arena_Showdown_Stage1_Final_Hero.png")
