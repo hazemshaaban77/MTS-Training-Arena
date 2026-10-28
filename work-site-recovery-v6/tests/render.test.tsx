@@ -537,7 +537,7 @@ test('Fortune Wheel stage artwork follows server selected sector and keeps game 
   display={false} canAnswer={false} busy={false} onSubmit={()=>{}}
   onInteract={()=>{}} onControl={()=>{}}/>);
  assert.ok(html.includes('arena-wheel3d--crown'));
- assert.ok(html.includes('aria-label="Arena Crown 3D Wheel"'),'Only the Crown WebGL wheel renders');
+ assert.ok(html.includes('aria-label="Arena Cinematic B Wheel"'),'Approved Cinematic B WebGL wheel renders');
  assert.ok(html.includes('wheel-legend-winner'),'Server selected sector is highlighted');
  assert.ok(html.includes('aria-current="true"'),'Accessible winning section marker');
  assert.ok(html.includes('Participation star'),'Real server outcome label is displayed');
@@ -1816,7 +1816,7 @@ test('real 3D Crown wheel is the only game wheel, with accessible action if GPU 
 test('Arena Crown wheel has original authored sector labels, mechanical bulbs and jewel pointer',()=>{
  const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
  const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
- assert.match(scene,/const labelText=String\(sectors\[i\]\.label/);
+ assert.match(scene,/const labelText=visibleWheelLabel\(sectors\[i\],i,sectors\.length\)/);
  assert.match(scene,/new THREE\.InstancedMesh/);
  assert.match(scene,/new THREE\.ExtrudeGeometry/);
  assert.match(scene,/const pointerShape=new THREE\.Shape/);
@@ -1834,7 +1834,7 @@ test('all ten 3D cinematic scene identities replace 2D picture splash, with skip
  const world=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
  const css=readFileSync('components/arena/ArenaWorld3D.css','utf8');
  const game=readFileSync('components/arena/GamePlay.tsx','utf8');
- assert.match(splash,/<ArenaWorld3D kind=\{base\} mode="intro"\/>/);
+ assert.match(splash,/<ArenaWorld3D kind=\{base\} mode="intro" sectors=\{sectors\} ar=\{ar\}\/>/);
  assert.doesNotMatch(splash,/ActivityArt|IntroScene/);
  assert.match(splash,/FastForward/);assert.match(splash,/onComplete/);
  for(const identity of ['wheel','championship','quiz','escape','box','poll','plan','order','cards','scenario']){
@@ -1871,4 +1871,47 @@ test('3D Vault replaces legacy box-card buttons without changing authoritative s
  assert.match(model,/const official=st\.used\.includes\(chest\.index\)\|\|st\.active===chest\.index/);
  assert.match(model,/st\.onOpen\(i\)/);
  assert.match(model,/aria-label=\{\(ar\?'صندوق رقم '/);
+});
+
+test('Cinematic Entrance B keeps Cairo and renders the trainer-authored wheel sectors instead of eight fixed choices',()=>{
+ const stage=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
+ const wheel=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ const splash=readFileSync('components/arena/StageSplash.tsx','utf8');
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ const theme=readFileSync('lib/arena-wheel-theme.ts','utf8');
+ const css=readFileSync('components/arena/ArenaWorld3D.css','utf8');
+ const wheelCss=readFileSync('components/arena/ArenaWheel3D.css','utf8');
+ assert.match(stage,/authoredSectors\.length/);
+ assert.match(stage,/sectorCorporateColor\(authoredSectors\[i\]\.kind,i\)/);
+ assert.match(stage,/visibleWheelLabel\(authoredSectors\[i\],i,n\)/);
+ assert.match(stage,/introSectorsKey/);
+ assert.match(stage,/font.*Cairo/);
+ assert.match(splash,/sectors\?:ArenaWheelSector\[\]/);
+ assert.match(session,/sectors=\{s\.activity\?\.sectors\|\|\[\]\}/);
+ const simulator=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.match(simulator,/sectors=\{a\.sectors\|\|\[\]\}/);
+ assert.match(session,/sectors=\{s\.queue\[previewIntro\.index\]\?\.sectors\|\|\[\]\}/);
+ assert.match(wheel,/visibleWheelLabel\(sectors\[i\],i,sectors\.length\)/);
+ assert.match(wheel,/document\.fonts\?\.load\('800 48px Cairo'/);
+ assert.match(theme,/sectorCorporateColor/);
+ assert.match(css,/intro-kind-wheel/);
+ assert.match(css,/font-family:"Cairo"/);
+ assert.match(wheelCss,/arena-wheel3d--cinematic-b/);
+ const markup=renderToStaticMarkup(<StageSplash type="Wheel of Fortune" label="عجلة الحظ" ar
+  sectors={[{label:'معلومات',kind:'question'},{label:'مهمة عملية',kind:'challenge'}]} preview onComplete={()=>{}}/>);
+ assert.ok(markup.includes('arena-world3d--intro'));
+ assert.ok(markup.includes('عجلة الحظ'));
+});
+
+test('Chosen design B shared 3D set is present in both wheel intro and live gameplay, not just new paint colors',()=>{
+ const geometry=readFileSync('lib/arena-b-stage.ts','utf8');
+ const world=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
+ const wheel=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ assert.match(geometry,/Two enormous silver architectural rings/);
+ assert.match(geometry,/White elevated identity monolith/);
+ assert.match(geometry,/Layered circular platform/);
+ assert.match(geometry,/new T\.TorusGeometry/);
+ assert.match(geometry,/new T\.CylinderGeometry/);
+ assert.match(world,/addArenaBArchitecture\(T,scene,assets,true\)/);
+ assert.match(wheel,/addArenaBArchitecture\(THREE,scene,disposables,false\)/);
 });

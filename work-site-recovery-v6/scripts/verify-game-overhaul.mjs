@@ -22,7 +22,7 @@ assert.match(crown,/new THREE\.ExtrudeGeometry/);
 assert.match(crown,/current\.revealed&&Number\.isInteger\(current\.index\)/);
 assert.match(cinematic,/new T\.WebGLRenderer/);
 assert.match(cinematic,/new T\.SpotLight/);
-assert.match(opening,/<ArenaWorld3D kind=\{base\} mode="intro"\/>/);
+assert.match(opening,/<ArenaWorld3D kind=\{base\} mode="intro" sectors=\{sectors\} ar=\{ar\}\/>/);
 assert.match(session, /\{!meta&&<button className="btn secondary" disabled=\{busy\|\|!!s\.deadline&&!seconds\}/);
 assert.match(order, /onPointerMove=\{moveTouch\} onPointerUp=\{stopTouch\}/);
 assert.match(stage, /g\?\.scenarioMap/);

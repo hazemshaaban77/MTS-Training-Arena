@@ -6,7 +6,10 @@
  */
 import {useEffect,useRef,useState} from 'react';
 import './ArenaWorld3D.css';
-type Props={kind?:string;mode?:'intro'|'ambient';light?:boolean;ar?:boolean};
+import {ARENA_CINEMA_B,sectorCorporateColor,visibleWheelLabel} from '../../lib/arena-wheel-theme';
+import {addArenaBArchitecture} from '../../lib/arena-b-stage';
+type WheelIntroSector={label?:string;kind?:string};
+type Props={kind?:string;mode?:'intro'|'ambient';light?:boolean;ar?:boolean;sectors?:WheelIntroSector[]};
 const KIND:Record<string,string>={
  'Spin Wheel':'wheel','Wheel of Fortune':'wheel','Ultimate Game Show':'championship',
  'Quiz':'quiz','Escape Room':'escape','Open the Box':'box','Live Poll':'poll',
@@ -14,10 +17,11 @@ const KIND:Record<string,string>={
  'Scenario Challenge':'scenario','lobby':'lobby'
 };
 const COLOR:Record<string,number>={wheel:0xf2ab48,championship:0xffd278,quiz:0x47c8ff,escape:0x23dcb4,box:0xe2ab55,poll:0x6abaff,plan:0x4ff0ce,order:0xc694ff,cards:0xffc57b,scenario:0xe79673,lobby:0x49bdeb};
-export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar=true}:Props){
+export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar=true,sectors=[]}:Props){
  const mount=useRef<HTMLDivElement>(null);
  const [unavailable,setUnavailable]=useState(false);
  const key=KIND[kind]||'lobby';
+ const introSectorsKey=key==='wheel'&&mode==='intro'?JSON.stringify(sectors.map(s=>[s.label,s.kind])):'';
  useEffect(()=>{
   if(light||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches){/* Use geometry without forced camera animation. */}
   const root=mount.current;
@@ -27,8 +31,10 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
   const slow=!!window.matchMedia?.('(pointer: coarse)')?.matches;
   const reduced=!!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
   const begin=performance.now();
+  const authoredSectors:WheelIntroSector[]=key==='wheel'&&mode==='intro'&&sectors.length>=2&&sectors.length<=20?sectors:Array.from({length:8},(_,i)=>({label:String(i+1),kind:'question'}));
   const build=async()=>{
    try{
+    if(key==='wheel')await document.fonts?.load('800 48px Cairo','المعلومات').catch(()=>[]);
     const T=await import('three');
     if(disposed)return;
     renderer=new T.WebGLRenderer({alpha:true,antialias:!slow,powerPreference:slow?'low-power':'high-performance'});
@@ -41,12 +47,12 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
     const scene=new T.Scene();
     const camera=new T.PerspectiveCamera(36,1,.1,100);
     const group=new T.Group();group.position.y=.1;scene.add(group);
-    const gold=new T.MeshStandardMaterial({color:0xd6a44e,metalness:.78,roughness:.2});
+    const gold=new T.MeshStandardMaterial({color:key==='wheel'?ARENA_CINEMA_B.chrome:0xd6a44e,metalness:.78,roughness:.2});
     const noir=new T.MeshStandardMaterial({color:0x071728,metalness:.65,roughness:.26});
-    const teal=new T.MeshStandardMaterial({color:0x07829d,metalness:.46,roughness:.27,emissive:0x07566d,emissiveIntensity:.38});
-    const accent=new T.MeshStandardMaterial({color:COLOR[key],metalness:.52,roughness:.22,emissive:COLOR[key],emissiveIntensity:.19});
+    const teal=new T.MeshStandardMaterial({color:key==='wheel'?0x078a67:0x07829d,metalness:.46,roughness:.27,emissive:0x07566d,emissiveIntensity:.38});
+    const accent=new T.MeshStandardMaterial({color:key==='wheel'?ARENA_CINEMA_B.blue:COLOR[key],metalness:.52,roughness:.22,emissive:key==='wheel'?ARENA_CINEMA_B.green:COLOR[key],emissiveIntensity:.19});
     const glass=new T.MeshPhysicalMaterial({color:COLOR[key],metalness:.12,roughness:.16,transmission:.16,transparent:true,opacity:.86,depthWrite:true});
-    const halo=new T.MeshBasicMaterial({color:COLOR[key],transparent:true,opacity:.48});
+    const halo=new T.MeshBasicMaterial({color:key==='wheel'?ARENA_CINEMA_B.brightGreen:COLOR[key],transparent:true,opacity:.48});
     assets.push(gold,noir,teal,accent,glass,halo);
     const put=(geo:any,mat:any,parent:any=group,x=0,y=0,z=0)=>{
       const m=new T.Mesh(geo,mat);m.position.set(x,y,z);parent.add(m);assets.push(geo);return m;
@@ -54,7 +60,9 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
     const ring=(r:number,t:number,z:number,mat:any,parent:any=group)=>{
       return put(new T.TorusGeometry(r,t,10,96),mat,parent,0,0,z);
     };
+    const designB=key==='wheel'?addArenaBArchitecture(T,scene,assets,true):null;
     // Stage, concentric LED runways and overhead crown arcs are true 3D.
+    if(key!=='wheel'){
     const floor=put(new T.CylinderGeometry(4.45,4.7,.19,80),noir,group,0,-2.35,-1.3);
     const goldBase=put(new T.TorusGeometry(4.24,.045,12,100),gold,group,0,-2.22,-1.3);goldBase.rotation.x=Math.PI/2;
     const ledBase=put(new T.TorusGeometry(3.76,.042,12,100),halo,group,0,-2.19,-1.3);ledBase.rotation.x=Math.PI/2;
@@ -69,29 +77,60 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
     arch.rotation.z=-.12;
     const luminous=put(new T.TorusGeometry(4.18,.023,9,90,Math.PI*1.28),halo,group,0,.84,-3.24);
     luminous.rotation.z=-.12;
+    }
     // Motifs distinguish ten game identities; no answers/players copied into WebGL.
     const actor=new T.Group();group.add(actor);actor.position.y=.1;
     if(key==='wheel'){
-      const backing=put(new T.CylinderGeometry(2.02,2.02,.4,72),noir,actor,0,.10,0);
+      // Entrance B: same REAL authored sectors as gameplay, not hardcoded demo labels.
+      const n=authoredSectors.length,step=Math.PI*2/n;
+      const backing=put(new T.CylinderGeometry(2.03,2.03,.43,80),noir,actor,0,.10,0);
       backing.rotation.x=Math.PI/2;
-      const n=8,step=Math.PI*2/n;
       for(let i=0;i<n;i++){
         const shape=new T.Shape();shape.moveTo(0,0);
-        for(let j=0;j<=8;j++){
-          const a=Math.PI/2-(i-.5)*step-j*step/8;
-          shape.lineTo(Math.cos(a)*1.86,Math.sin(a)*1.86);
+        for(let j=0;j<=10;j++){
+          const a=Math.PI/2-(i-.5)*step-j*step/10;
+          shape.lineTo(Math.cos(a)*1.88,Math.sin(a)*1.88);
         }
         shape.closePath();
-        const colors=[0xb23754,0xe5a436,0x15a6bf,0x8337bc];
-        const mat=new T.MeshStandardMaterial({color:colors[i%4],metalness:.34,roughness:.29});
-        assets.push(mat);put(new T.ExtrudeGeometry(shape,{depth:.16,bevelEnabled:true,bevelThickness:.02,bevelSize:.018,bevelSegments:2}),mat,actor,0,.1,.19);
+        const color=sectorCorporateColor(authoredSectors[i].kind,i);
+        const mat=new T.MeshStandardMaterial({color,metalness:.4,roughness:.28,side:T.DoubleSide});
+        assets.push(mat);
+        put(new T.ExtrudeGeometry(shape,{depth:.17,bevelEnabled:true,bevelThickness:.013,bevelSize:.014,bevelSegments:2}),mat,actor,0,.1,.19);
+        const face=document.createElement('canvas');face.width=256;face.height=144;
+        const ctx=face.getContext('2d');
+        if(ctx){
+          ctx.textAlign='center';ctx.textBaseline='middle';ctx.direction=ar?'rtl':'ltr';
+          ctx.fillStyle=color===0xf3f8ff||color===0xf1f6ff?'#053260':'#f9fcff';
+          ctx.font='800 39px Cairo,Arial,sans-serif';
+          const label=visibleWheelLabel(authoredSectors[i],i,n);
+          const short=n>8?String(i+1).padStart(2,'0'):label.length>12?label.slice(0,11)+'…':label;
+          ctx.fillText(short,128,72,230);
+          const texture=new T.CanvasTexture(face);texture.colorSpace=T.SRGBColorSpace;
+          const spriteMaterial=new T.SpriteMaterial({map:texture,transparent:true,depthWrite:false});
+          const sprite=new T.Sprite(spriteMaterial),mid=Math.PI/2-i*step;
+          sprite.position.set(Math.cos(mid)*1.41,Math.sin(mid)*1.41+.1,.43);
+          sprite.scale.set(n>10?.68:n>6?.88:1.14,n>10?.38:.53,1);
+          actor.add(sprite);assets.push(texture,spriteMaterial);
+        }
       }
-      ring(2.02,.1,.3,gold,actor);
-      ring(1.87,.025,.37,glass,actor);
-      const hub=put(new T.CylinderGeometry(.42,.42,.29,48),gold,actor,0,.1,.41);hub.rotation.x=Math.PI/2;
-      const pointer=put(new T.ConeGeometry(.23,.52,4),gold,group,0,2.42,.64);
+      ring(2.06,.11,.32,gold,actor);
+      ring(1.88,.029,.4,glass,actor);
+      ring(2.19,.042,.06,halo,actor);
+      const hub=put(new T.CylinderGeometry(.44,.44,.3,48),gold,actor,0,.1,.46);hub.rotation.x=Math.PI/2;
+      const disk=put(new T.CylinderGeometry(.32,.32,.07,48),teal,actor,0,.1,.66);disk.rotation.x=Math.PI/2;
+      const logoFace=document.createElement('canvas');logoFace.width=256;logoFace.height=128;
+      const logoCtx=logoFace.getContext('2d');
+      if(logoCtx){
+        logoCtx.textAlign='center';logoCtx.textBaseline='middle';logoCtx.fillStyle='#eef9ff';
+        logoCtx.font='800 67px Cairo,Arial,sans-serif';logoCtx.fillText('MTS',128,64);
+        const logoTexture=new T.CanvasTexture(logoFace);logoTexture.colorSpace=T.SRGBColorSpace;
+        const logoMaterial=new T.SpriteMaterial({map:logoTexture,transparent:true,depthWrite:false});
+        const logo=new T.Sprite(logoMaterial);logo.position.set(0,.1,.75);logo.scale.set(.53,.27,1);
+        actor.add(logo);assets.push(logoTexture,logoMaterial);
+      }
+      const pointer=put(new T.ConeGeometry(.22,.52,4),gold,group,0,2.43,.72);
       pointer.rotation.z=Math.PI;
-      const stand=put(new T.CylinderGeometry(.13,.24,1.0,12),gold,actor,0,-2.15,-.45);
+      put(new T.CylinderGeometry(.13,.24,1.0,12),gold,actor,0,-2.15,-.45);
     }else if(key==='box'){
       for(let i=0;i<3;i++){
         const x=(i-1)*1.8;
@@ -150,11 +189,11 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
     }
     const hemi=new T.HemisphereLight(0x9ddefc,0x090d1f,.5);
     scene.add(hemi);
-    const keySpot=new T.SpotLight(0xffd9a1,0,22,Math.PI/4,.56,1.7);
+    const keySpot=new T.SpotLight(key==='wheel'?0xf4fcff:0xffd9a1,0,22,Math.PI/4,.56,1.7);
     keySpot.position.set(-3.2,5.3,5.9);scene.add(keySpot);
     const cyan=new T.SpotLight(0x39c9ff,0,24,Math.PI/4,.65,1.6);
     cyan.position.set(3.6,4.1,3.6);scene.add(cyan);
-    const goldFill=new T.PointLight(COLOR[key],0,22);
+    const goldFill=new T.PointLight(key==='wheel'?0x35e18b:COLOR[key],0,22);
     goldFill.position.set(.1,-1,4.0);scene.add(goldFill);
     // Physical volumetric-looking cones (geometry), dark-to-light timed with stage.
     for(const [x,material] of [[-2.0,halo],[2.0,halo]] as const){
@@ -177,6 +216,7 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
       const elapsed=(frame-begin)*.001;
       // Real 3D light cue: blackout -> individual practical spotlights -> full reveal.
       const reveal=mode==='intro'&&!reduced?Math.max(0,Math.min(1,(elapsed-.38)/1.6)):1;
+      if(designB)designB.illuminate(reveal);
       const burst=mode==='intro'&&!reduced&&elapsed>1.55&&elapsed<2.1?1.45:1;
       keySpot.intensity=(light?19:100)*reveal*burst;
       cyan.intensity=(light?13:80)*reveal*burst;
@@ -189,7 +229,7 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
       }
       const cameraProgress=mode==='intro'&&!reduced?Math.max(0,Math.min(1,elapsed/2.6)):1;
       const eased=1-Math.pow(1-cameraProgress,3);
-      camera.position.set(2.9*(1-eased),1.0*(1-eased)+.1, (light?12.8:9.6)+3.4*(1-eased));
+      camera.position.set(2.9*(1-eased),1.0*(1-eased)+.1, key==='wheel'?14.1+2.5*(1-eased):(light?12.8:9.6)+3.4*(1-eased));
       camera.lookAt(0,-.08,-.05);
       resize();renderer.render(scene,camera);
     };
@@ -202,7 +242,7 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
   return ()=>{disposed=true;cancelAnimationFrame(raf);if(renderer){renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.dispose();renderer.domElement.remove();}
     for(const a of assets)try{a.dispose();}catch{/* best effort */}
   };
- },[key,mode,light]);
+ },[key,mode,light,ar,introSectorsKey]);
  return <div className={'arena-world3d arena-world3d--'+mode+(unavailable?' arena-world3d--unavailable':'')} aria-hidden="true">
    <div className="arena-world3d__canvas" ref={mount}/>
    <div className="arena-world3d__curtain"/>
