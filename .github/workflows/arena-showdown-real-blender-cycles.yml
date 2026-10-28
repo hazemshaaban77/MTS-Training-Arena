@@ -30,6 +30,7 @@ jobs:
       - name: Cycles material calibration OR authentic 3-angle GLB render (no deployment)
         working-directory: tools/arena-showdown-cycles
         run: |
+          mkdir -p renders
           set -uo pipefail
           set +e
           blender -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/cycles.log
