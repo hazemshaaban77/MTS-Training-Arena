@@ -17,14 +17,16 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends blender
           blender --version
-      - name: Confirm source or use safe CPU calibration
+      - name: Verify original GLB SHA256 and distinguish demo from actual model
         run: |
           if [ -f tools/arena-showdown-cycles/models/Arena_Showdown_Stage1_v3.glb ]; then
-            echo "Rendering the exact owner-reviewed GLB"
+            cd tools/arena-showdown-cycles/models
+            echo "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba  Arena_Showdown_Stage1_v3.glb" | sha256sum --check --status
+            echo "Verified original user-approved 2,787,288-byte V3 GLB; REAL MODEL render is next"
           else
-            echo "::notice::GLB not yet staged in the tools branch. Calibration render only; DO NOT label as Arena visual approval."
+            echo "::notice::NO ART SOURCE GLB YET. The job will only render the generic material CALIBRATION, not Arena Showdown. Owner must stage actual GLB."
           fi
-      - name: Real CPU Cycles render (no web server, no deployment)
+      - name: Cycles material calibration OR authentic 3-angle GLB render (no deployment)
         working-directory: tools/arena-showdown-cycles
         run: blender -b -t 2 --python scripts/render_cycles.py
       - name: Publish render images and editable scene as CI artifacts

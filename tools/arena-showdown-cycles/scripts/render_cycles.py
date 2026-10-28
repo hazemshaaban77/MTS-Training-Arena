@@ -2,7 +2,7 @@
 Use: blender -b -t 2 --python scripts/render_cycles.py -- [path/to/Arena_Showdown_Stage1_v3.glb]
 If the model has not been uploaded yet, render a small physically based studio calibration frame.
 """
-import math, sys, os
+import math, sys, os, hashlib
 from pathlib import Path
 import bpy
 from mathutils import Vector
@@ -13,12 +13,24 @@ OUTPUT.mkdir(exist_ok=True)
 CUSTOM = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 MODEL = Path(CUSTOM[0]).resolve() if CUSTOM else PROJECT / "models" / "Arena_Showdown_Stage1_v3.glb"
 REAL_MODEL = MODEL.is_file()
+EXPECTED_SHA256 = "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba"
+if REAL_MODEL:
+    digest = hashlib.sha256(MODEL.read_bytes()).hexdigest()
+    if digest != EXPECTED_SHA256:
+        raise RuntimeError("Model checksum mismatch; refusing to render a different GLB: " + digest)
+    print("ARENA_SOURCE_VERIFIED_SHA256", digest, "BYTES", MODEL.stat().st_size, flush=True)
+elif os.getenv("ARENA_REQUIRE_REAL_MODEL") == "1":
+    raise FileNotFoundError("The original authentic V3 GLB is required. Upload the exact file to tools/arena-showdown-cycles/models/ first.")
+
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
 scene.render.engine = "CYCLES"
 scene.cycles.device = "CPU"
-scene.cycles.samples = 16 if REAL_MODEL else 24
+scene.cycles.samples = 48 if REAL_MODEL else 24
+scene.cycles.max_bounces = 6
+scene.cycles.diffuse_bounces = 3
+scene.cycles.glossy_bounces = 4
 # Ubuntu 24.04's official Blender 4.0.2 package may ship without OpenImageDenoiser.
 # Disable BOTH scene and view-layer denoising so actual Cycles CPU kernels still run.
 scene.cycles.use_denoising = False
@@ -102,7 +114,7 @@ if REAL_MODEL:
             n.inputs["Roughness"].default_value = 0.25
         elif "marble" in name:
             n.inputs["Roughness"].default_value = 0.18
-    aim_target = (0, 4, -1)
+    aim_target = (0, 4.2, -1)
     cam = camera("Arena – front architectural review", (0, 5.5, 27), aim_target, 35)
     area("Mega softbox left", (-7, 13, 11), aim_target, (0.94, 0.98, 1.0), 2600, 9, 5)
     area("Chrome reflection strip", (2, 12, 12), aim_target, (1.0, 1.0, 1.0), 3000, 12, 1.4)
@@ -134,5 +146,11 @@ bpy.ops.render.render(write_still=True)
 if REAL_MODEL:
     cam.location=(-6.5,8.5,24.0); aim(cam, aim_target)
     scene.render.filepath=str(OUTPUT / "Arena_Showdown_Actual_Model_Cycles_Crane.png")
+    bpy.ops.render.render(write_still=True)
+    # Camera 3: focus on the actual mechanical rotor and certified logo texture.
+    cam.location=(3.3,5.0,10.9)
+    aim(cam, (0,4.06,0.6))
+    cam.data.lens=46
+    scene.render.filepath=str(OUTPUT / "Arena_Showdown_Actual_Model_Cycles_Wheel_Detail.png")
     bpy.ops.render.render(write_still=True)
 print("ARENA_CYCLES_COMPLETE:", "REAL_MODEL" if REAL_MODEL else "CALIBRATION_ONLY", flush=True)
