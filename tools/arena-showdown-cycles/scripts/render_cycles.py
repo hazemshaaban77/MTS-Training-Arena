@@ -288,6 +288,49 @@ if REAL_MODEL:
                 lamp.data.energy=energy;lamp.data.color=col
     scene.view_settings.exposure=-.55
     scene.cycles.samples=32
+
+    # V4.1 genuine approved masthead: REUSE the GLB's original photographic logo
+    # material without recoloring or redrawing MTS, on a real raised fascia.
+    box('branded masthead monolith',(0,-2.15,8.54),(6.15,.36,1.48),graphite,.09)
+    box('masthead chrome top lip',(0,-2.34,9.33),(6.30,.13,.10),chrome,.025)
+    box('masthead chrome lower lip',(0,-2.34,7.78),(6.30,.13,.09),chrome,.025)
+    box('masthead emerald running lamp',(0,-2.43,7.71),(5.95,.06,.055),emerald)
+    exact_logo=next((m for m in bpy.data.materials if 'V3_APPROVED_LOGO_MASTHEAD' in m.name),None)
+    if exact_logo is not None:
+        bpy.ops.mesh.primitive_plane_add(size=1,location=(0,-2.40,8.53))
+        sign=bpy.context.object
+        sign.name='V4_Original_Arena_Approved_Logo_Masthead'
+        sign.rotation_euler=(math.pi/2,0,0)
+        sign.scale=(5.75,1.29,1)
+        sign.data.materials.append(exact_logo)
+        objects.append(sign)
+        print('ART_V4_REAL_APPROVED_LOGO_TEXTURE_REUSED',flush=True)
+    # Breathtaking city broadcast wall is made from genuine illuminated 3D screens
+    # + an original modelled skyline, not a screenshot of the approved target.
+    broadcast=v4mat('physical immersive studio LED',(.005,.09,.31),.10,.35,(.03,.34,.85),.65)
+    for side in (-1,1):
+        sx=side*9.30
+        screen=box('large curved media wing',(sx,5.25,4.48),(4.15,.17,5.70),broadcast,.12)
+        box('media wing chromium edge',(sx,5.12,7.37),(4.25,.20,.09),chrome,.015)
+        box('media wing chromium sill',(sx,5.10,1.61),(4.24,.20,.08),chrome,.015)
+        for n in range(28):
+            x=sx-1.95+n*.14
+            tall=random.uniform(.9,3.4)
+            y=5.06
+            box('studio city silhouette',(x,y,1.85+tall/2),(.095,.07,tall),city)
+            if n%7==0:
+                pipe('LED skyline spire',(x,y,1.85+tall),(x,y,2.12+tall+.5),.012,chrome)
+            for row in range(int(tall/.36)):
+                if random.random()<.50:
+                    box('lit physical window',(x,y-.045,1.99+row*.36),(.022,.015,.041),warm if n%9==0 else cyan)
+        # 3D side-brand baffle behind the media wall.
+        box('emissive green media separator',(sx-side*2.18,4.90,4.4),(.11,.19,5.82),emerald,.02)
+    # Give the hero scene a real architectural lens that shows both foreground
+    # reflective runway and full wheel on standard fullscreen projector.
+    cam.location=(0,-23.3,7.05)
+    aim(cam,(0,-.4,3.88))
+    cam.data.lens=36
+    
     print('ART_V4_ACTUAL_ADDED_MESHES',len(objects),flush=True)
     print('ART_V4_PRESERVED_EMBEDDED_ARENA_LOGO_AND_CAIRO',flush=True)
 
