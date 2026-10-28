@@ -1,64 +1,59 @@
-name: Blender Cycles • Arena Showdown Art Review (NO DEPLOY)
+name: Arena Showdown V4 Art-First Cycles Review (NO DEPLOY)
 on:
   push:
-    branches:
-      - tools/arena-showdown-blender-cycles
+    branches: [feature/arena-showdown-art-v4-lookdev]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  cpu-cycles:
+  art-review:
     runs-on: ubuntu-24.04
     timeout-minutes: 28
     steps:
       - uses: actions/checkout@v4
-      - name: Install actual Blender renderer (Ubuntu universe package)
+      - name: Verify original V3 GLB is unchanged
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends blender python3-numpy
-          blender --version
-          blender -b --python-expr "import numpy; print('BLENDER_NUMPY_READY', numpy.__version__)"
-      - name: Verify original GLB SHA256 and distinguish demo from actual model
+          set -euo pipefail
+          cd tools/arena-showdown-cycles/models
+          echo "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba  Arena_Showdown_Stage1_v3.glb" | sha256sum -c -
+          test "$(wc -c < Arena_Showdown_Stage1_v3.glb)" -eq 2787288
+      - name: Download official Blender 4.5.15 LTS x64 and verify publisher checksum
         run: |
-          if [ -f tools/arena-showdown-cycles/models/Arena_Showdown_Stage1_v3.glb ]; then
-            cd tools/arena-showdown-cycles/models
-            echo "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba  Arena_Showdown_Stage1_v3.glb" | sha256sum --check --status
-            echo "Verified original user-approved 2,787,288-byte V3 GLB; REAL MODEL render is next"
-          else
-            echo "::notice::NO ART SOURCE GLB YET. The job will only render the generic material CALIBRATION, not Arena Showdown. Owner must stage actual GLB."
-          fi
-      - name: Cycles material calibration OR authentic 3-angle GLB render (no deployment)
+          set -euo pipefail
+          mkdir -p .blender
+          cd .blender
+          curl -fLSs --retry 3 --retry-delay 3 -o blender.tar.xz https://download.blender.org/release/Blender4.5/blender-4.5.15-linux-x64.tar.xz
+          curl -fLSs --retry 3 --retry-delay 3 -o release.sha256 https://download.blender.org/release/Blender4.5/blender-4.5.15.sha256
+          grep 'blender-4.5.15-linux-x64.tar.xz' release.sha256 | sed 's@blender-4.5.15-linux-x64.tar.xz@blender.tar.xz@' | sha256sum -c -
+          tar -xf blender.tar.xz
+          BIN="$(find "$PWD" -type f -name blender -executable -print -quit)"
+          test -n "$BIN"
+          "$BIN" --version | head -n 3
+          "$BIN" -b --python-expr "import numpy; print('BUNDLED_NUMPY_OK')"
+      - name: Render 3 REAL V4 art review frames and verify Blender outputs
         working-directory: tools/arena-showdown-cycles
         run: |
-          mkdir -p renders
           set -uo pipefail
+          mkdir -p renders
+          BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
+          test -n "$BIN" || exit 1
           set +e
-          blender -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/cycles.log
-          blender_exit=${PIPESTATUS[0]}
+          "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/v4_cycles.log
+          code=${PIPESTATUS[0]}
           set -e
-          if [ -f models/Arena_Showdown_Stage1_v3.glb ]; then
-            for p in Arena_Showdown_Actual_Model_Cycles_Front.png Arena_Showdown_Actual_Model_Cycles_Crane.png Arena_Showdown_Actual_Model_Cycles_Wheel_Detail.png Arena_Showdown_Actual_Model_Cycles.blend; do
-              test -s "renders/$p" || { echo "::error::Missing real model render: $p"; exit 1; }
-            done
-            grep -q "ARENA_CYCLES_COMPLETE: REAL_MODEL" renders/cycles.log || { echo "::error::Real model render incomplete"; exit 1; }
-            grep -q "ARENA_CAMERA_CORRECTED_TO_GLB_BLENDER_AXES" renders/cycles.log || { echo "::error::3D front camera was not corrected"; exit 1; }
-            for f in renders/Arena_Showdown_Actual_Model_Cycles_*.png; do
-              file "$f" | grep -q 'PNG image data, 1280 x 720' || { echo "::error::Invalid PNG dimensions: $f"; exit 1; }
-            done
-            test "$(head -c 7 renders/Arena_Showdown_Actual_Model_Cycles.blend)" = "BLENDER" || { echo "::error::Invalid .blend file"; exit 1; }
-          else
-            test -s renders/Cycles_Calibration.png || { echo "::error::Missing calibration frame"; exit 1; }
-            grep -q "ARENA_CYCLES_COMPLETE: CALIBRATION_ONLY" renders/cycles.log || exit 1
-          fi
-          if [ "$blender_exit" -ne 0 ]; then
-            echo "::warning::Blender exit $blender_exit AFTER successful complete marker; verified required PNGs and .blend independently."
-          fi
-          echo "ARENA_ARTIFACTS_VERIFIED=1"
-      - name: Publish render images and editable scene as CI artifacts
+          grep -q 'ART_V4_ACTUAL_ADDED_MESHES' renders/v4_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
+          grep -q 'ARENA_CYCLES_COMPLETE: ART_V4_REAL_MODEL' renders/v4_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
+          for shot in Hero Crane Wheel; do
+            file "renders/Arena_Showdown_V4_Cycles_$shot.png" | grep -q 'PNG image data, 1152 x 648' || { echo "::error::Invalid or missing $shot"; exit 1; }
+          done
+          test -s renders/Arena_Showdown_V4_Art_Review.blend || exit 1
+          test "$(head -c 7 renders/Arena_Showdown_V4_Art_Review.blend)" = "BLENDER" || exit 1
+          echo "ARENA_V4_3D_PHYSICAL_RENDER_ARTIFACTS_VERIFIED=1"
+      - name: Save visual evidence and editable scene, even on errors
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arena-showdown-real-blender-cycles-review
+          name: arena-showdown-v4-authentic-cycles-lookdev
           path: tools/arena-showdown-cycles/renders/
-          if-no-files-found: warn
           retention-days: 14
+          if-no-files-found: warn
