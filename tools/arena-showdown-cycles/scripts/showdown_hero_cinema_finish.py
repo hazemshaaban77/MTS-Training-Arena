@@ -7,6 +7,19 @@ from pathlib import Path
 from mathutils import Vector
 asset=PROJECT/"art_assets"
 start_count=len(objects)
+# Actual sampled studio HDRI drives metal reflections; screen textures remain physical panels.
+hdri=asset/"studio_small_01_1k.hdr"
+if hdri.is_file():
+    nodes=scene.world.node_tree.nodes
+    bg=nodes.get("Background")
+    env=nodes.new("ShaderNodeTexEnvironment")
+    env.image=bpy.data.images.load(str(hdri),check_existing=True)
+    scene.world.node_tree.links.new(env.outputs["Color"],bg.inputs["Color"])
+    bg.inputs["Strength"].default_value=.31
+    print("STAGE1_REAL_HDRI_LIGHTING_APPLIED",flush=True)
+else:
+    print("STAGE1_HDRI_NOT_AVAILABLE_KEEP_PHYSICAL_SOFTBOX_LIGHTING",flush=True)
+
 ink=v5_material("HERO black cobalt lacquer",(.007,.023,.052),.54,.22)
 brightsteel=v5_material("HERO brushed platinum",(.66,.79,.86),.89,.19)
 matte=v5_material("HERO black broadcast metal",(.012,.027,.054),.34,.37)
