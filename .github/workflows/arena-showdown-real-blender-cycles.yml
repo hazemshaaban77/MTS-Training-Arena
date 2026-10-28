@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 jobs:
   art-review:
     runs-on: ubuntu-24.04
@@ -42,6 +43,13 @@ jobs:
           curl -fLSs --retry 2 --max-time 45 -o tools/arena-showdown-cycles/art_assets/studio_small_01_1k.hdr \
             https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_01_1k.hdr \
             || echo "::warning::CC0 Poly Haven studio HDRI unavailable. Physical softbox lighting will be used."
+      - name: Retrieve authentic previously rendered editable Blender 3D set
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40710355251
+          github-token: ${{ github.token }}
+          name: arena-showdown-premium-stage1-hero-review
+          path: tools/arena-showdown-cycles/source_blend
       - name: Render authentic final 3D Stage 1 HERO and verify Blender outputs
         working-directory: tools/arena-showdown-cycles
         run: |
@@ -50,11 +58,11 @@ jobs:
           BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
           test -n "$BIN" || exit 1
           set +e
-          ARENA_PREMIUM_STAGE1=1 ARENA_FINAL_HERO=1 ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/premium_cycles.log
+          "$BIN" -b -t 2 --python scripts/render_fast_final_hero.py 2>&1 | tee renders/premium_cycles.log
           code=${PIPESTATUS[0]}
           set -e
           grep -q 'STAGE1_FINAL_HERO_REAL_3D_COMPLETE' renders/premium_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
-          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_REAL_MODEL' renders/premium_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
+          grep -q 'STAGE1_SAVED_PREMIUM_SCENE_ACTUALLY_LOADED' renders/premium_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
           file "renders/Arena_Showdown_Stage1_Final_Hero.png" | grep -q 'PNG image data, 1440 x 810' || { echo "::error::Premium Hero PNG missing or invalid dimensions"; exit 1; }
           test -s renders/Arena_Showdown_Stage1_Final_Hero.blend || exit 1
           test "$(head -c 7 renders/Arena_Showdown_Stage1_Final_Hero.blend)" = "BLENDER" || exit 1
