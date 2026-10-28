@@ -19,7 +19,13 @@ scene = bpy.context.scene
 scene.render.engine = "CYCLES"
 scene.cycles.device = "CPU"
 scene.cycles.samples = 16 if REAL_MODEL else 24
-scene.cycles.use_denoising = True
+# Ubuntu 24.04's official Blender 4.0.2 package may ship without OpenImageDenoiser.
+# Disable BOTH scene and view-layer denoising so actual Cycles CPU kernels still run.
+scene.cycles.use_denoising = False
+try:
+    bpy.context.view_layer.cycles.use_denoising = False
+except (AttributeError, TypeError):
+    pass
 scene.render.resolution_x = 1280 if REAL_MODEL else 720
 scene.render.resolution_y = 720 if REAL_MODEL else 405
 scene.render.resolution_percentage = 100
