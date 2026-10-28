@@ -224,10 +224,44 @@ for ob in scene.objects:
     if ob.type=='LIGHT' and ob.name in ('Chrome reflection strip','Mega softbox left'):
         ob.data.energy*=.78
 
+# V6.1 visual correction: the original approved logo is dark blue/green,
+# so place it over a genuine lit porcelain fascia, not dark-on-dark cobalt.
+box('physical softly lit porcelain behind approved original logo',
+    (0,-5.735,9.26),(4.77,.052,1.66),white,.085)
+box('subtle real chrome badge lip',(0,-5.81,8.40),(4.84,.06,.055),silver,.012)
+
+# The original V3 GLB embeds real city-screen textures. Reuse these exact
+# source materials on dedicated 3D media wings; not a fake photo backdrop.
+for side in (-1,1):
+    key='STAGE2_CITY_DEPTH_SCREEN_'+str(side)
+    original=next((m for m in bpy.data.materials if key in m.name and m.use_nodes),None)
+    img_node=next((nd for nd in original.node_tree.nodes
+                   if nd.type=='TEX_IMAGE' and nd.image),None) if original else None
+    if img_node is None:
+        print('V6_CITY_SCREEN_SOURCE_NOT_FOUND',key,flush=True)
+        continue
+    citymat=bpy.data.materials.new('PREMIUM_HERO city from original 3D source %s'%side)
+    citymat.use_nodes=True;nodes=citymat.node_tree.nodes;nodes.clear()
+    out=nodes.new('ShaderNodeOutputMaterial')
+    tx=nodes.new('ShaderNodeTexImage');tx.image=img_node.image
+    em=nodes.new('ShaderNodeEmission');em.inputs['Strength'].default_value=.83
+    citymat.node_tree.links.new(tx.outputs['Color'],em.inputs['Color'])
+    citymat.node_tree.links.new(em.outputs[0],out.inputs['Surface'])
+    x=side*8.37
+    box('physical framed panoramic TV side wing',(x,-2.77,4.71),(3.38,.19,4.95),navy,.10)
+    bpy.ops.mesh.primitive_plane_add(size=1,location=(x,-2.92,4.71))
+    obj=bpy.context.object;obj.rotation_euler.x=math.pi/2
+    obj.scale=(3.14,4.64,1)
+    register(obj,'V3 original night city screen panel',citymat)
+    for z,mat in [(7.17,mirror),(2.24,silver)]:
+        box('polished display chrome horizontal edge',(x,-2.93,z),(3.33,.09,.075),mat,.015)
+    box('green high-end TV edge',(x-side*1.64,-2.99,4.73),(.042,.09,4.76),lime)
+    print('V6_EMBEDDED_REAL_CITY_TV_SOURCE_REUSED',side,img_node.image.name,flush=True)
+
 # Full HD projector composition (review at 1600x900), subject dominant, logo visible.
-cam.location=(0,-25.5,6.0)
-aim(cam,(0,-.9,4.84))
-cam.data.lens=37
+cam.location=(0,-27.2,6.7)
+aim(cam,(0,-.9,4.70))
+cam.data.lens=34
 scene.render.resolution_x=1280
 scene.render.resolution_y=720
 scene.cycles.samples=20
