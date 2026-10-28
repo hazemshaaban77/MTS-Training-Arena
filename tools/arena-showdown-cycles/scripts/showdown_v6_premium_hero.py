@@ -77,8 +77,8 @@ for i in range(12):
         sphere("studio white lens",(x,y,8.48),.12,frost)
 # Proper MTS channel name on a curved sign (silver/white on navy), with
 # approved logo pixels retained in original wheel hub and side banners.
-signage("CHROME MTS MASTHEAD","MTS",(0,-3.88,9.65),.90,polish,font)
-signage("CAIRO TRAINING ARENA","TRAINING ARENA",(0,-3.90,9.05),.345,frost,font)
+signage("CHROME MTS MASTHEAD","MTS",(0,-3.88,9.67),1.57,polish,font)
+signage("CAIRO TRAINING ARENA","TRAINING ARENA",(0,-3.90,9.02),.46,frost,font)
 # Architectural silver proscenium cutouts: brushed steel and lit inlays.
 for side in (-1,1):
     # Mount physically curved steel ribs to frame wheel, with one strip per arc.
@@ -109,6 +109,38 @@ for side in (-1,1):
     box("V6 PRESENTER BROADCAST DESK",(px,-7.12,.49),(2.36,1.22,.97),blackglass,.14)
     box("V6 PRESENTER GREEN DIAGONAL",(px,-7.77,.45),(1.76,.08,.15),ledg,.02)
     box("V6 PRESENTER CHROME DESK EDGE",(px,-7.80,1.01),(2.42,.10,.065),polish,.019)
+
+# Rebuild the two actual 3D media walls as luminous, physically layered set panels.
+# The hand-built skyline, window geometry and gradient emissive screen are genuine
+# 3D stage objects; no photo of the selected reference is pasted as a fake scene.
+import random
+random.seed(30729)
+ledsky=v5_material("V6.1 city broadcast luminous deep blue",(0.012,.10,.29),.05,.48,(.045,.20,.52),.83)
+nightcity=v5_material("V6.1 steel blue buildings",(.013,.023,.049),.42,.41)
+nightglass=v5_material("V6.1 lit city glass",(.018,.13,.28),.22,.28,(.12,.29,.65),.77)
+warmglass=v5_material("V6.1 selected warm glass",(.25,.20,.12),.1,.23,(.95,.64,.27),.70)
+citytrim=v5_material("V6.1 light roofline",(.22,.37,.55),.56,.31,(.22,.52,.91),.30)
+for side in (-1,1):
+    mid=side*8.90
+    box("V6.1 CINEMATIC LED CITY WALL",(mid,-2.15,4.26),(4.35,.16,5.62),ledsky,.08)
+    box("V6.1 OUTER CHROME PANORAMA FRAME",(mid,-2.35,7.16),(4.52,.11,.075),polish,.02)
+    box("V6.1 LOWER CHROME PANORAMA FRAME",(mid,-2.35,1.39),(4.52,.11,.074),polish,.02)
+    # Night skyline with true extruded building masses & lit individual windows.
+    for k in range(29):
+        x=mid-2.0+k*.143
+        ht=random.uniform(.78,3.26)
+        box("V6.1 physically extruded illuminated city tower",(x,-2.32,1.50+ht*.5),(.115,.12,ht),nightcity)
+        if k%7==0:
+            pipe("V6.1 city spire",(x,-2.29,1.50+ht),(x,-2.29,1.81+ht+.26),.014,citytrim)
+        for j in range(max(1,int(ht/.33))):
+            if random.random()<.54:
+                z=1.67+j*.32
+                box("V6.1 lit window physical glass",(x,-2.392,z),(.035,.018,.042),
+                    warmglass if (k+j)%9==0 else nightglass,.004)
+    for row in range(4):
+        z=1.76+row*1.17
+        box("V6.1 cobalt media image scanline",(mid,-2.44,z),(4.04,.016,.024),citytrim,.008)
+
 # Mechanical 3D precision wheel wheel expands radiance but keeps source sector art.
 # This is stage-1 static art; actual dynamic trainer-created wedges remain in stage 2.
 for rad,thick,y,mat in [(3.00,.11,-2.04,polish),(2.92,.041,-2.12,ledb),
