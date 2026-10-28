@@ -165,9 +165,12 @@ area("V5.2 off-axis emerald fill",(7.8,-9.0,9.3),(0,-1.5,4.1),
      (.19,.95,.62),260,4,5)
 
 # Projector hero framing; no bitmap slide, this is the same actual animated set.
-cam.location=(0,-21.4,6.4)
-aim(cam,(0,-1.0,4.70))
-cam.data.lens=33.5
+# Keep the authentic suspended logo and the physical halo INSIDE the 16:9
+# frame; the previous hero crop cut the upper architectural structures.
+cam.location=(0,-24.0,7.1)
+aim(cam,(0,-.8,5.35))
+cam.data.lens=32.0
+print("V52_FULL_MASTHEAD_CAMERA_FRAMING", flush=True)
 scene.render.resolution_x=1152
 scene.render.resolution_y=648
 scene.cycles.samples=48

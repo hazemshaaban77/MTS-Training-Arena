@@ -44,8 +44,9 @@ jobs:
           ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/v5_2_cycles.log
           code=${PIPESTATUS[0]}
           set -e
-          grep -q 'V52_REAL_EDITABLE_NEW_OBJECTS' renders/v5_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
-          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_2_HERO_REAL_MODEL' renders/v5_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
+          grep -q 'V52_REAL_EDITABLE_NEW_OBJECTS' renders/v5_2_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
+          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_2_HERO_REAL_MODEL' renders/v5_2_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
+          grep -q 'V52_FULL_MASTHEAD_CAMERA_FRAMING' renders/v5_2_cycles.log || { echo "::error::Improved full-masthead framing was not applied"; exit 1; }
           grep -q 'V52_REAL_WHEEL_SECTORS 8' renders/v5_2_cycles.log || { echo "::error::Editable real sector-shell geometry missing"; exit 1; }
           grep -q 'V52_CAIRO_NEUTRAL_SECTOR_LABELS 8' renders/v5_2_cycles.log || { echo "::error::Cairo 3D neutral labels missing"; exit 1; }
           grep -q 'V5_APPROVED_LOGO_PBR_TEXTURE_FOUND' renders/v5_2_cycles.log || { echo "::error::Approved Arena logo texture missing"; exit 1; }
