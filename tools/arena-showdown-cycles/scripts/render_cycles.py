@@ -342,6 +342,10 @@ if REAL_MODEL:
                      "showdown_stage1_hero_v6.py", "exec"), globals())
 
 blend=OUTPUT / ("Arena_Showdown_V6_Premium_Hero.blend" if REAL_MODEL and os.getenv("ARENA_HERO_V6") == "1" else "Arena_Showdown_V5_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
+if REAL_MODEL and os.getenv("ARENA_HERO_V6") == "1":
+    # Embed Cairo textures and original Arena logo inside the editable .blend.
+    bpy.ops.file.pack_all()
+    print("V6_HERO_ALL_TEXT_AND_BRAND_TEXTURES_PACKED",flush=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
 scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V6_Premium_Hero.png" if REAL_MODEL and os.getenv("ARENA_HERO_V6") == "1" else "Arena_Showdown_V5_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
