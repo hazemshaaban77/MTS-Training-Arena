@@ -334,18 +334,22 @@ if REAL_MODEL:
     print('ART_V4_ACTUAL_ADDED_MESHES',len(objects),flush=True)
     print('ART_V4_PRESERVED_EMBEDDED_ARENA_LOGO_AND_CAIRO',flush=True)
 
-blend=OUTPUT / ("Arena_Showdown_V4_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
+if REAL_MODEL:
+    exec(compile((PROJECT / "scripts" / "showdown_v5_finishing.py").read_text(encoding="utf-8"),
+                 "showdown_v5_finishing.py", "exec"), globals())
+
+blend=OUTPUT / ("Arena_Showdown_V5_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
-scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V4_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
+scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V5_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
 if REAL_MODEL:
     cam.location=(-6.5,-24.0,8.5); aim(cam, aim_target)
-    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V4_Cycles_Crane.png")
+    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V5_Cycles_Crane.png")
     bpy.ops.render.render(write_still=True)
     # Camera 3: focus on the actual mechanical rotor and certified logo texture.
     cam.location=(3.3,-11.0,5.0)
     aim(cam, (0,-0.6,4.06))
     cam.data.lens=46
-    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V4_Cycles_Wheel.png")
+    scene.render.filepath=str(OUTPUT / "Arena_Showdown_V5_Cycles_Wheel.png")
     bpy.ops.render.render(write_still=True)
-print("ARENA_CYCLES_COMPLETE:", "ART_V4_REAL_MODEL" if REAL_MODEL else "CALIBRATION_ONLY", flush=True)
+print("ARENA_CYCLES_COMPLETE:", "ART_V5_REAL_MODEL" if REAL_MODEL else "CALIBRATION_ONLY", flush=True)
