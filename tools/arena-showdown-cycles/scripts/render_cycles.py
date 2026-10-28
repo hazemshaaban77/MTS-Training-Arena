@@ -144,6 +144,7 @@ else:
     area("Narrow white reflection",(0,-3,6),aim_target,(1,1,1),1000,1,7)
 
 
+if REAL_MODEL:
     # SHOWDOWN V4 LOOKDEV: physical studio set, NEVER faking target art as a backdrop.
     # The imported original approved Arena logo texture is retained unchanged.
     import random, math
