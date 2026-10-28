@@ -1888,6 +1888,8 @@ test('Cinematic Entrance B keeps Cairo and renders the trainer-authored wheel se
  assert.match(stage,/font.*Cairo/);
  assert.match(splash,/sectors\?:ArenaWheelSector\[\]/);
  assert.match(session,/sectors=\{s\.activity\?\.sectors\|\|\[\]\}/);
+ const simulator=readFileSync('components/arena/ArenaSimulator.tsx','utf8');
+ assert.match(simulator,/sectors=\{a\.sectors\|\|\[\]\}/);
  assert.match(session,/sectors=\{s\.queue\[previewIntro\.index\]\?\.sectors\|\|\[\]\}/);
  assert.match(wheel,/visibleWheelLabel\(sectors\[i\],i,sectors\.length\)/);
  assert.match(wheel,/document\.fonts\?\.load\('800 48px Cairo'/);
