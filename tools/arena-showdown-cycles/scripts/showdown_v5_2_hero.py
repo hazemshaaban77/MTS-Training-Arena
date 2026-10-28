@@ -64,6 +64,27 @@ sector_count=8
 for idx in range(sector_count):
     precision_wedge(idx,sector_count)
 
+# Stage-one labels are legible Cairo numerals only. They are NOT trainer-authored
+# game sectors; live names, number of sectors and outcome mapping come in phase 2.
+cairo_path=PROJECT.parent.parent / "work-site-recovery-v6" / "public" / "fonts" / "cairo-800.ttf"
+if not cairo_path.is_file():
+    raise FileNotFoundError("The original V6 Cairo 800 font is required for art approval")
+cairo52=bpy.data.fonts.load(str(cairo_path))
+for idx in range(sector_count):
+    angle=math.pi/2-idx*math.tau/sector_count
+    text=bpy.data.curves.new("V5.2 neutral sector id Cairo", "FONT")
+    text.font=cairo52
+    text.body=str(idx+1).zfill(2)
+    text.align_x="CENTER";text.align_y="CENTER"
+    text.size=.40;text.extrude=.002;text.bevel_depth=.001
+    ob=bpy.data.objects.new("V5.2 Cairo neutral wheel number %02d"%(idx+1), text)
+    scene.collection.objects.link(ob)
+    ob.location=(1.52*math.cos(angle),-2.31,4.06+1.52*math.sin(angle))
+    ob.rotation_euler=(math.pi/2,0,0)
+    ob.data.materials.append(white52 if idx%4!=2 else navy52)
+    objects.append(ob)
+print("V52_CAIRO_NEUTRAL_SECTOR_LABELS",sector_count,flush=True)
+
 # Multiple independently editable wheel layers, with original central bearings
 # exposed. Main ring pieces are centered in XZ plane facing the projector camera.
 def rim52(name,radius,thickness,depth,mat):
