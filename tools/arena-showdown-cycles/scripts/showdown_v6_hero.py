@@ -44,6 +44,17 @@ azure=v5_material("V6 laser blue glass",(.012,.15,.48),.12,.2,(.035,.33,.94),.85
 snow=v5_material("V6 bright optical diffuser",(.73,.85,1),.20,.24,(.39,.58,.78),.30)
 diffuser=v5_material("V6 lightbox",(.46,.63,.82),.09,.48,(.32,.56,.72),.38)
 
+# Clean visual hierarchy: V3+V4+V5 prototypes stacked too many redundant rings.
+# Hide geometry from rendering (do not delete or damage the approved underlying GLB).
+for ob in scene.objects:
+    name=ob.name.lower()
+    if name.startswith(("wheel_ring_1","wheel_ring_2","wheel_ring_4","wheel_ring_5")):
+        ob.hide_render=True
+    if name.startswith(("v4_precision machined rotor","v5 precision orbital bearing housing")):
+        ob.hide_render=True
+    if name.startswith(("v3_canopy_ring_0","v3_canopy_ring_2")):
+        ob.hide_render=True
+
 # 1. Premium suspended banner: actual CURVED solid panels and 3D chrome ring.
 def arc_band(name,R,zlow,zhigh,arc,mat,segments=86):
     vv=[];ff=[]
@@ -156,7 +167,7 @@ for i in range(6):
     ob=bpy.context.object
     ob.name="V6 Arabic Cairo beautifully shaped generic segment "+str(i)
     ob.rotation_euler=(math.pi/2,0,0)
-    ob.scale=(1.14,.52,1)
+    ob.scale=(1.67,.72,1)
     ob.data.materials.append(mat)
 
 # 4. Broadcast screens: materially convincing panels, but not image-backed
@@ -189,9 +200,9 @@ area("V6 stage depth blue softbox",(-8,2.5,8.6),(0,0,4.0),(.34,.56,1),900,4,6)
 area("V6 stage depth green rake",(8,2.5,7.0),(0,-2,3.4),(.36,1,.69),520,4,5)
 
 # 6. HERO CAMERA: visual hierarchy upper blue banner + large wheel + reflective runway.
-cam.location=(0,-21.5,6.00)
-aim(cam,(0,-.60,4.15))
-cam.data.lens=37
+cam.location=(0,-25.0,5.96)
+aim(cam,(0,-.70,4.66))
+cam.data.lens=34
 scene.cycles.samples=24
 scene.cycles.use_denoising=True
 bpy.context.view_layer.cycles.use_denoising=True
