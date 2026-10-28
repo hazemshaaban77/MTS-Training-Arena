@@ -238,7 +238,7 @@ export default function ArenaSimulator({ar,activities,onClose,title,initialIndex
  if(!a||!room)return null;
  return <div className="arena-simulator-overlay" role="dialog" aria-modal="true" aria-label={t('محاكي التدريب','Training simulator')} dir={ar?'rtl':'ltr'}>
   {cinematicPreview&&<StageSplash key={index+'-'+runId+'-cinema'} preview
-    type={mainType(a)} label={activityLabel(a,ar)} ar={ar}
+    type={mainType(a)} label={activityLabel(a,ar)} ar={ar} sectors={a.sectors||[]}
     durationMs={9500} onComplete={()=>setCinematicPreview(false)}/>}
   <div className="arena-simulator-shell arena-simulator-shell--stage-first">
    <header className="arena-simulator-header">
