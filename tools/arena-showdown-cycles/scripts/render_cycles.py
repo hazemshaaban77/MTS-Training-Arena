@@ -29,7 +29,10 @@ try:
     scene.view_settings.view_transform = "AgX"
 except Exception:
     pass
-scene.view_settings.look = "Medium High Contrast"
+try:
+    scene.view_settings.look = "AgX - Medium High Contrast"
+except (TypeError, ValueError):
+    scene.view_settings.look = "Medium High Contrast"
 scene.render.image_settings.color_mode = "RGBA"
 scene.world = bpy.data.worlds.new("Arena Showdown — night studio")
 scene.world.use_nodes = True
