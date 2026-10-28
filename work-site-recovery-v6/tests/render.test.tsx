@@ -537,7 +537,7 @@ test('Fortune Wheel stage artwork follows server selected sector and keeps game 
   display={false} canAnswer={false} busy={false} onSubmit={()=>{}}
   onInteract={()=>{}} onControl={()=>{}}/>);
  assert.ok(html.includes('arena-wheel3d--crown'));
- assert.ok(html.includes('aria-label="Arena Crown 3D Wheel"'),'Only the Crown WebGL wheel renders');
+ assert.ok(html.includes('aria-label="Arena Cinematic B Wheel"'),'Approved Cinematic B WebGL wheel renders');
  assert.ok(html.includes('wheel-legend-winner'),'Server selected sector is highlighted');
  assert.ok(html.includes('aria-current="true"'),'Accessible winning section marker');
  assert.ok(html.includes('Participation star'),'Real server outcome label is displayed');
@@ -1816,7 +1816,7 @@ test('real 3D Crown wheel is the only game wheel, with accessible action if GPU 
 test('Arena Crown wheel has original authored sector labels, mechanical bulbs and jewel pointer',()=>{
  const scene=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
  const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
- assert.match(scene,/const labelText=String\(sectors\[i\]\.label/);
+ assert.match(scene,/const labelText=visibleWheelLabel\(sectors\[i\],i,sectors\.length\)/);
  assert.match(scene,/new THREE\.InstancedMesh/);
  assert.match(scene,/new THREE\.ExtrudeGeometry/);
  assert.match(scene,/const pointerShape=new THREE\.Shape/);
