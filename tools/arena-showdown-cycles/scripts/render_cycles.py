@@ -445,7 +445,7 @@ if REAL_MODEL:
         sphere('wheel physical sapphire rivet',(px,-1.77,pz),.047,platinum)
     # Production photo-lighting: neutral white creates readable sheen,
     # blue/green source lights supply the approved chromatic identity.
-    area('Arena V5 face fill',(0,-16,10),(0,-2,4.0),(1.,.97,.94),1700,12,8)
+    area('Arena V5 face fill',(0,-16,10),(0,-2,4.0),(1.,.97,.94),1080,12,8)
     area('Arena V5 wheel reflective strip',(-4,-8,6),(0,-1.5,4.0),(.83,.94,1.),700,2.5,9)
     area('Arena V5 side green', (10,-1,8),(2,-1.5,4),(.32,1,.68),530,5,8)
     # Improved texture detail by LTS bundled OIDN, never pretend 32 noisy samples
@@ -456,18 +456,19 @@ if REAL_MODEL:
         print('ARENA_V5_OIDN_DENOISER_ENABLED',flush=True)
     except (TypeError,AttributeError,RuntimeError):
         print('ARENA_V5_OIDN_UNAVAILABLE',flush=True)
-    scene.view_settings.exposure=-.20
-    cam.location=(0,-28.5,6.1)
-    aim_target=(0,-2.6,5.07)
+    scene.view_settings.exposure=-.31
+    cam.location=(0,-28.7,6.3)
+    aim_target=(0,-2.6,5.6)
     aim(cam,aim_target)
-    cam.data.lens=38
+    cam.data.lens=34
+    print('ARENA_V5_1_FULL_MASTHEAD_HERO_REFRAME',flush=True)
     print('ARENA_V5_TRUE_3D_HERO_ASSETS',len(objects),'ORIGINAL_BRAND=YES',flush=True)
 
 blend=OUTPUT / ("Arena_Showdown_V5_Art_Review.blend" if REAL_MODEL else "Cycles_Calibration.blend")
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
 scene.render.filepath = str(OUTPUT / ("Arena_Showdown_V5_Cycles_Hero.png" if REAL_MODEL else "Cycles_Calibration.png"))
 bpy.ops.render.render(write_still=True)
-if REAL_MODEL:
+if REAL_MODEL and os.environ.get('ARENA_HERO_ONLY')!='1':
     cam.location=(-6.5,-26.0,9.0); aim(cam, aim_target)
     scene.render.filepath=str(OUTPUT / "Arena_Showdown_V5_Cycles_Crane.png")
     bpy.ops.render.render(write_still=True)

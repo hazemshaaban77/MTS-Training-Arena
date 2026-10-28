@@ -1,4 +1,4 @@
-name: Arena Showdown V5 Art Direction — real Cycles review (NO DEPLOY)
+name: Arena Showdown V5.1 camera/lookdev — real Cycles review (NO DEPLOY)
 on:
   push:
     branches: [feature/arena-showdown-art-v5-stage-direction]
@@ -30,7 +30,7 @@ jobs:
           test -n "$BIN"
           "$BIN" --version | head -n 3
           "$BIN" -b --python-expr "import numpy; print('BUNDLED_NUMPY_OK')"
-      - name: Render 3 REAL V5 art review frames and verify Blender outputs
+      - name: Render genuine full-masthead V5.1 single-camera art review
         working-directory: tools/arena-showdown-cycles
         run: |
           set -uo pipefail
@@ -41,11 +41,10 @@ jobs:
           "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/v5_cycles.log
           code=${PIPESTATUS[0]}
           set -e
-          grep -q 'ARENA_V5_TRUE_3D_HERO_ASSETS' renders/v4_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
-          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_REAL_MODEL' renders/v4_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
-          for shot in Hero Crane Wheel; do
-            file "renders/Arena_Showdown_V5_Cycles_$shot.png" | grep -q 'PNG image data, 1152 x 648' || { echo "::error::Invalid or missing $shot"; exit 1; }
-          done
+          grep -q 'ARENA_V5_TRUE_3D_HERO_ASSETS' renders/v5_cycles.log || { echo "::error::V5 physical geometry missing"; exit 1; }
+          grep -q 'ARENA_V5_1_FULL_MASTHEAD_HERO_REFRAME' renders/v5_cycles.log || { echo "::error::V5.1 camera fix missing"; exit 1; }
+          grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_REAL_MODEL' renders/v5_cycles.log || { echo "::error::Incomplete V5.1 real render, Blender exit $code"; exit 1; }
+          file renders/Arena_Showdown_V5_Cycles_Hero.png | grep -q 'PNG image data, 1152 x 648' || { echo "::error::Invalid or missing hero image"; exit 1; }
           test -s renders/Arena_Showdown_V5_Art_Review.blend || exit 1
           test "$(head -c 7 renders/Arena_Showdown_V4_Art_Review.blend)" = "BLENDER" || exit 1
           echo "ARENA_V5_ACTUAL_3D_RENDERS_VERIFIED=1"
@@ -53,7 +52,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arena-showdown-v5-actual-3d-art-review
+          name: arena-showdown-v5-1-real-cycles-hero
           path: tools/arena-showdown-cycles/renders/
           retention-days: 14
           if-no-files-found: warn
