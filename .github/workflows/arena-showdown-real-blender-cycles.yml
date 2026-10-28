@@ -1,7 +1,7 @@
-name: Arena Showdown Premium Stage 1 / Actual Blender Cycles Art Gate
+name: Arena Showdown STAGE 1 / Final Real 3D Hero Review
 on:
   push:
-    branches: [feature/arena-showdown-stage1-premium-hero]
+    branches: [feature/arena-showdown-stage1-final-hero-art]
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,7 +30,19 @@ jobs:
           test -n "$BIN"
           "$BIN" --version | head -n 3
           "$BIN" -b --python-expr "import numpy; print('BUNDLED_NUMPY_OK')"
-      - name: Render authentic Premium Stage 1 HERO and verify Blender outputs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build Cairo Arabic sector textures and real-world studio media assets
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet Pillow
+          python tools/arena-showdown-cycles/scripts/prepare_hero_assets.py
+          mkdir -p tools/arena-showdown-cycles/art_assets
+          curl -fLSs --retry 2 --max-time 45 -o tools/arena-showdown-cycles/art_assets/studio_small_01_1k.hdr \
+            https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_01_1k.hdr \
+            || echo "::warning::CC0 Poly Haven studio HDRI unavailable. Physical softbox lighting will be used."
+      - name: Render authentic final 3D Stage 1 HERO and verify Blender outputs
         working-directory: tools/arena-showdown-cycles
         run: |
           set -uo pipefail
@@ -38,20 +50,20 @@ jobs:
           BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
           test -n "$BIN" || exit 1
           set +e
-          ARENA_PREMIUM_STAGE1=1 ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/premium_cycles.log
+          ARENA_PREMIUM_STAGE1=1 ARENA_FINAL_HERO=1 ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/premium_cycles.log
           code=${PIPESTATUS[0]}
           set -e
-          grep -q 'PREMIUM_STAGE1_CAMERA_CANOPY_AND_WHEEL_READY' renders/premium_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
+          grep -q 'STAGE1_FINAL_HERO_REAL_3D_COMPLETE' renders/premium_cycles.log || { echo "::error::Art geometry step not executed"; exit 1; }
           grep -q 'ARENA_CYCLES_COMPLETE: ART_V5_REAL_MODEL' renders/premium_cycles.log || { echo "::error::Incomplete actual V4 render, Blender exit $code"; exit 1; }
-          file "renders/Arena_Showdown_Premium_Stage1_Hero.png" | grep -q 'PNG image data, 1440 x 810' || { echo "::error::Premium Hero PNG missing or invalid dimensions"; exit 1; }
-          test -s renders/Arena_Showdown_Premium_Stage1.blend || exit 1
-          test "$(head -c 7 renders/Arena_Showdown_Premium_Stage1.blend)" = "BLENDER" || exit 1
-          echo "PREMIUM_STAGE1_HERO_ACTUAL_BLENDER_FRAME_VERIFIED=1"
+          file "renders/Arena_Showdown_Stage1_Final_Hero.png" | grep -q 'PNG image data, 1440 x 810' || { echo "::error::Premium Hero PNG missing or invalid dimensions"; exit 1; }
+          test -s renders/Arena_Showdown_Stage1_Final_Hero.blend || exit 1
+          test "$(head -c 7 renders/Arena_Showdown_Stage1_Final_Hero.blend)" = "BLENDER" || exit 1
+          echo "ARENA_STAGE1_FINAL_HERO_ACTUAL_CYCLES_FRAME_VERIFIED=1"
       - name: Save visual evidence and editable scene, even on errors
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arena-showdown-premium-stage1-hero-review
+          name: arena-showdown-stage1-final-hero-authentic-review
           path: tools/arena-showdown-cycles/renders/
           retention-days: 14
           if-no-files-found: warn
