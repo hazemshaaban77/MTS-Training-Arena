@@ -185,7 +185,7 @@ for y in (-4.3,7.3):
   bar("ceiling lattice / truss slash",(x,y,11.08),(x+1.1,y,11.65),.027,brushed)
   bar("ceiling lattice / return",(x+1.1,y,11.65),(x+2,y,11.08),.027,brushed)
  for x in range(-12,13,3):
-  c=cyl("physical hanging studio Fresnel", (x,y,10.82),.16,.36,graphite,16)
+  c=cyl("physical hanging studio Fresnel", (x,y,10.82),.16,.36,lacquer,16)
   bulb_mesh=sphere("studio spot eye",(x,y-.12,10.71),.105,bulb)
 # 04: deep panoramic 3D video walls (photo only INSIDE actual mesh/LED panels).
 cityphoto=ASSETS/"night_city.jpg"
