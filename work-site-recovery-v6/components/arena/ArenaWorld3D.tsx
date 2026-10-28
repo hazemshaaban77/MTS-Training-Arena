@@ -114,6 +114,16 @@ export default function ArenaWorld3D({kind='lobby',mode='ambient',light=false,ar
       ring(2.19,.042,.06,halo,actor);
       const hub=put(new T.CylinderGeometry(.44,.44,.3,48),gold,actor,0,.1,.46);hub.rotation.x=Math.PI/2;
       const disk=put(new T.CylinderGeometry(.32,.32,.07,48),teal,actor,0,.1,.66);disk.rotation.x=Math.PI/2;
+      const logoFace=document.createElement('canvas');logoFace.width=256;logoFace.height=128;
+      const logoCtx=logoFace.getContext('2d');
+      if(logoCtx){
+        logoCtx.textAlign='center';logoCtx.textBaseline='middle';logoCtx.fillStyle='#eef9ff';
+        logoCtx.font='800 67px Cairo,Arial,sans-serif';logoCtx.fillText('MTS',128,64);
+        const logoTexture=new T.CanvasTexture(logoFace);logoTexture.colorSpace=T.SRGBColorSpace;
+        const logoMaterial=new T.SpriteMaterial({map:logoTexture,transparent:true,depthWrite:false});
+        const logo=new T.Sprite(logoMaterial);logo.position.set(0,.1,.75);logo.scale.set(.53,.27,1);
+        actor.add(logo);assets.push(logoTexture,logoMaterial);
+      }
       const pointer=put(new T.ConeGeometry(.22,.52,4),gold,group,0,2.43,.72);
       pointer.rotation.z=Math.PI;
       put(new T.CylinderGeometry(.13,.24,1.0,12),gold,actor,0,-2.15,-.45);

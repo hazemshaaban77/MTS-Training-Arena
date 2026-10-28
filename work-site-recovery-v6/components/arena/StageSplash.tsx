@@ -2,6 +2,7 @@
 import {useEffect,useRef} from 'react';
 import {ArrowRight,Clapperboard,FastForward,Sparkles} from 'lucide-react';
 import ArenaWorld3D from './ArenaWorld3D';
+import {OfficialLogo} from './Brand';
 import type {ArenaWheelSector} from '../../lib/arena-wheel-theme';
 import {introIdentity} from '../../lib/arena-game-identity';
 import {gameIntroBeats} from '../../lib/arena-intro-beats';
@@ -20,7 +21,7 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
   <div className="cinematic-lights" aria-hidden="true"><i/><i/><i/></div>
   <div className="cinematic-rule cinematic-rule--top" aria-hidden="true"/>
   <section className="splash-center cinematic-center cinematic-layout">
-   <header className="cinematic-kicker"><Sparkles size={16}/><span>MTS TRAINING ARENA</span><Sparkles size={16}/></header>
+   <header className="cinematic-kicker">{identity.key==='wheel'?<><OfficialLogo kind="training"/><span>MTS TRAINING ARENA</span><OfficialLogo kind="mts"/></>:<><Sparkles size={16}/><span>MTS TRAINING ARENA</span><Sparkles size={16}/></>}</header>
    <div className="cinematic-content-grid">
     <div className="cinematic-visual-zone">
      <div className="cinematic-art-frame arena-intro-world-frame"><ArenaWorld3D kind={base} mode="intro" sectors={sectors} ar={ar}/></div>

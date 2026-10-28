@@ -48,3 +48,58 @@
 .arena-cinematic-intro.intro-kind-wheel .cinematic-start-label{background:linear-gradient(120deg,#0d579d,#0d654c)!important;color:#f4fbff!important;border-color:#39df9d82!important}
 .arena-cinematic-intro.intro-kind-wheel .cinematic-art-frame .arena-world3d{background:radial-gradient(ellipse at 48% 45%,#185d96,#0c305b 43%,#031329 93%)}
 .arena-cinematic-intro.intro-kind-wheel .cinematic-lights i{background:linear-gradient(180deg,#5edbff99,transparent 90%)!important}
+
+/* Full-width approved DESIGN B wheel arrival. Only wheel intro is affected. */
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-layout{
+ display:grid!important;grid-template-rows:clamp(36px,6vh,58px) minmax(0,1fr) 52px!important;
+ gap:3px!important;padding:clamp(9px,1.8vh,24px)!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-content-grid{
+ display:block!important;position:relative!important;width:100%!important;height:100%!important;overflow:hidden!important;
+ border-radius:18px!important;border:1px solid #4ec5e94a!important;background:#051a33!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-visual-zone{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-height:none!important;
+ min-height:0!important;display:block!important;z-index:1!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-copy{
+ position:absolute!important;inset:auto 0 0!important;z-index:3!important;display:flex!important;
+ flex-direction:column!important;justify-content:center!important;align-items:center!important;
+ text-align:center!important;direction:inherit!important;max-height:42%!important;min-height:0!important;
+ padding:17px 22px 14px!important;gap:4px!important;
+ background:linear-gradient(0deg,#03172dfa 0%,#062548d7 60%,transparent)!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-copy h2{
+ font:800 clamp(24px,4vw,50px)/1.2 "Cairo",sans-serif!important;color:#f5fcff!important;
+ text-shadow:0 3px 19px #051328!important;text-align:center!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-copy p{
+ font:700 clamp(12px,1.2vw,17px)/1.4 "Cairo",sans-serif!important;color:#ccecff!important;text-align:center!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-beat-sequence{display:none!important}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-start-label{
+ font-family:"Cairo",sans-serif!important;min-height:26px!important;max-width:100%!important;text-align:center!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-kicker{
+ display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(13px,3vw,46px)!important;
+ min-width:0!important;color:#e5f6ff!important;font:800 clamp(13px,1.75vw,23px) "Cairo",sans-serif!important;
+ background:#eef8fff2!important;border-radius:10px!important;padding:3px 12px!important;z-index:4!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-kicker span:not(.official-logo){color:#0a4477!important}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-kicker .official-logo{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:none!important;
+ width:clamp(52px,10vw,125px)!important;height:clamp(28px,4vh,46px)!important
+}
+.stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-kicker .official-logo img{
+ object-fit:contain!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important
+}
+@media(max-height:590px){
+ .stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-copy p{display:none!important}
+ .stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-start-label{display:none!important}
+}
+@media(max-width:650px){
+ .stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-layout{grid-template-rows:42px minmax(0,1fr) 48px!important}
+ .stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-copy{max-height:36%!important;padding:9px 12px!important}
+ .stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-copy p{display:none!important}
+ .stage-splash.arena-cinematic-intro.cinematic-composed.arena-intro-real3d.intro-kind-wheel .cinematic-kicker{gap:6px!important;font-size:11px!important}
+}
