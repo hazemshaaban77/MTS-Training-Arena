@@ -1834,7 +1834,7 @@ test('all ten 3D cinematic scene identities replace 2D picture splash, with skip
  const world=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
  const css=readFileSync('components/arena/ArenaWorld3D.css','utf8');
  const game=readFileSync('components/arena/GamePlay.tsx','utf8');
- assert.match(splash,/<ArenaWorld3D kind=\{base\} mode="intro"\/>/);
+ assert.match(splash,/<ArenaWorld3D kind=\{base\} mode="intro" sectors=\{sectors\} ar=\{ar\}\/>/);
  assert.doesNotMatch(splash,/ActivityArt|IntroScene/);
  assert.match(splash,/FastForward/);assert.match(splash,/onComplete/);
  for(const identity of ['wheel','championship','quiz','escape','box','poll','plan','order','cards','scenario']){
@@ -1871,4 +1871,32 @@ test('3D Vault replaces legacy box-card buttons without changing authoritative s
  assert.match(model,/const official=st\.used\.includes\(chest\.index\)\|\|st\.active===chest\.index/);
  assert.match(model,/st\.onOpen\(i\)/);
  assert.match(model,/aria-label=\{\(ar\?'صندوق رقم '/);
+});
+
+test('Cinematic Entrance B keeps Cairo and renders the trainer-authored wheel sectors instead of eight fixed choices',()=>{
+ const stage=readFileSync('components/arena/ArenaWorld3D.tsx','utf8');
+ const wheel=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ const splash=readFileSync('components/arena/StageSplash.tsx','utf8');
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ const theme=readFileSync('lib/arena-wheel-theme.ts','utf8');
+ const css=readFileSync('components/arena/ArenaWorld3D.css','utf8');
+ const wheelCss=readFileSync('components/arena/ArenaWheel3D.css','utf8');
+ assert.match(stage,/authoredSectors\.length/);
+ assert.match(stage,/sectorCorporateColor\(authoredSectors\[i\]\.kind,i\)/);
+ assert.match(stage,/visibleWheelLabel\(authoredSectors\[i\],i,n\)/);
+ assert.match(stage,/introSectorsKey/);
+ assert.match(stage,/font.*Cairo/);
+ assert.match(splash,/sectors\?:ArenaWheelSector\[\]/);
+ assert.match(session,/sectors=\{s\.activity\?\.sectors\|\|\[\]\}/);
+ assert.match(session,/sectors=\{s\.queue\[previewIntro\.index\]\?\.sectors\|\|\[\]\}/);
+ assert.match(wheel,/visibleWheelLabel\(sectors\[i\],i,sectors\.length\)/);
+ assert.match(wheel,/document\.fonts\?\.load\('800 48px Cairo'/);
+ assert.match(theme,/sectorCorporateColor/);
+ assert.match(css,/intro-kind-wheel/);
+ assert.match(css,/font-family:"Cairo"/);
+ assert.match(wheelCss,/arena-wheel3d--cinematic-b/);
+ const markup=renderToStaticMarkup(<StageSplash type="Wheel of Fortune" label="عجلة الحظ" ar
+  sectors={[{label:'معلومات',kind:'question'},{label:'مهمة عملية',kind:'challenge'}]} preview onComplete={()=>{}}/>);
+ assert.ok(markup.includes('arena-world3d--intro'));
+ assert.ok(markup.includes('عجلة الحظ'));
 });
