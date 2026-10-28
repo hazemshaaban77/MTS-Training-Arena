@@ -1,0 +1,63 @@
+name: Arena Showdown Stage 1 Premium Hero V6 (art-only, NO DEPLOY)
+on:
+  push:
+    branches: [feature/arena-showdown-stage1-premium-hero-v6]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  premium-hero-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify immutable original approved Arena V3 source
+        run: |
+          set -euo pipefail
+          cd tools/arena-showdown-cycles/models
+          echo "c5104ded9cfb0714bf74a89fcaf59adf4d905e3a8952560c96c9accb0f8873ba  Arena_Showdown_Stage1_v3.glb" | sha256sum --check
+      - name: Generate RTL Cairo Arabic samples for 6 example wheel faces
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends python3-pil libraqm0
+          /usr/bin/python3 tools/arena-showdown-cycles/scripts/build_cairo_hero_labels.py
+          test "$(find tools/arena-showdown-cycles/labels -name 'sector-*.png' | wc -l)" -eq 6
+      - name: Get verified official Blender 4.5 LTS binary (CPU Cycles)
+        run: |
+          set -euo pipefail
+          mkdir -p .blender && cd .blender
+          curl -fLSs --retry 3 --retry-delay 2 -o blender.tar.xz https://download.blender.org/release/Blender4.5/blender-4.5.15-linux-x64.tar.xz
+          curl -fLSs --retry 3 --retry-delay 2 -o release.sha256 https://download.blender.org/release/Blender4.5/blender-4.5.15.sha256
+          grep 'blender-4.5.15-linux-x64.tar.xz' release.sha256 | sed 's@blender-4.5.15-linux-x64.tar.xz@blender.tar.xz@' | sha256sum --check
+          tar -xf blender.tar.xz
+          BIN="$(find "$PWD" -type f -name blender -executable -print -quit)"
+          test -n "$BIN"
+          "$BIN" --version | head -n 2
+      - name: Render REAL 3D 1440x810 Premium Hero and ensure all editable sources
+        working-directory: tools/arena-showdown-cycles
+        run: |
+          set -uo pipefail
+          mkdir -p renders
+          BIN="$(find "$GITHUB_WORKSPACE/.blender" -type f -name blender -executable -print -quit)"
+          test -n "$BIN" || exit 1
+          set +e
+          ARENA_HERO_V6=1 ARENA_ART_SINGLE_FRAME=1 "$BIN" -b -t 2 --python scripts/render_cycles.py 2>&1 | tee renders/hero_v6.log
+          code=${PIPESTATUS[0]}
+          set -e
+          grep -q "V6_ORIGINAL_APPROVED_LOGO_FROM_V3" renders/hero_v6.log || { echo "::error::Original logo not loaded"; exit 1; }
+          grep -q "V6_HERO_ADDED_EDITABLE_OBJECTS" renders/hero_v6.log || { echo "::error::New physical stage art missing"; exit 1; }
+          grep -q "V6_HERO_ALL_TEXT_AND_BRAND_TEXTURES_PACKED" renders/hero_v6.log || { echo "::error::Textures not packed into blend"; exit 1; }
+          grep -q "ARENA_CYCLES_COMPLETE: STAGE1_PREMIUM_HERO_V6" renders/hero_v6.log || { echo "::error::Real Cycles render incomplete, Blender exit $code"; exit 1; }
+          file renders/Arena_Showdown_V6_Premium_Hero.png | grep -q 'PNG image data, 1440 x 810' || { echo "::error::Invalid hero frame"; exit 1; }
+          test -s renders/Arena_Showdown_V6_Premium_Hero.blend || exit 1
+          test "$(head -c 7 renders/Arena_Showdown_V6_Premium_Hero.blend)" = BLENDER || exit 1
+          echo "ART_ASSETS_VERIFIED=1; NO_PUBLISH=1; HUMAN_VISUAL_APPROVAL_STILL_REQUIRED=1"
+      - name: Archive actual hero and editable .blend (no deployment)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-showdown-v6-premium-real-cycles-hero
+          path: tools/arena-showdown-cycles/renders/
+          retention-days: 14
+          if-no-files-found: warn
