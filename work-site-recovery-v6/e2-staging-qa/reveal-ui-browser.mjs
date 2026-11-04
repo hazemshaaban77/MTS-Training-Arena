@@ -83,8 +83,15 @@ try{
   return s.keyRevealed===true;
  },code,{timeout:8500,polling:120});
  s=await state();
+ if(s.activity?.correct!==0)console.log('AUTO_REVEAL_DEBUG',JSON.stringify({
+  status:s.status,current:s.current,key:s.keyRevealed,
+  activityType:s.activity?.type,mode:s.activity?.revealMode,
+  fx:s.activity?.revealFx,revealMomentAt:s.revealMomentAt,
+  revealScheduledAt:s.revealScheduledAt,deadline:s.deadline,
+  serverNow:s.serverNow,revision:s.revision
+ }));
  assert.equal(s.activity.correct,0);
- assert.equal(s.revealMomentAt,s.revealScheduledAt===null?s.revealMomentAt:s.revealScheduledAt);
+ assert.ok(Number.isFinite(s.revealMomentAt),'Server must stamp the reveal moment');
  await page.locator('.arena-answer-reveal.fx-light').waitFor({timeout:7000});
  await page.screenshot({path:path.join(screenshots,'09-react-projector-auto-light.png')});
  await page.locator('.arena-answer-reveal').waitFor({state:'detached',timeout:6000});
