@@ -1,0 +1,8 @@
+# Experience 2.0 generated local / CI output; keep source, QA scripts and approved assets.
+**/ci-screenshots/
+**/screenshots/
+audit/results/
+**/playwright-report/
+**/test-results/
+**/*.log
+**/.DS_Store
