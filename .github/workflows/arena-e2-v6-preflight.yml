@@ -31,6 +31,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck, backend authorization, scoring and rendering tests
         run: pnpm test
+      - name: Verify public projection contract, session-code links and answer privacy
+        run: node --test e2-staging-qa/public-stage.test.mjs
       - name: Verify client identity and original approved corporate logos
         run: node scripts/verify-creative-identity.mjs
       - name: Verify live state transport unit tests (not live network tests)
@@ -49,6 +51,9 @@ jobs:
           test -s dist-github/e2-preview/index.html
           test -s dist-github/e2-preview/assets/arena-logo-approved.png
           test -s dist-github/e2-preview/assets/arena-logo-safe-margin.png
+          test -s dist-github/e2-preview/live-projector.html
+          test -s dist-github/e2-preview/live-projector.mjs
+          test -s dist-github/e2-preview/v6-public-stage.mjs
           echo "PASS: V6 and staged E2 visual assets built locally; no deployment performed."
       - name: Install isolated browser test runner
         working-directory: .
@@ -67,6 +72,8 @@ jobs:
           exit 1
       - name: Browser QA for branded E2 preview inside compiled V6
         run: node e2-staging-qa/browser-qa.mjs
+      - name: Browser QA for read-only V6 public data stage
+        run: node e2-staging-qa/live-projector-qa.mjs
       - name: Archive build evidence (not production state)
         if: always()
         uses: actions/upload-artifact@v4
