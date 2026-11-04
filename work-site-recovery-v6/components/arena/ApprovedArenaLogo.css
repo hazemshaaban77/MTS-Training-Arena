@@ -1,0 +1,37 @@
+/* Approved Arena product identity. NEVER frame the transparent PNG in a white circle.
+   Corporate brand logos are governed by their existing original rules. */
+.approved-arena-logo{
+ display:block;flex:0 0 auto;position:relative;z-index:1;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;outline:0;overflow:visible!important;line-height:0;
+ contain:layout style;max-width:100%;
+}
+.approved-arena-logo img{
+ display:block!important;width:100%!important;height:100%!important;
+ max-width:100%!important;max-height:100%!important;min-width:0!important;
+ object-fit:contain!important;object-position:center!important;
+ position:static!important;inset:auto!important;transform:none!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ clip-path:none!important;mask:none!important;box-shadow:none!important;
+ filter:drop-shadow(0 9px 18px #0008);
+}
+.approved-arena-logo--header{width:clamp(74px,6.5vw,105px);height:65px}
+.approved-arena-logo--lobby{width:clamp(180px,25vw,310px);height:clamp(112px,15vw,180px);margin:0 auto 10px}
+.approved-arena-logo--intro{width:clamp(140px,17vw,215px);height:clamp(78px,9vw,115px);margin:0 auto 2px}
+.approved-arena-logo--victory{width:clamp(180px,20vw,265px);height:clamp(107px,11vw,152px);margin:0 auto -7px;z-index:2}
+.lobby-stage .approved-arena-logo--lobby + .lobby-beacon{margin-top:0}
+.arena-victory__content>.approved-arena-logo--victory{align-self:center}
+.stage-splash .approved-arena-logo--intro{position:relative;z-index:5;flex-shrink:0}
+@media(max-width:800px){
+ .brand-header-center .approved-arena-logo--header{width:70px;height:48px}
+ .approved-arena-logo--lobby{width:min(68vw,255px);height:140px}
+}
+@media(max-width:520px){
+ .brand-header-center .approved-arena-logo--header{width:60px;height:45px}
+ .brand-header-center .arena-title-lockup{font-size:12px;letter-spacing:0;white-space:normal}
+ .approved-arena-logo--intro{width:155px;height:85px}
+ .approved-arena-logo--victory{width:200px;height:115px}
+}
+@media(prefers-reduced-motion:reduce){
+ .approved-arena-logo,.approved-arena-logo img{animation:none!important;transition:none!important}
+}
