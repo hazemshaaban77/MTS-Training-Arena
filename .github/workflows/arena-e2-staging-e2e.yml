@@ -4,6 +4,7 @@ on:
     branches:
       - feature/arena-e2-staging-e2e-20261104
       - feature/arena-e2-per-activity-reveal-20261104
+      - feature/arena-e2-approved-brand-stage-20261104
     paths:
       - "work-site-recovery-v6/e2-staging-qa/**"
       - "work-site-recovery-v6/public/e2-preview/**"
