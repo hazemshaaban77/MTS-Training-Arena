@@ -1,3 +1,6 @@
+import {createHash} from 'node:crypto';
+import ApprovedArenaLogo from '../components/arena/ApprovedArenaLogo';
+import BrandHeader from '../components/arena/Brand';
 import {TAU,sectorAngle,forwardSweep,easedStop,wheelClock} from '../lib/arena-wheel3d-math';
 import {newKnowledgeQuestion,changeKnowledgeQuestionType,normalizeKnowledgeQuestion,knowledgeQuestionTypes,questionTypeLabel,setMatchingPair,deleteMatchingPair} from '../lib/question-authoring';
 import {gameIntroBeats} from '../lib/arena-intro-beats';
@@ -1871,4 +1874,41 @@ test('3D Vault replaces legacy box-card buttons without changing authoritative s
  assert.match(model,/const official=st\.used\.includes\(chest\.index\)\|\|st\.active===chest\.index/);
  assert.match(model,/st\.onOpen\(i\)/);
  assert.match(model,/aria-label=\{\(ar\?'صندوق رقم '/);
+});
+
+
+test('the approved Arena product mark stays byte-identical, transparent and independent of corporate marks',()=>{
+ const png=readFileSync('public/e2-preview/assets/arena-logo-safe-margin.png');
+ assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+ assert.ok(png.readUInt32BE(16)>150 && png.readUInt32BE(20)>150,'Original approved logo must retain sufficient pixels');
+ // Git blob hash is pinned to the previously approved, padded transparent
+ // image, not a newly generated substitute or a white-background logo.
+ const gitSha=createHash('sha1').update('blob '+png.length+'\\0').update(png).digest('hex');
+ assert.equal(gitSha,'5dcc72c9dadf7f01f7ca4b69f5afc62b38fca180');
+ const css=readFileSync('components/arena/ApprovedArenaLogo.css','utf8');
+ assert.match(css,/background:transparent!important/);
+ assert.match(css,/object-fit:contain!important/);
+ assert.match(css,/border-radius:0!important/);
+ assert.match(css,/overflow:visible!important/);
+ assert.doesNotMatch(css,/background:\\s*white|background:\\s*#fff/i);
+ const header=renderToStaticMarkup(<BrandHeader/>);
+ assert.match(header,/approved-arena-logo--header/);
+ assert.match(header,/official-logo mts/);
+ assert.match(header,/official-logo training/);
+ assert.match(header,/e2-preview\\/assets\\/arena-logo-safe-margin\\.png/);
+ const logo=renderToStaticMarkup(<ApprovedArenaLogo placement="lobby"/>);
+ assert.match(logo,/approved-arena-logo--lobby/);
+});
+test('approved product logo is present in V6 live lobby, existing intro and authoritative winners podium',()=>{
+ const session=readFileSync('components/arena/Session.tsx','utf8');
+ const splash=readFileSync('components/arena/StageSplash.tsx','utf8');
+ const victory=readFileSync('components/arena/ArenaVictory.tsx','utf8');
+ assert.match(session,/<ApprovedArenaLogo placement="lobby"\\/>/);
+ assert.match(splash,/<ApprovedArenaLogo placement="intro"\\/>/);
+ assert.match(victory,/<ApprovedArenaLogo placement="victory"\\/>/);
+ assert.match(session,/QRCode\\.toDataURL|QRCode\\.toString|QRCode\\.toCanvas/);
+ assert.match(session,/siteUrl\\('join',code\\)/);
+ const rendered=renderToStaticMarkup(<ArenaVictory s={{teamMode:true,teams:[{team:'Wave',score:220,rank:1}],individual:[]}} ar/>);
+ assert.match(rendered,/approved-arena-logo--victory/);
+ assert.match(rendered,/arena-victory__winner/);
 });
