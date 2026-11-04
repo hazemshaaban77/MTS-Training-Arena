@@ -57,6 +57,42 @@ try{
  page.on('pageerror',e=>failures.push(e.message));
  await page.goto(origin+'/MTS-Training-Arena/v6/?view=display&code='+code,{waitUntil:'domcontentloaded'});
  await page.locator('.session-shell.projector').waitFor({timeout:25000});
+ // Stage 06 branding: the exact existing PNG, no circle, no clipping, no
+ // replacement of the two official corporate emblems or the single QR.
+ const productInHeader=page.locator('.session-brand-header .approved-arena-logo--header img');
+ const productInLobby=page.locator('.lobby-stage .approved-arena-logo--lobby img');
+ await productInHeader.waitFor({timeout:10000});
+ await productInLobby.waitFor({timeout:10000});
+ await page.waitForFunction(()=>[...document.querySelectorAll('.session-brand-header .official-logo img,.session-brand-header .approved-arena-logo img,.lobby-stage .approved-arena-logo img')]
+    .every(img=>img.complete && img.naturalWidth>0),null,{timeout:14000});
+ assert.equal(await page.locator('.session-brand-header .official-logo img').count(),2);
+ assert.ok((await productInLobby.getAttribute('src')).includes('/e2-preview/assets/arena-logo-safe-margin.png'));
+ const check=await productInLobby.evaluate(img=>{
+  const s=getComputedStyle(img),parent=getComputedStyle(img.parentElement),r=img.getBoundingClientRect();
+  return {width:r.width,height:r.height,x:r.left,right:r.right,
+   intrinsic:img.naturalWidth,fit:s.objectFit,
+   imageBackground:s.backgroundColor,parentBackground:parent.backgroundColor,
+   radius:s.borderTopLeftRadius,parentRadius:parent.borderTopLeftRadius};
+ });
+ assert.ok(check.intrinsic>150&&check.width>100,'Approved logo must be loaded and legible');
+ assert.equal(check.fit,'contain');
+ assert.equal(check.radius,'0px');
+ assert.equal(check.parentRadius,'0px');
+ assert.ok(check.parentBackground==='rgba(0, 0, 0, 0)'||check.parentBackground==='transparent',
+  'No white circular backing behind approved identity');
+ assert.ok(check.x>=0&&check.right<=1920,'Never clip approved logo on projector');
+ await page.locator('.lobby-qr img').waitFor({timeout:14000});
+ await page.screenshot({path:path.join(screenshots,'10-approved-product-lobby-projector.png')});
+ // Mobile participant view is still V6 React, not the standalone preview.
+ const mobile=await browser.newPage({viewport:{width:390,height:844}});
+ mobile.on('pageerror',e=>failures.push(e.message));
+ await mobile.goto(origin+'/MTS-Training-Arena/v6/?view=join&code='+code,{waitUntil:'domcontentloaded'});
+ await mobile.locator('.approved-arena-logo--header img').waitFor({timeout:14000});
+ await mobile.waitForFunction(()=>document.querySelector('.approved-arena-logo--header img')?.naturalWidth>0);
+ const small=await mobile.locator('.approved-arena-logo--header').evaluate(x=>{const r=x.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width}});
+ assert.ok(small.width>=45&&small.left>=-1&&small.right<=391,'Approved identity must fit 390px participant header');
+ await mobile.screenshot({path:path.join(screenshots,'12-approved-mobile-join.png'),fullPage:true});
+ await mobile.close();
  await control('start');
  await page.waitForFunction(()=>document.body.textContent?.includes('Manual reveal'),null,{timeout:10000});
  await control('close');
@@ -102,8 +138,12 @@ try{
  await page.locator('.session-shell.projector').waitFor({timeout:10000});
  await sleep(800);
  assert.equal(await page.locator('.arena-answer-reveal').count(),0,'Do not replay completed animation on returning display');
+ await control('finish');
+ await page.locator('.arena-victory .approved-arena-logo--victory img').waitFor({timeout:14000});
+ await page.waitForFunction(()=>document.querySelector('.arena-victory .approved-arena-logo--victory img')?.naturalWidth>0);
+ await page.screenshot({path:path.join(screenshots,'11-approved-original-logo-winners.png')});
  assert.deepEqual(failures,[]);
- console.log('PASS React 16:9 projector: manual reveal secure; cinematic light sweep; auto reveal 2s; light FX; no replay; no JavaScript errors.');
+ console.log('PASS original V6 logos: 1920p projector lobby, stable QR, unframed exact Arena PNG, mobile header, winners podium, manual and auto reveal.');
 }finally{
  if(browser)await browser.close();
  fixture.kill('SIGTERM');
