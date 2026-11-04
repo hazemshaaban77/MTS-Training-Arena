@@ -233,7 +233,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(!s)return;
   const prior=previousSnapshot.current;
   const kind=eligibleMoment(prior,s,host?'host':display?'display':'play');
-  if(kind&&(host||display)&&!(kind==='reveal'&&s.revealMomentAt!=null&&
+  if(kind&&(host||display)&&!(kind==='reveal'&&
     (s.activity?.revealMode!=null||s.activity?.revealFx!=null))){
    setMoment(kind);
    if(momentTimer.current)clearTimeout(momentTimer.current);
