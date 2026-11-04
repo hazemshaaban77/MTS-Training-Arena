@@ -1,4 +1,4 @@
-name: Experience 2.0 visual QA and V6 contract tests
+name: Experience 2.0 canonical Sprint 02 and V6 contract tests
 on:
   push:
     branches:
@@ -25,26 +25,21 @@ jobs:
         run: |
           python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/arena-experience-2-http.log 2>&1 &
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8000/experience-2-preview/ >/dev/null; then exit 0; fi
+            if curl -fsS http://127.0.0.1:8000/experience-2-preview/sprint02/ >/dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/arena-experience-2-http.log
           exit 1
       - name: Verify V6 one-QR and safe read-only stage contract
         run: node --test experience-2-preview/integration/v6-public-stage.test.mjs
-      - name: Run synthetic logic regression checks
-        run: node experience-2-preview/smoke-test.mjs
-      - name: Run real Chromium responsive and projector checks
-        run: node experience-2-preview/browser-qa.mjs
       - name: Verify preserved original logo and run Sprint 02 Chromium end-to-end checks
         run: node experience-2-preview/sprint02/browser-qa.mjs
       - name: Preserve review screenshots and static-server logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: experience-2-stage1-and-stage2-browser-qa
+          name: experience-2-canonical-sprint02-browser-qa
           path: |
-            experience-2-preview/screenshots/
             experience-2-preview/sprint02/ci-screenshots/
             /tmp/arena-experience-2-http.log
           if-no-files-found: ignore
