@@ -66,6 +66,16 @@ try{
  await page.waitForFunction(()=>[...document.querySelectorAll('.session-brand-header .official-logo img,.session-brand-header .approved-arena-logo img,.lobby-stage .approved-arena-logo img')]
     .every(img=>img.complete && img.naturalWidth>0),null,{timeout:14000});
  assert.equal(await page.locator('.session-brand-header .official-logo img').count(),2);
+ const corporateLeft=await page.locator('.session-brand-header .mts-frame').boundingBox();
+ const corporateRight=await page.locator('.session-brand-header .training-frame').boundingBox();
+ const centerProduct=await page.locator('.session-brand-header .approved-arena-logo--header').boundingBox();
+ assert.ok(corporateLeft&&corporateRight&&centerProduct,'Three projector brand zones visible');
+ assert.ok(corporateLeft.x+corporateLeft.width<centerProduct.x,
+  'MTS corporate emblem must be in the projector left corner');
+ assert.ok(centerProduct.x+centerProduct.width<corporateRight.x,
+  'Training Team emblem must be in the projector right corner');
+ assert.ok(centerProduct.width>=80&&centerProduct.height>=45,
+  'Approved Arena logo in projector header must be visibly sized, not collapsed');
  assert.ok((await productInLobby.getAttribute('src')).includes('/e2-preview/assets/arena-logo-safe-margin.png'));
  const check=await productInLobby.evaluate(img=>{
   const s=getComputedStyle(img),parent=getComputedStyle(img.parentElement),r=img.getBoundingClientRect();
