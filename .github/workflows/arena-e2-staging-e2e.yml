@@ -1,0 +1,61 @@
+name: Arena E2 Sprint05 real API isolated staging E2E (NO DEPLOY)
+on:
+  push:
+    branches:
+      - feature/arena-e2-staging-e2e-20261104
+    paths:
+      - "work-site-recovery-v6/e2-staging-qa/**"
+      - "work-site-recovery-v6/public/e2-preview/**"
+      - ".github/workflows/arena-e2-staging-e2e.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ephemeral-v6-real-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - name: Checkout isolated E2E branch (no deployment credentials)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "11.25.0"
+      - name: Install dependencies in disposable CI runner
+        run: pnpm install --frozen-lockfile
+      - name: Verify all baseline V6 TypeScript, authorization and score tests
+        run: pnpm test
+      - name: Verify staged projection safe contract
+        run: node --test e2-staging-qa/public-stage.test.mjs
+      - name: Build frontend locally, never publish
+        run: pnpm run build:github
+        env:
+          VITE_ARENA_API_ORIGIN: http://127.0.0.1:8094
+      - name: Bundle local V6 API handler with ephemeral SQLite transport
+        run: |
+          mkdir -p .sites-runtime/e2-staging-qa
+          pnpm exec esbuild e2-staging-qa/staging-local-server.ts --bundle --platform=node --format=esm --target=node24 --outfile=.sites-runtime/e2-staging-qa/staging-local-server.mjs
+      - name: Install isolated Chromium browser
+        run: |
+          pnpm exec playwright --version || true
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run two then five independent browser clients and projector against real API handler
+        run: node e2-staging-qa/real-session-browser.mjs
+      - name: Archive only screenshot evidence (no database, secrets or participant tokens)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-e2-sprint05-ephemeral-real-api-e2e
+          path: work-site-recovery-v6/e2-staging-qa/ci-screenshots/
+          retention-days: 5
+          if-no-files-found: ignore
