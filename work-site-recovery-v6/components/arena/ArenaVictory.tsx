@@ -1,4 +1,5 @@
 'use client';
+import ApprovedArenaLogo from './ApprovedArenaLogo';
 import {useState} from 'react';
 import {Crown,RotateCcw,Sparkles,Trophy,Users} from 'lucide-react';
 
@@ -35,6 +36,7 @@ export default function ArenaVictory({s,ar}:{s:any;ar:boolean}){
       '--size':(5+i%5)+'px','--confetti-hue':[44,169,195,222,284][i%5]} as React.CSSProperties}/>)}</div>
   </div>
   <div className="arena-victory__content">
+   <ApprovedArenaLogo placement="victory"/>
    <span className="arena-victory__eyebrow"><Sparkles size={19}/>{t('لحظة مجد في ساحة التدريب','THE ARENA VICTORY MOMENT')}<Sparkles size={19}/></span>
    <div className="arena-victory__trophy" aria-hidden="true">
     <div className="arena-victory__orbit arena-victory__orbit--first"/>
