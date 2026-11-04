@@ -214,6 +214,13 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(age<0||age>3600)return; // no replay for stale snapshots or return visits
   const key=s.code+':'+s.current+':'+s.revealMomentAt;
   if(lastServerReveal.current===key)return;
+  // Persist only the visual cue id for this projector tab across reloads.
+  // This has zero influence over the server-provided reveal authorization.
+  const seenKey='arena-reveal-visual-seen:'+s.code;
+  try{
+   if(window.sessionStorage.getItem(seenKey)===key)return;
+   window.sessionStorage.setItem(seenKey,key);
+  }catch{/* Browser may disable storage; in-memory guard still applies. */}
   lastServerReveal.current=key;
   const configured=s.activity?.revealFx;
   const fx:'light'|'standard'|'cinematic'=intensity==='light'||s.runtime?.intensity==='light'?
