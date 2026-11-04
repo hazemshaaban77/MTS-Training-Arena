@@ -35,6 +35,8 @@
 .arena-answer-reveal.fx-light .arena-answer-reveal__beam,
 .arena-answer-reveal.fx-light .arena-answer-reveal__rings,
 .arena-answer-reveal.fx-light .arena-answer-reveal__burst{opacity:0;animation:none}
+.arena-answer-reveal.fx-light .arena-answer-reveal__headline{animation:arena-reveal-light var(--reveal-time) ease both}
+@keyframes arena-reveal-light{0%{opacity:0;transform:translateY(5px)}20%,78%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-4px)}}
 .arena-answer-reveal.fx-standard .arena-answer-reveal__rings{opacity:.35}
 @keyframes arena-reveal-dim{0%{opacity:0}18%{opacity:.95}58%{opacity:.83}92%{opacity:.24}100%{opacity:0}}
 @keyframes arena-reveal-beam-left{0%{transform:translateX(-70%) rotate(21deg);opacity:0}
