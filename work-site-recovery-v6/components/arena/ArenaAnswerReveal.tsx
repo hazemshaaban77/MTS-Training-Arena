@@ -1,15 +1,16 @@
 'use client';
-import {useEffect} from 'react';
+import {useEffect,useRef} from 'react';
 import {Sparkles,Zap} from 'lucide-react';
 import './ArenaAnswerReveal.css';
 
 export default function ArenaAnswerReveal({ar,fx='cinematic',preview=false,onComplete}:{
  ar:boolean;fx?:'light'|'standard'|'cinematic';preview?:boolean;onComplete?:()=>void
 }){
+ const callback=useRef(onComplete);callback.current=onComplete;
  useEffect(()=>{
-  const id=setTimeout(()=>onComplete?.(),fx==='light'?1550:fx==='standard'?2100:2800);
+  const id=setTimeout(()=>callback.current?.(),fx==='light'?1550:fx==='standard'?2100:2800);
   return()=>clearTimeout(id);
- },[fx,onComplete]);
+ },[fx]);
  return <div className={'arena-answer-reveal fx-'+fx} role="status" aria-live="polite" aria-atomic="true"
   aria-label={ar?'تم كشف الإجابة الصحيحة':'The correct answer is revealed'}>
   <div className="arena-answer-reveal__shade" aria-hidden="true"/>
