@@ -58,6 +58,8 @@ jobs:
           node "$RUNNER_TEMP/e2-playwright/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Run two then five independent browser clients and projector against real API handler
         run: node e2-staging-qa/real-session-browser.mjs
+      - name: Verify manual and automatic cinematic reveal in original V6 React projector
+        run: node e2-staging-qa/reveal-ui-browser.mjs
       - name: Archive only screenshot evidence (no database, secrets or participant tokens)
         if: always()
         uses: actions/upload-artifact@v4
