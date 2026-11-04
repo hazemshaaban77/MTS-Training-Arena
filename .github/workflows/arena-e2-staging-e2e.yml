@@ -39,7 +39,8 @@ jobs:
       - name: Build frontend locally, never publish
         run: pnpm run build:github
         env:
-          VITE_ARENA_API_ORIGIN: http://127.0.0.1:8094
+          # Same-origin on loopback; production client rejects insecure configured API origins.
+          VITE_ARENA_API_ORIGIN: ""
       - name: Bundle local V6 API handler with ephemeral SQLite transport
         run: |
           mkdir -p .sites-runtime/e2-staging-qa
