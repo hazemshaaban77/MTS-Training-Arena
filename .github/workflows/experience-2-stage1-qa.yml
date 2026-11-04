@@ -1,0 +1,45 @@
+name: Experience 2.0 Stage 1 browser QA
+on:
+  push:
+    branches:
+      - feature/arena-experience-2-lobby-preview
+    paths:
+      - 'experience-2-preview/**'
+      - '.github/workflows/experience-2-stage1-qa.yml'
+permissions:
+  contents: read
+jobs:
+  stage1-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser-testing dependency
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run local test-only static server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/arena-experience-2-http.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/experience-2-preview/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/arena-experience-2-http.log
+          exit 1
+      - name: Run synthetic logic regression checks
+        run: node experience-2-preview/smoke-test.mjs
+      - name: Run real Chromium responsive and projector checks
+        run: node experience-2-preview/browser-qa.mjs
+      - name: Preserve review screenshots and static-server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: experience-2-stage1-browser-qa
+          path: |
+            experience-2-preview/screenshots/
+            /tmp/arena-experience-2-http.log
+          if-no-files-found: ignore
