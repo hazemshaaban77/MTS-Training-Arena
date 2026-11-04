@@ -61,6 +61,7 @@ try{
  await page.locator('[data-box="1"]').click();
  assert.equal((await state()).openedBoxes.length,2,'Second box still opens');
  await page.locator('#leaderboardBtn').click();
+ await page.locator('details:has(#scoreTeam) > summary').click();
  await page.locator('#scoreTeam').selectOption('1');
  await page.locator('#scoreDelta').fill('500');
  await page.locator('#scoreReason').fill('Sprint 02 QA test');
