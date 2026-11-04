@@ -114,3 +114,55 @@ html body .session-shell.projector .championship-stage__ladder{max-height:none!i
  html body .session-shell.projector>.live-workspace{min-height:calc(100dvh - 46px)!important}
  html body .session-shell.projector .wheel-stage--forge .forge-stage .forge-wheel{width:clamp(245px,min(39vw,53dvh),440px)!important}
 }
+
+
+/* Approved Experience 2.0 branding: correctly align the three identity zones
+   in the *existing* V6 projector header, without touching live game layout.
+   The previous flex header grouped all logos at one end of the 16:9 screen.
+   Corporate MTS stays left, Training Team stays right; original product mark
+   sits between them without a circular background, clip or new substitute. */
+html body .session-shell.projector>.session-brand-header{
+ display:grid!important;
+ grid-template-columns:minmax(120px,1fr) minmax(0,5fr) minmax(120px,1fr)!important;
+ align-items:center!important;
+ gap:clamp(8px,1.25vw,24px)!important;
+ padding:4px clamp(15px,2vw,32px)!important;
+}
+html body .session-shell.projector>.session-brand-header>.brand-logo-frame.mts-frame{
+ grid-column:1!important;grid-row:1!important;justify-self:start!important;
+ max-width:150px!important;min-width:0!important;margin:0!important
+}
+html body .session-shell.projector>.session-brand-header>.brand-logo-frame.training-frame{
+ grid-column:3!important;grid-row:1!important;justify-self:end!important;
+ max-width:160px!important;min-width:0!important;margin:0!important
+}
+html body .session-shell.projector>.session-brand-header>.brand-header-center{
+ grid-column:2!important;grid-row:1!important;
+ width:100%!important;min-width:0!important;max-width:none!important;
+ height:100%!important;display:flex!important;flex-wrap:nowrap!important;
+ gap:clamp(10px,1.5vw,24px)!important;
+ justify-content:center!important;align-items:center!important;overflow:visible!important
+}
+html body .session-shell.projector>.session-brand-header .approved-arena-logo--header{
+ display:block!important;opacity:1!important;visibility:visible!important;
+ flex:0 0 100px!important;width:100px!important;height:52px!important;
+ overflow:visible!important;background:transparent!important;border:0!important;border-radius:0!important
+}
+html body .session-shell.projector>.session-brand-header .arena-title-lockup,
+html body .session-shell.projector>.session-brand-header .brand-header-center>.wordmark{display:none!important}
+html body .session-shell.projector>.session-brand-header .session-header-actions{
+ display:flex!important;flex:0 1 auto!important;align-items:center!important;
+ justify-content:center!important;max-width:calc(100% - 125px)!important;min-width:0!important
+}
+@media(max-width:740px){
+ html body .session-shell.projector>.session-brand-header{
+  grid-template-columns:minmax(52px,1fr) minmax(0,3fr) minmax(52px,1fr)!important;
+  gap:4px!important;padding-inline:6px!important
+ }
+ html body .session-shell.projector>.session-brand-header .approved-arena-logo--header{
+  flex-basis:63px!important;width:63px!important;height:45px!important
+ }
+ html body .session-shell.projector>.session-brand-header .session-header-actions{
+  max-width:calc(100% - 67px)!important;gap:4px!important
+ }
+}
