@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#071526"/>
+<title>MTS Training Arena — Read-only Live Stage | E2 Preflight</title>
+<style>
+@font-face{font-family:Cairo;src:url("../fonts/cairo-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:Cairo;src:url("../fonts/cairo-400.ttf") format("truetype");font-weight:400;font-display:swap}
+:root{font-family:Cairo,Arial,sans-serif;color:#ebf7ff;background:#071527}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 48% -20%,#194568 0%,#071527 65%)}
+button,input{font:inherit}
+button{cursor:pointer;border:0}
+button:focus-visible,input:focus-visible{outline:3px solid #65ddff;outline-offset:3px}
+.shell{max-width:1680px;margin:0 auto;padding:16px 20px}
+.top{direction:ltr;display:grid;grid-template-columns:180px 1fr 180px;gap:15px;align-items:center;min-height:92px;padding:14px 18px;border:1px solid #295477;background:#0b2948e8;border-radius:16px}
+.top img{height:55px;max-width:170px;object-fit:contain}
+.top img:last-child{justify-self:end}
+.title{text-align:center;direction:rtl;font-weight:900;font-size:clamp(15px,2.1vw,26px)}
+.title span{color:#57dab2}
+.mode{color:#a2c9db;font-size:11px;letter-spacing:.12em;text-align:center;margin-top:4px}
+.tools{margin:14px 0;display:grid;grid-template-columns:1fr 1fr 150px 130px;gap:10px;align-items:end}
+.field{display:grid;gap:3px;color:#a8cade;font-size:12px}
+.field input{width:100%;border:1px solid #39739b;border-radius:9px;background:#102f4f;color:#effbff;padding:10px 12px;font-size:13px;direction:ltr;text-align:left}
+.btn{border-radius:11px;background:#218b68;color:white;padding:11px 16px;font-weight:700}
+.btn.secondary{background:#153f62;border:1px solid #36709d}
+.btn:disabled{opacity:.5;cursor:default}
+.stage{position:relative;overflow:hidden;border:1px solid #3a668a;border-radius:20px;aspect-ratio:16/9;min-height:390px;padding:3% 5%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:radial-gradient(ellipse at 50% 45%,#154d76 0%,#0d2b4a 45%,#07192d 95%);box-shadow:0 23px 54px #0007}
+.stage::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.27;background-image:linear-gradient(#3f85aa30 1px,transparent 1px),linear-gradient(90deg,#3f85aa30 1px,transparent 1px);background-size:42px 42px}
+.product-logo{position:relative;max-width:min(42%,350px);max-height:21%;object-fit:contain;filter:drop-shadow(0 10px 18px #01091377)}
+.indicator{position:relative;display:inline-flex;gap:7px;align-items:center;border:1px solid #4277a0;background:#09243fcc;padding:5px 13px;border-radius:999px;font-size:11px;font-weight:700}
+.indicator i{width:7px;height:7px;background:#5ce7ae;border-radius:50%}
+h1{position:relative;font-size:clamp(22px,3vw,52px);line-height:1.45;text-align:center;margin:0;max-width:90%;font-weight:900}
+.subtitle{position:relative;color:#b5d5e9;font-size:clamp(12px,1.15vw,18px);text-align:center;margin:0}
+.summary{position:relative;display:flex;gap:15px;justify-content:center;color:#a9d7f0;font-size:14px;font-weight:700;flex-wrap:wrap}
+.options,.teams{position:relative;width:min(880px,96%);display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.option{padding:13px 18px;border:1px solid #5288b2;border-radius:13px;background:#14466f;color:white;font-size:clamp(12px,1.2vw,20px);font-weight:700}
+.option.correct{background:#156347;border-color:#62e8ae}
+.team{padding:18px;border:1px solid #3c7ba6;background:#143f65bb;border-radius:14px;text-align:center}
+.team:nth-child(2){background:#11513dbb;border-color:#399779}
+.team strong{display:block;font-size:clamp(15px,2.1vw,30px)}
+.team span{display:block;color:#bdd5e8;font-size:13px}
+.message{border:1px solid #6a8398;background:#07192be0;border-radius:12px;padding:14px;max-width:90%;font-size:14px;text-align:center;color:#bad8ed}
+.hidden{display:none!important}
+.alert{margin-top:12px;color:#f5d9a7;background:#543c214b;padding:10px 14px;border-radius:9px;border:1px solid #977b5375;font-size:12px}
+.join{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;padding:12px;border:1px solid #275478;border-radius:12px;background:#0c2946}
+.join a{color:#81d9ff;word-break:break-all;direction:ltr;font:12px/1.6 monospace}
+.join b{font-size:13px;color:#b0d9ec}
+.status{color:#bdd5e8;font-size:12px}
+body.projector .top,body.projector .tools,body.projector .join,body.projector .alert{display:none}
+body.projector .shell{max-width:none;padding:0}
+body.projector .stage{height:100vh;min-height:100vh;aspect-ratio:auto;border:0;border-radius:0}
+.exit{position:fixed;top:12px;left:12px;z-index:4;opacity:.2;background:#194563;color:white;border-radius:9px;padding:7px 12px}
+.exit:hover,.exit:focus-visible{opacity:1}
+body:not(.projector) .exit{display:none}
+@media(max-width:850px){.tools{grid-template-columns:1fr 1fr}.top{grid-template-columns:90px 1fr 90px}.top img{max-width:85px;height:46px}}
+@media(max-width:550px){.shell{padding:9px}.top{min-height:66px;padding:8px;gap:3px}.title{font-size:13px}.title .mode{font-size:7px}.tools{grid-template-columns:1fr}.stage{min-height:560px;aspect-ratio:auto;padding:40px 10px;justify-content:center}.product-logo{max-width:70%;max-height:120px}.options,.teams{grid-template-columns:1fr}.option{padding:9px}.team{padding:9px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <img src="../mts.png" alt="MTS Official Logo"/>
+    <div class="title">MTS <span>TRAINING ARENA</span><div class="mode">EXPERIENCE 2.0 · PUBLIC DATA ONLY · NO SCORING</div></div>
+    <img src="../training.png" alt="Training Team Official Logo"/>
+  </header>
+  <form class="tools" id="connect-form">
+    <label class="field">عنوان واجهة الـAPI للاختبار (HTTPS)<input id="api-origin" type="url" required placeholder="https://example-api.workers.dev" autocomplete="off"/></label>
+    <label class="field">رابط واجهة V6 الرئيسية<input id="frontend-origin" type="url" required autocomplete="off"/></label>
+    <label class="field">كود الجلسة<input id="room-code" type="text" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" required placeholder="123456" autocomplete="off"/></label>
+    <button class="btn" type="submit" id="start">اتصال للعرض فقط</button>
+    <button class="btn secondary" type="button" id="stop">إيقاف الاتصال</button>
+    <button class="btn secondary" type="button" id="projector">معاينة البروجيكتور</button>
+  </form>
+  <main class="stage" id="stage" aria-live="polite" data-scene="disconnected">
+    <img class="product-logo" src="./assets/arena-logo-safe-margin.png" alt="MTS Training Arena — Approved Logo"/>
+    <div class="indicator"><i></i> READ-ONLY · PREVIEW</div>
+    <h1 id="session-title">عرض البيانات الآمن للجلسة</h1>
+    <p class="subtitle" id="scene-info">من غير تعديل نقاط أو بيانات متدربين</p>
+    <div class="summary" id="metrics"></div>
+    <div class="options hidden" id="choices"></div>
+    <div class="teams hidden" id="teams"></div>
+    <div class="message" id="empty">أدخل عنوان API وكود جلسة اختبار للعرض. لا يتم الاتصال تلقائيًا بأي جلسة منشورة.</div>
+  </main>
+  <div class="join"><b>رابط الانضمام الثابت (ليس تسجيل دخول جديدًا)</b><a id="join-link">لم يتم تحديد جلسة</a><span class="status" id="connection">غير متصل</span></div>
+  <div class="alert">نسخة تجريبية للعرض فقط — بتقرأ بيانات الجلسة المسموح بها من السيرفر، من غير أسماء أو أرقام وظيفية أو أسرار. لا QR مزيف، ولا تحديث درجات من المتصفح، ولا بيانات افتراضية عند انقطاع الاتصال.</div>
+  <button class="exit" id="exit" type="button">خروج</button>
+</div>
+<script type="module" src="./live-projector.mjs"></script>
+</body>
+</html>
