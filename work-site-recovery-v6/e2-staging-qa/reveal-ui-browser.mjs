@@ -76,22 +76,22 @@ try{
  s=await state();
  assert.equal(s.keyRevealed,false);assert.equal(s.activity.correct,undefined);
  assert.ok(s.revealScheduledAt>Date.now());
+ const scheduledFor=s.revealScheduledAt;
  await page.locator('.arena-answer-reveal').waitFor({state:'detached',timeout:4000});
+ // Do not mistake an older in-flight /api/state fetch for the current round.
+ // The server guarantees that the key stays hidden until the scheduled instant.
+ await sleep(Math.max(0,scheduledFor-Date.now())+240);
  await page.waitForFunction(async code=>{
   const response=await fetch('/api/state?code='+code);
   const s=await response.json();
   return s.keyRevealed===true;
  },code,{timeout:8500,polling:120});
  s=await state();
- if(s.activity?.correct!==0)console.log('AUTO_REVEAL_DEBUG',JSON.stringify({
-  status:s.status,current:s.current,key:s.keyRevealed,
-  activityType:s.activity?.type,mode:s.activity?.revealMode,
-  fx:s.activity?.revealFx,revealMomentAt:s.revealMomentAt,
-  revealScheduledAt:s.revealScheduledAt,deadline:s.deadline,
-  serverNow:s.serverNow,revision:s.revision
- }));
+ assert.equal(s.current,1);
+ assert.equal(s.status,'results');
+ assert.equal(s.keyRevealed,true);
  assert.equal(s.activity.correct,0);
- assert.ok(Number.isFinite(s.revealMomentAt),'Server must stamp the reveal moment');
+ assert.equal(s.revealMomentAt,scheduledFor,'Cinematic cue follows server-scheduled timestamp');
  await page.locator('.arena-answer-reveal.fx-light').waitFor({timeout:7000});
  await page.screenshot({path:path.join(screenshots,'09-react-projector-auto-light.png')});
  await page.locator('.arena-answer-reveal').waitFor({state:'detached',timeout:6000});
