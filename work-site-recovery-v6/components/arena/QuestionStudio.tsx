@@ -1,4 +1,5 @@
 'use client';
+import AnswerRevealSettings from './AnswerRevealSettings';
 import {useEffect,useRef,useState} from 'react';
 import {importVerseQuestions} from '../../lib/importverse-question-bank';
 import {ArrowDown,ArrowUp,Check,Copy,Plus,ShieldCheck,Trash2,X} from 'lucide-react';
@@ -242,6 +243,7 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
       q.type==='Image Hotspot'&&media?.type==='image'?{media,image:media.url}:{media}
      )}/>
     <QuestionTypeFields ar={ar} q={q} onPatch={patch}/>
+    <AnswerRevealSettings ar={ar} activity={q} onChange={changes=>patch(changes)}/>
     <div className="question-studio__fields">
      <label>{t('زمن الإجابة بالثواني','Time limit (seconds)')}
       <input type="number" min={5} max={3600} value={q.timer} onChange={e=>patch({timer:Number(e.target.value)})}/></label>
