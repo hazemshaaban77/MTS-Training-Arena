@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071527">
+  <title>MTS Training Arena — Experience 2.0 | Sprint 02 Interactive Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="corporate corporate-left">
+        <img src="https://raw.githubusercontent.com/hazemshaaban77/MTS-Training-Arena/work-site-recovery-v6/work-site-recovery-v6/public/mts.png" alt="MTS official corporate logo" onerror="this.hidden=true;this.parentElement.classList.add('image-fallback')">
+        <span class="fallback-text">MTS</span>
+      </div>
+      <div class="header-middle"><span class="green-dot"></span><strong>MTS TRAINING ARENA</strong><small>EXPERIENCE 2.0 · SPRINT 02</small></div>
+      <div class="corporate corporate-right">
+        <img src="https://raw.githubusercontent.com/hazemshaaban77/MTS-Training-Arena/work-site-recovery-v6/work-site-recovery-v6/public/training.png" alt="MTS Training Team official logo" onerror="this.hidden=true;this.parentElement.classList.add('image-fallback')">
+        <span class="fallback-text">TRAINING TEAM</span>
+      </div>
+    </header>
+    <div class="top-tools">
+      <div class="section-tag"><span class="pulse"></span><span data-i18n="previewMode">معاينة التصميم — بيانات تجريبية</span></div>
+      <div class="tool-buttons">
+        <button type="button" class="tool" id="langBtn" aria-label="Toggle language">English</button>
+        <button type="button" class="tool" id="soundBtn">🔇 <span data-i18n="soundOff">صوت مغلق</span></button>
+        <button type="button" class="tool" id="reduceBtn" data-i18n="reduce">تقليل الحركة</button>
+        <button type="button" class="tool" id="previewProjectorBtn" data-i18n="previewProjector">معاينة العرض هنا ▢</button>
+        <button type="button" class="tool emphasized" id="projectorBtn" data-i18n="openProjector">فتح البروجيكتور ⛶</button>
+      </div>
+    </div>
+    <div class="workspace">
+      <main class="stage" id="stage" data-scene="lobby" aria-label="Preview broadcast stage">
+        <div class="stage-corner stage-corner-left"></div><div class="stage-corner stage-corner-right"></div>
+        <div class="stage-grid"></div><div class="stage-glow"></div><div class="stage-beam beam-left"></div><div class="stage-beam beam-right"></div>
+        <div class="stage-topbar">
+          <div class="projector-brand projector-brand-left" aria-label="MTS logo"><img src="https://raw.githubusercontent.com/hazemshaaban77/MTS-Training-Arena/work-site-recovery-v6/work-site-recovery-v6/public/mts.png" alt="MTS corporate logo" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>MTS</span></div>
+          <div class="stage-badge"><i></i><span>ARENA LIVE DESIGN · <b>DEMO</b></span></div>
+          <div class="stage-info" id="stageInfo">01 · GAME LOBBY</div>
+          <div class="projector-brand projector-brand-right" aria-label="Training Team logo"><img src="https://raw.githubusercontent.com/hazemshaaban77/MTS-Training-Arena/work-site-recovery-v6/work-site-recovery-v6/public/training.png" alt="Training Team corporate logo" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>TRAINING TEAM</span></div>
+        </div>
+        <div class="scene-layer" id="sceneLayer" aria-live="polite"></div>
+        <div class="stage-footer"><span>MTS TRAINING ARENA · PREMIUM BROADCAST</span><span id="footerStatus">DESIGN PREVIEW · NO LIVE CONNECTION</span></div>
+      </main>
+      <aside class="control-room" id="controlRoom">
+        <div class="control-head"><div><span class="micro">TRAINER'S CONSOLE</span><h2 data-i18n="trainerTitle">مركز قيادة المدرب</h2><p data-i18n="trainerDesc">تحكم مباشر في مشاهد النموذج التجريبي</p></div><span class="console-icon">✦</span></div>
+        <div class="controls-stack">
+          <button id="lobbyBtn" class="control-btn"><span>01</span><b data-i18n="goLobby">شاشة انتظار الفرق</b><em>◉</em></button>
+          <button id="introBtn" class="control-btn primary"><span>02</span><b data-i18n="goIntro">المقدمة السينمائية</b><em>▶</em></button>
+          <button id="questionBtn" class="control-btn"><span>03</span><b data-i18n="goQuestion">السؤال التجريبي</b><em>?</em></button>
+          <button id="lockBtn" class="control-btn"><span>04</span><b data-i18n="lock">إغلاق الإجابات</b><em>▣</em></button>
+          <button id="revealBtn" class="control-btn"><span>05</span><b data-i18n="goReveal">كشف الإجابة</b><em>✓</em></button>
+          <button id="podiumBtn" class="control-btn gold"><span>06</span><b data-i18n="goPodium">منصة الفائزين</b><em>★</em></button>
+          <div class="control-divider">SPRINT 02 · GAME EXPERIENCE</div>
+          <button id="wheelBtn" class="control-btn blue"><span>07</span><b>عجلة الحظ · Spin Wheel</b><em>◉</em></button>
+          <button id="boxesBtn" class="control-btn green"><span>08</span><b>صناديق المفاجآت · Mystery Boxes</b><em>🎁</em></button>
+          <button id="leaderboardBtn" class="control-btn amber"><span>09</span><b>ترتيب الفرق · Leaderboard</b><em>▤</em></button>
+        </div>
+        <details class="control-config" id="wheelSettings"><summary>⚙ تخصيص العجلة (تجريبي)</summary>
+          <label for="wheelLabelsInput">كل سطر = قطاع من قطاعات العجلة (3–12)</label>
+          <textarea id="wheelLabelsInput" aria-label="Wheel sections" spellcheck="false"></textarea>
+          <button type="button" id="applyWheelLabels">تطبيق التحديات</button><span class="form-state" id="wheelConfigStatus" aria-live="polite"></span>
+        </details>
+        <details class="control-config"><summary>🎁 محتوى الصناديق (تجريبي)</summary>
+          <label for="boxesLabelsInput">6 صناديق بالترتيب، كل سطر محتوى صندوق</label>
+          <textarea id="boxesLabelsInput" aria-label="Box challenges" spellcheck="false"></textarea>
+          <div class="controls-extra"><button type="button" id="applyBoxLabels">تطبيق المحتوى</button><button type="button" id="resetBoxes">إعادة إغلاق الصناديق</button></div>
+          <span class="form-state" id="boxConfigStatus" aria-live="polite"></span>
+        </details>
+        <details class="control-config"><summary>🏆 تعديل نقاط الفرق (تجريبي فقط)</summary>
+          <div class="score-adjust"><label class="full" for="scoreTeam">الفريق</label>
+            <select id="scoreTeam" class="full"><option value="0">فريق البرق / Lightning</option><option value="1">فريق الموجة / Wave</option></select>
+            <label class="full" for="scoreDelta">عدد النقاط (+ للإضافة، - للخصم)</label>
+            <input id="scoreDelta" type="number" min="-500" max="500" step="1" value="5" class="full">
+            <label class="full" for="scoreReason">سبب التعديل</label><input class="full" id="scoreReason" value="تحدٍّ تدريبي تجريبي" maxlength="80">
+          </div><button type="button" id="applyScore">تسجيل تعديل النقاط (محلي فقط)</button>
+          <span class="form-state" id="scoreMessage" role="status"></span>
+          <small class="form-hint">الدرجات للتوضيح فقط، محفوظة محليًا في المتصفح؛ مش درجات متدربين حقيقيين ولا Backend آمن.</small>
+        </details>
+        <div class="control-section"><div class="control-section-title" data-i18n="sessionInfo">حالة الجلسة التجريبية</div>
+          <div class="stat"><span data-i18n="currentScene">المشهد الحالي</span><b id="sceneStatus">الانتظار</b></div>
+          <div class="stat"><span data-i18n="participants">المشاركون</span><b data-i18n="demoParticipants">12 اسم افتراضي</b></div>
+          <div class="stat"><span data-i18n="teams">الفرق</span><b>2</b></div>
+          <div class="stat"><span data-i18n="questionTimer">مدة السؤال</span><b>20s</b></div>
+        </div>
+        <div class="note" data-i18n="note">ده نموذج بصري تفاعلي. الـQR والنقاط والمشاركين بيانات وهمية، ومفيش اتصال بنظام الجلسات الحقيقي.</div>
+      </aside>
+    </div>
+    <footer class="shell-foot"><span data-i18n="previewFooter">مرحلة التصميم · بدون تعديل الموقع المنشور أو قاعدة البيانات</span><span>ORIGINAL APPROVED LOGO · TRANSPARENT · NO CLIPPING</span></footer>
+  </div>
+  <button class="exit-projector" id="exitProjector" data-i18n="exitProjector" hidden>خروج من البروجيكتور ✕</button>
+  <script src="app.js"></script>
+</body>
+</html>
