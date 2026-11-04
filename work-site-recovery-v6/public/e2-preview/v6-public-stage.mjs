@@ -12,17 +12,19 @@ const str=(value,max=160)=>typeof value==="string"?value.slice(0,max):"";
 const obj=x=>x!==null && typeof x==="object" && !Array.isArray(x);
 const number=x=>typeof x==="number" && Number.isFinite(x);
 const count=x=>Number.isInteger(x)&&x>=0?x:0;
-function originUrl(origin) {
+function safeUrl(origin) {
   let u;try{u=new URL(String(origin));}catch{throw new PublicStageError("INVALID_ORIGIN");}
   if(u.protocol!=="https:" && !(u.protocol==="http:"&&["localhost","127.0.0.1"].includes(u.hostname)))
     throw new PublicStageError("INSECURE_ORIGIN");
-  // A supplied URL may have path, query, userinfo or a hash; none belong in QR/API URLs.
-  u.username="";u.password="";u.pathname="/";u.search="";u.hash="";
+  u.username="";u.password="";u.search="";u.hash="";
   return u;
 }
-export function joinUrl(origin,code) {
+export function joinUrl(frontendBase,code) {
   if(!CODE.test(String(code)))throw new PublicStageError("INVALID_CODE");
-  const url=originUrl(origin);url.searchParams.set("view","join");url.searchParams.set("code",String(code));
+  // Keep V6 frontend base path: Sites uses / but GitHub Pages uses /MTS-Training-Arena/v6/.
+  // Pass the canonical app base URL, not a host control subroute.
+  const url=safeUrl(frontendBase);
+  url.searchParams.set("view","join");url.searchParams.set("code",String(code));
   return url.href;
 }
 /**
@@ -81,7 +83,7 @@ export function stageFromV6(raw,previous=null){
 }
 export async function fetchPublicStage(origin,code,{fetchImpl=fetch,signal,previous=null}={}){
   if(!CODE.test(String(code)))throw new PublicStageError("INVALID_CODE");
-  const url=originUrl(origin);url.pathname="/api/state";url.searchParams.set("code",String(code));
+  const url=safeUrl(origin);url.pathname="/api/state";url.searchParams.set("code",String(code));
   let response;
   try{response=await fetchImpl(url.href,{method:"GET",credentials:"omit",cache:"no-store",headers:{"Accept":"application/json"},signal});}
   catch(e){if(signal?.aborted)throw new PublicStageError("ABORTED");throw new PublicStageError("NETWORK_UNAVAILABLE");}
