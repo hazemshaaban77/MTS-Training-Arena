@@ -208,7 +208,8 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
  // Other clients never calculate the key or infer success from a local timer.
  useEffect(()=>{
   if(!s||s.status!=='results'||!s.keyRevealed||!Number.isFinite(s.revealMomentAt)||
-     !(host||display)||intensity==='off'||s.runtime?.intensity==='off')return;
+     !(host||display)||intensity==='off'||s.runtime?.intensity==='off'||
+     (s.activity?.revealMode==null&&s.activity?.revealFx==null))return;
   const age=Date.now()+(s.serverNow-received.current)-s.revealMomentAt;
   if(age<0||age>3600)return; // no replay for stale snapshots or return visits
   const key=s.code+':'+s.current+':'+s.revealMomentAt;
@@ -225,7 +226,8 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(!s)return;
   const prior=previousSnapshot.current;
   const kind=eligibleMoment(prior,s,host?'host':display?'display':'play');
-  if(kind&&(host||display)&&!(kind==='reveal'&&s.revealMomentAt!=null)){
+  if(kind&&(host||display)&&!(kind==='reveal'&&s.revealMomentAt!=null&&
+    (s.activity?.revealMode!=null||s.activity?.revealFx!=null))){
    setMoment(kind);
    if(momentTimer.current)clearTimeout(momentTimer.current);
    momentTimer.current=setTimeout(()=>setMoment(null),kind==='champion'?2900:1900);
