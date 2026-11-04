@@ -113,7 +113,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
    if(b.action==='projection'){rt={...rt,board:!!b.board,quiet:!!b.quiet,intensity:['full','light','off'].includes(b.intensity)?b.intensity:'full',analytics:!!b.analytics};}
    if(b.action==='revealkey'){
     if(s.status!=='results')fail('STATE');
-    if(rt.keyRevealed===true)fail('ALREADY_REVEALED',409);
+    if(rt.keyRevealed===true&&canConfigureAnswerReveal(active()))fail('ALREADY_REVEALED',409);
     rt.keyRevealed=true;rt.keyRevealAt=null;rt.keyRevealedAt=now;
    }
    if(b.action==='metareveal'){if(s.status!=='results'||!active()?.assignments)fail('STATE');rt.metaCount=Math.min(active().items.length,(rt.metaCount||0)+1);rt.keyRevealed=true;}
