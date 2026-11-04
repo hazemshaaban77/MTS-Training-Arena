@@ -3,9 +3,14 @@ on:
   push:
     branches:
       - feature/arena-e2-staging-e2e-20261104
+      - feature/arena-e2-per-activity-reveal-20261104
     paths:
       - "work-site-recovery-v6/e2-staging-qa/**"
       - "work-site-recovery-v6/public/e2-preview/**"
+      - "work-site-recovery-v6/lib/**"
+      - "work-site-recovery-v6/components/arena/**"
+      - "work-site-recovery-v6/tests/**"
+      - "work-site-recovery-v6/scripts/**"
       - ".github/workflows/arena-e2-staging-e2e.yml"
   workflow_dispatch:
 permissions:
