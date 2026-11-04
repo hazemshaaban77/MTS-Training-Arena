@@ -20,6 +20,7 @@ const response={
 test("join URL contains only a stable six-digit code; no host query or credentials",()=>{
  assert.equal(joinUrl("https://arena.test/?token=SECRET#x","123456"),"https://arena.test/?view=join&code=123456");
  assert.equal(joinUrl("https://hazemshaaban77.github.io/MTS-Training-Arena/v6/?token=PRIVATE","123456"),"https://hazemshaaban77.github.io/MTS-Training-Arena/v6/?view=join&code=123456");
+ assert.equal(joinUrl("https://hazemshaaban77.github.io/MTS-Training-Arena/v6/host?token=PRIVATE","123456"),"https://hazemshaaban77.github.io/MTS-Training-Arena/v6/?view=join&code=123456");
  assert.equal(joinUrl("https://alice:secret@arena.test/admin?token=SECRET","123456"),"https://arena.test/?view=join&code=123456");
  assert.equal(joinUrl("http://localhost:8090","123456"),"http://localhost:8090/?view=join&code=123456");
  assert.throws(()=>joinUrl("http://arena.test","123456"),{code:"INSECURE_ORIGIN"});
