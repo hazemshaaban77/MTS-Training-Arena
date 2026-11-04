@@ -1,4 +1,5 @@
 // Portable server-authoritative Arena contracts. v1 source remains in lib/upstream.
+import {REVEAL_DELAY_SECONDS,REVEAL_FX} from './reveal-policy.mjs';
 const ok=(v)=>{if(!v)throw Error('DECK');};
 const str=(v,max=2000)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
 const list=(v,min=1,max=100)=>Array.isArray(v)&&v.length>=min&&v.length<=max&&v.every(x=>str(x));
@@ -8,6 +9,12 @@ export const presentation=type=>['Spin Wheel','Wheel of Fortune','Open the Box',
 export const unscored=a=>['Meta Plan','Categorize','Live Poll','Flashcards'].includes(a.type)||a.scored===false;
 export function validateActivity(a,depth=0){
  ok(a&&typeof a==='object'&&!Array.isArray(a)&&depth<=3&&str(a.prompt)&&Number.isInteger(a.timer)&&a.timer>=0&&a.timer<=3600);
+ // Per-activity controls are validated before being persisted in templates/drafts/sessions.
+ // Omitted values keep the original V6 session setting for old saved activities.
+ if(a.revealMode!==undefined)ok(['manual','auto'].includes(a.revealMode));
+ if(a.revealDelay!==undefined)ok(REVEAL_DELAY_SECONDS.includes(a.revealDelay));
+ if(a.revealFx!==undefined)ok(REVEAL_FX.includes(a.revealFx));
+ if(a.revealSound!==undefined)ok(typeof a.revealSound==='boolean');
  // Optional learning media; never allow HTML/data/javascript URLs in participant views.
  if(a.media!=null){ok(a.media&&typeof a.media==='object'&&['image','video'].includes(a.media.type)&&str(a.media.url,2048)&&/^https:\/\/[^\s]+$/i.test(a.media.url)&&(!a.media.alt||typeof a.media.alt==='string'&&a.media.alt.length<=200));}
  const type=a.type;
@@ -47,7 +54,7 @@ export function validateDeck(activities){ok(Array.isArray(activities)&&activitie
 export function flattenDeck(activities){
  const flat=[];
  activities.forEach((root,group)=>{let step=0;function visit(a,parent=null){
-  const merged=parent?{...a,timer:a.timer??parent.timer,weight:a.weight??parent.weight??1,points:a.points??parent.points??1000,wrongPenalty:a.wrongPenalty??parent.wrongPenalty??0,speed:a.speed??parent.speed??true,section:a.section||parent.section||parent.prompt,betEnabled:a.betEnabled??parent.betEnabled??false,participation:a.participation??parent.participation??'all',stageTheme:a.stageTheme??parent.stageTheme??'orbital',progression:a.progression||parent.progression||'manual'}:{...a};
+  const merged=parent?{...a,timer:a.timer??parent.timer,revealMode:a.revealMode??parent.revealMode,revealDelay:a.revealDelay??parent.revealDelay,revealFx:a.revealFx??parent.revealFx,revealSound:a.revealSound??parent.revealSound,weight:a.weight??parent.weight??1,points:a.points??parent.points??1000,wrongPenalty:a.wrongPenalty??parent.wrongPenalty??0,speed:a.speed??parent.speed??true,section:a.section||parent.section||parent.prompt,betEnabled:a.betEnabled??parent.betEnabled??false,participation:a.participation??parent.participation??'all',stageTheme:a.stageTheme??parent.stageTheme??'orbital',progression:a.progression||parent.progression||'manual'}:{...a};
   if(a.questions&&!(a.type==='Ultimate Game Show'&&a.showFormat==='championship')){for(const q of a.questions)visit(q,merged);}else flat.push({...merged,mainType:root.type,group,step:step++,revealDelay:root.type==='Ultimate Game Show'?2000:0});
  }visit(root);});return flat;
 }
