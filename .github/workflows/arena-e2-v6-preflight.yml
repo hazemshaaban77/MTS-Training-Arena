@@ -1,0 +1,59 @@
+name: Arena Experience 2.0 - V6 Candidate Preflight (NO DEPLOY)
+on:
+  push:
+    branches: ['feature/arena-e2-v6-preflight-20261104']
+    paths:
+      - 'ARENA_E2_V6_PREFLIGHT.md'
+      - '.github/workflows/arena-e2-v6-preflight.yml'
+      - 'work-site-recovery-v6/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-v6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: work-site-recovery-v6
+    steps:
+      - name: Fetch isolated source (no checkout credentials retained)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - name: Install lockfile-pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck, backend authorization, scoring and rendering tests
+        run: pnpm test
+      - name: Verify client identity and original approved corporate logos
+        run: node scripts/verify-creative-identity.mjs
+      - name: Verify live state transport unit tests (not live network tests)
+        run: node scripts/verify-live.mjs
+      - name: Build isolated static V6 frontend without publishing
+        run: pnpm run build:github
+        env:
+          VITE_ARENA_API_ORIGIN: https://arena.invalid
+      - name: Build V6 API bundle locally, do not deploy
+        run: pnpm run build:github-api
+      - name: Verify compiled artifacts
+        run: |
+          test -s dist-github/index.html
+          test -d dist-github/assets
+          test -s dist-github-api/worker.mjs
+          echo "PASS: local artifacts verified; no deployment performed."
+      - name: Archive build evidence (not production state)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-e2-v6-preflight-build
+          path: |
+            work-site-recovery-v6/dist-github/index.html
+            work-site-recovery-v6/dist-github-api/worker.mjs
+          retention-days: 3
+          if-no-files-found: ignore
