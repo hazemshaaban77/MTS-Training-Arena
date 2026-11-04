@@ -1,4 +1,4 @@
-name: Experience 2.0 Stage 1 browser QA
+name: Experience 2.0 Stage 1 and 2 browser QA
 on:
   push:
     branches:
@@ -34,12 +34,15 @@ jobs:
         run: node experience-2-preview/smoke-test.mjs
       - name: Run real Chromium responsive and projector checks
         run: node experience-2-preview/browser-qa.mjs
+      - name: Verify preserved original logo and run Sprint 02 Chromium end-to-end checks
+        run: node experience-2-preview/sprint02/browser-qa.mjs
       - name: Preserve review screenshots and static-server logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: experience-2-stage1-browser-qa
+          name: experience-2-stage1-and-stage2-browser-qa
           path: |
             experience-2-preview/screenshots/
+            experience-2-preview/sprint02/ci-screenshots/
             /tmp/arena-experience-2-http.log
           if-no-files-found: ignore
