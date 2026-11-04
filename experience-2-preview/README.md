@@ -12,6 +12,7 @@ Source baseline: Version 6 recovery at work-site-recovery-v6/ (published on 2026
 4. Click Projector to open a display-only tab; move it to a projector or second display. Both tabs must use the same browser/origin for local preview synchronization.
 5. Try lobby → cinematic intro (8s) → demo question (20s) → answer reveal → winners.
 6. Try Arabic/English, reduced motion, sound (off by default), 360px mobile viewport, and two browser windows.
+7. Run the reproducible, **non-browser** smoke test from repo root: node experience-2-preview/smoke-test.mjs.
 
 When served inside this repository, the preview references the unchanged original MTS and Training Team PNG files from ../work-site-recovery-v6/public/. A fallback points at the same public GitHub originals if the document is opened outside the repository. The images are NOT regenerated.
 
@@ -46,7 +47,7 @@ When served inside this repository, the preview references the unchanged origina
 - [ ] Chrome desktop, 360px mobile viewport, fullscreen projector 16:9 visually reviewed.
 - [ ] No production routing, backend requests, or real user information used.
 
-Current status: Implemented in isolated branch; browser/device QA pending. Static code readback is not proof of passing these acceptance tests.
+Current status: Implemented in isolated branch; syntax and mocked interaction flow inspected, but actual smoke-test file execution in Node and browser/device QA are still pending. Static code readback is not proof of passing these acceptance tests.
 
 ## Next milestones
 
