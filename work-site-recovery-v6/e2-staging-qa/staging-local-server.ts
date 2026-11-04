@@ -47,7 +47,7 @@ const fixtureTrainer=async (req:Request)=>{
  if(req.headers.get("X-Firebase-Token")!=="local-fixture-trainer")
   throw Error("SIGN_IN");
  return {owner:"firebase:staging-fixture",uid:"staging-fixture",
-         name:"Local Test Trainer",email:"trainer@fixture.invalid"};
+         name:"Local Test Trainer",email:"trainer@fixture.invalid",expires:Date.now()+3600000,arenaRole:"trainer"};
 };
 const mime=new Map(Object.entries({
  ".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",
