@@ -174,14 +174,14 @@ button:hover:not(:disabled){filter:brightness(1.13)}
  const bc=typeof BroadcastChannel!=='undefined'?new BroadcastChannel(storageKey):null;
  let lang='ar',muted=true,reduce=false,clock=null,introTimers=[];
  const en={
-  crumb:'Stage 1 · interactive visual preview',panelTitle:'🎛 Trainer Control Room',panelDesc:'Switch scenes to preview the experience.',panelLabel:'CONTROLS · LOCAL DEMO ONLY',goLobby:'① Participant lobby',goIntro:'② Play cinematic intro (8 seconds)',goQuestion:'③ Demo question (20 seconds)',goReveal:'④ Reveal answer and scores',goPodium:'⑤ Winners podium',panelStatsTitle:'Preview status',statusLabel:'Current scene',sessionLabel:'Session code',usersLabel:'Participants',userCount:'12 fictional players',warning:'⚠ QR, participants and scores are illustrative. Real multi-device joining and trusted scoring belong to Stage 3.',previewTip:'Interactive local preview — not a real session or connected scoring.',soundOn:'🔊 Sound',soundOff:'🔇 Sound',motionOn:'Enable animations',motionOff:'Reduce motion',projector:'⛶ Projector screen',states:{lobby:'Lobby',question:'Question',reveal:'Reveal',podium:'Winners'}};
+  crumb:'Stage 1 · interactive visual preview',panelTitle:'🎛 Trainer Control Room',panelDesc:'Switch scenes to preview the experience.',panelLabel:'CONTROLS · LOCAL DEMO ONLY',goLobby:'① Participant lobby',goIntro:'② Play cinematic intro (8 seconds)',goQuestion:'③ Demo question (20 seconds)',goReveal:'④ Reveal answer and scores',goPodium:'⑤ Winners podium',panelStatsTitle:'Preview status',statusLabel:'Current scene',sessionLabel:'Session code',usersLabel:'Participants',userCount:'12 fictional players',warning:'⚠ QR, participants and scores are illustrative. Real multi-device joining and trusted scoring belong to Stage 3.',previewTip:'Interactive local preview — not a real session or connected scoring.',soundOn:'🔊 Sound',soundOff:'🔇 Sound',motionOn:'Enable animations',motionOff:'Reduce motion',projector:'⛶ Projector screen',states:{lobby:'Lobby',intro:'Intro',question:'Question',reveal:'Reveal',podium:'Winners'}};
  const ar={
-  crumb:'المرحلة الأولى · نموذج بصري تفاعلي',panelTitle:'🎛 مركز قيادة المدرب',panelDesc:'جرّب الانتقال بين مشاهد الجلسة بنفسك.',panelLabel:'CONTROLS · LOCAL DEMO ONLY',goLobby:'① شاشة انتظار المشاركين',goIntro:'② تشغيل المقدمة السينمائية (8 ثواني)',goQuestion:'③ عرض سؤال تجريبي (20 ثانية)',goReveal:'④ كشف الإجابة والنتائج',goPodium:'⑤ إعلان الفائزين',panelStatsTitle:'حالة النموذج',statusLabel:'المشهد الحالي',sessionLabel:'كود الجلسة',usersLabel:'المشاركون',userCount:'12 وهميين',warning:'⚠ QR وأسماء المشاركين والنقاط بيانات توضيحية فقط. الانضمام من موبايلات مختلفة وتسجيل النقاط الحقيقي ضمن المرحلة الثالثة.',previewTip:'اللي قدامك معاينة تفاعلية محلية — مش جلسة حقيقية ولا نظام درجات متصل.',soundOn:'🔊 صوت',soundOff:'🔇 صوت',motionOn:'تفعيل الحركة',motionOff:'تقليل الحركة',projector:'⛶ شاشة البروجيكتور',states:{lobby:'الانتظار',question:'السؤال',reveal:'كشف الإجابة',podium:'الفائزون'}};
+  crumb:'المرحلة الأولى · نموذج بصري تفاعلي',panelTitle:'🎛 مركز قيادة المدرب',panelDesc:'جرّب الانتقال بين مشاهد الجلسة بنفسك.',panelLabel:'CONTROLS · LOCAL DEMO ONLY',goLobby:'① شاشة انتظار المشاركين',goIntro:'② تشغيل المقدمة السينمائية (8 ثواني)',goQuestion:'③ عرض سؤال تجريبي (20 ثانية)',goReveal:'④ كشف الإجابة والنتائج',goPodium:'⑤ إعلان الفائزين',panelStatsTitle:'حالة النموذج',statusLabel:'المشهد الحالي',sessionLabel:'كود الجلسة',usersLabel:'المشاركون',userCount:'12 وهميين',warning:'⚠ QR وأسماء المشاركين والنقاط بيانات توضيحية فقط. الانضمام من موبايلات مختلفة وتسجيل النقاط الحقيقي ضمن المرحلة الثالثة.',previewTip:'اللي قدامك معاينة تفاعلية محلية — مش جلسة حقيقية ولا نظام درجات متصل.',soundOn:'🔊 صوت',soundOff:'🔇 صوت',motionOn:'تفعيل الحركة',motionOff:'تقليل الحركة',projector:'⛶ شاشة البروجيكتور',states:{lobby:'الانتظار',intro:'المقدمة',question:'السؤال',reveal:'كشف الإجابة',podium:'الفائزون'}};
  const $=id=>document.getElementById(id);
  const getT=()=>lang==='ar'?ar:en;
  const saved=(()=>{try{return JSON.parse(localStorage.getItem(storageKey)||'{}')}catch{return {}}})();
  let state={scene:'lobby',deadline:0,...saved};
- if(!['lobby','question','reveal','podium'].includes(state.scene))state.scene='lobby';
+ if(!['lobby','intro','question','reveal','podium'].includes(state.scene))state.scene='lobby';
  function logoFallback(id,name){
   const el=$(id);el.addEventListener('error',function once(){el.removeEventListener('error',once);el.src='https://raw.githubusercontent.com/hazemshaaban77/MTS-Training-Arena/work-site-recovery-v6/work-site-recovery-v6/public/'+name;});
  }
@@ -229,18 +229,26 @@ button:hover:not(:disabled){filter:brightness(1.13)}
     '<p class="sub">'+(word?'النتائج تجريبية — نظام النقاط الحقيقي ضمن المرحلة الثالثة':'Sample scores — trusted scoring is planned for Stage 3')+'</p>';
   }
   clearInterval(clock);
+  if(state.scene==='intro'){
+    const cover=$('introCover');
+    cover.classList.remove('on');void cover.offsetWidth;cover.classList.add('on');
+    cover.setAttribute('aria-hidden','false');
+    function frame(){
+      const elapsed=Math.max(0,Date.now()-(state.introAt||Date.now()));
+      $('introTitle').innerHTML=elapsed<3400?'MTS<br/><strong>TRAINING ARENA</strong>':(lang==='ar'?'استعدوا للمنافسة':'THE CHALLENGE BEGINS');
+      $('introNumber').textContent=elapsed<4800?'':elapsed<5650?'3':elapsed<6500?'2':elapsed<7350?'1':'';
+      $('introLine').textContent=lang==='ar'?'ARENA EXPERIENCE · استعدوا':'THE EXPERIENCE BEGINS';
+    }
+    frame();clock=setInterval(frame,100);
+  }
   if(state.scene==='question'){
     clock=setInterval(()=>{if(!document.getElementById('countdown'))return;const remaining=Math.max(0,Math.ceil((state.deadline-Date.now())/1000));$('countdown').textContent=remaining;if(remaining===0){clearInterval(clock);if(!document.body.classList.contains('projector-mode'))publish({scene:'reveal',deadline:0});}},250);
   }
  }
  function cancelIntro(){introTimers.forEach(clearTimeout);introTimers=[];$('introCover').classList.remove('on')}
  function intro(){
-  cancelIntro();sound();const cover=$('introCover');
-  cover.classList.remove('on');void cover.offsetWidth;cover.classList.add('on');cover.setAttribute('aria-hidden','false');
-  $('introTitle').innerHTML='MTS<br/><strong>TRAINING ARENA</strong>';$('introNumber').textContent='';
-  introTimers.push(setTimeout(()=>{$('introTitle').textContent=lang==='ar'?'استعدوا للمنافسة':'THE CHALLENGE BEGINS';$('introNumber').textContent=''},3400));
-  [3,2,1].forEach((n,i)=>introTimers.push(setTimeout(()=>{$('introNumber').textContent=n;sound()},4800+i*850)));
-  introTimers.push(setTimeout(()=>{cancelIntro();publish({scene:'question',deadline:Date.now()+20000})},8000));
+  cancelIntro();publish({scene:'intro',introAt:Date.now(),deadline:0});sound();
+  introTimers.push(setTimeout(()=>publish({scene:'question',deadline:Date.now()+20000}),8000));
  }
  function sceneGo(where){cancelIntro();if(where==='question'){publish({scene:'question',deadline:Date.now()+20000});sound()}else{publish({scene:where,deadline:0});if(where==='podium'||where==='reveal')sound()}}
  [['goLobby','lobby'],['goQuestion','question'],['goReveal','reveal'],['goPodium','podium']].forEach(([id,name])=>$(id).addEventListener('click',()=>sceneGo(name)));
