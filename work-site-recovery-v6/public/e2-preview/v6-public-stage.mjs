@@ -24,6 +24,10 @@ export function joinUrl(frontendBase,code) {
   // Keep V6 frontend base path: Sites uses / but GitHub Pages uses /MTS-Training-Arena/v6/.
   // Pass the canonical app base URL, not a host control subroute.
   const url=safeUrl(frontendBase);
+  // A caller might supply a direct trainer/player route instead of the canonical
+  // app base. Collapse ONLY these known V6 UI route names, retaining the parent
+  // path (important for GitHub Pages at /MTS-Training-Arena/v6/).
+  url.pathname=url.pathname.replace(/\/(?:admin|host|play|display|join|login)\/?$/i,"/"); 
   url.searchParams.set("view","join");url.searchParams.set("code",String(code));
   return url.href;
 }
