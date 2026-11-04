@@ -72,7 +72,7 @@ export function publicStage(raw, previous=null){
 /** Same-origin public state poll; never send Firebase trainer tokens or player tokens. */
 export async function fetchPublicState(origin,code,{fetchImpl=fetch,signal}={}){
   const join=joinUrl(origin,code),u=new URL(join);
-  u.pathname='/api/state';u.searchParams=new URLSearchParams({code:String(code)});
+  u.pathname='/api/state';u.search=new URLSearchParams({code:String(code)}).toString();
   const response=await fetchImpl(u.href,{method:'GET',headers:{'Accept':'application/json'},
     credentials:'omit',cache:'no-store',signal});
   if(!response.ok)throw new ArenaStateError(response.status===404?'NOT_FOUND':
