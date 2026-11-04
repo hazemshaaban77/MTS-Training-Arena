@@ -55,7 +55,7 @@ export function flattenDeck(activities){
  const flat=[];
  activities.forEach((root,group)=>{let step=0;function visit(a,parent=null){
   const merged=parent?{...a,timer:a.timer??parent.timer,revealMode:a.revealMode??parent.revealMode,revealDelay:a.revealDelay??parent.revealDelay,revealFx:a.revealFx??parent.revealFx,revealSound:a.revealSound??parent.revealSound,weight:a.weight??parent.weight??1,points:a.points??parent.points??1000,wrongPenalty:a.wrongPenalty??parent.wrongPenalty??0,speed:a.speed??parent.speed??true,section:a.section||parent.section||parent.prompt,betEnabled:a.betEnabled??parent.betEnabled??false,participation:a.participation??parent.participation??'all',stageTheme:a.stageTheme??parent.stageTheme??'orbital',progression:a.progression||parent.progression||'manual'}:{...a};
-  if(a.questions&&!(a.type==='Ultimate Game Show'&&a.showFormat==='championship')){for(const q of a.questions)visit(q,merged);}else flat.push({...merged,mainType:root.type,group,step:step++,revealDelay:root.type==='Ultimate Game Show'?2000:0});
+  if(a.questions&&!(a.type==='Ultimate Game Show'&&a.showFormat==='championship')){for(const q of a.questions)visit(q,merged);}else flat.push({...merged,mainType:root.type,group,step:step++});
  }visit(root);});return flat;
 }
 export function publicActivity(a,{closed=false,reveal=null,host=false}={}){
