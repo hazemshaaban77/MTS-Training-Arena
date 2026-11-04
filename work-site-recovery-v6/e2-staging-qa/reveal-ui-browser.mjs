@@ -68,6 +68,8 @@ try{
  assert.equal(await page.locator('.arena-answer-reveal').count(),0);
  await control('revealkey');
  await page.locator('.arena-answer-reveal.fx-cinematic').waitFor({timeout:7000});
+ // Record the actual brightest moment rather than frame zero of the CSS animation.
+ await page.waitForTimeout(1350);
  await page.screenshot({path:path.join(screenshots,'08-react-projector-manual-cinematic.png')});
  await page.locator('.arena-answer-reveal').waitFor({state:'detached',timeout:7000});
  await control('next');
@@ -93,6 +95,7 @@ try{
  assert.equal(s.activity.correct,0);
  assert.equal(s.revealMomentAt,scheduledFor,'Cinematic cue follows server-scheduled timestamp');
  await page.locator('.arena-answer-reveal.fx-light').waitFor({timeout:7000});
+ await page.waitForTimeout(450);
  await page.screenshot({path:path.join(screenshots,'09-react-projector-auto-light.png')});
  await page.locator('.arena-answer-reveal').waitFor({state:'detached',timeout:6000});
  await page.reload({waitUntil:'domcontentloaded'});
