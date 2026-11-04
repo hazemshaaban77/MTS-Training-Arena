@@ -17,3 +17,10 @@ The user explicitly selected the logo shown in their 2026-11-04 reference image 
 
 ## No false completion
 Current status: **branding decision recorded; binary integration pending**. A future PR is not accepted unless an automated browser check proves the actual approved PNG/SVG is loaded in Lobby, Intro, Trainer, and Podium.
+
+## 2026-11-04 branded local implementation
+A separate downloadable artifact includes the exact originally uploaded product logo with validated byte-identical SHA-256:
+`d5ea82da1dd359843c9fa5b1c1aef638645bca1302869aa00aba39ae94e4baff` (PNG RGBA, 1619x971).
+The standalone prototype includes the logo on Game Lobby, 8-second Intro and Winners Podium, and passed in-memory Chromium visual and interaction checks.
+**IMPORTANT:** The logo binary is still NOT checked into this GitHub branch. The separate in-chat ZIP and standalone HTML include it, but the GitHub preview remains the pre-logo development proof. Do not claim this GitHub branch is fully branded or deployed.
+Next code gate: copy the original PNG from the vetted artifact to `experience-2-preview/assets/arena-logo-approved.png` or app `public/` source; verify SHA-256 above; port the branded HTML/CSS/JS changes; rerun GitHub Chromium CI and inspect screenshot output.
