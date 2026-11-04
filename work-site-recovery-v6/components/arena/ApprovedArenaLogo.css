@@ -22,6 +22,17 @@
 .lobby-stage .approved-arena-logo--lobby + .lobby-beacon{margin-top:0}
 .arena-victory__content>.approved-arena-logo--victory{align-self:center}
 .stage-splash .approved-arena-logo--intro{position:relative;z-index:5;flex-shrink:0}
+/* Reuse the existing cinematic intro; make the product identity the center
+   without pushing its cinematic grid off projector bounds. */
+.stage-splash .cinematic-kicker:has(.approved-arena-logo--intro){
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+ min-width:0;margin-inline:auto;text-align:center;overflow:visible
+}
+.stage-splash .cinematic-brand-strap{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:11px;letter-spacing:.1em}
+/* Keep the official MTS and Training Team emblems as-is. */
+.brand-header-center .approved-arena-logo--header{flex-shrink:0;max-width:105px}
+.session-shell.projector .brand-header-center .approved-arena-logo--header{width:78px;height:50px}
+
 @media(max-width:800px){
  .brand-header-center .approved-arena-logo--header{width:70px;height:48px}
  .approved-arena-logo--lobby{width:min(68vw,255px);height:140px}
