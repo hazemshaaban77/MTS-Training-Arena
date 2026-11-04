@@ -10,7 +10,7 @@ const refs=run(["for-each-ref","--format=%(refname:short)","refs/remotes/origin"
 if(refs.length<2)throw Error("Remote branch fetch incomplete; use checkout fetch-depth 0");
 const inventories=new Map(),metadata=[];
 for(const ref of refs){
- const bytes=run(["ls-tree","-r","-z","-l",ref],{encoding:"buffer"});
+ const bytes=run(["ls-tree","-r","-z","-l",ref],{encoding:null});
  const files=new Map();
  for(const entry of bytes.toString("utf8").split("\0")){
   if(!entry)continue;const tab=entry.indexOf("\t");if(tab<0)continue;
@@ -55,7 +55,7 @@ for(const [branch,inventory] of inventories){
 const blobKeys=[...textFiles.keys()],flagged=[];
 for(let i=0;i<blobKeys.length;i+=150){
  const chunk=blobKeys.slice(i,i+150);
- const raw=run(["cat-file","--batch"],{encoding:"buffer",input:chunk.join("\n")+"\n",maxBuffer:220*1024*1024});
+ const raw=run(["cat-file","--batch"],{encoding:null,input:chunk.join("\n")+"\n",maxBuffer:220*1024*1024});
  let pos=0;
  for(const sha of chunk){
   const end=raw.indexOf(10,pos);if(end<0)throw Error("bad git cat-file response");
