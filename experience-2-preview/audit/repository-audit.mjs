@@ -24,7 +24,7 @@ for(const ref of refs){
    v6:[...files.keys()].filter(x=>x.startsWith("work-site-recovery-v6/")).length,
    demo:[...files.keys()].filter(x=>x.startsWith("experience-2-preview/")).length});
 }
-const current=run(["branch","--show-current"]).trim(),files=inventories.get("origin/"+current);
+const manifest=["branch\tpath\tgitBlobSHA\tbytes"];\nfor(const [ref,items] of inventories)for(const [file,info] of items)manifest.push(ref.slice(7)+"\t"+file.replaceAll("\\t"," ")+"\t"+info.sha+"\t"+info.size);\nfs.writeFileSync(resultDir+"/ALL_TRACKED_FILES.tsv",manifest.join("\\n")+"\\n");\nconst current=run(["branch","--show-current"]).trim(),files=inventories.get("origin/"+current);
 if(!files)throw Error("Review branch not present in refs: "+current);
 const v5=new Map([...files].filter(([p])=>p.startsWith("work-site-recovery/")).map(([p,x])=>[p.slice(19),x]));
 const v6=new Map([...files].filter(([p])=>p.startsWith("work-site-recovery-v6/")).map(([p,x])=>[p.slice(22),x]));
