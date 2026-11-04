@@ -15,7 +15,8 @@ import {DatabaseSync} from "node:sqlite";
 import {handleArenaRequest} from "../lib/api-handler";
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
-const ROOT=path.resolve(HERE,"..");
+// Always run from the V6 project root after esbuild bundles into .sites-runtime.
+const ROOT=path.resolve(process.cwd());
 const PUBLIC=path.resolve(ROOT,"dist-github");
 const PORT=Number(process.env.E2_FIXTURE_PORT||8094);
 if(!Number.isSafeInteger(PORT)||PORT<1024||PORT>65535)throw Error("INVALID_TEST_PORT");
