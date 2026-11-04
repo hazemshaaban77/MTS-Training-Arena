@@ -43,7 +43,7 @@ const db:any={
   }catch(e){dbFile.exec("ROLLBACK");throw e;}
  }
 };
-const fixtureTrainer=(req:Request)=>{
+const fixtureTrainer=async (req:Request)=>{
  if(req.headers.get("X-Firebase-Token")!=="local-fixture-trainer")
   throw Error("SIGN_IN");
  return {owner:"firebase:staging-fixture",uid:"staging-fixture",
