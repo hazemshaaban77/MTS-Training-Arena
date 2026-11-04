@@ -1,0 +1,106 @@
+// Experience 2.0 Sprint 02 — actual Chromium CI; isolated demonstration only.
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {chromium} from 'playwright';
+
+const dir=path.dirname(fileURLToPath(import.meta.url));
+const original=await fs.readFile(path.join(dir,'..','public','e2-preview','assets','arena-logo-approved.png'));
+assert.equal(crypto.createHash('sha256').update(original).digest('hex'),
+  'd5ea82da1dd359843c9fa5b1c1aef638645bca1302869aa00aba39ae94e4baff',
+  'Do not substitute or modify user-approved original logo');
+const url=process.env.ARENA_SPRINT02_URL || 'http://127.0.0.1:8087/e2-preview/';
+const out=path.join(dir,'ci-screenshots');await fs.mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true});
+const errors=[];
+try{
+ const ctx=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
+ const page=await ctx.newPage();
+ page.on('pageerror',e=>errors.push('trainer: '+e.message));
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await page.waitForSelector('.hero-logo');
+ assert.ok(await page.locator('.hero-logo').evaluate(el=>el.complete&&el.naturalWidth>0),'Approved logo must load in lobby');
+ const bg=await page.locator('.hero-logo').evaluate(el=>getComputedStyle(el).backgroundImage);
+ assert.equal(bg,'none','White radial halo not allowed');
+ await page.screenshot({path:path.join(out,'01-lobby.png')});
+ const display=await ctx.newPage();await display.setViewportSize({width:1920,height:1080});
+ display.on('pageerror',e=>errors.push('projector: '+e.message));
+ await display.goto(url+'?display=1',{waitUntil:'domcontentloaded'});
+ await display.waitForSelector('.hero-logo');
+ assert.ok(await display.locator('.hero-logo').evaluate(el=>el.naturalWidth>0));
+ await display.screenshot({path:path.join(out,'02-projector-lobby.png')});
+
+ // Preserve Sprint 01's cinematic introduction, skip and podium regressions
+ // before its redundant standalone entry point is retired.
+ await page.locator('#introBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='intro',null,{timeout:5000});
+ assert.ok(await display.locator('.intro-brand').evaluate(el=>el.complete&&el.naturalWidth>0),
+   'Approved logo should appear in the cinematic intro');
+ await display.screenshot({path:path.join(out,'02b-projector-intro.png')});
+ await page.locator('#skipIntroBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='question',null,{timeout:5000});
+ assert.ok(!(await display.locator('#sceneLayer').innerText()).includes('الإجابة الصحيحة'),
+   'Skipping intro must not reveal an answer');
+ await page.locator('#podiumBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='podium',null,{timeout:5000});
+ assert.ok(await display.locator('.hero-logo').evaluate(el=>el.complete&&el.naturalWidth>0),
+   'Approved logo should appear on podium');
+ await display.screenshot({path:path.join(out,'02c-projector-podium.png')});
+ await page.locator('#questionBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='question');
+
+ assert.ok(!(await display.locator('#sceneLayer').innerText()).includes('الإجابة الصحيحة'),'No early answer key');
+ await page.locator('#lockBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='locked');
+ assert.ok(!(await display.locator('#sceneLayer').innerText()).includes('الإجابة الصحيحة'),'Locked must not reveal answer');
+ await page.locator('#revealBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='reveal');
+ assert.ok((await display.locator('#sceneLayer').innerText()).includes('الإجابة الصحيحة'));
+ await page.locator('#wheelBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='wheel');
+ assert.ok(await page.locator('#wheelFace').isEnabled(),'Wheel should be clickable in trainer view');
+ await page.locator('#wheelFace').click();
+ const state=async()=>page.evaluate(()=>JSON.parse(localStorage.getItem('mts-arena-e2-sprint02-v1')||'{}'));
+ assert.equal((await state()).wheel.status,'countdown','Spin must wait for countdown');
+ await page.waitForTimeout(350);
+ assert.equal((await state()).wheel.status,'countdown','Must not spin before 3-second countdown');
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('mts-arena-e2-sprint02-v1')||'{}').wheel?.status==='landed',
+  {timeout:11000});
+ const wheelState=(await state()).wheel;
+ assert.ok(Number.isInteger(wheelState.index)&&wheelState.index>=0&&wheelState.index<8);
+ assert.ok((await display.locator('#wheelResult').innerText()).trim().length>0,'Final result must be shown without additional click');
+ await display.screenshot({path:path.join(out,'03-wheel-result.png')});
+ await page.locator('#boxesBtn').click();
+ await page.locator('[data-box="0"]').click();
+ assert.equal((await state()).openedBoxes.length,1,'Opening box should count once');
+ assert.ok(await page.locator('[data-box="0"]').isDisabled(),'Opened box must disable');
+ await page.locator('[data-box="1"]').click();
+ assert.equal((await state()).openedBoxes.length,2,'Second box still opens');
+ await page.locator('#leaderboardBtn').click();
+ await page.locator('details:has(#scoreTeam) > summary').click();
+ await page.locator('#scoreTeam').selectOption('1');
+ await page.locator('#scoreDelta').fill('500');
+ await page.locator('#scoreReason').fill('Sprint 02 QA test');
+ await page.locator('#applyScore').click();
+ await page.locator('#applyScore').click();
+ const final=await state();
+ assert.equal(final.scoreLedger.length,2,'Demo score adjustments should be auditable');
+ assert.equal(final.demoScores[1],2900,'Demo scores reflect both adjustments');
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='leaderboard');
+ assert.equal(await display.locator('.score-row').first().getAttribute('data-team'),'1','Leaderboard orders by scores');
+ await display.screenshot({path:path.join(out,'04-leaderboard.png')});
+ await page.locator('#langBtn').click();
+ await display.waitForFunction(()=>document.documentElement.lang==='en');
+ const mobile=await ctx.newPage();await mobile.setViewportSize({width:390,height:844});
+ mobile.on('pageerror',e=>errors.push('mobile: '+e.message));
+ await mobile.goto(url,{waitUntil:'domcontentloaded'});
+ await mobile.locator('#boxesBtn').click();
+ const w=await mobile.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
+ assert.ok(w.scroll<=w.width+2,'Unexpected mobile horizontal overflow '+JSON.stringify(w));
+ await mobile.screenshot({path:path.join(out,'05-mobile-boxes.png'),fullPage:true});
+ assert.deepEqual(errors,[],'No uncaught JavaScript errors');
+ console.log('PASS: exact original logo, no halo, same-origin projector, answer lock/reveal, wheel countdown/landing, boxes, demo leaderboard, bilingual, mobile 390px');
+ console.log('LIMIT: no live QR, no real devices, no trusted server or production integration.');
+}finally{await browser.close()}
