@@ -44,11 +44,12 @@ jobs:
         run: |
           mkdir -p .sites-runtime/e2-staging-qa
           pnpm exec esbuild e2-staging-qa/staging-local-server.ts --bundle --platform=node --format=esm --target=node24 --outfile=.sites-runtime/e2-staging-qa/staging-local-server.mjs
-      - name: Install isolated Chromium browser
+      - name: Install isolated Chromium browser without touching pnpm dependencies
         run: |
-          pnpm exec playwright --version || true
-          npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
-          npx playwright install --with-deps chromium
+          mkdir -p "$RUNNER_TEMP/e2-playwright"
+          npm --prefix "$RUNNER_TEMP/e2-playwright" install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+          ln -s "$RUNNER_TEMP/e2-playwright/node_modules/playwright" node_modules/playwright
+          node "$RUNNER_TEMP/e2-playwright/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Run two then five independent browser clients and projector against real API handler
         run: node e2-staging-qa/real-session-browser.mjs
       - name: Archive only screenshot evidence (no database, secrets or participant tokens)
