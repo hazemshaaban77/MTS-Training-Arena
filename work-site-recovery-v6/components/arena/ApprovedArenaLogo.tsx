@@ -15,7 +15,7 @@ export default function ApprovedArenaLogo({placement,decorative=false}:{
  return <span className={'approved-arena-logo approved-arena-logo--'+placement} data-approved-logo={placement}>
   <img src={siteAsset(APPROVED_ARENA_LOGO_PATH)}
    alt={decorative?'':'MTS Training Arena — approved original product logo'}
-   aria-hidden={decorative||undefined} loading={placement==='header'||placement==='intro'?'lazy':'eager'}
+   aria-hidden={decorative||undefined} loading="eager"
    decoding="async" draggable={false}/>
  </span>;
 }
