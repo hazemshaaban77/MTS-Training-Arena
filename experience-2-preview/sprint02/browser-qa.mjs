@@ -31,8 +31,26 @@ try{
  await display.waitForSelector('.hero-logo');
  assert.ok(await display.locator('.hero-logo').evaluate(el=>el.naturalWidth>0));
  await display.screenshot({path:path.join(out,'02-projector-lobby.png')});
+
+ // Preserve Sprint 01's cinematic introduction, skip and podium regressions
+ // before its redundant standalone entry point is retired.
+ await page.locator('#introBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='intro',null,{timeout:5000});
+ assert.ok(await display.locator('.intro-brand').evaluate(el=>el.complete&&el.naturalWidth>0),
+   'Approved logo should appear in the cinematic intro');
+ await display.screenshot({path:path.join(out,'02b-projector-intro.png')});
+ await page.locator('#skipIntroBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='question',null,{timeout:5000});
+ assert.ok(!(await display.locator('#sceneLayer').innerText()).includes('الإجابة الصحيحة'),
+   'Skipping intro must not reveal an answer');
+ await page.locator('#podiumBtn').click();
+ await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='podium',null,{timeout:5000});
+ assert.ok(await display.locator('.hero-logo').evaluate(el=>el.complete&&el.naturalWidth>0),
+   'Approved logo should appear on podium');
+ await display.screenshot({path:path.join(out,'02c-projector-podium.png')});
  await page.locator('#questionBtn').click();
  await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='question');
+
  assert.ok(!(await display.locator('#sceneLayer').innerText()).includes('الإجابة الصحيحة'),'No early answer key');
  await page.locator('#lockBtn').click();
  await display.waitForFunction(()=>document.querySelector('#stage')?.dataset.scene==='locked');
