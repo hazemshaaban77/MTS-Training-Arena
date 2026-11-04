@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071427">
+<title>MTS Training Arena | Experience 2.0 — Lobby Preview</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+:root{--navy:#071427;--navy2:#0c2545;--blue:#1783c5;--cyan:#49ccff;--green:#218e5b;--gold:#ffc971;--white:#f2f9ff;--muted:#a1b8d0;--line:#254667;--radius:22px}
+*{box-sizing:border-box}
+html{background:var(--navy)}
+body{margin:0;font:500 15px/1.6 Cairo,Arial,sans-serif;color:var(--white);background:radial-gradient(circle at 20% 0%,#123b63 0%,transparent 38%),linear-gradient(145deg,#061121,#0b1f38 78%);min-height:100vh}
+button{font:700 14px Cairo,Arial,sans-serif;cursor:pointer;border:0}
+button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+button:disabled{cursor:not-allowed;opacity:.45}
+button:active{transform:translateY(1px)}
+button:hover:not(:disabled){filter:brightness(1.13)}
+.frame{max-width:1620px;margin:auto;padding:24px clamp(14px,2vw,32px) 32px}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;border:1px solid #28496a;border-radius:20px;background:linear-gradient(90deg,#0c2645df,#102c4ae6);padding:12px 20px;margin-bottom:18px;min-height:100px}
+.logo{display:flex;min-width:0;align-items:center}
+.logo.left{justify-content:flex-start}.logo.right{justify-content:flex-end}
+.logo img{display:block;max-width:190px;max-height:67px;width:auto;height:auto;object-fit:contain}
+.brand-title{text-align:center;white-space:nowrap}.brand-title b{display:block;font-size:clamp(18px,2vw,28px);letter-spacing:.04em;line-height:1.3}.brand-title b strong{color:#6be1b7}.brand-title small{color:#a8c1d7;font:700 10px/1.6 Cairo,Arial;letter-spacing:.22em}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+.breadcrumb{display:flex;align-items:center;gap:9px;color:#b2c5da;font-size:13px}.spark{width:8px;height:8px;border-radius:50%;background:#5bdbab;box-shadow:0 0 12px #39dca3}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1px solid #355676;border-radius:10px;padding:8px 13px;background:#102b48;color:#d6ecff}
+.pill.active{background:#176aa4;color:white;border-color:#4dbffd}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 326px;gap:18px;align-items:start}
+.stage-wrap{min-width:0}
+.stage{aspect-ratio:16/9;min-height:420px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#174b79 0%,#0c2747 46%,#071a31 100%);border:1px solid #406a90;border-radius:24px;box-shadow:0 22px 52px #0007, inset 0 0 80px #0c83bf25;isolation:isolate}
+.stage::before{content:"";position:absolute;inset:0;background:linear-gradient(transparent 95%,#5ac9f40c 96%),linear-gradient(90deg,transparent 95%,#5ac9f40c 96%);background-size:47px 47px;opacity:.65;pointer-events:none}
+.stage::after{content:"";position:absolute;left:17%;right:17%;bottom:-29%;height:38%;border-radius:50%;background:#007cc3;filter:blur(100px);opacity:.3;pointer-events:none}
+.stage-head{position:absolute;inset:0 0 auto;z-index:10;padding:18px 23px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;letter-spacing:.08em}
+.live{display:flex;gap:9px;align-items:center;background:#0a2945;border:1px solid #336083;padding:7px 11px;border-radius:99px;color:#d7efff;font-weight:800}
+.live i{display:block;background:#4fe1a8;width:7px;height:7px;border-radius:50%;box-shadow:0 0 12px #37f7a5}
+.stage-tag{color:#d0e5f7;background:#092541aa;padding:6px 12px;border-radius:99px;border:1px solid #27577d}
+.stage-bottom{position:absolute;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-between;align-items:center;padding:15px 23px;gap:10px;color:#96bad2;font-size:11px;letter-spacing:.04em;border-top:1px solid #22628a3e;background:linear-gradient(transparent,#06162add)}
+.scene{position:absolute;inset:55px 28px 42px;z-index:2;display:flex;justify-content:center;align-items:center;text-align:center;flex-direction:column}
+.eyebrow{font:800 11px Cairo,Arial;color:#65e0b8;letter-spacing:.28em}
+.hero{font-size:clamp(28px,4.3vw,60px);line-height:1.2;font-weight:900;margin:9px 0 6px;text-shadow:0 4px 28px #07172a}
+.hero em{font-style:normal;color:#61d6ff}
+.sub{font-size:clamp(12px,1.35vw,18px);color:#c5dfef;max-width:760px;margin:7px auto}
+.lobby-grid{display:grid;grid-template-columns:1fr minmax(135px,.7fr) 1fr;gap:14px;align-items:stretch;width:min(840px,100%);margin:24px auto 0}
+.team{background:linear-gradient(140deg,#154677aa,#0b2846d9);border:1px solid #30648e;border-radius:17px;padding:12px;box-shadow:inset 0 0 30px #17a7ff10}
+.team.green{background:linear-gradient(140deg,#0e553e81,#0b2846d9);border-color:#347c69}
+.team b{display:block;font-size:clamp(16px,2vw,26px);line-height:1.35}
+.team span{display:block;font-size:11px;color:#aec8d8}
+.team .names{font-size:11px;margin-top:6px;color:#d3eaff}
+.joinbox{border-radius:18px;background:#f6fcff;color:#0c2848;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0}
+.qr-placeholder{width:86px;height:86px;background:repeating-conic-gradient(#0d2945 0% 25%,transparent 0% 50%) 50%/15px 15px;border:7px solid white;box-shadow:inset 0 0 0 3px white}
+.joinbox b{font-size:14px}.joinbox span{font-size:10px;line-height:1.35}
+.joinbox .demo-note{color:#a64c35;font-weight:900}
+.foot-metrics{margin-top:13px;display:flex;gap:15px;justify-content:center;color:#c7e6f9;font-weight:700;font-size:12px;flex-wrap:wrap}
+.dot{width:5px;height:5px;display:inline-block;background:#60dbb2;border-radius:50%;margin-inline:6px}
+.panel{border:1px solid #284f73;border-radius:21px;background:linear-gradient(155deg,#102e50,#091d35);padding:20px;box-shadow:0 17px 30px #0004}
+.panel h2{font-size:19px;margin:0}.panel p{font-size:12px;color:#a3c0d6;margin:3px 0 17px}
+.label{display:block;color:#75d3ff;font-weight:800;letter-spacing:.06em;font-size:11px;margin-bottom:10px}
+.buttons{display:grid;gap:9px}
+.action{background:#153a5e;border:1px solid #3676aa;color:#e5f7ff;padding:13px 12px;border-radius:12px;text-align:center;min-height:45px}
+.action.primary{background:linear-gradient(100deg,#176aa4,#1a9cbb);border-color:#5ac4ff}
+.action.green{background:linear-gradient(100deg,#126647,#168568);border-color:#51c7aa}
+.action.gold{background:linear-gradient(100deg,#80551d,#a27425);border-color:#f1c36b}
+.minihead{border-top:1px solid #2e5571;padding-top:17px;margin-top:20px;font-size:11px;color:#a9c8dc}
+.rule{display:flex;justify-content:space-between;gap:10px;margin-top:9px;font-size:12px}
+.rule b{color:#eaf6ff}
+.warning{font-size:11px;color:#e7c79c;border-radius:12px;background:#63491f40;padding:10px;border:1px solid #997b4257;margin-top:16px}
+.hint{margin:14px 0 0;color:#aac5d8;font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.question-scene{width:100%;max-width:820px}
+.counter{margin:auto;border:3px solid #4dcaff;box-shadow:0 0 25px #238bcc5b;border-radius:50%;height:70px;width:70px;display:grid;place-items:center;font-size:31px;font-weight:900;color:white}
+.question-title{font-size:clamp(20px,2.6vw,35px);line-height:1.5;margin:14px auto 18px;max-width:760px;font-weight:900}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.answer{border:1px solid #5a8dbb;border-radius:12px;background:#103d6a;color:white;padding:13px 16px;text-align:start;font-size:clamp(12px,1.2vw,16px);font-weight:700;box-shadow:inset 0 0 20px #008dff0b}
+.answer::before{content:attr(data-tag);font-weight:900;border-radius:7px;background:#ffffff26;margin-inline-end:11px;padding:2px 9px}
+.answer.correct{border-color:#78e5ab;background:#166044;box-shadow:0 0 22px #32e59b44}
+.answer.wrong{opacity:.5}
+.reveal-ribbon{color:#6bffb9;font-weight:900;font-size:clamp(17px,2vw,26px);margin-top:17px}
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:min(730px,100%);margin-top:20px}
+.score-card{border-radius:18px;border:1px solid #4e89ba;padding:22px;background:#153c68aa}
+.score-card:nth-child(2){border-color:#56b69a;background:#1047397d}
+.score-card .number{font-size:clamp(36px,5vw,72px);font-weight:900;line-height:1.1}
+.score-card label{display:block;color:#bad5e8;font-weight:800}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:15px;width:min(700px,100%);height:230px;margin-top:15px}
+.step{width:36%;background:linear-gradient(#164f81,#0e3056);border:1px solid #54b6ee;border-radius:16px 16px 3px 3px;padding:18px 8px;display:flex;flex-direction:column;justify-content:flex-start;font-weight:900}
+.step.first{height:100%;background:linear-gradient(#76603a,#30577e);border-color:#ffc971}.step.second{height:76%}
+.step i{font-style:normal;font-size:34px;color:#ffc971}.step span{font-size:15px}.step small{color:#d4e9f7}
+.intro-cover{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;background:radial-gradient(circle at center,#185580 0%,#07182e 75%);padding:25px}
+.intro-cover.on{display:flex}
+.intro-beam{position:absolute;inset:0;background:conic-gradient(from 250deg at 50% 110%,transparent,#348ac833 10%,transparent 24%,#24c1ff22 32%,transparent 45%);animation:rotate 10s linear infinite}
+.intro-cover h2{font-size:clamp(31px,5vw,70px);line-height:1.2;z-index:2;letter-spacing:.03em;margin:0;animation:rise .9s both}
+.intro-cover strong{color:#65e5b9}
+.intro-cover .intro-line{font-weight:900;color:#b1ecff;z-index:2;letter-spacing:.3em;animation:rise 1.5s both}
+.progress{position:absolute;bottom:0;left:0;height:5px;width:100%;background:linear-gradient(90deg,#1889d4,#49ffc6);transform:scaleX(0);transform-origin:left}
+.intro-cover.on .progress{animation:grow 8s linear both}
+.intro-number{font-size:clamp(44px,8vw,108px);line-height:1;color:#fff;font-weight:900;z-index:2;text-shadow:0 0 50px #2fa9ff}
+.projector-mode .frame{max-width:none;padding:0}
+.projector-mode .top,.projector-mode .toolbar,.projector-mode .panel,.projector-mode .hint{display:none}
+.projector-mode .layout{display:block}
+.projector-mode .stage{height:100vh;min-height:100vh;aspect-ratio:auto;border:0;border-radius:0}
+.projector-mode .scene{inset:8% 5% 7%}
+.projector-mode .hero{font-size:clamp(44px,5vw,90px)}
+.projector-mode .question-title{font-size:clamp(32px,3.4vw,66px)}
+.projector-mode .answer{font-size:clamp(18px,2.1vw,35px);padding:22px}
+.projector-mode .team b{font-size:clamp(22px,2.6vw,48px)}
+.projection-exit{position:fixed;left:16px;top:13px;z-index:50;opacity:.2;background:#153b5b;color:white;border-radius:9px;padding:7px 11px}
+.projection-exit:hover,.projection-exit:focus-visible{opacity:1}
+.hidden{display:none!important}
+@keyframes rise{from{opacity:0;transform:translateY(32px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes rotate{to{transform:rotate(360deg)}}
+@keyframes grow{to{transform:scaleX(1)}}
+.pop{animation:rise .5s both}
+@media(max-width:1070px){.layout{grid-template-columns:1fr}.panel{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel h2,.panel p,.panel .label{grid-column:1/-1}.buttons{grid-column:1}.minihead{grid-column:2;grid-row:4;margin-top:0;padding:0;border:0}.warning{grid-column:1/-1}}
+@media(max-width:700px){.frame{padding:10px}.top{padding:10px;gap:5px;min-height:68px}.logo img{max-width:86px;max-height:44px}.brand-title b{font-size:13px}.brand-title small{font-size:7px;letter-spacing:.03em}.stage{min-height:460px;aspect-ratio:auto}.scene{inset:50px 10px 44px}.stage-head{padding:10px;font-size:9px}.stage-bottom{padding:10px;font-size:9px}.lobby-grid{grid-template-columns:1fr 1fr;gap:8px}.joinbox{grid-column:1/-1;grid-row:1;flex-direction:row;min-height:64px}.qr-placeholder{width:36px;height:36px;border-width:3px;background-size:9px 9px}.team{padding:9px}.team b{font-size:15px}.hero{font-size:27px}.sub{font-size:12px}.panel{display:block}.minihead{border-top:1px solid #2e5571;padding-top:17px;margin-top:16px}.answers{grid-template-columns:1fr}.answer{padding:10px}.question-title{font-size:20px}.counter{width:54px;height:54px;font-size:24px}.podium{height:170px}.stage-tag{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="frame">
+<header class="top">
+ <div class="logo left"><img id="mtsLogo" src="../work-site-recovery-v6/public/mts.png" alt="MTS — Misr Technology Services"/></div>
+ <div class="brand-title"><b>MTS <strong>TRAINING ARENA</strong></b><small>EXPERIENCE 2.0 · BROADCAST PREVIEW</small></div>
+ <div class="logo right"><img id="teamLogo" src="../work-site-recovery-v6/public/training.png" alt="Training Team"/></div>
+</header>
+<div class="toolbar">
+ <div class="breadcrumb"><span class="spark"></span><span id="crumb">المرحلة الأولى · نموذج بصري تفاعلي</span></div>
+ <div class="tools">
+  <button class="pill" id="language" type="button">EN</button>
+  <button class="pill" id="sound" type="button">🔇 صوت</button>
+  <button class="pill" id="motion" type="button">تقليل الحركة</button>
+  <button class="pill active" id="projector" type="button">⛶ شاشة البروجيكتور</button>
+ </div>
+</div>
+<div class="layout">
+<main class="stage-wrap">
+ <section class="stage" id="stage" aria-label="Arena 16:9 screen">
+  <div class="stage-head"><span class="live"><i></i> EXPERIENCE 2.0 · DEMO</span><span class="stage-tag" id="stageTag">GAME LOBBY</span></div>
+  <div class="scene" id="scene" aria-live="polite"></div>
+  <div class="stage-bottom"><span>MTS TRAINING ARENA · PREMIUM BROADCAST 2D</span><span id="stageBottom">DESIGN PREVIEW · NOT CONNECTED TO LIVE SERVER</span></div>
+  <div class="intro-cover" id="introCover" aria-hidden="true">
+   <div class="intro-beam"></div>
+   <span class="intro-line" id="introLine">THE EXPERIENCE BEGINS</span>
+   <h2 id="introTitle">MTS<br/><strong>TRAINING ARENA</strong></h2>
+   <div class="intro-number" id="introNumber"></div>
+   <div class="progress"></div>
+  </div>
+ </section>
+ <div class="hint"><span id="previewTip">اللي قدامك معاينة تفاعلية محلية — مش جلسة حقيقية ولا نظام درجات متصل.</span><span>16:9 · RTL/LTR · REDUCED MOTION</span></div>
+</main>
+<aside class="panel" aria-label="Trainer demo controls">
+ <h2 id="panelTitle">🎛 مركز قيادة المدرب</h2>
+ <p id="panelDesc">جرّب الانتقال بين مشاهد الجلسة بنفسك.</p>
+ <span class="label" id="panelLabel">CONTROLS · LOCAL DEMO ONLY</span>
+ <div class="buttons">
+  <button class="action" id="goLobby">① شاشة انتظار المشاركين</button>
+  <button class="action primary" id="goIntro">② تشغيل المقدمة السينمائية (8 ثواني)</button>
+  <button class="action" id="goQuestion">③ عرض سؤال تجريبي (20 ثانية)</button>
+  <button class="action green" id="goReveal">④ كشف الإجابة والنتائج</button>
+  <button class="action gold" id="goPodium">⑤ إعلان الفائزين</button>
+ </div>
+ <div class="minihead" id="panelStatsTitle">حالة النموذج</div>
+ <div class="rule"><span id="statusLabel">المشهد الحالي</span><b id="sceneStatus">الانتظار</b></div>
+ <div class="rule"><span id="sessionLabel">كود الجلسة</span><b>DEMO-ONLY</b></div>
+ <div class="rule"><span id="usersLabel">المشاركون</span><b id="userCount">12 وهميين</b></div>
+ <div class="warning" id="warning">⚠ QR وأسماء المشاركين والنقاط بيانات توضيحية فقط. الانضمام من موبايلات مختلفة وتسجيل النقاط الحقيقي ضمن المرحلة الثالثة.</div>
+</aside>
+</div>
+<button class="projection-exit hidden" id="exitProjector" type="button">⤢ خروج</button>
+</div>
+<script>
+'use strict';
+(function(){
+ const storageKey='mts-arena-experience-2-preview-v1';
+ const bc=typeof BroadcastChannel!=='undefined'?new BroadcastChannel(storageKey):null;
+ let lang='ar',muted=true,reduce=false,clock=null,introTimers=[];
+ const en={
+  crumb:'Stage 1 · interactive visual preview',panelTitle:'🎛 Trainer Control Room',panelDesc:'Switch scenes to preview the experience.',panelLabel:'CONTROLS · LOCAL DEMO ONLY',goLobby:'① Participant lobby',goIntro:'② Play cinematic intro (8 seconds)',goQuestion:'③ Demo question (20 seconds)',goReveal:'④ Reveal answer and scores',goPodium:'⑤ Winners podium',panelStatsTitle:'Preview status',statusLabel:'Current scene',sessionLabel:'Session code',usersLabel:'Participants',userCount:'12 fictional players',warning:'⚠ QR, participants and scores are illustrative. Real multi-device joining and trusted scoring belong to Stage 3.',previewTip:'Interactive local preview — not a real session or connected scoring.',soundOn:'🔊 Sound',soundOff:'🔇 Sound',motionOn:'Enable animations',motionOff:'Reduce motion',projector:'⛶ Projector screen',states:{lobby:'Lobby',question:'Question',reveal:'Reveal',podium:'Winners'}};
+ const ar={
+  crumb:'المرحلة الأولى · نموذج بصري تفاعلي',panelTitle:'🎛 مركز قيادة المدرب',panelDesc:'جرّب الانتقال بين مشاهد الجلسة بنفسك.',panelLabel:'CONTROLS · LOCAL DEMO ONLY',goLobby:'① شاشة انتظار المشاركين',goIntro:'② تشغيل المقدمة السينمائية (8 ثواني)',goQuestion:'③ عرض سؤال تجريبي (20 ثانية)',goReveal:'④ كشف الإجابة والنتائج',goPodium:'⑤ إعلان الفائزين',panelStatsTitle:'حالة النموذج',statusLabel:'المشهد الحالي',sessionLabel:'كود الجلسة',usersLabel:'المشاركون',userCount:'12 وهميين',warning:'⚠ QR وأسماء المشاركين والنقاط بيانات توضيحية فقط. الانضمام من موبايلات مختلفة وتسجيل النقاط الحقيقي ضمن المرحلة الثالثة.',previewTip:'اللي قدامك معاينة تفاعلية محلية — مش جلسة حقيقية ولا نظام درجات متصل.',soundOn:'🔊 صوت',soundOff:'🔇 صوت',motionOn:'تفعيل الحركة',motionOff:'تقليل الحركة',projector:'⛶ شاشة البروجيكتور',states:{lobby:'الانتظار',question:'السؤال',reveal:'كشف الإجابة',podium:'الفائزون'}};
+ const $=id=>document.getElementById(id);
+ const getT=()=>lang==='ar'?ar:en;
+ const saved=(()=>{try{return JSON.parse(localStorage.getItem(storageKey)||'{}')}catch{return {}}})();
+ let state={scene:'lobby',deadline:0,...saved};
+ if(!['lobby','question','reveal','podium'].includes(state.scene))state.scene='lobby';
+ function logoFallback(id,name){
+  const el=$(id);el.addEventListener('error',function once(){el.removeEventListener('error',once);el.src='https://raw.githubusercontent.com/hazemshaaban77/MTS-Training-Arena/work-site-recovery-v6/work-site-recovery-v6/public/'+name;});
+ }
+ logoFallback('mtsLogo','mts.png');logoFallback('teamLogo','training.png');
+ function sound(){if(muted)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC();[523,659,784].forEach((f,i)=>{let osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=f;gain.gain.value=.035;osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+i*.12);osc.stop(ctx.currentTime+i*.12+.11)});setTimeout(()=>ctx.close(),1000)}catch{}}
+ function publish(next){state={...state,...next};try{localStorage.setItem(storageKey,JSON.stringify(state))}catch{}if(bc)bc.postMessage(state);render();}
+ const scene=document.getElementById('scene');
+ function render(){
+  const t=getT();document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  Object.keys(t).filter(k=>typeof t[k]==='string'&&$(k)).forEach(k=>$(k).textContent=t[k]);
+  $('sound').textContent=muted?t.soundOff:t.soundOn;
+  $('motion').textContent=reduce?t.motionOn:t.motionOff;
+  $('projector').textContent=t.projector;
+  document.body.classList.toggle('projector-mode',new URL(location.href).searchParams.get('display')==='1');
+  $('exitProjector').classList.toggle('hidden',!document.body.classList.contains('projector-mode'));
+  document.documentElement.style.setProperty('scroll-behavior','auto');
+  $('stageTag').textContent=state.scene.toUpperCase().replace('REVEAL','ANSWER REVEAL');
+  $('stageBottom').textContent='PREVIEW · NO LIVE CONNECTION · '+String(state.scene).toUpperCase();
+  $('sceneStatus').textContent=t.states[state.scene];
+  $('introCover').classList.remove('on');$('introCover').setAttribute('aria-hidden','true');
+  const word=lang==='ar';
+  if(state.scene==='lobby'){
+    scene.innerHTML='<div class="eyebrow">GET READY · GAME LOBBY</div>'+
+    '<h1 class="hero pop">'+(word?'كلنا جاهزين <em>للتحدي؟</em>':'ARE YOU <em>READY?</em>')+'</h1>'+
+    '<p class="sub">'+(word?'مسابقة جديدة، حماس جديد — الفريقان يستعدان للمنافسة':'A new challenge is about to begin — teams are getting ready')+'</p>'+
+    '<div class="lobby-grid">'+
+    '<div class="team"><span>TEAM 01</span><b>'+(word?'فريق البرق':'Lightning')+'</b><span class="names">6 '+(word?'مشاركين':'players')+'</span></div>'+
+    '<div class="joinbox"><div class="qr-placeholder" aria-hidden="true"></div><div><b>DEMO-ONLY</b><span class="demo-note" style="display:block">'+(word?'QR توضيحي غير قابل للاستخدام':'Illustrative QR — inactive')+'</span></div></div>'+
+    '<div class="team green"><span>TEAM 02</span><b>'+(word?'فريق الموجة':'Wave')+'</b><span class="names">6 '+(word?'مشاركين':'players')+'</span></div></div>'+
+    '<div class="foot-metrics"><span><i class="dot"></i>12 '+(word?'مشارك تجريبي':'sample players')+'</span><span><i class="dot"></i>2 '+(word?'فريق':'teams')+'</span><span><i class="dot"></i>'+(word?'في انتظار المدرب':'waiting for trainer')+'</span></div>';
+  } else if(state.scene==='question'||state.scene==='reveal'){
+    const revealed=state.scene==='reveal';
+    const title=word?'قبل إصدار رقم ACID، إيه أهم خطوة لازم نتأكد منها؟':'Before an ACID is issued, which step must be verified?';
+    const opts=word?['اكتمال بيانات الأطراف المطلوبة','اختيار لون الحاوية','طباعة البيان الجمركي','تحديد موعد خروج الشاحنة']:['Complete required party data','Choose a container color','Print a customs declaration','Set truck exit time'];
+    const sec=revealed?'✓':String(Math.max(0,Math.ceil((state.deadline-Date.now())/1000)));
+    scene.innerHTML='<div class="question-scene">'+
+      '<div class="eyebrow">ROUND 01 · '+(revealed?'ANSWER REVEAL':'LIVE QUESTION')+'</div>'+
+      '<div class="counter" id="countdown">'+sec+'</div><h2 class="question-title">'+title+'</h2>'+
+      '<div class="answers">'+opts.map((v,i)=>'<div class="answer '+(revealed?(i===0?'correct':'wrong'):'')+'" data-tag="'+['A','B','C','D'][i]+'">'+v+'</div>').join('')+'</div>'+
+      (revealed?'<div class="reveal-ribbon">'+(word?'✓ الإجابة الصحيحة — اكتمال بيانات الأطراف المطلوبة':'✓ Correct — complete required party data')+'</div>':'')+
+      '</div>';
+  } else if(state.scene==='podium'){
+    scene.innerHTML='<div class="eyebrow">THE GRAND FINALE · DEMO SCORES</div><h1 class="hero">'+(word?'أبطال <em>التحدي</em>':'THE <em>WINNERS</em>')+'</h1>'+
+    '<div class="podium"><div class="step second"><i>2</i><span>'+(word?'فريق الموجة':'Wave')+'</span><small>1,900 PTS</small></div><div class="step first"><i>★ 1</i><span>'+(word?'فريق البرق':'Lightning')+'</span><small>2,450 PTS</small></div></div>'+
+    '<p class="sub">'+(word?'النتائج تجريبية — نظام النقاط الحقيقي ضمن المرحلة الثالثة':'Sample scores — trusted scoring is planned for Stage 3')+'</p>';
+  }
+  clearInterval(clock);
+  if(state.scene==='question'){
+    clock=setInterval(()=>{if(!document.getElementById('countdown'))return;const remaining=Math.max(0,Math.ceil((state.deadline-Date.now())/1000));$('countdown').textContent=remaining;if(remaining===0){clearInterval(clock);if(!document.body.classList.contains('projector-mode'))publish({scene:'reveal',deadline:0});}},250);
+  }
+ }
+ function cancelIntro(){introTimers.forEach(clearTimeout);introTimers=[];$('introCover').classList.remove('on')}
+ function intro(){
+  cancelIntro();sound();const cover=$('introCover');
+  cover.classList.remove('on');void cover.offsetWidth;cover.classList.add('on');cover.setAttribute('aria-hidden','false');
+  $('introTitle').innerHTML='MTS<br/><strong>TRAINING ARENA</strong>';$('introNumber').textContent='';
+  introTimers.push(setTimeout(()=>{$('introTitle').textContent=lang==='ar'?'استعدوا للمنافسة':'THE CHALLENGE BEGINS';$('introNumber').textContent=''},3400));
+  [3,2,1].forEach((n,i)=>introTimers.push(setTimeout(()=>{$('introNumber').textContent=n;sound()},4800+i*850)));
+  introTimers.push(setTimeout(()=>{cancelIntro();publish({scene:'question',deadline:Date.now()+20000})},8000));
+ }
+ function sceneGo(where){cancelIntro();if(where==='question'){publish({scene:'question',deadline:Date.now()+20000});sound()}else{publish({scene:where,deadline:0});if(where==='podium'||where==='reveal')sound()}}
+ [['goLobby','lobby'],['goQuestion','question'],['goReveal','reveal'],['goPodium','podium']].forEach(([id,name])=>$(id).addEventListener('click',()=>sceneGo(name)));
+ $('goIntro').addEventListener('click',intro);
+ $('language').addEventListener('click',()=>{lang=lang==='ar'?'en':'ar';$('language').textContent=lang==='ar'?'EN':'عربي';render()});
+ $('sound').addEventListener('click',()=>{muted=!muted;render();if(!muted)sound()});
+ $('motion').addEventListener('click',()=>{reduce=!reduce;document.body.style.setProperty('--manual-reduce',reduce?'none':'initial');let css=$('reduceStyle');if(reduce){if(!css){css=document.createElement('style');css.id='reduceStyle';css.textContent='*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}';document.head.appendChild(css)}}else if(css)css.remove();render()});
+ $('projector').addEventListener('click',()=>{const href=new URL(location.href);href.searchParams.set('display','1');window.open(href.toString(),'arena-projector','noopener')});
+ $('exitProjector').addEventListener('click',()=>{const href=new URL(location.href);href.searchParams.delete('display');location.href=href.toString()});
+ window.addEventListener('storage',e=>{if(e.key!==storageKey||!e.newValue)return;try{state=JSON.parse(e.newValue);render()}catch{}});
+ if(bc)bc.onmessage=e=>{if(e.data&&e.data.scene){state=e.data;render()}};
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+ render();
+})();
+</script>
+</body>
+</html>
