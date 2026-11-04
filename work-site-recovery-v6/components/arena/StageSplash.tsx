@@ -1,4 +1,5 @@
 'use client';
+import ApprovedArenaLogo from './ApprovedArenaLogo';
 import {useEffect,useRef} from 'react';
 import {ArrowRight,Clapperboard,FastForward,Sparkles} from 'lucide-react';
 import ArenaWorld3D from './ArenaWorld3D';
@@ -19,7 +20,7 @@ export default function StageSplash({type,label,ar,onComplete,durationMs=4600,pr
   <div className="cinematic-lights" aria-hidden="true"><i/><i/><i/></div>
   <div className="cinematic-rule cinematic-rule--top" aria-hidden="true"/>
   <section className="splash-center cinematic-center cinematic-layout">
-   <header className="cinematic-kicker"><Sparkles size={16}/><span>MTS TRAINING ARENA</span><Sparkles size={16}/></header>
+   <header className="cinematic-kicker"><ApprovedArenaLogo placement="intro"/><span className="cinematic-brand-strap"><Sparkles size={16}/>MTS TRAINING ARENA<Sparkles size={16}/></span></header>
    <div className="cinematic-content-grid">
     <div className="cinematic-visual-zone">
      <div className="cinematic-art-frame arena-intro-world-frame"><ArenaWorld3D kind={base} mode="intro"/></div>
