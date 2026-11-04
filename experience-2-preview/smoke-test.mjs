@@ -38,6 +38,8 @@ const document={
  createElement:el,
  addEventListener(){}
 };
+let fakeNow=Date.now();
+class FakeDate extends Date { static now(){return fakeNow;} }
 const data=new Map();
 const localStorage={
  getItem:k=>data.get(k)||null,
@@ -48,7 +50,7 @@ const window={open:url=>{openedUrl=url;return {}},addEventListener(){}};
 class BroadcastChannel { postMessage(){} }
 const fakeTimeout=(fn,ms)=>{scheduled.push({fn,ms,type:'timeout'});return scheduled.length};
 const fakeInterval=(fn,ms)=>{scheduled.push({fn,ms,type:'interval'});return scheduled.length};
-const sandbox={document,window,location:{href:'http://localhost:8000/experience-2-preview/'},localStorage,BroadcastChannel,URL,setTimeout:fakeTimeout,setInterval:fakeInterval,clearTimeout(){},clearInterval(){},console};
+const sandbox={document,window,location:{href:'http://localhost:8000/experience-2-preview/'},localStorage,BroadcastChannel,URL,setTimeout:fakeTimeout,setInterval:fakeInterval,clearTimeout(){},clearInterval(){},Date:FakeDate,console};
 vm.runInNewContext(code,sandbox,{timeout:2000});
 const key='mts-arena-experience-2-preview-v1';
 function press(id){const cb=document.getElementById(id).events.click;assert.ok(cb,'Missing click handler: '+id);cb()}
@@ -62,10 +64,21 @@ const introFinish=scheduled.filter(t=>t.ms===8000&&t.type==='timeout').at(-1);
 assert.ok(introFinish,'Intro has no 8-second finish');
 introFinish.fn();
 assert.equal(current().scene,'question','Intro must transition to question');
+assert.ok(!document.getElementById('scene').innerHTML.includes('الإجابة الصحيحة'),'Correct answer shown too early');
+fakeNow+=21000;
+const timer=scheduled.filter(t=>t.ms===250&&t.type==='interval').at(-1);
+assert.ok(timer,'20-second demo question timer missing');timer.fn();
+assert.equal(current().scene,'locked','Time should lock responses, not auto-reveal answer');
+assert.ok(!document.getElementById('scene').innerHTML.includes('الإجابة الصحيحة'),'Answer must remain hidden until trainer reveals');
+press('goReveal');
+assert.equal(current().scene,'reveal');
+assert.ok(document.getElementById('scene').innerHTML.includes('الإجابة الصحيحة'),'Trainer reveal should expose correct answer');
 press('language');
 assert.equal(current().lang,'en','Language must be in shared scene state');
 assert.match(document.getElementById('scene').innerHTML,/Before an ACID/);
 press('projector');
 assert.match(openedUrl,/display=1/,'Projector should open read-only display URL');
-console.log('PASS: 5 trainer scenes, intro transition, language sync, projector URL, logos and no backend calls.');
+assert.match(source,/class="stage-logo left"/);
+assert.match(source,/class="stage-logo right"/);
+console.log('PASS: 5 trainer scenes, countdown locks before reveal, intro transition, language sync, projector URL, logos and no backend calls.');
 console.log('PENDING: real browser/device visuals, projector hardware and live multi-device scoring.');
