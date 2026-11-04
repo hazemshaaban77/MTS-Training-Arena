@@ -1,61 +1,67 @@
-# MTS Training Arena — Experience 2.0 / Stage 1 Preview
+# MTS Training Arena Experience 2.0 — Canonical Sprint 02 Preview
 
-Branch: feature/arena-experience-2-lobby-preview
-Scope: visual browser prototype only; NO production deployment, merge, auth change, database migration, or real user data.
-Source baseline: Version 6 recovery at work-site-recovery-v6/ (published on 2026-10-18). The user's November Stage Lab is a separate 3D experiment; its full source was not verified in the current repository.
+**Working branch:** `feature/arena-experience-2-lobby-preview`  
+**Scope:** visual proof-of-concept with fictitious data only. No production deployment, no real QR, no trusted scores, no change to `main`/Firebase/Cloudflare.
 
-## How to inspect
+## Current prototype
 
-1. Check out this branch (not main) so the original logo image paths remain available.
-2. From the repository root, start a basic static file server: python -m http.server 8000.
-3. Open http://localhost:8000/experience-2-preview/ in a browser. The trainer demo controls are on the right.
-4. Click Projector to open a display-only tab; move it to a projector or second display. Both tabs must use the same browser/origin for local preview synchronization.
-5. Try lobby → cinematic intro (8s) → demo question (20s) → answer reveal → winners.
-6. Try Arabic/English, reduced motion, sound (off by default), 360px mobile viewport, and two browser windows.
-7. Run the reproducible, **non-browser** smoke test from repo root: node experience-2-preview/smoke-test.mjs.
+The **one current entry point** is:
 
-When served inside this repository, the preview references the unchanged original MTS and Training Team PNG files from ../work-site-recovery-v6/public/. A fallback points at the same public GitHub originals if the document is opened outside the repository. The images are NOT regenerated.
+`experience-2-preview/sprint02/index.html`
 
-## What works in this preview
+Open it with a static server from repository root:
 
-- 2D Premium Broadcast visual language using accepted brand colours, Cairo typeface with local font fallback, and original logos.
-- 16:9 stage + separate projector display mode.
-- Visible lobby with fictional participants/teams and a clearly non-functional QR placeholder.
-- Cinematic 8-second intro. The intro state is synchronized between local tabs via BroadcastChannel / localStorage; the presenter's tab transitions to the sample question after the intro.
-- Demo question with 20s timer, reveal, and fictional podium.
-- A small control panel, Arabic/English switch, muted sound by default, reduced-motion option.
-- Browser-local scene state for isolated demonstration.
+```bash
+python3 -m http.server 8000
+# http://localhost:8000/experience-2-preview/sprint02/
+```
 
-## Not done; must not be described as working
+It includes the user-approved original Arena logo, cinematic intro (8 seconds, trainer skip), lobby, sample question/timer/locked/revealed stages, prize wheel, mystery boxes, demo leaderboard, winners podium, trainer-only demo controls, separate same-browser projector view, Arabic/English, sound off by default, and reduced motion.
 
-- No live join QR, no real participant registration, no cross-device Internet sync.
-- No official results, no server-trusted scoring or authentication in this preview.
-- No link to existing production rooms, tables, or workers.
-- No reliable multi-device or projector hardware test has yet been recorded.
-- Browser-local synchronization is same-origin, same-browser only. It is not a backend.
-- The QR-pattern tile is intentionally decorative; it is labeled inactive to avoid misrepresenting a real join link.
+**Important:** localStorage and BroadcastChannel sync between tabs of the same origin. This is **not** real cross-device server synchronization. QR, participants and points are illustrative; do not use this demo in a real training session or as employee assessment.
 
-## Acceptance / QA checklist
+## Asset ownership / identity
 
-- [ ] Browser renders source without JavaScript syntax/runtime errors.
-- [ ] MTS is physically top left, Training Team physically top right, both original images loaded.
-- [ ] Trainer controls switch to all five demo scenes (lobby, intro, question, reveal, winners).
-- [ ] Projector-only tab follows scene changes and the full intro from a trainer tab on the same origin.
-- [ ] Timer counts down from 20 and reveal does not expose the correct answer before the demo question closes.
-- [ ] Arabic/English affects trainer and projector presentation.
-- [ ] Reduced motion / sound off do not prevent controls.
-- [ ] Chrome desktop, 360px mobile viewport, fullscreen projector 16:9 visually reviewed.
-- [ ] No production routing, backend requests, or real user information used.
+- `sprint02/assets/arena-logo-approved.png`: unchanged user-approved original PNG; SHA-256 `d5ea82da1dd359843c9fa5b1c1aef638645bca1302869aa00aba39ae94e4baff`.
+- `sprint02/assets/arena-logo-safe-margin.png`: **used** padded transparent presentation derivative (no circular white halo); do not delete while referenced by `app.js`.
+- Original corporate MTS and Training Team logos live unchanged in recovered V6 `public/`. The preview currently uses GitHub raw URLs for these corporate logo images, so offline preview requires a suitable fallback.
+- Branding rules: `APPROVED_LOGO.md`. Both original and safe-margin assets are deliberately retained. No alteration to the product logo's pixels.
 
-Current status: Implemented in isolated branch; syntax and mocked interaction flow inspected, but actual smoke-test file execution in Node and browser/device QA are still pending. Static code readback is not proof of passing these acceptance tests.
+## QA
 
-## Next milestones
+Run the contract test in Node.js:
 
-1. Confirm current source of truth (the newest actual work-site, including November changes) before integration.
-2. Compare this prototype to Version 6 actual components/arena/Session.tsx, Brand.tsx, app/globals.css, and projector / score APIs.
-3. Conduct browser visual QA with screenshots and adjust layout; do not merge prematurely.
-4. Integrate approved visual components only into a dedicated staging branch and verify real devices.
-5. Continue Stage 2 (wheel, boxes, reveal, leaderboard) after Stage 1 approval.
+```bash
+node --test experience-2-preview/integration/v6-public-stage.test.mjs
+```
 
-Master Plan in Google Drive:
-https://docs.google.com/document/d/1XbQp6FxWk9wFz5clLttyFAjk1cKil4W8ySZBDQiV2CA/edit
+Run browser regression QA with Playwright installed and Chromium available:
+
+```bash
+node experience-2-preview/sprint02/browser-qa.mjs
+```
+
+GitHub Actions runs these checks in `.github/workflows/experience-2-stage1-qa.yml` (historical workflow filename; actual tests target canonical Sprint 02).
+
+**Coverage:** original PNG checksum, no white image background halo, lobby, intro/skip, podium, question/lock/reveal, wheel countdown+landing, boxes, demo scores/leaderboard, language sync, 390px simulated mobile viewport and 1920×1080 projector simulation. Browser QA passing does not certify real phones or live projector hardware.
+
+## Cleanup decision (2026-11-04)
+
+Removed the superseded **standalone Sprint 01 implementation and dedicated duplicate tests** from the active working branch once coverage had been moved to Sprint 02:
+
+- `experience-2-preview/index.html`
+- `experience-2-preview/browser-qa.mjs`
+- `experience-2-preview/smoke-test.mjs`
+
+These files are recoverable from this Git branch's earlier commits; they were not erased from Git history. The existing V5/V6 snapshots, foundation modules, security tests, all corporate/approved logos, the public-stage adapter, and production `main` are intentionally preserved.
+
+## Blockers to production integration
+
+1. Verify the deployed **private V6 Site source SHA**, not merely the older `work-site-recovery-v6/` snapshot.
+2. Reconcile separate V6 fixes for registration, wheel, boxes, projector, player feedback and ImportVerse.
+3. Use backend-authoritative scoring/answers and authenticated trainer; do not trust demo localStorage.
+4. Test two then five real participant devices and a projector with approved test accounts on a disposable staging environment.
+5. Get explicit release approval before deployment, migration, merging or access changes.
+
+Audit report: `experience-2-preview/audit/REVIEW_FINDINGS_2026-11-04.md`.  
+Master plan: https://docs.google.com/document/d/1XbQp6FxWk9wFz5clLttyFAjk1cKil4W8ySZBDQiV2CA/edit
