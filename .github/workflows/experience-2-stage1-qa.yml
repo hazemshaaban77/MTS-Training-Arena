@@ -1,4 +1,4 @@
-name: Experience 2.0 Stage 1 and 2 browser QA
+name: Experience 2.0 visual QA and V6 contract tests
 on:
   push:
     branches:
@@ -30,6 +30,8 @@ jobs:
           done
           cat /tmp/arena-experience-2-http.log
           exit 1
+      - name: Verify V6 one-QR and safe read-only stage contract
+        run: node --test experience-2-preview/integration/v6-public-stage.test.mjs
       - name: Run synthetic logic regression checks
         run: node experience-2-preview/smoke-test.mjs
       - name: Run real Chromium responsive and projector checks
