@@ -1,0 +1,36 @@
+name: Arena repository wide read-only audit
+on:
+  push:
+    branches:
+      - feature/arena-experience-2-lobby-preview
+    paths:
+      - 'experience-2-preview/audit/repository-audit.mjs'
+      - '.github/workflows/arena-repository-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm all branch refs were fetched
+        run: |
+          git for-each-ref --format='%(refname:short)' refs/remotes/origin
+          node --check experience-2-preview/audit/repository-audit.mjs
+      - name: Audit every tracked source tree and scan credential markers
+        run: node experience-2-preview/audit/repository-audit.mjs
+      - name: Upload repository audit results, no production impact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-repository-source-audit
+          path: experience-2-preview/audit/results/
+          if-no-files-found: warn
