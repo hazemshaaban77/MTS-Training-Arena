@@ -205,6 +205,18 @@ try{
  await projector.close();
  await trainee.close();
 
+ // Restart Chromium between independent heavy WebGL scenes. SwiftShader can
+ // lose shared GPU contexts after wheel screenshot rendering; a fresh process
+ // tests the crate as it would be opened in a new session.
+ await projectorCtx.close();
+ await traineeCtx.close();
+ await browser.close();
+ browser=await chromium.launch({
+  headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']
+ });
+ const crateCtx=await browser.newContext({viewport:{width:1920,height:1080},deviceScaleFactor:1});
+ contexts.push(crateCtx);
+
  // Real V6 Open the Box route: verify the actual licensed 9-mesh crate loads
  // in Chromium with disposable session data, not only a source-code assertion.
  const boxRoom=ok(await api('sessions',{
@@ -220,7 +232,7 @@ try{
  }),'join synthetic crate room');
  const boxHost=ok(await api('state?code='+boxCode+'&role=host',null,auth),'crate trainer state');
  ok(await api('control',{code:boxCode,revision:boxHost.revision,action:'start'},auth),'start crate room');
- const cratePage=await projectorCtx.newPage();
+ const cratePage=await crateCtx.newPage();
  cratePage.on('pageerror',e=>problems.push('crate: '+e.message));
  await cratePage.goto(root+'/MTS-Training-Arena/v6/?view=display&code='+boxCode,
   {waitUntil:'domcontentloaded'});
