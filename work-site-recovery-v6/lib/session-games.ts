@@ -44,7 +44,11 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
     statements.push(db.prepare('UPDATE sessions SET runtime=?,reveal=?,revision=revision+1 WHERE code=? AND revision=?').bind(JSON.stringify(rt),i,s.code,s.revision));const result=await batch(db,statements);if(!result.at(-1)?.meta.changes)fail('STALE',409);return {ok:true};
    }else if(b.action!=='selectturn'){
     const sectors=a.sectors||a.items.map((label:string)=>({label,repeatable:true}));const available=sectors.map((_:any,i:number)=>i).filter((i:number)=>sectors[i].repeatable||!rt.used?.includes(i));if(!available.length)fail('ROUNDS_COMPLETE',409);
-    const index=available[fairIndex(available.length)],id=crypto.randomUUID(),duration=(a.spinDuration??6)*1000;rt={...rt,target,spin:{id,index,target,startsAt:now+450,stopsAt:now+450+duration,revealAt:now+450+duration,revealed:false}};
+    const index=available[fairIndex(available.length)],id=crypto.randomUUID(),duration=(a.spinDuration??6)*1000;
+    // Three-second pre-spin is issued by the server; both phone and projector
+    // use startsAt, never a local countdown. Previously this was only 450ms.
+    const startsAt=now+3000,stopsAt=startsAt+duration;
+    rt={...rt,target,spin:{id,index,target,startsAt,stopsAt,revealAt:stopsAt,revealed:false}};
    }
   }
   const r=await writeSession(db,s,{...s,runtime:JSON.stringify(rt),revision:s.revision+1});if(!r.meta.changes)fail('STALE',409);return {ok:true};
