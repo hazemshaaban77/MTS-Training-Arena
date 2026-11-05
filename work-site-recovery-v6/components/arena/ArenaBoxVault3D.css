@@ -19,3 +19,31 @@
 .arena-box3d__credit:hover,.arena-box3d__credit:focus-visible{color:#fbe1ae}
 .arena-box3d__selector--active{border-color:#70f4d5;box-shadow:0 0 22px #00c99c88}
 .arena-box3d__scene{background:radial-gradient(ellipse at 50% 83%,#159c8730,transparent 62%)}
+
+
+/* Authentic GLB crate: fill the game stage. Parent vault uses align-items:center,
+   so flex items without an explicit width collapsed to the button-row width. */
+.box-stage--vault .arena-box3d{
+ width:100%;
+ max-width:min(1120px,100%);
+ align-self:stretch;
+ margin-inline:auto;
+ box-sizing:border-box;
+}
+.box-stage--vault .arena-box3d__scene{width:100%;min-width:0}
+/* Keep all three-dimensional crates and the numbered fallback controls on the
+   physical 16:9 projector; never rely on full-page scrolling during a round. */
+.session-shell.projector .round-stage .box-stage--vault .arena-box3d{
+ height:min(44vh,480px);
+ min-height:0;
+ max-height:min(44vh,480px);
+ flex:0 0 auto;
+}
+.session-shell.projector .round-stage .box-stage--vault .arena-box3d__scene{
+ min-height:0;
+ flex:1 1 auto;
+}
+@media(max-width:600px){
+ .box-stage--vault .arena-box3d{width:100%;min-height:350px}
+ .box-stage--vault .arena-box3d__scene{min-height:260px}
+}
