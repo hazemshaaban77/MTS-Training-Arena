@@ -52,7 +52,9 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
       return null;
     });
     if(gone){for(const part of sourceParts||[])part.geometry.dispose();return;}
-    if(sourceParts)setAuthentic(true);
+    // No fake cube replacements: the labelled HTML buttons are the accessible fallback.
+    if(!sourceParts){setUnavailable(true);return;}
+    setAuthentic(true);
     for(const part of sourceParts||[])assets.push(part.geometry);
     const crateBodyMat=new THREE.MeshStandardMaterial({color:0x0b2d4a,metalness:.63,roughness:.35});
     const crateFrameMat=new THREE.MeshStandardMaterial({color:0x36849f,metalness:.87,roughness:.25});
@@ -97,17 +99,6 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
             lid.add(mesh);
           }else assembly.add(mesh);
         }
-      }else{
-        // Fallback still uses the existing legacy geometry for old browsers.
-        object(new THREE.BoxGeometry(w,1.02,1.08),dark,body,0,-.13,0,i);
-        object(new THREE.BoxGeometry(w+.08,.13,1.16),gold,body,0,-.44,0,i);
-        object(new THREE.BoxGeometry(.14,1.07,1.14),gold,body,0,-.12,0,i);
-        object(new THREE.BoxGeometry(w+.03,.13,1.17),gold,body,0,.33,0,i);
-        object(new THREE.BoxGeometry(.34,.32,.12),glow,body,0,-.15,.60,i);
-        object(new THREE.BoxGeometry(.15,.12,.09),activeMat,body,0,-.12,.68,i);
-        lid.position.set(0,.43,-.52);body.add(lid);
-        object(new THREE.BoxGeometry(w+.12,.23,1.24),gold,lid,0,.03,.52,i);
-        object(new THREE.BoxGeometry(1.06,.04,.78),side,lid,0,.165,.52,i);
       }
       const number=document.createElement('canvas');number.width=160;number.height=120;
       const ctx=number.getContext('2d');
@@ -118,7 +109,6 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
       }
       crates.push({root:body,lid,gold:body,index:i,open:0,signal});
     }
-    const stage=object(new THREE.BoxGeometry(columns*spacingX+.65,.35,rows*spacingY+.8),dark,world,0,-((rows-1)/2)*spacingY-1.1,-.58);
     const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
     const select=(event:PointerEvent)=>{
       const st=state.current;if(!st.canChoose)return;
@@ -166,7 +156,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
   return ()=>{gone=true;cancelAnimationFrame(raf);if(renderer){renderer.domElement.removeEventListener('webglcontextlost',onContextLost);renderer.dispose();renderer.domElement.remove();}
    for(const item of assets)try{item.dispose();}catch{/* release GPU resource */}
   };
- },[items.length]);
+ },[items.length,unavailable]);
  return <div data-source-model={authentic?'agustin-honnun-sci-fi-crate':'accessible-fallback'} className={'arena-box3d'+(unavailable?' arena-box3d--lite':'')} role="group" aria-label={ar?'صناديق الجوائز ثلاثية الأبعاد':'3D prize vault'}>
   {!unavailable&&<div className="arena-box3d__scene" aria-hidden="true" ref={ref}/>}
   <div className="arena-box3d__numbers" aria-label={ar?'اختيار الصندوق':'Choose a box'}>
