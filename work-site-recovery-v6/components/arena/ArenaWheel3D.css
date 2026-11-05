@@ -161,9 +161,11 @@
    16:9, instead of letting a 720px wheel extend below the projector viewport.
    Extremely specific selectors are needed due to legacy V6 projector rules. */
 html body .session-shell.projector .round-stage .wheel-stage--crown-real3d .arena-wheel3d--crown{
- height:min(47vh,510px)!important;
+ /* Leave safe breathing room beneath the bezel at true 16:9.
+    47vh clipped the bottom by 4.56px in Chromium 1920x1080. */
+ height:min(43vh,465px)!important;
  min-height:0!important;
- max-height:min(47vh,510px)!important;
+ max-height:min(43vh,465px)!important;
  flex:0 0 auto!important;
 }
 html body .session-shell.projector .round-stage .wheel-stage--crown-real3d{
