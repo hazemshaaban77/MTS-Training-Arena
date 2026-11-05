@@ -274,6 +274,12 @@ try{
    &&document.querySelectorAll('.arena-box3d__selector--active').length===1,null,{timeout:12000});
  assert.equal(await boxButtons.nth(1).isDisabled(),true,'Crate 2 cannot be opened twice');
  await cratePage.waitForTimeout(900);
+ const revealCard=cratePage.locator('.box-vault-reveal');
+ await revealCard.waitFor({state:'visible',timeout:12000});
+ const revealFrame=await revealCard.evaluate(el=>{
+  const b=el.getBoundingClientRect();return {top:b.top,bottom:b.bottom,screen:innerHeight,height:b.height};
+ });
+ assert.ok(revealFrame.bottom<=revealFrame.screen+4,'Official crate reward must fit inside 16:9 projector: '+JSON.stringify(revealFrame));
  await screenshot(cratePage,'20-licensed-crate-server-open-projector.png');
 
  assert.deepEqual(problems,[],'No React WebGL runtime errors in wheel or licensed crate');
