@@ -280,7 +280,25 @@ try{
   const b=el.getBoundingClientRect();return {top:b.top,bottom:b.bottom,screen:innerHeight,height:b.height};
  });
  assert.ok(revealFrame.bottom<=revealFrame.screen+4,'Official crate reward must fit inside 16:9 projector: '+JSON.stringify(revealFrame));
+ // Mesh-level frustum guard catches lids cropped by the vault canvas even
+ // when the outer HTML box and reward card remain inside the viewport.
+ await cratePage.waitForFunction(()=>document.querySelector('.arena-box3d__scene canvas')?.dataset.modelFits==='true',
+   null,{timeout:12000});
+ assert.ok(await authenticCrate.locator('.arena-box3d__credit').count(),'Original CC BY attribution survives the game integration');
  await screenshot(cratePage,'20-licensed-crate-server-open-projector.png');
+ // Keep one WebGL context: exercise narrow-view layout on the same rendered
+ // session, without falsely claiming a physical phone test.
+ await cratePage.setViewportSize({width:390,height:844});
+ await cratePage.waitForTimeout(1000);
+ const narrow=await cratePage.evaluate(()=>({
+   viewport:innerWidth,overflow:document.documentElement.scrollWidth,
+   buttons:document.querySelectorAll('.arena-box3d__selector').length,
+   fit:document.querySelector('.arena-box3d__scene canvas')?.dataset.modelFits
+ }));
+ assert.ok(narrow.overflow<=narrow.viewport+2,'3D crate page must not scroll horizontally: '+JSON.stringify(narrow));
+ assert.equal(narrow.buttons,3,'All three box controls remain available on narrow view');
+ assert.equal(narrow.fit,'true','Opened crate geometry fits narrow camera frustum');
+ await screenshot(cratePage,'21-licensed-crate-narrow-layout.png',true);
 
  assert.deepEqual(problems,[],'No React WebGL runtime errors in wheel or licensed crate');
  console.log(JSON.stringify({status:'PASS',mode:'actual V6 participant React + real backend + 1920px projector',
