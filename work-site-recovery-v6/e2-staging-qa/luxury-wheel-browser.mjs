@@ -243,9 +243,9 @@ try{
  assert.equal(await boxButtons.count(),3,'Three server-sourced crate choices rendered');
  const crateBounds=await crateCanvas.evaluate(el=>{
   const r=el.getBoundingClientRect();
-  return {width:r.width,height:r.height,viewport:innerWidth,overflow:document.documentElement.scrollWidth};
+  return {width:r.width,height:r.height,bottom:r.bottom,screenHeight:innerHeight,viewport:innerWidth,overflow:document.documentElement.scrollWidth};
  });
- assert.ok(crateBounds.width>100&&crateBounds.height>200,
+ assert.ok(crateBounds.width>=crateBounds.viewport*.50&&crateBounds.height>200&&crateBounds.bottom<=crateBounds.screenHeight+5,
   'Real crate WebGL canvas occupies visible projector area: '+JSON.stringify(crateBounds));
  assert.equal(crateBounds.overflow<=crateBounds.viewport+2,true,'No horizontal projector overflow');
  await screenshot(cratePage,'19-licensed-sci-fi-crates-projector.png');
