@@ -39,7 +39,13 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     if(removed)return;
     // WebGLRenderer probes support itself. Avoid allocating a second GPU context.
     renderer=new THREE.WebGLRenderer({antialias:!coarse,alpha:true,powerPreference:coarse?'low-power':'high-performance'});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,coarse?1.3:1.75));
+    const gl=renderer.getContext();
+    const debugInfo=gl.getExtension('WEBGL_debug_renderer_info');
+    const rendererName=debugInfo?String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)||''):'';
+    const software=/(swiftshader|llvmpipe|software)/i.test(rendererName);
+    // Preserve native quality on GPU, avoid freezing projector screens on
+    // software WebGL (CI, remote desktops, low-power browser environments).
+    renderer.setPixelRatio(software?.82:Math.min(window.devicePixelRatio||1,coarse?1.2:1.5));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure=1.39;
@@ -195,7 +201,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     arc.rotation.z=Math.PI*.34;
     let angle=0,spinId='',lastFrame=performance.now(),lastTick=0,tickGlow=0;
     let finish:{start:number;from:number;to:number;ms:number}|null=null;
-    let width=0,height=0,frames=0;
+    let width=0,height=0,frames=0,lastDraw=0;
     const resize=()=>{
       const w=Math.max(1,root.clientWidth),h=Math.max(1,root.clientHeight);
       if(w===width&&h===height)return;
@@ -211,7 +217,10 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
       if(removed)return;
       raf=requestAnimationFrame(render);
       if(document.hidden)return;
-      if(coarse&&++frames%2!==0)return;
+      // Render budget limits apply only to software rasterizers and coarse
+      // pointer devices. The signed spin deadline always comes from Worker time.
+      if((software||coarse)&&frame-lastDraw<(software?95:32))return;
+      lastDraw=frame;
       resize();
       const dt=Math.min(.055,Math.max(0,(frame-lastFrame)/1000));lastFrame=frame;
       const current=spinRef.current;
