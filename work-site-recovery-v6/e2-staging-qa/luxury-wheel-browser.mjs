@@ -283,11 +283,11 @@ try{
  const broadcast=await cratePage.evaluate(()=>{
   const box=document.querySelector('.box-stage--vault .arena-box3d')?.getBoundingClientRect();
   const prize=document.querySelector('.box-stage--vault .box-vault-reveal')?.getBoundingClientRect();
-  return box&&prize?{boxRight:box.right,boxWidth:box.width,prizeLeft:prize.left,prizeWidth:prize.width,
-    viewport:innerWidth}:null;
+  return box&&prize?{boxLeft:box.left,boxRight:box.right,boxWidth:box.width,
+    prizeLeft:prize.left,prizeRight:prize.right,prizeWidth:prize.width,viewport:innerWidth}:null;
  });
  assert.ok(broadcast&&broadcast.boxWidth>=broadcast.viewport*.25&&broadcast.prizeWidth>=230
-   &&broadcast.prizeLeft>=broadcast.boxRight-5,
+   &&(broadcast.prizeLeft>=broadcast.boxRight-5||broadcast.prizeRight<=broadcast.boxLeft+5),
    'Projector must show large licensed crates BESIDE the official prize card: '+JSON.stringify(broadcast));
  // Mesh-level frustum guard catches lids cropped by the vault canvas even
  // when the outer HTML box and reward card remain inside the viewport.
