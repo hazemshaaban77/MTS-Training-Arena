@@ -71,7 +71,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   const seq=++refreshIssued.current;
   const key=code+view+(token||'');
   try{
-   const data=await api(`state?code=${code}${host?'&role=host':''}`,undefined,token);
+   const data=await api(`state?code=${code}${host?'&role=host':''}`,undefined,token,{publicRequest:!host});
    if(routeKey.current!==key||seq<refreshApplied.current)return;
    refreshApplied.current=seq;
    received.current=Date.now();
@@ -301,14 +301,14 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(ready===0&&!window.confirm(t('لسه مفيش متدربين معتمدين. متأكد إنك عايز تبدأ أول نشاط دلوقتي؟','No approved participants yet. Start the first activity anyway?')))return;
   command(s.settings?.surveyOnly?'survey':'start');
  }
- async function join(e:React.FormEvent){e.preventDefault();if(!code){navigate('join',joinCode);return;}setBusy(true);setError('');try{const data=await api(recovering?'recover':'join',recovering?{code,employeeId,recoveryCode:recoveryInput}:{code,name,employeeId,confirmed,team,language:ar?'ar':'en'},token);localStorage.setItem('arena-player-'+code,data.token);setToken(data.token);setRecoveryNote(data.recoveryCode||'');setCopied(false);navigate('play',code);}catch(e:any){setError(e.message);if(e.message==='ALREADY_REGISTERED')setRecovering(true);}finally{setBusy(false);}}
+ async function join(e:React.FormEvent){e.preventDefault();if(!code){navigate('join',joinCode);return;}setBusy(true);setError('');try{const data=await api(recovering?'recover':'join',recovering?{code,employeeId,recoveryCode:recoveryInput}:{code,name,employeeId,confirmed,team,language:ar?'ar':'en'},token,{publicRequest:true});localStorage.setItem('arena-player-'+code,data.token);setToken(data.token);setRecoveryNote(data.recoveryCode||'');setCopied(false);navigate('play',code);}catch(e:any){setError(e.message);if(e.message==='ALREADY_REGISTERED')setRecovering(true);}finally{setBusy(false);}}
  // A failed POST response is NOT proof an answer was rejected: the request
  // might have reached the authoritative Worker while the response was lost.
  // Always reconcile an uncertain write with a READ before enabling re-submit.
  async function checkAnswerReceipt(round:number):Promise<any|null>{
   const key=code+view+(token||'');
   try{
-   const state=await api(`state?code=${code}`,undefined,token);
+   const state=await api(`state?code=${code}`,undefined,token,{publicRequest:true});
    if(routeKey.current!==key)return null;
    received.current=Date.now();
    setConnected(true);
@@ -322,7 +322,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   answerSendLock.current=true;setBusy(true);setError('');
   setAnswerProgress({round,phase:'sending'});
   try{
-   const receipt=await api('answer',{code,round,answer},token);
+   const receipt=await api('answer',{code,round,answer},token,{publicRequest:true});
    if(receipt?.ok!==true)throw Error('API_BAD_RESPONSE');
    // The server accepted the write; never advance counts or grades locally.
    setAnswerProgress({round,phase:'confirmed'});
@@ -349,7 +349,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
    setAnswerProgress(null);
   else setAnswerProgress({round,phase:'uncertain'});
  }
- async function interact(action:string,extra:any={}){if(busy)return;setBusy(true);setError('');try{await api('interact',{code,round:s.current,action,...extra},token);
+ async function interact(action:string,extra:any={}){if(busy)return;setBusy(true);setError('');try{await api('interact',{code,round:s.current,action,...extra},token,{publicRequest:true});
    if(['showanswer','answer','miniquiz','lifeline','showlifeline','showwithdraw','box'].includes(action))
     audio.current?.play(action==='showlifeline'||action==='lifeline'||action==='box'?'mystery':action==='showwithdraw'?'reveal':'lock',
      {quiet:quiet||!!s.runtime?.quiet,light:intensity!=='full'});
@@ -486,6 +486,6 @@ function Confetti(){return <div className="confetti" aria-hidden="true">{Array.f
 function Survey({s,ar,host,display,token,command,refresh}:any){
  const t=(a:string,e:string)=>ar?a:e,[answers,setAnswers]=useState<any[]>(s.survey?.questions.map(()=>null)||[]),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const survey=s.survey;if(!survey)return null;
- async function submit(){setBusy(true);try{await api('survey',{code:s.code,answers},token);await refresh();}catch(e:any){setError(errorText(e.message,ar));}finally{setBusy(false);}}
+ async function submit(){setBusy(true);try{await api('survey',{code:s.code,answers},token,{publicRequest:true});await refresh();}catch(e:any){setError(errorText(e.message,ar));}finally{setBusy(false);}}
  return <div className="survey-stage"><span className="eyebrow">YOUR VOICE SHAPES WHAT COMES NEXT</span><h2>{survey.title}</h2><p className="muted">{survey.anonymous?t('استبيان مجهول الهوية. الردود لا ترتبط بالاسم أو الرقم الوظيفي في التقارير.','Anonymous survey. Reports contain no name or employee ID linked to responses.'):t('استبيان معرّف لمتابعة الأثر التدريبي.','Identified survey for training follow-up.')}</p>{host||display?<><div className="survey-orbit"><Users size={50}/></div><p>{s.surveyCount}/{s.players.length} {t('ردود مسجلة من نفس رابط الجلسة','responses from the same session link')}</p>{host&&<button className="btn primary" onClick={()=>command(s.surveyOnly?'closesurvey':'ceremony')}>{s.surveyOnly?t('إغلاق الاستبيان','Close survey'):t('ختام الاستبيان والتتويج','Close survey & celebrate')}</button>}</>:!s.surveyOpen?<div className="answer-sent">{t('تم إغلاق الاستبيان. شكرًا على وقتك.','The survey is closed. Thank you for your time.')}</div>:s.surveySubmitted?<div className="answer-sent"><CheckCircle2 size={32}/>{t('شكرًا. تم تسجيل رأيك.','Thank you. Your feedback is recorded.')}</div>:<form onSubmit={e=>{e.preventDefault();submit();}}>{survey.questions.map((q:any,i:number)=><fieldset className="survey-question" key={i}><legend>{i+1}. {q.prompt}</legend>{q.kind==='rating'?<div className="survey-rating">{[1,2,3,4,5].map(n=><button type="button" key={n} className={answers[i]===n?'selected':''} onClick={()=>setAnswers(answers.map((x,j)=>j===i?n:x))}>{n}</button>)}</div>:q.kind==='choice'?<div className="survey-choices">{q.options.map((o:string,n:number)=><button key={n} type="button" className={answers[i]===n?'selected':''} onClick={()=>setAnswers(answers.map((x,j)=>j===i?n:x))}>{o}</button>)}</div>:<textarea required maxLength={2000} value={answers[i]||''} onChange={e=>setAnswers(answers.map((x,j)=>j===i?e.target.value:x))}/>}</fieldset>)}{error&&<p className="error-banner">{error}</p>}<button className="btn primary wide" disabled={busy||answers.some(x=>x===null||x==='')}>{t('إرسال الاستبيان','Submit feedback')}</button></form>}</div>;
 }
