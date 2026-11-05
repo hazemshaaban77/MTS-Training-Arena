@@ -47,3 +47,30 @@
  .box-stage--vault .arena-box3d{width:100%;min-height:350px}
  .box-stage--vault .arena-box3d__scene{min-height:260px}
 }
+
+
+/* The server reveal must remain visible on a real 16:9 projector.
+   Shrink the 3D panel after a box opens, leaving space for the official card. */
+.session-shell.projector .round-stage .box-stage--vault:has(.box-vault-reveal) .arena-box3d{
+ height:min(27vh,294px);
+ max-height:min(27vh,294px);
+}
+.session-shell.projector .round-stage .box-stage--vault:has(.box-vault-reveal) .arena-box3d__scene{
+ min-height:0;
+}
+.session-shell.projector .round-stage .box-stage--vault .box-vault-reveal{
+ padding:clamp(8px,1.1vh,14px)!important;
+ gap:4px!important;
+ width:min(920px,95%)!important;
+ max-height:min(27vh,290px);
+ overflow-y:auto;
+ scrollbar-width:thin;
+}
+.session-shell.projector .round-stage .box-stage--vault .box-vault-reveal__icon{display:none}
+.session-shell.projector .round-stage .box-stage--vault .box-vault-reveal h3{
+ font-size:clamp(19px,2vw,30px)!important;
+}
+.session-shell.projector .round-stage .box-stage--vault .box-vault-reveal p{
+ font-size:clamp(12px,1.1vw,17px)!important;
+ line-height:1.4!important;
+}
