@@ -222,7 +222,9 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
       if((software||coarse)&&frame-lastDraw<(software?95:32))return;
       lastDraw=frame;
       resize();
-      const dt=Math.min(.055,Math.max(0,(frame-lastFrame)/1000));lastFrame=frame;
+      // Match time spent between throttled software frames; otherwise a 95ms
+      // update advances only 55ms of rotation and looks unnaturally slow.
+      const dt=Math.min(software?.12:.055,Math.max(0,(frame-lastFrame)/1000));lastFrame=frame;
       const current=spinRef.current;
       const now=wheelClock(clockRef.current.serverNow,clockRef.current.at,frame);
       if(current?.id!==spinId){spinId=current?.id||'';finish=null;lastTick=Math.floor(angle/step);}
