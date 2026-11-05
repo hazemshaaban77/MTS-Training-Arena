@@ -9,7 +9,7 @@ import './ArenaBoxVault3D.css';
 import {loadArenaCrateGeometry} from './ArenaSciFiCrateGeometry';
 type Props={items:string[];used:number[];active:number;canChoose:boolean;repeatable:boolean;onOpen:(i:number)=>void;ar:boolean};
 export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,onOpen,ar}:Props){
- const ref=useRef<HTMLDivElement>(null),state=useRef({used,active,canChoose,repeatable,onOpen}),[unavailable,setUnavailable]=useState(false);
+ const ref=useRef<HTMLDivElement>(null),state=useRef({used,active,canChoose,repeatable,onOpen}),[unavailable,setUnavailable]=useState(false),[authentic,setAuthentic]=useState(false);
  state.current={used,active,canChoose,repeatable,onOpen};
  useEffect(()=>{
   const root=ref.current;if(!root||!items.length)return;
@@ -52,6 +52,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
       return null;
     });
     if(gone){for(const part of sourceParts||[])part.geometry.dispose();return;}
+    if(sourceParts)setAuthentic(true);
     for(const part of sourceParts||[])assets.push(part.geometry);
     const crateBodyMat=new THREE.MeshStandardMaterial({color:0x0b2d4a,metalness:.63,roughness:.35});
     const crateFrameMat=new THREE.MeshStandardMaterial({color:0x36849f,metalness:.87,roughness:.25});
@@ -166,7 +167,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
    for(const item of assets)try{item.dispose();}catch{/* release GPU resource */}
   };
  },[items.length]);
- return <div className={'arena-box3d'+(unavailable?' arena-box3d--lite':'')} role="group" aria-label={ar?'صناديق الجوائز ثلاثية الأبعاد':'3D prize vault'}>
+ return <div data-source-model={authentic?'agustin-honnun-sci-fi-crate':'accessible-fallback'} className={'arena-box3d'+(unavailable?' arena-box3d--lite':'')} role="group" aria-label={ar?'صناديق الجوائز ثلاثية الأبعاد':'3D prize vault'}>
   {!unavailable&&<div className="arena-box3d__scene" aria-hidden="true" ref={ref}/>}
   <div className="arena-box3d__numbers" aria-label={ar?'اختيار الصندوق':'Choose a box'}>
   {items.map((label,i)=>{
