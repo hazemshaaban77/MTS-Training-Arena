@@ -94,7 +94,12 @@ try{
  contexts.push(projectorCtx,traineeCtx);
  const projector=await projectorCtx.newPage();
  const trainee=await traineeCtx.newPage();
- for(const page of [projector,trainee])page.on('pageerror',e=>problems.push(e.message));
+ for(const page of [projector,trainee]){
+  page.on('pageerror',e=>problems.push(e.message));
+  page.on('request',req=>{if(req.url().includes('/api/state'))console.log('TRACE_STATE_REQUEST',page===projector?'projector':'trainee',req.method());});
+  page.on('response',response=>{if(response.url().includes('/api/state'))console.log('TRACE_STATE_RESPONSE',page===projector?'projector':'trainee',response.status());});
+  page.on('requestfailed',req=>{if(req.url().includes('/api/'))console.log('TRACE_API_NETWORK_FAIL',page===projector?'projector':'trainee',req.failure()?.errorText?.slice(0,120));});
+ }
  await trainee.addInitScript(({code,token})=>localStorage.setItem('arena-player-'+code,token),
    {code,token:playerToken});
  await Promise.all([
@@ -111,6 +116,15 @@ try{
   activeMode:document.querySelectorAll('.session-shell.projector').length
  }));
  console.log('WHEEL_PROJECTION_DIAGNOSTIC',JSON.stringify(debug));
+ // The fixture API is probed directly to distinguish API latency from a
+ // client-side auth/persistence wait (no secrets or live API involved).
+ const direct=await projector.evaluate(async code=>{
+  const started=performance.now();
+  try{const res=await fetch('/api/state?code='+code,{cache:'no-store'});
+   const body=await res.json();return {status:res.status,ms:Math.round(performance.now()-started),stage:body.status};}
+  catch(e){return {ms:Math.round(performance.now()-started),error:String(e).slice(0,80)};}
+ },code);
+ console.log('DIRECT_PUBLIC_STATE_DIAGNOSTIC',JSON.stringify(direct));
 
  await wheel.waitFor({state:'attached',timeout:22000});
  const tap=trainee.locator('.arena-wheel3d__tap');
