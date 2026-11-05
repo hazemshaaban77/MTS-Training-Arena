@@ -148,7 +148,7 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     ring(2.62,.021,.09,steel);
     ring(2.66,.018,-.10,halo,tilt);
     const bulbs=60,orbGeo=new THREE.SphereGeometry(.041,9,7);
-    const lightMaterial=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffca78,emissiveIntensity:1.25,roughness:.16});
+    const lightMaterial=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffca78,emissiveIntensity:.38,roughness:.16});
     const bulbsMesh=new THREE.InstancedMesh(orbGeo,lightMaterial,bulbs);
     const dummy=new THREE.Object3D();
     for(let i=0;i<bulbs;i++){
@@ -158,6 +158,8 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
       dummy.updateMatrix();bulbsMesh.setMatrixAt(i,dummy.matrix);
     }
     bulbsMesh.instanceMatrix.needsUpdate=true;wheel.add(bulbsMesh);
+    const ledGold=new THREE.Color(0xffdf99),ledTeal=new THREE.Color(0x70eadd),ledDim=new THREE.Color(0x334858);
+    let ledPhase=-1;
     disposables.push(orbGeo,lightMaterial);
     // Authentic centre badge: the EXACT approved Arena PNG, never retyped or regenerated.
     const hub=mesh(new THREE.CylinderGeometry(.77,.77,.40,80),brass,wheel,0,0,.48);hub.rotation.x=Math.PI/2;
@@ -235,6 +237,17 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
         }
       }
       wheel.rotation.z=angle;
+      // Gentle moving LED chase. Instance colours are updated only ~4 times/s,
+      // so one shared GPU mesh provides all lamps on low-power phones.
+      const phase=Math.floor(now/260);
+      if(phase!==ledPhase){
+        ledPhase=phase;
+        for(let i=0;i<bulbs;i++){
+          const k=(i+phase)%9;
+          bulbsMesh.setColorAt(i,k===0?ledGold:k===1?ledTeal:ledDim);
+        }
+        if(bulbsMesh.instanceColor)bulbsMesh.instanceColor.needsUpdate=true;
+      }
       tickGlow=Math.max(0,tickGlow-dt*6.5);
       pointerMat.emissiveIntensity=.23+tickGlow*.9;
       if(!reduced&&!coarse)stage.rotation.y=-.035+Math.sin(frame*.00027)*.028;
