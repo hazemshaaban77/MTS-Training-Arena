@@ -1921,6 +1921,9 @@ test('Luxury Esports Crown Wheel preserves approved logo, broadcast stage, true 
  const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
  const game=readFileSync('lib/session-games.ts','utf8');
  assert.ok(wheel.includes("siteAsset('/e2-preview/assets/arena-logo-safe-margin.png')"),'Real approved logo texture used as center badge');
+ assert.ok(wheel.includes('approvedLogoMat,stage,0,0,.82'),'Official logo must stay upright while the sectors rotate');
+ assert.ok(wheel.includes('brass,stage,0,0,.48'),'Stationary metallic central hub must anchor the logo');
+ assert.ok(wheel.includes('bulbsMesh.instanceMatrix.needsUpdate=true;wheel.add(bulbsMesh)'),'Spinning LED rim remains part of the wheel');
  assert.ok(wheel.includes('new THREE.TextureLoader().load('),'3D hub uses authentic file');
  assert.ok(!wheel.includes("fillText('MTS'"),'Do not recreate product logo as text');
  for(const term of ['new THREE.ExtrudeGeometry','new THREE.InstancedMesh','new THREE.CylinderGeometry','new THREE.SpotLight','pointerMat','bulbsMesh.setColorAt','approvedLogoMat'])assert.ok(wheel.includes(term),term);
