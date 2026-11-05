@@ -1691,7 +1691,8 @@ test('practical Wheel award cannot be automatic and only host-authorized score e
  assert.ok(game.includes("['wheelaward','boxaward'].includes(b.action)"),'Both practical games share the strict host-scoring endpoint');
  assert.ok(game.includes("'wheel-judge'"));
  assert.ok(game.includes("['question','challenge','penalty'].includes(sector?.kind)?0"));
- assert.ok(game.includes('revealAt:now+450+duration'),'Reveal begins at wheel landing rather than waiting after spin');
+ assert.ok(game.includes('const startsAt=now+3000,stopsAt=startsAt+duration'),'The 3s countdown is authored by V6 server, not the client');
+ assert.ok(game.includes('revealAt:stopsAt'),'Reveal begins at wheel landing and not earlier');
  const service=readFileSync('lib/service.ts','utf8');
  assert.ok(service.includes("'wheelaward'"));
 });
@@ -1908,4 +1909,22 @@ test('approved logo appears in original V6 lobby, intro, and winner podium witho
  const rendered=renderToStaticMarkup(<ArenaVictory s={{teamMode:true,teams:[{team:'Wave',score:220,rank:1}],individual:[]}} ar/>);
  assert.ok(rendered.includes('approved-arena-logo--victory'));
  assert.ok(rendered.includes('arena-victory__winner'));
+});
+
+
+test('Luxury Esports Crown Wheel preserves approved logo, broadcast stage, true 3D geometry and server-timed mechanics',()=>{
+ const wheel=readFileSync('components/arena/ArenaWheel3D.tsx','utf8');
+ const css=readFileSync('components/arena/ArenaWheel3D.css','utf8');
+ const game=readFileSync('lib/session-games.ts','utf8');
+ assert.ok(wheel.includes("siteAsset('/e2-preview/assets/arena-logo-safe-margin.png')"),'Real approved logo texture used as center badge');
+ assert.ok(wheel.includes('new THREE.TextureLoader().load('),'3D hub uses authentic file');
+ assert.ok(!wheel.includes("fillText('MTS'"),'Do not recreate product logo as text');
+ for(const term of ['new THREE.ExtrudeGeometry','new THREE.InstancedMesh','new THREE.CylinderGeometry','new THREE.SpotLight','pointerMat','bulbsMesh.setColorAt','approvedLogoMat'])assert.ok(wheel.includes(term),term);
+ for(const term of ['arena-wheel3d__broadcast-truss','arena-wheel3d__broadcast-floor','arena-wheel3d__broadcast-wings','wheel-outcome-grand','prefers-reduced-motion'])assert.ok(css.includes(term),term);
+ assert.ok(wheel.includes('if(now<(current.startsAt||0))'),'3 second pre-spin gate');
+ assert.ok(wheel.includes('current.revealed&&Number.isInteger(current.index)'),'Cannot align winning sector before server reveal');
+ assert.ok(wheel.includes("onClick={onSpin}"),'Tap wheel itself to start');
+ assert.ok(wheel.includes('Math.pow(1-progress,1.32)'),'Kinetic deceleration');
+ assert.ok(game.includes('const startsAt=now+3000,stopsAt=startsAt+duration'),'Server remains countdown source');
+ assert.ok(game.includes('wheel:'),'Immutable spin ledger event prefix');
 });
