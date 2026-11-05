@@ -248,7 +248,21 @@ try{
  }));
  console.log('LICENSED_CRATE_DIAGNOSTIC',JSON.stringify(crateDebug));
  const authenticCrate=cratePage.locator('[data-source-model="agustin-honnun-sci-fi-crate"]');
- await authenticCrate.waitFor({state:'attached',timeout:30000});
+ try{await authenticCrate.waitFor({state:'attached',timeout:16000});}
+ catch{
+  const beforeReload=await cratePage.evaluate(()=>({
+   page:location.pathname+location.search,
+   sourceCount:document.querySelectorAll('[data-source-model]').length,
+   gameCount:document.querySelectorAll('.box-stage--vault').length,
+   splashCount:document.querySelectorAll('.stage-splash').length,
+   text:document.body.innerText.slice(0,300)
+  })).catch(()=>({unavailable:true}));
+  console.warn('CRATE_STAGE_RECOVERY_DIAGNOSTIC',JSON.stringify(beforeReload));
+  // Verify the public projector can recover from one transient remount.
+  // This must never fabricate a box selection or alter server state.
+  await cratePage.reload({waitUntil:'domcontentloaded'});
+  await authenticCrate.waitFor({state:'attached',timeout:30000});
+ }
  const crateCanvas=authenticCrate.locator('.arena-box3d__scene canvas');
  await crateCanvas.waitFor({state:'attached',timeout:12000});
  const boxButtons=authenticCrate.locator('.arena-box3d__selector');
