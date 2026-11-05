@@ -36,6 +36,13 @@ const checkReady=async()=>{
  }
  throw Error('Local V6 fixture did not start');
 };
+const screenshot=async(page,name,fullPage=false)=>{
+  // Screenshot capture through software WebGL can stall in headless CI.
+  // Data-flow assertions MUST still complete; never confuse a GPU capture
+  // issue with the server's session / score correctness.
+  try{await page.screenshot({path:path.join(output,name),fullPage,animations:'disabled',timeout:9000});}
+  catch(e){console.warn('SOFTWARE_WEBGL_SCREENSHOT_UNAVAILABLE',name,e?.name||'Error');}
+};
 const until=async(predicate,timeout=10000)=>{
  const start=Date.now();
  while(Date.now()-start<timeout){
@@ -104,7 +111,7 @@ try{
   activeMode:document.querySelectorAll('.session-shell.projector').length
  }));
  console.log('WHEEL_PROJECTION_DIAGNOSTIC',JSON.stringify(debug));
- await projector.screenshot({path:path.join(output,'13-wheel-debug-initial.png'),fullPage:true});
+ await screenshot(projector,'13-wheel-debug-initial.png');
  await wheel.waitFor({state:'attached',timeout:22000});
  const tap=trainee.locator('.arena-wheel3d__tap');
  await tap.waitFor({timeout:20000});
@@ -124,8 +131,8 @@ try{
   image:el.getBoundingClientRect().toJSON()
  }));
  assert.ok(style.stage&&style.floor&&style.wings,'Broadcast stage/truss/floor present');
- await projector.screenshot({path:path.join(output,'13-luxury-wheel-projector-ready.png')});
- await trainee.screenshot({path:path.join(output,'14-luxury-wheel-mobile-ready.png'),fullPage:true});
+ await screenshot(projector,'13-luxury-wheel-projector-ready.png');
+ await screenshot(trainee,'14-luxury-wheel-mobile-ready.png',true);
  // Actual button interaction on React PARTICIPANT UI, not a forged score.
  await tap.click();
  const started=await until(async()=>{
@@ -143,11 +150,11 @@ try{
  assert.equal(duplicate.status,409,'Cannot spin twice while current spin unresolved');
  await projector.waitForFunction(()=>document.querySelector('.arena-wheel3d__countdown')!==null,
   null,{timeout:6000});
- await projector.screenshot({path:path.join(output,'15-luxury-wheel-server-countdown.png')});
+ await screenshot(projector,'15-luxury-wheel-server-countdown.png');
  await sleep(Math.max(0,spin.startsAt-Date.now())+350);
  const afterCountdown=ok(await state(),'post-countdown');
  assert.equal(afterCountdown.game.spin.revealed,false,'No early selected winner');
- await projector.screenshot({path:path.join(output,'16-luxury-wheel-spinning.png')});
+ await screenshot(projector,'16-luxury-wheel-spinning.png');
  const winner=await until(async()=>{
   const x=await state();return x.json?.game?.spin?.revealed?x.json:null;
  },12500);
@@ -158,7 +165,7 @@ try{
  assert.ok(sectors.some(s=>s.points===result),'Award comes only from configured server sector');
  await projector.waitForFunction(()=>document.querySelector('.wheel-outcome-grand')!==null,
   null,{timeout:8500});
- await projector.screenshot({path:path.join(output,'17-luxury-wheel-signed-result.png')});
+ await screenshot(projector,'17-luxury-wheel-signed-result.png');
  const repeated=await state();
  assert.equal(repeated.json.game.spin.id,spin.id);
  assert.equal(repeated.json.game.outcome.points,result);
