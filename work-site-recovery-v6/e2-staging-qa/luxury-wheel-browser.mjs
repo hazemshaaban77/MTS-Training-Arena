@@ -261,6 +261,21 @@ try{
   'Real crate WebGL canvas occupies visible projector area: '+JSON.stringify(crateBounds));
  assert.equal(crateBounds.overflow<=crateBounds.viewport+2,true,'No horizontal projector overflow');
  await screenshot(cratePage,'19-licensed-sci-fi-crates-projector.png');
+ // Open a real crate through the same authorized V6 server control endpoint.
+ // The projector must reflect the confirmed state; no local fake reward.
+ const boxHostBefore=ok(await api('state?code='+boxCode+'&role=host',null,auth),'crate trainer before open');
+ ok(await api('control',{
+   code:boxCode,revision:boxHostBefore.revision,action:'box',index:1
+ },auth),'authorized trainer opens second crate');
+ const boxState=ok(await api('state?code='+boxCode),'crate public state');
+ assert.equal(boxState.game?.box?.index,1,'Server chooses crate 2');
+ assert.ok(boxState.game?.used?.includes(1),'Server records opened crate 2');
+ await cratePage.waitForFunction(()=>document.querySelectorAll('.arena-box3d__selector--used').length===1
+   &&document.querySelectorAll('.arena-box3d__selector--active').length===1,null,{timeout:12000});
+ assert.equal(await boxButtons.nth(1).isDisabled(),true,'Crate 2 cannot be opened twice');
+ await cratePage.waitForTimeout(900);
+ await screenshot(cratePage,'20-licensed-crate-server-open-projector.png');
+
  assert.deepEqual(problems,[],'No React WebGL runtime errors in wheel or licensed crate');
  console.log(JSON.stringify({status:'PASS',mode:'actual V6 participant React + real backend + 1920px projector',
   winnerIndex:winner.game.spin.index,pointsFromServer:result,uid:'synthetic',
