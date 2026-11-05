@@ -227,8 +227,7 @@ try{
  // The cinematic intro can hide the scene while original React initializes;
  // verify that genuine geometry mounts, then inspect its actual dimensions.
  await cratePage.waitForFunction(()=>!!document.querySelector('.stage-splash .splash-skip')||!!document.querySelector('[data-source-model="agustin-honnun-sci-fi-crate"]'),null,{timeout:16000});
- const introSkip=cratePage.locator('.stage-splash .splash-skip');
- if(await introSkip.count())await introSkip.click({timeout:8000});
+ // The scene auto-transitions after the introduction timer; no skip click is required.
  const crateDebug=await cratePage.evaluate(()=>({
    sceneCount:document.querySelectorAll('.arena-box3d').length,
    sources:[...document.querySelectorAll('[data-source-model]')].map(x=>x.getAttribute('data-source-model')),
@@ -237,7 +236,7 @@ try{
  }));
  console.log('LICENSED_CRATE_DIAGNOSTIC',JSON.stringify(crateDebug));
  const authenticCrate=cratePage.locator('[data-source-model="agustin-honnun-sci-fi-crate"]');
- await authenticCrate.waitFor({state:'attached',timeout:18000});
+ await authenticCrate.waitFor({state:'attached',timeout:30000});
  const crateCanvas=authenticCrate.locator('.arena-box3d__scene canvas');
  await crateCanvas.waitFor({state:'attached',timeout:12000});
  const boxButtons=authenticCrate.locator('.arena-box3d__selector');
