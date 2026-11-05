@@ -52,3 +52,21 @@ The Wheel Challenge Card itself is NOT implemented as part of this readiness gat
 
 ### Protection
 No merge, deploy, production Firebase/Cloudflare/D1 writes, paid integrations, replacement logos, or secrets are authorized by this report.
+
+## Repository organization policy — decision 2026-11-05
+- **One active development branch:** `work/arena-e2-integration-audit-20261105`. Keep creating and reviewing work here until an explicitly approved release milestone; **do not open a new branch or a new per-sprint report for every activity**.
+- **One living progress ledger:** append future technical acceptance, screenshots, assets, and bug decisions in THIS existing document. Existing historical reports are immutable audit evidence, not active competing plans.
+- **No mass branch deletion or merge:** repository currently lists 38 branches; archive-by-status through a safe inventory later, and only remove obsolete branches after verifying unique code, build evidence and owner approval.
+- **Existing structure first:** put future per-activity components beside related `components/arena/` features; place only selected, licensed 3D files under a single future `public/assets/boxes/` directory, with each source URL and exact license in this existing ledger rather than separate asset reports.
+- **No duplicated large media:** use one optimized asset shared by multiple boxes; unique game states, captions, colors and effects are provided by the component, not separate GLB copies.
+- **Branches/test evidence:** maintain a specific tested source SHA and GitHub Actions run in this ledger; do not confuse code-green with actual phone/projector acceptance.
+
+## Mystery Boxes — 3D asset research shortlist (not imported)
+| Candidate | Source/license evidence | Fit / limitation |
+|---|---|---|
+| **PolyOne Studio Free Pack - Loot Box** | Sketchfab https://sketchfab.com/3d-models/free-pack-loot-box-b806ed670bed400c81a4b6b1841e7f95 — free download, CC BY, 3 designs, 26.4k triangles on displayed scene and 4K textures. Fab https://www.fab.com/listings/4de81d3c-7b34-4e93-9ab6-faf14c9c0bb5 confirms GLB listing. | Most visually premium/expressive; recolor purple/pink to MTS navy/blue/green/champagne; downsize textures; opening animation not confirmed, cannot claim game-ready without inspecting model nodes. |
+| **Agustín Hönnun Sci-Fi Crate (Now Free)** | Sketchfab https://sketchfab.com/3d-models/sci-fi-crate-now-free-8a8f77af0de14630b94d2cda49823a74 — downloadable, CC BY, 3.8k triangles and 3 materials. | Lightweight PBR/hard-surface candidate for several interactive boxes; 4K maps need optimization and separated lid/animation is unverified. |
+| **Techno Chest by Micheal-Holloway** | Sketchfab https://sketchfab.com/3d-models/techno-chest-5c08fb77246c428791bb4f8786b7c459 — CC BY, downloadable, 432 triangles, opening animation stated. | Ready opening behavior but intentionally low-detail: useful fallback/tech proof of concept, not automatically the premium art pick. |
+| **Quaternius Scifi Container** | Poly Pizza https://poly.pizza/m/22FBVK7m9c — glTF/FBX, CC0. | Very permissive backup and browser-friendly; likely visually too low-poly without lighting/material work. |
+
+**Adoption gate:** before integration into existing `Open the Box` activity, inspect actual file download, material/textures, license file, GLB or glTF structure, whether lid opens, asset load speed with 6–12 visible boxes, WebGL loss/fallback, Arabic/English labels, and server-owned opened/closed state. Do not download unlicensed models, edit original corporate logos, create new branches, or mutate live scoring. The approved broader app remains Premium Broadcast 2D with **embedded interactive 3D props**, not a 3D stage environment.
