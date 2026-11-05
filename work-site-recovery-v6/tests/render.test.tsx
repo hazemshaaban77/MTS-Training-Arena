@@ -394,7 +394,11 @@ test('server-acknowledged participant answers never claim success on a click',()
  const poll=readFileSync('components/arena/LivePoll.tsx','utf8');
  const css=readFileSync('app/globals.css','utf8');
  assert.ok(source.includes("async function checkAnswerReceipt(round:number)"),'There is a safe state verification path');
- assert.ok(source.includes("const receipt=await api('answer',{code,round,answer},token)"));
+ assert.ok(source.includes("publicRequest:!host"),'Only public state skips trainer auth; host remains protected');
+ const client=readFileSync('lib/client.ts','utf8');
+ assert.ok(client.includes("options?.publicRequest===true?null:await trainerToken()"),'Trainer-only routes still await Firebase credentials');
+ assert.ok(source.includes("api('interact',{code,round:s.current,action,...extra},token,{publicRequest:true})"),'Player actions use player token, never trainer token');
+ assert.ok(source.includes("const receipt=await api('answer',{code,round,answer},token,{publicRequest:true})"),'Player sends answer without waiting for trainer Firebase initialization');
  assert.ok(source.includes("receipt?.ok!==true"),'Receipt must come from backend');
  assert.ok(source.includes("setAnswerProgress({round,phase:'sending'})"));
  assert.ok(source.includes("setAnswerProgress({round,phase:'verifying'})"));
