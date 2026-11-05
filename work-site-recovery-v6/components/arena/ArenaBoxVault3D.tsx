@@ -96,7 +96,8 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
      }
     };
     renderer.domElement.addEventListener('pointerup',select);
-    let w=0,h=0,previous=performance.now(),frames=0,verticalOffset=0;
+    let w=0,h=0,previous=performance.now(),frames=0;
+    const bounds=new THREE.Box3(),frameCenter=new THREE.Vector3(),frameSize=new THREE.Vector3();
     const draw=(time:number)=>{
      if(gone)return;
      raf=requestAnimationFrame(draw);if(document.hidden)return;
@@ -114,18 +115,25 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
       chest.rim.material.opacity=st.active===chest.index?.86:official?.27:.12;
      }
      if(!reduced)world.rotation.y=Math.sin(time*.00032)*.055;
-     const radians=THREE.MathUtils.degToRad(camera.fov);
-     const vertical=2*Math.tan(radians/2),horizontal=vertical*camera.aspect;
-     // Fill the available projector/phone scene but keep the whole crate grid
-     // within both frame axes, regardless of box count and aspect ratio.
-     const gridWidth=columns*dx+.55,gridHeight=rows*dy+.7;
-     const distance=Math.max(3.6,Math.max(gridWidth/horizontal,gridHeight/vertical)*1.14);
-     // After a confirmed opening, frame the hinged top inside the vault,
-     // easing camera framing instead of abruptly moving the whole scene.
-     const targetOffset=st.used.length?.34:0;
-     verticalOffset=reduced?targetOffset:verticalOffset+(targetOffset-verticalOffset)*Math.min(1,dt*4);
-     camera.position.set(0,.20+verticalOffset,distance);
-     camera.lookAt(0,verticalOffset,0);
+     // Frame the ACTUAL nine-mesh geometry, including the fully opened lid.
+     // A fixed grid height cropped the hinge after the prize card shortened
+     // the projector viewport. Read world bounds after the server-driven pose.
+     world.updateMatrixWorld(true);
+     bounds.setFromObject(world);
+     bounds.getCenter(frameCenter);bounds.getSize(frameSize);
+     const vertical=2*Math.tan(THREE.MathUtils.degToRad(camera.fov)/2);
+     const horizontal=vertical*camera.aspect;
+     const distance=Math.max(3.5,
+       Math.max(frameSize.x/horizontal,frameSize.y/vertical)*1.23+frameSize.z*.55);
+     camera.position.set(frameCenter.x,frameCenter.y,frameCenter.z+distance);
+     camera.lookAt(frameCenter);
+     // Browser QA verifies real geometry fits the view after opening.
+     if(frames%8===0){
+       const faceDistance=distance-frameSize.z/2;
+       renderer.domElement.dataset.modelFits=String(
+         frameSize.x<=faceDistance*horizontal*.92&&
+         frameSize.y<=faceDistance*vertical*.92);
+     }
      renderer.render(scene,camera);
     };
     raf=requestAnimationFrame(draw);
@@ -149,5 +157,9 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
    })}
   </div>
   {unavailable&&<span className="arena-box3d__lite-note">{ar?'المجسم غير متاح على الجهاز؛ اختار الصندوق من الأرقام':'3D unavailable. Choose a numbered box.'}</span>}
+  <a className="arena-box3d__credit" href="https://sketchfab.com/3d-models/sci-fi-crate-now-free-8a8f77af0de14630b94d2cda49823a74"
+     target="_blank" rel="noopener noreferrer" aria-label="Sci-Fi Crate 3D model by Agustín Hönnun, CC BY">
+     Sci-Fi Crate · Agustín Hönnun · CC BY
+  </a>
  </div>;
 }
