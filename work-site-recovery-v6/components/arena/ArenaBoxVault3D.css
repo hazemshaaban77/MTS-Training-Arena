@@ -11,3 +11,11 @@
 .arena-box3d__lite-note{font-size:12px;line-height:1.4;text-align:center;color:#d0e2ed;padding:5px 12px 15px}
 @media(max-width:600px){.arena-box3d{min-height:370px}.arena-box3d__scene{min-height:280px}.arena-box3d__selector{width:44px;height:44px}}
 @media(prefers-reduced-motion:reduce){.arena-box3d *{transition:none!important}}
+
+/* One reusable branded Sci-Fi Crate, sourced from the licensed user-provided model. */
+.arena-box3d__credit{display:block;position:relative;z-index:2;text-align:center;
+  font-size:10px;line-height:1.5;padding:0 12px 9px;color:#b6d8d4;
+  text-decoration:underline;text-underline-offset:2px}
+.arena-box3d__credit:hover,.arena-box3d__credit:focus-visible{color:#fbe1ae}
+.arena-box3d__selector--active{border-color:#70f4d5;box-shadow:0 0 22px #00c99c88}
+.arena-box3d__scene{background:radial-gradient(ellipse at 50% 83%,#159c8730,transparent 62%)}
