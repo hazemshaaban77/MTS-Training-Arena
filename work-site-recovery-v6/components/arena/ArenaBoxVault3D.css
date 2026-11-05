@@ -74,3 +74,43 @@
  font-size:clamp(12px,1.1vw,17px)!important;
  line-height:1.4!important;
 }
+
+
+/* Projector-only broadcast reveal: show the 3D set beside the prize card.
+   Leave phone layouts and all server-owned interactions unchanged. */
+@media (min-width:1100px) and (min-height:700px){
+ .session-shell.projector .round-stage .box-stage--vault:has(.box-vault-reveal){
+  display:grid!important;
+  grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);
+  grid-template-rows:auto minmax(0,1fr);
+  gap:clamp(12px,1.3vw,24px)!important;
+  align-items:center;
+  width:100%;
+  max-width:1420px;
+ }
+ .session-shell.projector .round-stage .box-stage--vault:has(.box-vault-reveal) .box-vault-heading{
+  grid-column:1/-1;
+  grid-row:1;
+  margin:0;
+ }
+ .session-shell.projector .round-stage .box-stage--vault:has(.box-vault-reveal) .arena-box3d{
+  grid-column:1;
+  grid-row:2;
+  width:100%;
+  max-width:100%;
+  min-height:0!important;
+  height:clamp(310px,37vh,420px)!important;
+  max-height:clamp(310px,37vh,420px)!important;
+ }
+ .session-shell.projector .round-stage .box-stage--vault:has(.box-vault-reveal) .box-vault-reveal{
+  grid-column:2;
+  grid-row:2;
+  width:100%!important;
+  max-width:100%!important;
+  max-height:clamp(310px,37vh,420px);
+  margin:0;
+ }
+ .session-shell.projector .round-stage .box-stage--vault:has(.box-vault-reveal) .box-vault-instruction{
+  display:none;
+ }
+}
