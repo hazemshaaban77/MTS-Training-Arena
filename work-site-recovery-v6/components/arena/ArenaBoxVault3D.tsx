@@ -101,7 +101,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
     const draw=(time:number)=>{
      if(gone)return;
      raf=requestAnimationFrame(draw);if(document.hidden)return;
-     if(coarse&&++frames%2!==0)return;
+     if(++frames%2!==0&&coarse)return;
      const rw=Math.max(1,root.clientWidth),rh=Math.max(1,root.clientHeight);
      if(rw!==w||rh!==h){w=rw;h=rh;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
      const dt=Math.min(.07,Math.max(0,(time-previous)/1000));previous=time;
