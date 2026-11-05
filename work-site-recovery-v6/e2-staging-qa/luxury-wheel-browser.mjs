@@ -221,8 +221,18 @@ try{
  cratePage.on('pageerror',e=>problems.push('crate: '+e.message));
  await cratePage.goto(root+'/MTS-Training-Arena/v6/?view=display&code='+boxCode,
   {waitUntil:'domcontentloaded'});
+ // The cinematic intro can hide the scene while original React initializes;
+ // verify that genuine geometry mounts, then inspect its actual dimensions.
+ await cratePage.waitForTimeout(1800);
+ const crateDebug=await cratePage.evaluate(()=>({
+   sceneCount:document.querySelectorAll('.arena-box3d').length,
+   sources:[...document.querySelectorAll('[data-source-model]')].map(x=>x.getAttribute('data-source-model')),
+   canvasCount:document.querySelectorAll('.arena-box3d canvas').length,
+   body:document.body.innerText.slice(0,1300)
+ }));
+ console.log('LICENSED_CRATE_DIAGNOSTIC',JSON.stringify(crateDebug));
  const authenticCrate=cratePage.locator('[data-source-model="agustin-honnun-sci-fi-crate"]');
- await authenticCrate.waitFor({timeout:26000});
+ await authenticCrate.waitFor({state:'attached',timeout:18000});
  const crateCanvas=authenticCrate.locator('.arena-box3d__scene canvas');
  await crateCanvas.waitFor({state:'attached',timeout:12000});
  const boxButtons=authenticCrate.locator('.arena-box3d__selector');
