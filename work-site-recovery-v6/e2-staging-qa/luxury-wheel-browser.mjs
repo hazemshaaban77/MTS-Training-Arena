@@ -111,7 +111,7 @@ try{
   activeMode:document.querySelectorAll('.session-shell.projector').length
  }));
  console.log('WHEEL_PROJECTION_DIAGNOSTIC',JSON.stringify(debug));
- await screenshot(projector,'13-wheel-debug-initial.png');
+
  await wheel.waitFor({state:'attached',timeout:22000});
  const tap=trainee.locator('.arena-wheel3d__tap');
  await tap.waitFor({timeout:20000});
@@ -131,8 +131,8 @@ try{
   image:el.getBoundingClientRect().toJSON()
  }));
  assert.ok(style.stage&&style.floor&&style.wings,'Broadcast stage/truss/floor present');
- await screenshot(projector,'13-luxury-wheel-projector-ready.png');
- await screenshot(trainee,'14-luxury-wheel-mobile-ready.png',true);
+
+
  // Actual button interaction on React PARTICIPANT UI, not a forged score.
  await tap.click();
  const started=await until(async()=>{
@@ -150,11 +150,11 @@ try{
  assert.equal(duplicate.status,409,'Cannot spin twice while current spin unresolved');
  await projector.waitForFunction(()=>document.querySelector('.arena-wheel3d__countdown')!==null,
   null,{timeout:6000});
- await screenshot(projector,'15-luxury-wheel-server-countdown.png');
+
  await sleep(Math.max(0,spin.startsAt-Date.now())+350);
  const afterCountdown=ok(await state(),'post-countdown');
  assert.equal(afterCountdown.game.spin.revealed,false,'No early selected winner');
- await screenshot(projector,'16-luxury-wheel-spinning.png');
+
  const winner=await until(async()=>{
   const x=await state();return x.json?.game?.spin?.revealed?x.json:null;
  },12500);
@@ -165,13 +165,17 @@ try{
  assert.ok(sectors.some(s=>s.points===result),'Award comes only from configured server sector');
  await projector.waitForFunction(()=>document.querySelector('.wheel-outcome-grand')!==null,
   null,{timeout:8500});
- await screenshot(projector,'17-luxury-wheel-signed-result.png');
+
  const repeated=await state();
  assert.equal(repeated.json.game.spin.id,spin.id);
  assert.equal(repeated.json.game.outcome.points,result);
  const standings=winner.individual||[];
  assert.ok(standings.some(row=>row.score===result),'Only server ledger created points');
  assert.deepEqual(problems,[],'No React page errors');
+ // Only after game logic is verified do we attempt optional GPU screenshots.
+ // Software WebGL capture can hang on CI; never block or fake the signed result.
+ await screenshot(projector,'17-luxury-wheel-signed-result.png');
+ await screenshot(trainee,'18-luxury-wheel-mobile-result.png',true);
  const mobile=await trainee.evaluate(()=>({viewport:innerWidth,content:document.documentElement.scrollWidth}));
  assert.ok(mobile.content<=mobile.viewport+2,'Responsive wheel causes horizontal overflow '+JSON.stringify(mobile));
  console.log(JSON.stringify({status:'PASS',mode:'actual V6 participant React + real backend + 1920px projector',
