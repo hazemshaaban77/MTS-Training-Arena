@@ -81,8 +81,8 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
      rim.position.z=-.42;chest.add(rim);assets.push(rim.geometry,rimMat);
      crates.push({root:chest,lid,rim,index:i,open:0});
     }
-    // BoxGeometry is ONLY the shared podium, never a selectable crate.
-    const platform=new THREE.Mesh(new THREE.BoxGeometry(columns*dx+.75,.19,rows*dy+.35),dark);
+    // A lightweight flat backstage panel; selectable crates are original authored meshes.
+    const platform=new THREE.Mesh(new THREE.PlaneGeometry(columns*dx+.75,rows*dy+.35),dark);
     platform.position.set(0,-((rows-1)/2)*dy-1.06,-.8);
     world.add(platform);assets.push(platform.geometry);
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
