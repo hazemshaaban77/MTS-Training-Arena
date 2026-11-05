@@ -201,6 +201,41 @@ try{
  await screenshot(trainee,'18-luxury-wheel-mobile-result.png',true);
  const mobile=await trainee.evaluate(()=>({viewport:innerWidth,content:document.documentElement.scrollWidth}));
  assert.ok(mobile.content<=mobile.viewport+2,'Responsive wheel causes horizontal overflow '+JSON.stringify(mobile));
+
+ // Real V6 Open the Box route: verify the actual licensed 9-mesh crate loads
+ // in Chromium with disposable session data, not only a source-code assertion.
+ const boxRoom=ok(await api('sessions',{
+  title:'Licensed Sci-Fi Crate QA · Synthetic Session',language:'en',
+  activities:[{type:'Open the Box',prompt:'Choose a training challenge',
+    timer:0,rounds:3,items:['Explain ACI','Teamwork','Safety check']}],
+  settings:{reveal:'manual',progression:'manual'}
+ },auth),'create Sci-Fi Crate room');
+ const boxCode=boxRoom.code;
+ ok(await api('join',{
+  code:boxCode,name:'Crate QA Learner',employeeId:'QA-CRATE-001',
+  confirmed:true,language:'en'
+ }),'join synthetic crate room');
+ const boxHost=ok(await api('state?code='+boxCode+'&role=host',null,auth),'crate trainer state');
+ ok(await api('control',{code:boxCode,revision:boxHost.revision,action:'start'},auth),'start crate room');
+ const cratePage=await projectorCtx.newPage();
+ cratePage.on('pageerror',e=>problems.push('crate: '+e.message));
+ await cratePage.goto(root+'/MTS-Training-Arena/v6/?view=display&code='+boxCode,
+  {waitUntil:'domcontentloaded'});
+ const authenticCrate=cratePage.locator('[data-source-model="agustin-honnun-sci-fi-crate"]');
+ await authenticCrate.waitFor({timeout:26000});
+ const crateCanvas=authenticCrate.locator('.arena-box3d__scene canvas');
+ await crateCanvas.waitFor({state:'attached',timeout:12000});
+ const boxButtons=authenticCrate.locator('.arena-box3d__selector');
+ assert.equal(await boxButtons.count(),3,'Three server-sourced crate choices rendered');
+ const crateBounds=await crateCanvas.evaluate(el=>{
+  const r=el.getBoundingClientRect();
+  return {width:r.width,height:r.height,viewport:innerWidth,overflow:document.documentElement.scrollWidth};
+ });
+ assert.ok(crateBounds.width>100&&crateBounds.height>200,
+  'Real crate WebGL canvas occupies visible projector area: '+JSON.stringify(crateBounds));
+ assert.equal(crateBounds.overflow<=crateBounds.viewport+2,true,'No horizontal projector overflow');
+ await screenshot(cratePage,'19-licensed-sci-fi-crates-projector.png');
+ assert.deepEqual(problems,[],'No React WebGL runtime errors in wheel or licensed crate');
  console.log(JSON.stringify({status:'PASS',mode:'actual V6 participant React + real backend + 1920px projector',
   winnerIndex:winner.game.spin.index,pointsFromServer:result,uid:'synthetic',
   countdownMs:before,spinMs:spin.stopsAt-spin.startsAt,webglCanvas:true,
