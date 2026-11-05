@@ -201,6 +201,9 @@ try{
  await screenshot(trainee,'18-luxury-wheel-mobile-result.png',true);
  const mobile=await trainee.evaluate(()=>({viewport:innerWidth,content:document.documentElement.scrollWidth}));
  assert.ok(mobile.content<=mobile.viewport+2,'Responsive wheel causes horizontal overflow '+JSON.stringify(mobile));
+ // Release both expensive WebGL wheel views before the separate crate scene.
+ await projector.close();
+ await trainee.close();
 
  // Real V6 Open the Box route: verify the actual licensed 9-mesh crate loads
  // in Chromium with disposable session data, not only a source-code assertion.
