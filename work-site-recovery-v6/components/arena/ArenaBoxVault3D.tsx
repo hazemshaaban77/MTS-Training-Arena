@@ -96,7 +96,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
      }
     };
     renderer.domElement.addEventListener('pointerup',select);
-    let w=0,h=0,previous=performance.now(),frames=0;
+    let w=0,h=0,previous=performance.now(),frames=0,verticalOffset=0;
     const draw=(time:number)=>{
      if(gone)return;
      raf=requestAnimationFrame(draw);if(document.hidden)return;
@@ -120,7 +120,12 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
      // within both frame axes, regardless of box count and aspect ratio.
      const gridWidth=columns*dx+.55,gridHeight=rows*dy+.7;
      const distance=Math.max(3.6,Math.max(gridWidth/horizontal,gridHeight/vertical)*1.14);
-     camera.position.set(0,.20,distance);camera.lookAt(0,0,0);
+     // After a confirmed opening, frame the hinged top inside the vault,
+     // easing camera framing instead of abruptly moving the whole scene.
+     const targetOffset=st.used.length?.34:0;
+     verticalOffset=reduced?targetOffset:verticalOffset+(targetOffset-verticalOffset)*Math.min(1,dt*4);
+     camera.position.set(0,.20+verticalOffset,distance);
+     camera.lookAt(0,verticalOffset,0);
      renderer.render(scene,camera);
     };
     raf=requestAnimationFrame(draw);
