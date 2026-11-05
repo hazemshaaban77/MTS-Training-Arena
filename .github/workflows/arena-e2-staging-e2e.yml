@@ -49,6 +49,20 @@ jobs:
         env:
           # Same-origin on loopback; production client rejects insecure configured API origins.
           VITE_ARENA_API_ORIGIN: ""
+      - name: Verify realtime notification contract without production WebSockets
+        run: node scripts/verify-live.mjs
+      - name: Build isolated V6 API Worker bundle (never deploy)
+        run: pnpm run build:github-api
+      - name: Verify frontend, API and brand preview artifacts
+        run: |
+          test -s dist-github/index.html
+          test -s dist-github-api/worker.mjs
+          test -s dist-github/e2-preview/index.html
+          test -s dist-github/e2-preview/live-projector.html
+          test -s dist-github/e2-preview/live-projector.mjs
+          test -s dist-github/e2-preview/assets/arena-logo-approved.png
+          test -s dist-github/e2-preview/assets/arena-logo-safe-margin.png
+          echo "PASS: local frontend/API and E2 assets exist; none deployed."
       - name: Bundle local V6 API handler with ephemeral SQLite transport
         run: |
           mkdir -p .sites-runtime/e2-staging-qa
@@ -59,6 +73,19 @@ jobs:
           npm --prefix "$RUNNER_TEMP/e2-playwright" install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
           ln -s "$RUNNER_TEMP/e2-playwright/node_modules/playwright" node_modules/playwright
           node "$RUNNER_TEMP/e2-playwright/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Launch local read-only frontend preview for browser visual regressions
+        run: |
+          python3 -m http.server 8087 --bind 127.0.0.1 --directory dist-github >/tmp/arena-e2-visual.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8087/e2-preview/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/arena-e2-visual.log
+          exit 1
+      - name: Test 2D lobby intro boxes scoreboard and mobile visual prototype
+        run: node e2-staging-qa/browser-qa.mjs
+      - name: Test read-only projector privacy and link hygiene on Chromium
+        run: node e2-staging-qa/live-projector-qa.mjs
       - name: Run two then five independent browser clients and projector against real API handler
         run: node e2-staging-qa/real-session-browser.mjs
       - name: Verify manual and automatic cinematic reveal in original V6 React projector
