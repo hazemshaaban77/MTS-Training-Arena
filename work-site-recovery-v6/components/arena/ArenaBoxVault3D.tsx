@@ -81,10 +81,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
      rim.position.z=-.42;chest.add(rim);assets.push(rim.geometry,rimMat);
      crates.push({root:chest,lid,rim,index:i,open:0});
     }
-    // A lightweight flat backstage panel; selectable crates are original authored meshes.
-    const platform=new THREE.Mesh(new THREE.PlaneGeometry(columns*dx+.75,rows*dy+.35),dark);
-    platform.position.set(0,-((rows-1)/2)*dy-1.06,-.8);
-    world.add(platform);assets.push(platform.geometry);
+    // Leave the broadcast floor open: no opaque rectangular placeholder stage.
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
     select=(event:PointerEvent)=>{
      const st=state.current;if(!st.canChoose)return;
