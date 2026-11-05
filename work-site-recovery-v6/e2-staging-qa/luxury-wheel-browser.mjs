@@ -226,7 +226,9 @@ try{
   {waitUntil:'domcontentloaded'});
  // The cinematic intro can hide the scene while original React initializes;
  // verify that genuine geometry mounts, then inspect its actual dimensions.
- await cratePage.waitForTimeout(1800);
+ await cratePage.waitForFunction(()=>!!document.querySelector('.stage-splash .splash-skip')||!!document.querySelector('[data-source-model="agustin-honnun-sci-fi-crate"]'),null,{timeout:16000});
+ const introSkip=cratePage.locator('.stage-splash .splash-skip');
+ if(await introSkip.count())await introSkip.click({timeout:8000});
  const crateDebug=await cratePage.evaluate(()=>({
    sceneCount:document.querySelectorAll('.arena-box3d').length,
    sources:[...document.querySelectorAll('[data-source-model]')].map(x=>x.getAttribute('data-source-model')),
