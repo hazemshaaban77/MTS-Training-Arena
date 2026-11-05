@@ -17,3 +17,141 @@
 .wheel-3d-mode-switch .btn.is-active{box-shadow:0 0 12px #f9ba494d;border-color:#f2c276}
 .wheel-3d-mode-switch span{font-size:11px;color:#c4cbd5}
 @media(max-width:600px){.wheel-3d-mode-switch span{display:none}.wheel-3d-mode-switch .btn{min-height:44px}}
+
+
+/* Wheel Sprint 07 — Luxury Esports broadcast stage, tied to the actual 3D canvas.
+   No audience, placeholder crowd, or competing copy of the wheel. */
+.arena-wheel3d--crown{
+  min-height:clamp(430px,49vw,720px);
+  border-radius:25px;
+  border:1px solid #668a8a76;
+  background:
+   radial-gradient(ellipse at 50% 27%,#164e69aa 0%,transparent 53%),
+   radial-gradient(ellipse at 10% 82%,#0c7c7761,transparent 40%),
+   radial-gradient(ellipse at 89% 80%,#226a9972,transparent 38%),
+   linear-gradient(180deg,#051324 0%,#071b30 55%,#040d1b 100%);
+  box-shadow:inset 0 0 80px #0009,0 16px 36px #0007,inset 0 0 0 1px #5bd3d31b;
+}
+.arena-wheel3d--crown::before{
+  background:
+   repeating-linear-gradient(90deg,transparent 0 8%,#73d6e50c 8.1% 8.19%,transparent 8.29% 16%),
+   radial-gradient(ellipse at 50% 84%,#06d2ac45,transparent 42%);
+  opacity:.9;
+}
+.arena-wheel3d--crown::after{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(100deg,transparent 19%,#c4dba71a 50%,transparent 81%);
+  box-shadow:inset 0 -2px 0 #c5a46c65,inset 0 2px 0 #70f6e12a;
+}
+.arena-wheel3d__broadcast-wings{
+ position:absolute;inset:7% 3% 16%;z-index:0;pointer-events:none;
+ background:
+  linear-gradient(115deg,transparent 8%,#2cb5bc35 8.4%,transparent 9.2%,transparent 90.7%,#60bce533 91.1%,transparent 92%),
+  linear-gradient(90deg,#114267b3 0%,transparent 24%,transparent 76%,#103e5bbd 100%);
+ clip-path:polygon(0 5%,25% 0,75% 0,100% 5%,100% 97%,75% 84%,25% 84%,0 97%);
+ filter:drop-shadow(0 0 12px #138c9e6b);
+}
+.arena-wheel3d__broadcast-truss{
+ position:absolute;inset:4% 12% auto;height:24%;z-index:0;pointer-events:none;
+ border-top:7px solid #567b84aa;
+ border-left:3px solid #5476828e;border-right:3px solid #5476828e;
+ border-radius:50% 50% 0 0 / 90% 90% 0 0;
+ box-shadow:0 -5px 12px #37bbb64a,inset 0 9px 24px #e2b65e21;
+ background:
+  linear-gradient(145deg,transparent 47%,#79adbb21 49%,transparent 51%),
+  linear-gradient(35deg,transparent 47%,#79adbb21 49%,transparent 51%);
+}
+.arena-wheel3d__broadcast-truss::before,
+.arena-wheel3d__broadcast-truss::after{
+ content:"";position:absolute;top:9px;width:28%;height:220%;pointer-events:none;
+ background:linear-gradient(180deg,#9aeff64d,transparent);
+ filter:blur(7px);opacity:.36;
+ clip-path:polygon(43% 0,57% 0,100% 100%,0 100%);
+ transform-origin:top center;
+}
+.arena-wheel3d__broadcast-truss::before{left:5%;transform:rotate(-24deg)}
+.arena-wheel3d__broadcast-truss::after{right:5%;transform:rotate(24deg)}
+.arena-wheel3d__broadcast-floor{
+ position:absolute;inset:auto 5% 0;height:20%;z-index:0;pointer-events:none;
+ border-top:2px solid #42beb8a9;
+ border-radius:50% 50% 0 0 / 22% 22% 0 0;
+ background:radial-gradient(ellipse at 50% 3%,#1dcdad70,transparent 59%),
+ repeating-linear-gradient(90deg,transparent 0 7.5%,#65c9d922 7.6% 7.8%,transparent 8% 15%);
+ box-shadow:0 -12px 45px #22cbb93a,inset 0 16px 24px #03263a86;
+}
+.arena-wheel3d__canvas{z-index:1}
+.arena-wheel3d__ambient{z-index:2;background:radial-gradient(ellipse,#21d1b05e,transparent 70%)}
+.arena-wheel3d__tap{
+ width:min(81%,480px);top:45%;border-radius:50%;
+}
+.arena-wheel3d__tap:not(:disabled):hover{box-shadow:inset 0 0 25px #7be8d62a,0 0 26px #45d9e21d}
+.arena-wheel3d__tap:focus-visible{outline:4px solid #99ffe7}
+.arena-wheel3d__status{
+ color:#f1d4a1;background:#0a2034ec;border-color:#cbaa678b;
+ box-shadow:0 5px 16px #0008;letter-spacing:.105em;
+}
+.arena-wheel3d__countdown{
+ top:12%;left:50%;min-width:87px;height:87px;
+ font-size:39px;background:radial-gradient(circle,#0e455c 0%,#07162b 78%);
+ border:3px solid #e0b86f;color:#fcf2ce;
+ box-shadow:0 0 0 8px #dab05d21,0 0 44px #31f3d77d,0 8px 26px #000b;
+ animation:arena-wheel-countdown-pulse 1s ease-out infinite;
+}
+@keyframes arena-wheel-countdown-pulse{
+ 0%{box-shadow:0 0 0 2px #dab05d65,0 0 30px #31f3d77c}
+ 100%{box-shadow:0 0 0 17px #dab05d00,0 0 35px #31f3d700}
+}
+.arena-wheel3d__pill{
+ background:linear-gradient(120deg,#09192bea,#173950f5,#092735ef);
+ border-color:#d3ac6c9c;max-width:90%;
+ color:#f6e8c9;text-align:center;overflow:hidden;text-overflow:ellipsis;
+}
+.wheel-stage--crown-real3d .wheel-arena-banner{
+ position:relative;z-index:3;
+ background:linear-gradient(115deg,#082539,#0b4d59,#082536)!important;
+ color:#d5fbea!important;border:1px solid #afc282a0!important;
+ box-shadow:0 8px 28px #0006,inset 0 0 25px #35c5b82c;
+}
+.wheel-stage--crown-real3d .wheel-outcome-grand{
+ position:relative;isolation:isolate;overflow:hidden;
+ border:1px solid #e3c7829c!important;border-radius:18px!important;
+ background:radial-gradient(ellipse at 50% 0%,#267887af,transparent 70%),linear-gradient(120deg,#082239,#0c4050,#082338)!important;
+ color:#f7fcf4!important;box-shadow:0 0 45px #25dbc45a,0 22px 45px #0007;
+ animation:arena-wheel-result-enter 820ms cubic-bezier(.18,.89,.19,1.13) both;
+}
+.wheel-stage--crown-real3d .wheel-outcome-grand::before{
+ content:"";position:absolute;inset:-65% -15%;z-index:-1;pointer-events:none;
+ background:linear-gradient(100deg,transparent 38%,#a9fff756 50%,transparent 62%);
+ transform:translateX(-90%) rotate(-14deg);
+ animation:arena-wheel-outcome-sweep 1700ms ease-out both;
+}
+.wheel-stage--crown-real3d .wheel-outcome-grand h3{
+ color:#ffffff;text-shadow:0 0 20px #59ffe399;
+ font-size:clamp(21px,2.7vw,38px);
+}
+.wheel-stage--crown-real3d .wheel-outcome-grand.outcome-penalty{
+ border-color:#c36d7e!important;box-shadow:0 0 35px #c33d6148,0 15px 40px #0006;
+}
+@keyframes arena-wheel-result-enter{
+ 0%{opacity:0;transform:translateY(20px) scale(.91)}
+ 70%{opacity:1;transform:translateY(-4px) scale(1.015)}
+ 100%{transform:translateY(0) scale(1)}
+}
+@keyframes arena-wheel-outcome-sweep{
+ 0%{transform:translateX(-90%) rotate(-14deg);opacity:0}
+ 20%{opacity:1}100%{transform:translateX(90%) rotate(-14deg);opacity:0}
+}
+@media(max-width:600px){
+ .arena-wheel3d--crown{height:clamp(370px,98vw,490px);min-height:370px;border-radius:16px}
+ .arena-wheel3d__broadcast-truss{inset:5% 8% auto}
+ .arena-wheel3d__countdown{top:12%;min-width:67px;height:67px;font-size:30px}
+ .arena-wheel3d__status{font-size:8px;top:7px;right:7px;padding:5px 7px}
+ .arena-wheel3d__pill{white-space:normal;font-size:10px;line-height:1.45;padding:7px 13px}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-wheel3d__countdown,.wheel-stage--crown-real3d .wheel-outcome-grand,
+ .wheel-stage--crown-real3d .wheel-outcome-grand::before{
+  animation:none!important;transition:none!important;
+ }
+}
