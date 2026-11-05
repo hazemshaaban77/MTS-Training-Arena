@@ -1874,7 +1874,9 @@ test('3D Vault replaces legacy box-card buttons without changing authoritative s
  assert.match(source,/<ArenaBoxVault3D items=\{items\} used=\{used\}/);
  assert.doesNotMatch(source,/className=\{'box-vault-box'/);
  assert.match(model,/new THREE\.WebGLRenderer/);
- assert.match(model,/new THREE\.BoxGeometry/);
+ assert.match(model,/loadArenaCrateGeometry/);
+ assert.doesNotMatch(model,/new THREE\.BoxGeometry/, 'Actual licensed crate meshes must not silently regress to cube placeholders');
+ assert.match(model,/st\.used\.includes\(chest\.index\)/, 'Official server-open state must drive the lid');
  assert.match(model,/new THREE\.Raycaster/);
  assert.match(model,/const official=st\.used\.includes\(chest\.index\)\|\|st\.active===chest\.index/);
  assert.match(model,/st\.onOpen\(i\)/);
@@ -1934,4 +1936,30 @@ test('Luxury Esports Crown Wheel preserves approved logo, broadcast stage, true 
  assert.ok(wheel.includes('Math.pow(1-progress,1.32)'),'Kinetic deceleration');
  assert.ok(game.includes('const startsAt=now+3000,stopsAt=startsAt+duration'),'Server remains countdown source');
  assert.ok(game.includes('wheel:'),'Immutable spin ledger event prefix');
+});
+
+
+test('licensed nine-part Sci-Fi Crate geometries decode to valid real triangles, not box placeholders',async()=>{
+ const original=readFileSync('components/arena/ArenaSciFiCrateGeometry.ts','utf8');
+ assert.match(original,/Agustín Hönnun/);
+ assert.match(original,/CC BY/);
+ const THREE=await import('three');
+ const {loadArenaCrateGeometry,cratePartNames}=await import('../components/arena/ArenaSciFiCrateGeometry');
+ const parts=await loadArenaCrateGeometry(THREE);
+ try{
+  assert.equal(parts.length,9);
+  assert.equal(cratePartNames.length,9);
+  assert.ok(parts.some(x=>x.name.startsWith('2Top')));
+  assert.ok(parts.some(x=>x.name.startsWith('1Handle')));
+  assert.ok(parts.every(x=>x.geometry.getAttribute('position').count>0));
+  assert.ok(parts.every(x=>x.geometry.getIndex().count>0));
+  const triangles=parts.reduce((n,x)=>n+x.geometry.getIndex().count/3,0);
+  assert.ok(triangles>3000,'All original crate mesh details must survive geometry compression');
+  const bounds=new THREE.Box3();
+  for(const part of parts){
+   part.geometry.computeBoundingBox();
+   bounds.union(part.geometry.boundingBox);
+  }
+  assert.ok(bounds.max.y>0.65&&bounds.min.y<0,'Actual model retains body, top and handle');
+ }finally{for(const x of parts)x.geometry.dispose();}
 });
