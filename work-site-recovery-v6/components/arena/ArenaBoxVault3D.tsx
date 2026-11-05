@@ -117,8 +117,13 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
       chest.rim.material.opacity=st.active===chest.index?.86:official?.27:.12;
      }
      if(!reduced)world.rotation.y=Math.sin(time*.00032)*.055;
-     const maxDim=Math.max(columns*dx,rows*dy);
-     camera.position.set(0,.38,maxDim*1.32+3.3);camera.lookAt(0,0,0);
+     const radians=THREE.MathUtils.degToRad(camera.fov);
+     const vertical=2*Math.tan(radians/2),horizontal=vertical*camera.aspect;
+     // Fill the available projector/phone scene but keep the whole crate grid
+     // within both frame axes, regardless of box count and aspect ratio.
+     const gridWidth=columns*dx+.55,gridHeight=rows*dy+.7;
+     const distance=Math.max(3.6,Math.max(gridWidth/horizontal,gridHeight/vertical)*1.14);
+     camera.position.set(0,.20,distance);camera.lookAt(0,0,0);
      renderer.render(scene,camera);
     };
     raf=requestAnimationFrame(draw);
