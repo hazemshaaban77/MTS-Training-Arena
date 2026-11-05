@@ -167,14 +167,16 @@ export default function ArenaWheel3D({sectors,spin,serverNow,canSpin,onSpin,ar,c
     const ledGold=new THREE.Color(0xffdf99),ledTeal=new THREE.Color(0x70eadd),ledDim=new THREE.Color(0x334858);
     let ledPhase=-1;
     disposables.push(orbGeo,lightMaterial);
-    // Authentic centre badge: the EXACT approved Arena PNG, never retyped or regenerated.
-    const hub=mesh(new THREE.CylinderGeometry(.77,.77,.40,80),brass,wheel,0,0,.48);hub.rotation.x=Math.PI/2;
-    const inset=mesh(new THREE.CylinderGeometry(.68,.68,.07,80),graphite,wheel,0,0,.73);inset.rotation.x=Math.PI/2;
-    ring(.69,.035,.77,bright);
+    // The true approved Arena logo must STAY UPRIGHT when the prize wheel spins.
+    // Mount this mechanical hub to the stationary stage (same parent as pointer),
+    // while colored sectors, LEDs and outer frame remain on the rotating wheel.
+    const hub=mesh(new THREE.CylinderGeometry(.77,.77,.40,80),brass,stage,0,0,.48);hub.rotation.x=Math.PI/2;
+    const inset=mesh(new THREE.CylinderGeometry(.68,.68,.07,80),graphite,stage,0,0,.73);inset.rotation.x=Math.PI/2;
+    const hubRim=mesh(new THREE.TorusGeometry(.69,.035,8,64),bright,stage,0,0,.77);
     const approvedLogo=new THREE.TextureLoader().load(siteAsset('/e2-preview/assets/arena-logo-safe-margin.png'));
     approvedLogo.colorSpace=THREE.SRGBColorSpace;
     const approvedLogoMat=new THREE.MeshBasicMaterial({map:approvedLogo,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
-    const approvedBadge=mesh(new THREE.PlaneGeometry(1.17,.68),approvedLogoMat,wheel,0,0,.82);
+    const approvedBadge=mesh(new THREE.PlaneGeometry(1.17,.68),approvedLogoMat,stage,0,0,.82);
     approvedBadge.renderOrder=3;
     disposables.push(approvedLogo,approvedLogoMat);
     // Jewelled fixed top pointer: it does not rotate with the game sectors.
