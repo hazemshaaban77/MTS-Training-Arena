@@ -21,8 +21,14 @@ export function arenaLiveUrl(code:string):string|null{
   return url.toString();
  }catch{return null;}
 }
-export async function api(path:string,body?:any,token?:string){
- const firebaseToken=await trainerToken();
+/**
+ * Public trainee/projector routes deliberately do not wait for Firebase
+ * authStateReady(). Trainer endpoints still require the Firebase ID token.
+ * Caller opts in ONLY for public endpoints; no auth semantics are relaxed
+ * on session mutation/control APIs.
+ */
+export async function api(path:string,body?:any,token?:string,options?:{publicRequest?:boolean}){
+ const firebaseToken=options?.publicRequest===true?null:await trainerToken();
  const configured=apiOrigin();
  // Fallback applies ONLY to idempotent GETs. Never resend a POST after network
  // uncertainty: that could duplicate an answer, vote, room, or admin action.
