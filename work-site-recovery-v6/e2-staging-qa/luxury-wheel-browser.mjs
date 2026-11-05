@@ -131,6 +131,11 @@ try{
   image:el.getBoundingClientRect().toJSON()
  }));
  assert.ok(style.stage&&style.floor&&style.wings,'Broadcast stage/truss/floor present');
+ const projectorFrame=await wheel.evaluate(el=>{
+  const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height,viewport:innerHeight};
+ });
+ assert.ok(projectorFrame.height<=530,'Projector wheel must be framed to 16:9: '+JSON.stringify(projectorFrame));
+ assert.ok(projectorFrame.bottom<=projectorFrame.viewport+4,'Entire wheel needs to fit on projector: '+JSON.stringify(projectorFrame));
 
 
  // Actual button interaction on React PARTICIPANT UI, not a forged score.
@@ -165,6 +170,10 @@ try{
  assert.ok(sectors.some(s=>s.points===result),'Award comes only from configured server sector');
  await projector.waitForFunction(()=>document.querySelector('.wheel-outcome-grand')!==null,
   null,{timeout:8500});
+ const resultBox=await projector.locator('.wheel-outcome-grand').evaluate(el=>{
+  const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height,viewport:innerHeight};
+ });
+ assert.ok(resultBox.bottom<=resultBox.viewport+4,'Winner card must be visible without scrolling: '+JSON.stringify(resultBox));
 
  const repeated=await state();
  assert.equal(repeated.json.game.spin.id,spin.id);
