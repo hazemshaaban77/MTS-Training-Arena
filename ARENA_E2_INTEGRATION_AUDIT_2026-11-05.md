@@ -35,3 +35,11 @@ Status: **INTEGRATION CANDIDATE / NOT RELEASED**. Branch created from `feature/a
 ## Current execution record
 - 2026-11-05: created **a separate candidate branch** from latest identified wheel branch; no feature-code changes, merge to main, release or production configuration changes.
 - Direct inspection of GitHub workflows, V6 package scripts, wheel/reveal/branding reports, E2 master plan and branch ancestry performed. **No new automated test suite was executed in this audit**.
+
+## 2026-11-05 follow-up — CI evidence and automatic trigger
+- Independently read workflow run `41996667260` via GitHub Actions jobs endpoint. The `ephemeral-v6-real-api` job (ID `127141410322`) concluded **success**, and all reported steps concluded success: dependencies, baseline V6 authorization and scoring, public-stage contract, local build, temporary SQLite HTTP API, Chromium 2/5 clients, manual/auto reveal, wheel mobile/projector, and screenshot artifact.
+- Artifact `13401155746` / `arena-e2-sprint05-ephemeral-real-api-e2e` exists, was not expired at inspection, and belongs to tested source SHA `5d010568328b34e996225caf81d57ed0f7275fbc`. This is synthetic CI evidence only, not evidence of real devices or live backend.
+- Added `work/arena-e2-integration-audit-20261105` to `.github/workflows/arena-e2-staging-e2e.yml` push branch filter, retaining `workflow_dispatch`; workflow remains no-deploy, temporary SQLite, read-only repository permissions, and no production credentials.
+- Workflow configuration update commit: `e5b517ca2b19d4d251f52b4993baac60d1123433`. This update itself matches the workflow path filter, but **a new run has not yet been independently confirmed**. GitHub may suppress workflow triggers for pushes originating from certain automation tokens. Do not claim new full-head green until a matching completed run is found.
+- At audit time, GitHub commit combined-status endpoint for this new commit returned no legacy statuses; absence of statuses is not equivalent to failure or success.
+- Release remains BLOCKED for exact live Sites source mapping, current-head CI verification, authorized isolated staging and physical mobile/projector tests.
