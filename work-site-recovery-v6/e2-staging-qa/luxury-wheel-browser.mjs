@@ -95,7 +95,17 @@ try{
   trainee.goto(root+'/MTS-Training-Arena/v6/?view=play&code='+code,{waitUntil:'domcontentloaded'})
  ]);
  const wheel=projector.locator('[data-testid="arena-wheel3d"]');
- await wheel.waitFor({timeout:25000});
+ await projector.waitForTimeout(2200);
+ const debug=await projector.evaluate(()=>({
+  path:location.pathname,search:location.search,body:document.body.innerText.slice(0,1900),
+  wheelNodes:document.querySelectorAll('[data-testid="arena-wheel3d"]').length,
+  fallback:document.querySelectorAll('.arena-wheel-webgl-unavailable').length,
+  gameNodes:document.querySelectorAll('.presentation-play').length,
+  activeMode:document.querySelectorAll('.session-shell.projector').length
+ }));
+ console.log('WHEEL_PROJECTION_DIAGNOSTIC',JSON.stringify(debug));
+ await projector.screenshot({path:path.join(output,'13-wheel-debug-initial.png'),fullPage:true});
+ await wheel.waitFor({state:'attached',timeout:22000});
  const tap=trainee.locator('.arena-wheel3d__tap');
  await tap.waitFor({timeout:20000});
  await until(async()=>await tap.isEnabled(),13000);
