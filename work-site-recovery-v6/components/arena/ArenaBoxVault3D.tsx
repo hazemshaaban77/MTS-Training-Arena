@@ -6,6 +6,7 @@
  */
 import {useEffect,useRef,useState} from 'react';
 import './ArenaBoxVault3D.css';
+import {loadArenaCrateGeometry} from './ArenaSciFiCrateGeometry';
 type Props={items:string[];used:number[];active:number;canChoose:boolean;repeatable:boolean;onOpen:(i:number)=>void;ar:boolean};
 export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,onOpen,ar}:Props){
  const ref=useRef<HTMLDivElement>(null),state=useRef({used,active,canChoose,repeatable,onOpen}),[unavailable,setUnavailable]=useState(false);
@@ -43,23 +44,70 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
       if(index!==undefined)mesh.userData.boxIndex=index;
       return mesh;
     };
+    // The exact nine meshes of the user-selected Agustín Hönnun Sci-Fi Crate,
+    // repacked without 4K textures. One geometry shared across all boxes.
+    // If decompression fails, preserve the existing working accessible vault.
+    const sourceParts=await loadArenaCrateGeometry(THREE).catch(error=>{
+      console.warn('Original Sci-Fi Crate geometry unavailable; retaining fallback.',error);
+      return null;
+    });
+    if(gone){for(const part of sourceParts||[])part.geometry.dispose();return;}
+    for(const part of sourceParts||[])assets.push(part.geometry);
+    const crateBodyMat=new THREE.MeshStandardMaterial({color:0x0b2d4a,metalness:.63,roughness:.35});
+    const crateFrameMat=new THREE.MeshStandardMaterial({color:0x36849f,metalness:.87,roughness:.25});
+    const crateBronzeMat=new THREE.MeshStandardMaterial({color:0xb9a070,metalness:.85,roughness:.28});
+    const crateStrapMat=new THREE.MeshStandardMaterial({color:0x1b6872,metalness:.69,roughness:.30});
+    assets.push(crateBodyMat,crateFrameMat,crateBronzeMat,crateStrapMat);
     const count=items.length,columns=Math.min(5,Math.ceil(Math.sqrt(count*1.5))),rows=Math.ceil(count/columns);
     const w=1.46,h=1.32,spacingX=1.75,spacingY=1.75;
-    const crates:Array<{root:any;lid:any;gold:any;index:number;open:number}>=[];
+    const crates:Array<{root:any;lid:any;gold:any;index:number;open:number;signal?:any}>=[];
     for(let i=0;i<count;i++){
       const col=i%columns,row=Math.floor(i/columns);
       const x=(col-(Math.min(columns,count)-1)/2)*spacingX;
       const y=((rows-1)/2-row)*spacingY;
       const body=new THREE.Group();world.add(body);body.position.set(x,y,0);
-      object(new THREE.BoxGeometry(w,1.02,1.08),dark,body,0,-.13,0,i);
-      object(new THREE.BoxGeometry(w+.08,.13,1.16),gold,body,0,-.44,0,i);
-      object(new THREE.BoxGeometry(.14,1.07,1.14),gold,body,0,-.12,0,i);
-      object(new THREE.BoxGeometry(w+.03,.13,1.17),gold,body,0,.33,0,i);
-      object(new THREE.BoxGeometry(.34,.32,.12),glow,body,0,-.15,.60,i);
-      object(new THREE.BoxGeometry(.15,.12,.09),activeMat,body,0,-.12,.68,i);
-      const lid=new THREE.Group();lid.position.set(0,.43,-.52);body.add(lid);
-      object(new THREE.BoxGeometry(w+.12,.23,1.24),gold,lid,0,.03,.52,i);
-      object(new THREE.BoxGeometry(1.06,.04,.78),side,lid,0,.165,.52,i);
+      let lid=new THREE.Group(),signal:any;
+      if(sourceParts){
+        // Source is Z-up in its original FBX, but its glTF world transforms
+        // have already been applied to the packed Y-up geometry.
+        const assembly=new THREE.Group();
+        assembly.scale.setScalar(2.02);
+        assembly.position.set(0,-.55,0);
+        body.add(assembly);
+        // Back hinge: rotate actual top/cover/handle/light geometry rather than
+        // a temporary cube. All pieces remain real meshes from the GLB.
+        lid.position.set(0,.615,-.30);
+        assembly.add(lid);
+        signal=new THREE.MeshStandardMaterial({
+          color:0x17b59a,metalness:.33,roughness:.22,
+          emissive:0x00c99c,emissiveIntensity:.65
+        });
+        assets.push(signal);
+        const moving=/^(2Top|3Cover|1Handle|6Edges|4Lights)/;
+        for(const {name,geometry} of sourceParts){
+          const material=name.startsWith('4Lights')?signal:
+            name.startsWith('8Straps')?crateStrapMat:
+            name.startsWith('5Chasis')||name.startsWith('2Top')?crateFrameMat:
+            name.startsWith('7Box')||name.startsWith('9Base')?crateBodyMat:crateBronzeMat;
+          const mesh=new THREE.Mesh(geometry,material);
+          mesh.userData.boxIndex=i;
+          if(moving.test(name)){
+            mesh.position.set(0,-.615,.30);
+            lid.add(mesh);
+          }else assembly.add(mesh);
+        }
+      }else{
+        // Fallback still uses the existing legacy geometry for old browsers.
+        object(new THREE.BoxGeometry(w,1.02,1.08),dark,body,0,-.13,0,i);
+        object(new THREE.BoxGeometry(w+.08,.13,1.16),gold,body,0,-.44,0,i);
+        object(new THREE.BoxGeometry(.14,1.07,1.14),gold,body,0,-.12,0,i);
+        object(new THREE.BoxGeometry(w+.03,.13,1.17),gold,body,0,.33,0,i);
+        object(new THREE.BoxGeometry(.34,.32,.12),glow,body,0,-.15,.60,i);
+        object(new THREE.BoxGeometry(.15,.12,.09),activeMat,body,0,-.12,.68,i);
+        lid.position.set(0,.43,-.52);body.add(lid);
+        object(new THREE.BoxGeometry(w+.12,.23,1.24),gold,lid,0,.03,.52,i);
+        object(new THREE.BoxGeometry(1.06,.04,.78),side,lid,0,.165,.52,i);
+      }
       const number=document.createElement('canvas');number.width=160;number.height=120;
       const ctx=number.getContext('2d');
       if(ctx){ctx.fillStyle='#fff1ca';ctx.font='bold 83px Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1).padStart(2,'0'),80,61);
@@ -67,7 +115,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
        const mat=new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false});
        const badge=new THREE.Sprite(mat);badge.position.set(0,-.15,.77);badge.scale.set(.54,.39,1);body.add(badge);assets.push(texture,mat);
       }
-      crates.push({root:body,lid,gold:body,index:i,open:0});
+      crates.push({root:body,lid,gold:body,index:i,open:0,signal});
     }
     const stage=object(new THREE.BoxGeometry(columns*spacingX+.65,.35,rows*spacingY+.8),dark,world,0,-((rows-1)/2)*spacingY-1.1,-.58);
     const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
@@ -100,6 +148,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
         const desired=official?1:0;
         chest.open=reduce?desired:chest.open+(desired-chest.open)*Math.min(1,dt*4.6);
         chest.lid.rotation.x=-1.17*chest.open;
+        if(chest.signal)chest.signal.emissiveIntensity=st.active===chest.index?1.75:official?1.1:.48;
         chest.root.position.z=st.active===chest.index?.17:0;
       }
       if(!reduce)world.rotation.y=Math.sin(time*.00032)*.06;
@@ -127,6 +176,10 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
      disabled={!canChoose||exhausted} onClick={()=>onOpen(i)}>{String(i+1).padStart(2,'0')}</button>;
   })}
   </div>
+  <a className="arena-box3d__credit" href="https://sketchfab.com/3d-models/sci-fi-crate-now-free-8a8f77af0de14630b94d2cda49823a74"
+     target="_blank" rel="noopener noreferrer" aria-label={ar?'مصدر نموذج الصناديق ثلاثية الأبعاد':'3D crate model credit'}>
+     Sci-Fi Crate by Agustín Hönnun · CC BY · Recolored for MTS Arena
+  </a>
   {unavailable&&<span className="arena-box3d__lite-note">{ar?'المجسم غير متاح على الجهاز؛ اختار الصندوق من الأرقام':'3D not supported. Choose a numbered box.'}</span>}
  </div>;
 }
