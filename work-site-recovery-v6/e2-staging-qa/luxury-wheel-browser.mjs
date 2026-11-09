@@ -248,7 +248,10 @@ try{
  // The cinematic intro can hide the scene while original React initializes;
  // verify that genuine geometry mounts, then inspect its actual dimensions.
  await cratePage.waitForFunction(()=>!!document.querySelector('.stage-splash .splash-skip')||!!document.querySelector('[data-source-model="agustin-honnun-sci-fi-crate"]'),null,{timeout:16000});
- // The scene auto-transitions after the introduction timer; no skip click is required.
+ // Trigger the real React intro Skip control (not a server/game mutation),
+ // then test the full 3D renderer without two WebGL scenes competing.
+ await cratePage.evaluate(()=>document.querySelector('.stage-splash .splash-skip')?.click());
+ await cratePage.waitForFunction(()=>!document.querySelector('.stage-splash'),null,{timeout:18000});
  const crateDebug=await cratePage.evaluate(()=>({
    sceneCount:document.querySelectorAll('.arena-box3d').length,
    sources:[...document.querySelectorAll('[data-source-model]')].map(x=>x.getAttribute('data-source-model')),
