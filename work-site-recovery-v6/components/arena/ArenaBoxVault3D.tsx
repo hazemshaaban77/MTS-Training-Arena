@@ -13,6 +13,7 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
  useEffect(()=>{
   const root=ref.current;if(!root||!items.length)return;
   let gone=false,raf=0,renderer:any,select:(e:PointerEvent)=>void=()=>{};
+  let startTimer=0,introObserver:MutationObserver|undefined,launched=false;
   const assets:Array<{dispose:()=>void}>=[];
   const coarse=!!window.matchMedia?.('(pointer: coarse)')?.matches;
   const reduced=!!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -96,12 +97,15 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
      }
     };
     renderer.domElement.addEventListener('pointerup',select);
-    let w=0,h=0,previous=performance.now(),frames=0;
+    let w=0,h=0,previous=performance.now(),frames=0,lastFrame=0;
+    const targetFrameMs=coarse?50:34; // Cap to 20/30fps: avoid software-GPU saturation.
     const bounds=new THREE.Box3(),frameCenter=new THREE.Vector3(),frameSize=new THREE.Vector3();
     const draw=(time:number)=>{
      if(gone)return;
-     raf=requestAnimationFrame(draw);if(document.hidden)return;
-     if(++frames%2!==0&&coarse)return;
+     raf=requestAnimationFrame(draw);
+     if(document.hidden||document.querySelector('.stage-splash'))return;
+     if(time-lastFrame<targetFrameMs)return;
+     lastFrame=time;frames++;
      const rw=Math.max(1,root.clientWidth),rh=Math.max(1,root.clientHeight);
      if(rw!==w||rh!==h){w=rw;h=rh;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
      const dt=Math.min(.07,Math.max(0,(time-previous)/1000));previous=time;
@@ -139,9 +143,20 @@ export default function ArenaBoxVault3D({items,used,active,canChoose,repeatable,
     raf=requestAnimationFrame(draw);
    }catch(error){if(!gone){console.warn('Sci-Fi Crate unavailable; using accessible numbered selection.',error);setUnavailable(true);}}
   };
-  void start();
+  // The intro also runs a real 3D scene. Never create a second WebGL context
+  // while that broadcast intro is playing; this fixes low-powered projectors
+  // and software-WebGL Chromium becoming unresponsive before crate selection.
+  const startWhenReady=()=>{
+   if(gone||launched)return;
+   if(document.querySelector('.stage-splash'))return;
+   launched=true;introObserver?.disconnect();void start();
+  };
+  introObserver=new MutationObserver(startWhenReady);
+  introObserver.observe(document.body,{childList:true,subtree:true});
+  startTimer=window.setTimeout(startWhenReady,150);
   return ()=>{
-   gone=true;cancelAnimationFrame(raf);
+   gone=true;window.clearTimeout(startTimer);introObserver?.disconnect();
+   cancelAnimationFrame(raf);
    if(renderer){renderer.domElement.removeEventListener('pointerup',select);renderer.domElement.removeEventListener('webglcontextlost',onLost);renderer.dispose();renderer.domElement.remove();}
    for(const item of assets)try{item.dispose();}catch{/* release GPU resource */}
   };
