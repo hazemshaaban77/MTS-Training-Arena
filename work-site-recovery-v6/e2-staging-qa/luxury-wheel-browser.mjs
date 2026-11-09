@@ -235,6 +235,14 @@ try{
  ok(await api('control',{code:boxCode,revision:boxHost.revision,action:'start'},auth),'start crate room');
  const cratePage=await crateCtx.newPage();
  cratePage.on('pageerror',e=>problems.push('crate: '+e.message));
+ cratePage.on('console',msg=>{
+  const line=msg.text();
+  if(/Sci-Fi Crate unavailable|WebGL|Context Lost|THREE\.WebGLRenderer|deflate|ERR_/.test(line))
+   console.warn('CRATE_BROWSER_DIAGNOSTIC',msg.type(),line.slice(0,220));
+ });
+ cratePage.on('requestfailed',req=>{
+  if(req.url().includes('/api/'))console.warn('CRATE_API_REQUEST_FAILED',req.failure()?.errorText?.slice(0,120));
+ });
  await cratePage.goto(root+'/MTS-Training-Arena/v6/?view=display&code='+boxCode,
   {waitUntil:'domcontentloaded'});
  // The cinematic intro can hide the scene while original React initializes;
@@ -245,6 +253,9 @@ try{
    sceneCount:document.querySelectorAll('.arena-box3d').length,
    sources:[...document.querySelectorAll('[data-source-model]')].map(x=>x.getAttribute('data-source-model')),
    canvasCount:document.querySelectorAll('.arena-box3d canvas').length,
+   viewExists:!!document.querySelector('.arena-box3d__scene'),
+   fallback:!!document.querySelector('.arena-box3d--lite'),
+   splash:!!document.querySelector('.stage-splash'),
    body:document.body.innerText.slice(0,1300)
  }));
  console.log('LICENSED_CRATE_DIAGNOSTIC',JSON.stringify(crateDebug));
@@ -256,6 +267,9 @@ try{
    sourceCount:document.querySelectorAll('[data-source-model]').length,
    gameCount:document.querySelectorAll('.box-stage--vault').length,
    splashCount:document.querySelectorAll('.stage-splash').length,
+   fallback:!!document.querySelector('.arena-box3d--lite'),
+   sceneRoot:!!document.querySelector('.arena-box3d__scene'),
+   canvasCount:document.querySelectorAll('.arena-box3d__scene canvas').length,
    text:document.body.innerText.slice(0,300)
   })).catch(()=>({unavailable:true}));
   console.warn('CRATE_STAGE_RECOVERY_DIAGNOSTIC',JSON.stringify(beforeReload));
