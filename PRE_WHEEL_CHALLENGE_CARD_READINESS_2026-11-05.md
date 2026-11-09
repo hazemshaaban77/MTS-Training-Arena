@@ -70,3 +70,16 @@ No merge, deploy, production Firebase/Cloudflare/D1 writes, paid integrations, r
 | **Quaternius Scifi Container** | Poly Pizza https://poly.pizza/m/22FBVK7m9c — glTF/FBX, CC0. | Very permissive backup and browser-friendly; likely visually too low-poly without lighting/material work. |
 
 **Adoption gate:** before integration into existing `Open the Box` activity, inspect actual file download, material/textures, license file, GLB or glTF structure, whether lid opens, asset load speed with 6–12 visible boxes, WebGL loss/fallback, Arabic/English labels, and server-owned opened/closed state. Do not download unlicensed models, edit original corporate logos, create new branches, or mutate live scoring. The approved broader app remains Premium Broadcast 2D with **embedded interactive 3D props**, not a 3D stage environment.
+
+
+## 2026-11-09 — Open the Box 3D integration closed (isolated build)
+- **Verdict:** GO for Wheel Challenge Card development on the SAME branch; still NO-GO for production until physical-device and live authorization/provenance gates are completed.
+- Exact green checkpoint: `9123e8068eb074cb475d286cdacc757d5be091ae`.
+- [GitHub Actions run 42658178963](https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/42658178963): **completed / success**; every job step passed including baseline V6, authorization and score tests, frontend/API builds, synthetic room clients, projector reveal, 3D crate AND wheel independently.
+- CI now runs the existing `e2-staging-qa/luxury-wheel-browser.mjs` in separate `--crate` and `--wheel` Node/browser processes. **No new test file** or feature branch created.
+- Actual Agustín Hönnun nine-piece Sci-Fi Crate is embedded in `ArenaSciFiCrateGeometry.ts`, with attribution in the UI. PBR Arena blue/green/gold, hinged lid, keyboard/accessible numeric fallback and server-approved open state.
+- The projector's prize reveal uses a RTL-aware side-by-side layout, protects canvas geometry in the viewing frustum, and keeps the server result visible. Dedicated Chromium visual evidence: `19-licensed-sci-fi-crates-projector.png` (closed); `20-licensed-crate-server-open-projector.png` (server opening); `21-licensed-crate-narrow-layout.png` (390px width).
+- The intermittent original GPU test failure occurred while the stage intro and the crates competed for GPU resources. The shipped code **defers crate WebGL setup until after StageSplash**, caps animation frame rate to 20/30 fps, and tests loading after using the real intro Skip action.
+- QA verified a server-issued box opening (second crate), official used-state/disabled duplicate selection, authorized read-only projector, 3D mesh fit, prize card fit, RTL two-column view, narrow-view overflow and original CC BY attribution. The 3D wheel also passed independently.
+- Source/server/scoring **not redeployed or merged**. Existing real-device, live Firebase guest QR access, low-power GPU and production-source provenance gates remain unverified.
+- Follow-on scope: Wheel Challenge Card trainer-controlled evaluation and idempotent scoring with audit logs; must not bypass backend authority.
