@@ -51,11 +51,15 @@ const until=async(predicate,timeout=10000)=>{
  }
  throw Error('Timed out checking authoritative V6 state');
 };
+// Two independent CLI scenarios share this source but run in separate Node processes.
+// This prevents a prior SwiftShader wheel render from starving the crate GPU.
+const scenario=process.argv.includes('--wheel')?'wheel':process.argv.includes('--crate')?'crate':'both';
 let browser;
 const contexts=[];
 const problems=[];
 try{
  await checkReady();
+ if(scenario!=='crate'){
  const sectors=[
   {kind:'prize',label:'Recognition Star',points:250,detail:'Knowledge participation star',repeatable:true},
   {kind:'prize',label:'Teamwork Reward',points:400,detail:'Outstanding teamwork',repeatable:true},
@@ -201,16 +205,13 @@ try{
  await screenshot(trainee,'18-luxury-wheel-mobile-result.png',true);
  const mobile=await trainee.evaluate(()=>({viewport:innerWidth,content:document.documentElement.scrollWidth}));
  assert.ok(mobile.content<=mobile.viewport+2,'Responsive wheel causes horizontal overflow '+JSON.stringify(mobile));
- // Release both expensive WebGL wheel views before the separate crate scene.
- await projector.close();
- await trainee.close();
-
- // Restart Chromium between independent heavy WebGL scenes. SwiftShader can
- // lose shared GPU contexts after wheel screenshot rendering; a fresh process
- // tests the crate as it would be opened in a new session.
+ console.log('WHEEL_FIXTURE_PASS',JSON.stringify({signedResult:true,oneServerLedger:true,duplicateSpinRejected:true,countdownMs:before}));
  await projectorCtx.close();
  await traineeCtx.close();
  await browser.close();
+ browser=undefined;
+ }
+ if(scenario!=='wheel'){
  browser=await chromium.launch({
   headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']
  });
@@ -323,11 +324,10 @@ try{
  assert.equal(narrow.fit,'true','Opened crate geometry fits narrow camera frustum');
  await screenshot(cratePage,'21-licensed-crate-narrow-layout.png',true);
 
- assert.deepEqual(problems,[],'No React WebGL runtime errors in wheel or licensed crate');
- console.log(JSON.stringify({status:'PASS',mode:'actual V6 participant React + real backend + 1920px projector',
-  winnerIndex:winner.game.spin.index,pointsFromServer:result,uid:'synthetic',
-  countdownMs:before,spinMs:spin.stopsAt-spin.startsAt,webglCanvas:true,
-  noDoubleSpin:duplicate.status===409,stagingOnly:true},null,2));
+ console.log('CRATE_FIXTURE_PASS',JSON.stringify({serverOwnedOpen:true,duplicateLock:true,webglModel:true,projectorFit:true,narrowFit:true}));
+ }
+ assert.deepEqual(problems,[], 'No React browser errors in '+scenario+' scenario');
+ console.log('ARENA_E2_3D_PASS',JSON.stringify({scenario,isolatedFixture:true,noLiveWrites:true}));
 }finally{
  for(const ctx of contexts)try{await ctx.close()}catch{}
  if(browser)await browser.close();
