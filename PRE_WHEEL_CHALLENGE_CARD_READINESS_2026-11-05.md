@@ -109,3 +109,14 @@ No merge, deploy, production Firebase/Cloudflare/D1 writes, paid integrations, r
 - Existing original wheel, 3D crate, Challenge Card browser, multi-trainee simulator, public projector/intro and privacy tests all passed in the same complete workflow.
 - The legacy software-rendered Chromium 3-second transient countdown DOM check was replaced with a non-blocking visual sample while retaining strict server-time countdown, immutable winner and duplicate spin numeric assertions. **Not** a production clock or visual UX change.
 - No new branches, files or deployment. Physical Android/iOS + projector, actual guest QR/Firebase access, deployed V6 provenance, and release approval still outstanding.
+
+
+### 2026-11-10 — Animated live leaderboard score-and-rank feedback
+- **Code checkpoint:** `ff67ebeb609eb75f4f5f61dd7d50386def0c16d2`; full GitHub CI **SUCCESS**: https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/42812383499
+- Improved the existing `Session.tsx` `Leaderboard`, no new component/file: stable participant/team row identity, host-verified score delta (+ or −), rank up/down indicators, a short visual pulse after a changed official server snapshot, and a consistent bilingual/RTL display.
+- Preserves signed official server `score` with no optimistic local points ledger. Indicators are visual comparisons only, clear after 3.4 seconds, and do not animate with reduced motion or effects-off.
+- Stylistic changes appended to existing `ArenaGamePolish.css`, not large new assets or duplicate dashboards. Existing podium and final branding remain unchanged.
+- Added real 1920×1080 Chromium projector regression to existing `e2-staging-qa/luxury-wheel-browser.mjs --challenge`. The trainer enables the official board, settles a signed −600 assessment, verifies `data-server-score="-600"` and the visible negative-delta indicator (Western and Arabic-Indic digit support), then restores the original projector layout.
+- Evidence screenshot in run 42812383499 artifact `arena-e2-sprint05-ephemeral-real-api-e2e`: `23-server-signed-leaderboard-penalty.png`; original Challenge Card screenshot also preserved as `22-wheel-challenge-card-projector.png`.
+- All previous tests pass on the same code SHA: V6 baseline and score authorization, frontend/API build, simulated multi-client session, projector privacy, cinematic reveal, Wheel Challenge Card, Sci-Fi Crate, and actual wheel.
+- **Still NO live deployment approval:** need real Android/iOS and projector test, verified real guest QR/Firebase access, production source provenance, and visual signoff. No merge or deploy was performed.
