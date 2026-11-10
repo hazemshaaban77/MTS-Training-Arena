@@ -277,3 +277,51 @@ html body .session-shell.trainee .trainee-score-hero>strong{
 html body .session-shell.trainee .trainee-score-burst{
  font-size:clamp(24px,6vw,43px)!important;z-index:40!important;
 }
+
+
+/* Experience 2: signed Wheel Challenge Card — projector-first, not a second game engine. */
+.wheel-challenge-card{
+ width:min(100%,1100px);margin:14px auto 8px;overflow:hidden;
+ border:1.5px solid #5497bd;border-radius:20px;
+ background:linear-gradient(132deg,#112b48 0%,#0a1d33 64%,#123b43 100%);
+ color:#f2f8ff;box-shadow:0 16px 36px #0007,0 0 25px #248fa72e;
+ text-align:start;direction:inherit;
+}
+.wheel-challenge-card__eyebrow{
+ display:flex;align-items:center;gap:10px;padding:12px clamp(14px,2vw,22px);
+ background:linear-gradient(90deg,#164f70,#18596088);font-size:13px;
+ letter-spacing:.07em;font-weight:900;color:#c9f3fa;
+}
+.wheel-challenge-card__eyebrow b{margin-inline-start:auto;color:#f6d993;font-size:17px}
+.wheel-challenge-card__body{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(170px,.8fr);gap:18px;align-items:center;padding:clamp(14px,1.8vw,26px)}
+.wheel-challenge-card__copy{min-width:0}
+.wheel-challenge-card__copy small{color:#3ce3b6;font-weight:900;letter-spacing:.05em}
+.wheel-challenge-card__copy h3{font-size:clamp(22px,2.7vw,38px);line-height:1.22;margin:7px 0 11px;color:#fff0c4;overflow-wrap:anywhere}
+.wheel-challenge-card__copy p{font-size:clamp(14px,1.45vw,20px);line-height:1.45;color:#d8eaf6;margin:0;overflow-wrap:anywhere}
+.wheel-challenge-card__spotlight{
+ border:1px solid #47859a;background:#09273be8;border-radius:13px;padding:16px;
+ display:flex;flex-direction:column;gap:8px;min-width:0
+}
+.wheel-challenge-card__spotlight span{font-size:12px;letter-spacing:.07em;font-weight:800;color:#61e0bc}
+.wheel-challenge-card__spotlight strong{font-size:clamp(17px,1.6vw,25px);line-height:1.3;overflow-wrap:anywhere}
+.wheel-challenge-card__spotlight small{font-size:12px;color:#b9d8e4}
+.wheel-challenge-card__footer{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 20px;background:#091b2eb5;color:#b7d5e5;font-size:13px;font-weight:800}
+.wheel-challenge-card__footer b{margin-inline-start:auto;color:#66f4bd;font-size:clamp(17px,2vw,26px)}
+.wheel-challenge-card--penalty{border-color:#c99854}
+.wheel-challenge-card--penalty .wheel-challenge-card__eyebrow{background:linear-gradient(90deg,#654d2d,#31516b)}
+.arena-rubric-reason{display:flex;flex-direction:column;gap:8px;color:#d9ecf7}
+.arena-rubric-reason textarea{width:100%;min-height:76px;resize:vertical;border:1px solid #719aac;border-radius:11px;background:#0a2036;color:#fff;padding:11px;font:inherit;line-height:1.45}
+.arena-rubric-reason textarea:focus-visible{outline:3px solid #46d8b7;outline-offset:2px}
+.arena-rubric-reason small{color:#afd3dc;font-size:12px}
+@media(max-width:700px){
+ .wheel-challenge-card__body{grid-template-columns:1fr;gap:12px;padding:14px}
+ .wheel-challenge-card__spotlight{padding:11px}
+ .wheel-challenge-card__footer{font-size:12px;padding:10px 14px}
+ .arena-practical-rubric{padding:14px}
+}
+@media(min-width:1100px) and (min-height:700px){
+ .session-shell.projector .wheel-challenge-card{max-width:1080px}
+ .session-shell.projector .wheel-challenge-card__body{padding:14px 22px}
+ .session-shell.projector .wheel-challenge-card__copy h3{font-size:clamp(24px,2.2vw,33px)}
+ .session-shell.projector .wheel-challenge-card__copy p{font-size:clamp(15px,1.1vw,19px)}
+}
