@@ -41,7 +41,8 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
   const selected=g.target===mine?.id;
   const canRequestSpin=!!g.target&&(host||selected)&&!busy&&!s.paused&&!closed&&(!spin||spin.revealed)&&g.turn<g.rounds&&!g.mini?.question;
 
-  return <div className="presentation-play wheel-stage wheel-stage--crown-real3d">
+  return <div className={'presentation-play wheel-stage wheel-stage--crown-real3d'+
+   (spin?.revealed&&['challenge','penalty'].includes(g.outcome?.kind)?' wheel-stage--challenge-revealed':'')}>
    <div className="turn-entrance" key={g.target}><span className="avatar">{turnPlayer?.name?.charAt(0)||'✦'}</span><div><small>{t('الدور الحالي','IN THE SPOTLIGHT')}</small><b>{turnPlayer?.name||t('في انتظار مشارك','Waiting for a player')}</b></div><strong>{g.turn}/{g.rounds}</strong></div>
    <div className="wheel-arena-banner"><Zap size={18}/><span>{t('المسرح جاهز… العجلة الملكية هتحدد التحدي!','LIGHTS. CAMERA. CROWN WHEEL!')}</span><Zap size={18}/></div>
    {!wheelFallback&&sectors.length>=2?<ArenaWheel3D sectors={sectors} spin={spin} serverNow={now} canSpin={canRequestSpin} countdown={count} ar={ar}
