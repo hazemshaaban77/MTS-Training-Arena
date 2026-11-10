@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
 import {joinUrl,stageFromV6,fetchPublicStage,PublicStageError} from "../public/e2-preview/v6-public-stage.mjs";
 
 // Realistic V6 /api/state payload shape, with deliberate private fields to verify redaction.
@@ -102,3 +103,30 @@ test("non-200 and invalid JSON fail without falling back to demo results",async(
  await assert.rejects(fetchPublicStage("https://arena.test","123456",{fetchImpl:async()=>({ok:true,json:async()=>{throw Error("bad json")}})}),{code:"INVALID_RESPONSE"});
  await assert.rejects(fetchPublicStage("https://arena.test","123456",{fetchImpl:async()=>{throw Error("offline")}}),{code:"NETWORK_UNAVAILABLE"});
 });
+
+
+test("E2 Cloudflare staging cannot point at production Worker, D1, Pages or Firebase",()=>{
+ const fs=requireReadFile();
+ const stage=fs("wrangler.e2-staging.toml");
+ const live=fs("wrangler.github.toml");
+ const worker=fs("github-api-worker.ts");
+ const frontend=fs("lib/firebase-client.ts");
+ assert.match(stage,/name\\s*=\\s*"mts-training-arena-e2-staging-api"/);
+ assert.match(stage,/database_name\\s*=\\s*"mts-training-arena-e2-staging"/);
+ assert.match(stage,/database_id\\s*=\\s*"becba428-cc2d-45c3-9930-438726906d79"/);
+ assert.match(stage,/ARENA_PUBLIC_ORIGIN\\s*=\\s*"https:\/\/mts-training-arena-e2-staging\\.pages\\.dev"/);
+ assert.match(stage,/ARENA_DEPLOYMENT\\s*=\\s*"e2-staging"/);
+ assert.match(stage,/ARENA_STAGING_LOCK\\s*=\\s*"locked"/);
+ assert.notEqual(stage.match(/^database_id\\s*=\\s*"([^"]+)"/m)?.[1],
+  live.match(/^database_id\\s*=\\s*"([^"]+)"/m)?.[1]);
+ assert.notEqual(stage.match(/^name\\s*=\\s*"([^"]+)"/m)?.[1],
+  live.match(/^name\\s*=\\s*"([^"]+)"/m)?.[1]);
+ assert.ok(!stage.includes("CLOUDINARY_API_SECRET"));
+ assert.ok(!stage.includes("FIREBASE_SERVICE_ACCOUNT"));
+ assert.match(worker,/if\\(env\\.ARENA_DEPLOYMENT==='e2-staging'\\)/);
+ assert.match(worker,/STAGING_LOCKED/);
+ assert.match(frontend,/STAGING_FIREBASE_NOT_CONFIGURED/);
+});
+function requireReadFile(){
+ return filename=>readFileSync(new URL("../"+filename,import.meta.url),"utf8");
+}
