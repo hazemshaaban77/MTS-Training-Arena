@@ -43,7 +43,10 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
   {rated?<div className="arena-rubric-confirmed" role="status">
    <ShieldCheck size={23}/>{t('تم اعتماد التقييم','Grade committed')}:
    <b>{rated.grade===null?'—':rated.grade+'/10'}</b>
-   <strong>{rated.delta>0?'+':''}{rated.delta} {t('نقطة','points')}</strong></div>:
+   <strong>{rated.delta>0?'+':''}{rated.delta} {t('نقطة','points')}</strong>
+   {rated.reason&&<small className="arena-rubric-confirmed__reason">
+    {t('سبب التقييم','Recorded reason')}: {rated.reason}
+   </small>}</div>:
   <><div className="arena-rubric-grade">
    <label>{t('تقييم الأداء','Performance grade')}
     <input type="range" min={0} max={10} step={1} value={grade} disabled={busy||pending}
@@ -51,9 +54,9 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
    <strong aria-live="polite">{grade}<small>/10</small></strong>
   </div>
   <div className="wheel-judge__direction" role="group" aria-label={t('إضافة أو خصم','Award or deduct')}>
-   <button type="button" className={direction===1?'chosen':''} aria-pressed={direction===1}
+   <button type="button" disabled={busy||pending} className={direction===1?'chosen':''} aria-pressed={direction===1}
     onClick={()=>setDirection(1)}><PlusCircle size={18}/>{t('مكافأة','Award')}</button>
-   <button type="button" className={direction===-1?'chosen':''} aria-pressed={direction===-1}
+   <button type="button" disabled={busy||pending} className={direction===-1?'chosen':''} aria-pressed={direction===-1}
     onClick={()=>setDirection(-1)}><MinusCircle size={18}/>{t('خصم','Deduct')}</button>
   </div>
   <p className="arena-rubric-preview"><Star size={18}/>
