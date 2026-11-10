@@ -321,7 +321,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
     // session storage. On network loss/reload, retry the SAME attempt: the
     // server returns the exact original result, not another token rotation.
     const identity=employeeId.trim().toUpperCase();
-    const recovery=recoveryInput.replace(/[\\s-]/g,'').toUpperCase();
+    const recovery=recoveryInput.replace(/[\s-]/g,'').toUpperCase();
     const fingerprintBuffer=await crypto.subtle.digest('SHA-256',
      new TextEncoder().encode(code+':'+identity+':'+recovery));
     const fingerprint=Array.from(new Uint8Array(fingerprintBuffer))
