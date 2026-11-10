@@ -86,6 +86,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
   // Deterministic, domain-separated HMACs let an identical request recover
   // exactly the SAME credentials after an uncertain reply. The per-room
   // server-held secret is never exposed in any public state or response.
+  if(typeof s.anonymous_secret!=='string'||s.anonymous_secret.length<32)fail('RECOVERY',401);
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(s.anonymous_secret),
    {name:'HMAC',hash:'SHA-256'},false,['sign']);
   const derive=async(kind:string)=>{
