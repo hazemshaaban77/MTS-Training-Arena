@@ -11,6 +11,7 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
  const [grade,setGrade]=useState(7);
  const [direction,setDirection]=useState<1|-1>(1);
  const [pending,setPending]=useState(false);
+ const [reason,setReason]=useState('');
  const isBox=mode==='box',reveal=isBox?game?.box:game?.spin;
  const sector=isBox?reveal:activity.sectors?.[reveal?.index]; // Box contents intentionally absent from publicActivity; signed reveal is server-owned
  const shown=!!reveal&&(isBox||reveal.revealed)&&['challenge','penalty'].includes(sector?.kind);
@@ -21,15 +22,17 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
  const weight=Number(activity.weight??1);
  const points=Math.min(10000,Math.round(grade*base*weight/10));
  const delta=direction*points;
- const valid=Number.isInteger(grade)&&grade>=0&&grade<=10&&Number.isFinite(points);
- useEffect(()=>{setPending(false);setGrade(7);setDirection(1);},[reveal?.id]);
+ const cleanReason=reason.trim();
+ const valid=Number.isInteger(grade)&&grade>=0&&grade<=10&&Number.isFinite(points)
+  &&cleanReason.length>=5&&cleanReason.length<=280&&!!reveal?.id&&!!targetId;
+ useEffect(()=>{setPending(false);setGrade(7);setDirection(1);setReason('');},[reveal?.id]);
  useEffect(()=>{if(!busy)setPending(false);},[busy,session.revision]);
  if(!shown)return null;
  function submit(){
   if(!valid||busy||pending||rated)return;
   setPending(true);
   onControl(isBox?'boxaward':'wheelaward',undefined,
-   {grade,direction,delta,adjustmentId:crypto.randomUUID()});
+   {grade,direction,delta,reason:cleanReason,revealId:reveal.id,target:targetId,adjustmentId:crypto.randomUUID()});
  }
  return <section className="wheel-judge arena-practical-rubric"
    aria-label={t('تقييم أداء المتدرب من عشرة','Grade practical performance out of ten')}>
@@ -55,6 +58,15 @@ export default function WheelJudge({ar,game,session,activity,busy,onControl,mode
   </div>
   <p className="arena-rubric-preview"><Star size={18}/>
    {t('التأثير على الرصيد','Leaderboard impact')}: <b>{delta>0?'+':''}{delta} {t('نقطة','points')}</b></p>
+  <label className="arena-rubric-reason" htmlFor="arena-wheel-grade-reason">
+   {t('سبب التقييم (إجباري، من 5 إلى 280 حرف)','Grade reason (required, 5–280 characters)')}
+   <textarea id="arena-wheel-grade-reason" rows={2} minLength={5} maxLength={280}
+    value={reason} disabled={busy||pending}
+    placeholder={t('مثال: شرح الحل كاملًا مع توضيح خطوات التنفيذ','e.g. Explained all steps and demonstrated the solution')}
+    onChange={e=>setReason(e.target.value)}/>
+   <small>{cleanReason.length}/280 · {t('يظهر في سجل المدرب فقط','Only the trainer can view the written reason')}</small>
+  </label>
+
   <button type="button" className="btn primary" disabled={busy||pending||!valid}
    onClick={submit}><ShieldCheck size={18}/>{t('اعتماد الدرجة','Commit grade')}</button>
   {pending&&<small role="status">{t('جاري التحقق من تسجيل الدرجة على السيرفر...',
