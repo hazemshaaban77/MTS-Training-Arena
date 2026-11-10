@@ -1,5 +1,59 @@
-# MTS Training Arena / E2 — PRE-WHEEL CHALLENGE CARD READINESS
+# MTS Training Arena / Experience 2 — Living project status
 Date: 2026-11-05
+
+## Current status — 2026-11-10 (supersedes historical checkpoint decisions below)
+
+**Implemented and green in isolated tests; locked staging deployed; NOT released to real trainees.**
+
+- Latest tested application code: `1732f46997be8bc896a2f4852172de85dca52d90`.
+- Complete exact-code CI: **SUCCESS**, https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/42845309164 . Earlier implementation CI `42844236302` also passed.
+- One active branch remains `work/arena-e2-integration-audit-20261105`; no main merge and no production V6 deployment/data change.
+- Historical headings below are immutable chronological evidence, not current pending-work lists. The Wheel Challenge Card, crate, rotating recovery, learning v1 and locked staging deployment described below are now implemented.
+
+### تقرير المشروع بالعربية
+| الجزء | الوضع الحالي |
+|---|---|
+| دخول المتدرب | QR واحد للجلسة؛ استعادة الهوية والنقاط على جهاز تاني؛ تدوير رمز الاستعادة وإلغاء توكن الجهاز القديم؛ معالجة فقدان رد النقل |
+| المدرب والبروجيكتور | تحكم الجلسة وكشف الإجابة يدوي/تلقائي؛ إخفاء الإجابات قبل الكشف وملاحظات المدرب الخاصة؛ عرض مستقل |
+| العجلة | عجلة 3D، توقيت ونتيجة من السيرفر، بطاقة تحدي، تقييم من 0–10 مع إضافة/خصم وسبب إلزامي؛ منع التقييم المكرر وتجاوز تحدي غير مقيّم |
+| الصناديق | موديل Sci-Fi Crate المرخّص وهوية MTS، حركة فتح ونتيجة معتمدة من السيرفر، منع إعادة اختيار الصندوق |
+| النتائج | ترتيب متحرك وفروق نقاط ومراكز مبنية على رصيد السيرفر؛ لوحة الفائزين الحالية محفوظة |
+| Power-ups | مضاعفة نقاط الإجابة الصحيحة، وحماية من خصم الخطأ؛ استخدام واحد لكل نوع لكل متدرب في الجلسة |
+| الثقة في الإجابة | ثلاثة مستويات تؤثر في النقاط على السيرفر؛ لا قبول لنقاط مصطنعة من المتصفح |
+| المراجعة | إعادة الأسئلة الخاطئة للمتدرب المعني؛ مراجعة ذكية لأسئلة نسبة الخطأ فيها 30% فأكثر؛ حتى 20 سؤالاً لكل مسار ومرة واحدة من كل مسار للجلسة |
+| أوضاع الأسئلة | عادي، مع احتساب السرعة، وتدريب بلا وقت أو نقاط؛ ليست مجموعة ألعاب مستقلة كاملة على نمط Blooket |
+| الفيديو | MP4/WebM مباشر يتوقف عند توقيت السؤال؛ نقطة تفاعل واحدة لكل سؤال؛ لا دعم حالي لمحرر أسئلة متعددة على YouTube |
+| التفاعل والتقارير | سحابة كلمات مع أعداد دقيقة؛ مؤشرات فردية للأسئلة الضعيفة والتحسن وأخطاء الثقة العالية |
+| الهوية والموبايل | اللوجوهات المعتمدة محفوظة؛ تحسين تباين النصوص؛ اختبارات عرض 390px بلا تجاوز أفقي في السيناريوهات المختبرة |
+
+### Verification completed
+- 131 baseline/feature tests passed; independent workerd signed Firebase-token fixtures passed. These fixtures do not prove real Firebase sign-in.
+- 12 public-stage checks, realtime notification contract, both frontend variants, compiled API and staging-only Wrangler dry run passed.
+- Local downloaded Chromium headless shell worked after system Chromium failed. Full local browser suites and exact-code GitHub CI passed: 2D preview, projector privacy, two/five independent clients, QR/recovery, reveal, challenge, crate and wheel.
+- New browser evidence confirms server-calculated learning score 2,600, word cloud, and actual native video playback paused at its question timestamp. Synthetic test clip is not a production asset.
+- 80 synthetic concurrent answer records do not establish an 80-device capacity guarantee. No physical Android/iOS, projector hardware or low-power GPU signoff is claimed.
+
+### Isolated staging deployment evidence
+- Pages: https://mts-training-arena-e2-staging.pages.dev . Deployment `083f3f56-679e-4f17-9ff5-5693ccb62c30`, status **success**, 49 static files. Metadata records exact code SHA `1732f46997be8bc896a2f4852172de85dca52d90`.
+- Pages labels its default branch deployment “production”; this is the **separate staging project**, not the existing V6 production Pages project.
+- Worker: https://mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev . Deployment ID `33dbf992c1144ed8b040261828e04ce0`; built backend checkpoint `c92e59b02397ada6cb277a3c31a8564eb26be2fe` (backend unchanged in `1732f46`).
+- Bound only to staging D1 `mts-training-arena-e2-staging` and separate ArenaLiveRoom namespace; remains `ARENA_STAGING_LOCK=locked`. No test Firebase configuration supplied or inherited.
+- Public HTTP verification: health 200 reports `locked:true` and `databaseSchemaReady:true`; session POST and `/api/me` return 503 `STAGING_LOCKED`; V6 production origin returns 403 `ORIGIN`; correct staging-origin preflight returns 204. Frontend URL returns HTTP 200.
+- Public staging frontend also passed a 390px Chromium visit: HTTP 200, no page errors, explicit Arabic locked-Firebase message, and requests only to the staging Pages host. This check used the managed proxy (certificate validation disabled only in that test browser for the proxy CA); it does not claim end-to-end sign-in or an external TLS audit.
+- Account-level quotas remain shared with production; this deployment is not authorization for a public load test.
+
+### Remaining work and dependencies, in execution order
+1. **Blocked on connected isolated Firebase:** provision dedicated project, Email/Password provider, test trainer and allowlist; apply separately validated frontend/Worker config. Existing production Firebase must not be inherited. Staging account/media administration remains disabled. No plugin install request was repeated.
+2. **After that dependency:** unlock only staging, rebuild/deploy the configured staging frontend, and test actual trainer sign-in, QR mobile entry, recovery, realtime/WebSocket, reveal, score, reconnect and report end-to-end against deployed services. Locked HTTP checks do not substitute for this.
+3. **Physical acceptance:** Android + iPhone + projector session, weak connection/reconnect, readability/accessibility and 3D performance on lower-powered devices; obtain visual acceptance. Current software Chromium evidence is insufficient for hardware approval.
+4. **Release preparation:** identify the source behind the current V6 production frontend/Worker, establish reproducible source mapping, backup/migration/rollback plan, and review the release diff. Existing production provenance remains unconfirmed. No merge or production release without the agreed release decision.
+5. **Future extended scope, not claimed complete:** spaced repetition across different days; multiple interactive checkpoints/YouTube authoring; additional distinct game modes beyond classic/speed/practice. Current delivered features are functional v1 boundaries, not completion of those expansions.
+
+**المحصلة:** التطوير المتاح اتنفذ واتختبر واتنشر على Staging مقفول. المانع الحالي لتجربة جلسة حقيقية هو تجهيز Firebase اختبار مستقل؛ بعدها اختبارات الخدمة المنشورة والأجهزة الفعلية واعتماد الإصدار. لا توجد نسبة إنجاز رقمية موثوقة لخطة مفتوحة النطاق، ولا ادعاء أن المنصة جاهزة للإطلاق النهائي.
+
+---
+## Historical execution ledger
+
 
 ## Decision
 **GO for isolated Wheel Challenge Card feature DEVELOPMENT on this branch.**
