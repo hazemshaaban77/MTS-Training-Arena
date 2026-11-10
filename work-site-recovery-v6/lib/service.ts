@@ -75,8 +75,44 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
  const token=req.headers.get('X-Player-Token'),player:any=token?await db.prepare('SELECT * FROM players WHERE session=? AND token=?').bind(code,await hash(token)).first():null;
  if(url.pathname==='/api/recover'&&method==='POST'){
   let employeeId;try{employeeId=normalizeEmployeeId(b.employeeId);}catch{fail('EMPLOYEE_ID');}
-  const employeeKey=await hash(code+':'+employeeId),recovery=normalizeRecoveryCode(b.recoveryCode);if(!/^[A-F0-9]{20}$/.test(recovery))fail('RECOVERY',401);const newToken=crypto.randomUUID()+crypto.randomUUID();
-  const r=await db.prepare('UPDATE players SET token=? WHERE session=? AND employee_key=? AND recovery_hash=?').bind(await hash(newToken),code,employeeKey,await hash(code+':'+recovery)).run();if(!r.meta.changes)fail('RECOVERY',401);await audit(db,s.owner,code,'device-recovery');return {token:newToken};
+  const employeeKey=await hash(code+':'+employeeId),recovery=normalizeRecoveryCode(b.recoveryCode);
+  if(!/^[A-F0-9]{20}$/.test(recovery))fail('RECOVERY',401);
+  // The client generates and retains one attempt ID across uncertain network
+  // retries. NEVER mint a fresh attempt ID on the server: that would lock out
+  // a trainee if the response to the first successful transfer were lost.
+  const attemptId=b.attemptId;
+  if(typeof attemptId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(attemptId))
+   fail('RECOVERY_ATTEMPT');
+  // Deterministic, domain-separated HMACs let an identical request recover
+  // exactly the SAME credentials after an uncertain reply. The per-room
+  // server-held secret is never exposed in any public state or response.
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(s.anonymous_secret),
+   {name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const derive=async(kind:string)=>{
+   const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(
+    'mts-arena-recover-v1:'+kind+':'+code+':'+employeeKey+':'+recovery+':'+attemptId.toLowerCase())));
+   return Array.from(bytes).map(x=>x.toString(16).padStart(2,'0')).join('');
+  };
+  const newToken=await derive('token'),nextCode=(await derive('next-code')).slice(0,20).toUpperCase();
+  const newTokenHash=await hash(newToken),newRecoveryHash=await hash(code+':'+nextCode);
+  const oldRecoveryHash=await hash(code+':'+recovery);
+  // Atomic compare-and-swap: exactly one transfer can consume a recovery
+  // code, even if two devices submit the old code concurrently. Score and
+  // participant ID remain untouched.
+  const updated=await db.prepare(
+   'UPDATE players SET token=?,recovery_hash=? WHERE session=? AND employee_key=? AND recovery_hash=?'
+  ).bind(newTokenHash,newRecoveryHash,code,employeeKey,oldRecoveryHash).run();
+  if(updated.meta.changes){
+   await audit(db,s.owner,code,'device-recovery');
+  }else{
+   // Idempotent response-loss retry. A DIFFERENT attempt ID with an already
+   // consumed code cannot recreate a token or reuse the old recovery code.
+   const sameAttempt=await db.prepare(
+    'SELECT id FROM players WHERE session=? AND employee_key=? AND token=? AND recovery_hash=?'
+   ).bind(code,employeeKey,newTokenHash,newRecoveryHash).first();
+   if(!sameAttempt)fail('RECOVERY',401);
+  }
+  return {token:newToken,recoveryCode:nextCode.match(/.{1,5}/g)!.join('-')};
  }
  if(url.pathname==='/api/join'&&method==='POST'){
   if(['ready','draft','completed','archived','survey'].includes(s.status))fail(['ready','draft'].includes(s.status)?'NOT_LAUNCHED':'ENDED');if(typeof b.name!=='string'||!b.name.trim()||b.name.trim().length>40)fail('NAME');
