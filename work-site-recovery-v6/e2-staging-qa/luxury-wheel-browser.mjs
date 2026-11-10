@@ -215,7 +215,7 @@ try{
  browser=await chromium.launch({
   headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']
  });
- const crateCtx=await browser.newContext({viewport:{width:1920,height:1080},deviceScaleFactor:1});
+ const crateCtx=await browser.newContext({viewport:{width:1920,height:1080},deviceScaleFactor:1,reducedMotion:'reduce'});
  contexts.push(crateCtx);
 
  // Real V6 Open the Box route: verify the actual licensed 9-mesh crate loads
