@@ -5,7 +5,7 @@ const alternateV6Api='https://mts-training-arena-v6-api.hazem-mts-arena.workers.
 let connectedApiOrigin:string|null=null;
 function apiOrigin():string {
  const external=(import.meta.env?.VITE_ARENA_API_ORIGIN||'').trim().replace(/\/$/,'');
- if(import.meta.env.VITE_ARENA_STAGE==='e2-staging'&&
+ if(import.meta.env?.VITE_ARENA_STAGE==='e2-staging'&&
   !/^https:\/\/mts-training-arena-e2-staging-api\.[a-z0-9-]+\.workers\.dev$/.test(external))
   throw Error('E2_STAGING_API_MISMATCH');
  if(external && !/^https:\/\/[^/]+$/i.test(external)) throw Error('API_NOT_CONFIGURED');
@@ -91,12 +91,12 @@ export function resolveArenaMediaUrl(url:string):string{
 // Free proof-of-concept: direct unsigned Cloudinary upload without server credentials.
 // IMPORTANT: This preset is PUBLIC. Restrict formats/folder in the Cloudinary console,
 // disable/rotate if abused, and never use it for confidential training materials.
-export const arenaUnsignedUpload=import.meta.env.VITE_ARENA_STAGE==='e2-staging'
+export const arenaUnsignedUpload=import.meta.env?.VITE_ARENA_STAGE==='e2-staging'
  ? {cloudName:'',preset:''}
  : {cloudName:'kzez0dlv',preset:'mtsarena_v6_u_7c94f2a1'};
 export async function uploadArenaMedia(file:File):Promise<{url:string;type:'image'|'video'}>{
  // E2 previews never write into the original production Cloudinary account.
- if(import.meta.env.VITE_ARENA_STAGE==='e2-staging')throw Error('STAGING_MEDIA_DISABLED');
+ if(import.meta.env?.VITE_ARENA_STAGE==='e2-staging')throw Error('STAGING_MEDIA_DISABLED');
  const allowed=['image/jpeg','image/png','image/webp','video/mp4','video/webm'];
  if(!allowed.includes(file.type)||file.size<1)throw Error('MEDIA');
  const expectedType:'image'|'video'=file.type.startsWith('video/')?'video':'image';
