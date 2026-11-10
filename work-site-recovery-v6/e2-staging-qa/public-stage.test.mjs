@@ -111,19 +111,19 @@ test("E2 Cloudflare staging cannot point at production Worker, D1, Pages or Fire
  const live=fs("wrangler.github.toml");
  const worker=fs("github-api-worker.ts");
  const frontend=fs("lib/firebase-client.ts");
- assert.match(stage,/name\\s*=\\s*"mts-training-arena-e2-staging-api"/);
- assert.match(stage,/database_name\\s*=\\s*"mts-training-arena-e2-staging"/);
- assert.match(stage,/database_id\\s*=\\s*"becba428-cc2d-45c3-9930-438726906d79"/);
- assert.match(stage,/ARENA_PUBLIC_ORIGIN\\s*=\\s*"https:\/\/mts-training-arena-e2-staging\\.pages\\.dev"/);
- assert.match(stage,/ARENA_DEPLOYMENT\\s*=\\s*"e2-staging"/);
- assert.match(stage,/ARENA_STAGING_LOCK\\s*=\\s*"locked"/);
- assert.notEqual(stage.match(/^database_id\\s*=\\s*"([^"]+)"/m)?.[1],
-  live.match(/^database_id\\s*=\\s*"([^"]+)"/m)?.[1]);
- assert.notEqual(stage.match(/^name\\s*=\\s*"([^"]+)"/m)?.[1],
-  live.match(/^name\\s*=\\s*"([^"]+)"/m)?.[1]);
+ assert.match(stage,/name\s*=\s*"mts-training-arena-e2-staging-api"/);
+ assert.match(stage,/database_name\s*=\s*"mts-training-arena-e2-staging"/);
+ assert.match(stage,/database_id\s*=\s*"becba428-cc2d-45c3-9930-438726906d79"/);
+ assert.match(stage,/ARENA_PUBLIC_ORIGIN\s*=\s*"https:\/\/mts-training-arena-e2-staging\.pages\.dev"/);
+ assert.match(stage,/ARENA_DEPLOYMENT\s*=\s*"e2-staging"/);
+ assert.match(stage,/ARENA_STAGING_LOCK\s*=\s*"locked"/);
+ assert.notEqual(stage.match(/^database_id\s*=\s*"([^"]+)"/m)?.[1],
+  live.match(/^database_id\s*=\s*"([^"]+)"/m)?.[1]);
+ assert.notEqual(stage.match(/^name\s*=\s*"([^"]+)"/m)?.[1],
+  live.match(/^name\s*=\s*"([^"]+)"/m)?.[1]);
  assert.ok(!stage.includes("CLOUDINARY_API_SECRET"));
  assert.ok(!stage.includes("FIREBASE_SERVICE_ACCOUNT"));
- assert.match(worker,/if\\(env\\.ARENA_DEPLOYMENT==='e2-staging'\\)/);
+ assert.match(worker,/if\(env\.ARENA_DEPLOYMENT==='e2-staging'\)/);
  assert.match(worker,/STAGING_LOCKED/);
  assert.match(frontend,/STAGING_FIREBASE_NOT_CONFIGURED/);
 });
