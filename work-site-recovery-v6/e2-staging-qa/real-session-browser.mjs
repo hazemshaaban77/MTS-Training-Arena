@@ -222,6 +222,17 @@ try{
  const qrToken=await qrPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode);
  assert.ok(typeof qrToken==="string"&&qrToken.length>=30,"Real React registration persists one private token");
  assert.ok(!qrPage.url().includes(qrToken),"The private player token must never appear in a QR or address bar");
+ // New participants must acknowledge their one-time recovery code BEFORE
+ // the activity buttons become interactive. Exercise the real modal, never
+ // dismiss a production privacy step via injected state.
+ const recoveryDialog=qrPage.locator(".recovery-welcome[role=dialog]");
+ await recoveryDialog.waitFor({state:"visible",timeout:12000});
+ const shownRecovery=await recoveryDialog.locator(".recovery-code").innerText();
+ assert.match(shownRecovery,/^[A-F0-9]{5}(?:-[A-F0-9]{5}){3}$/,
+  "One-time recovery code should be readable and correctly formatted");
+ assert.ok(!qrPage.url().includes(shownRecovery),"The recovery secret must not leak into QR URL");
+ await recoveryDialog.locator("button.btn.primary").click({timeout:8000});
+ await recoveryDialog.waitFor({state:"detached",timeout:8000});
  const qrProfile=ok(await get("state?code="+qrCode,{token:qrToken}),"QR token identity");
  assert.equal(qrProfile.mine?.name,"QR Browser Participant");
  const qrUid=qrProfile.mine?.id;
