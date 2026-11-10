@@ -488,7 +488,12 @@ try{
   await page.waitForFunction(()=>!!document.querySelector('.projector-leaderboard [data-server-score="-600"] .arena-rank-score--loss'),
    null,{timeout:13000});
   const scoreRibbon=await page.locator('.projector-leaderboard .arena-rank-score--loss').innerText();
-  assert.ok(scoreRibbon.includes('600'),'Real live leaderboard must display only signed -600 delta');
+  // Arabic interface uses Arabic-Indic digits; normalize presentation digits
+  // without relaxing the server's exact numeric -600 score assertion above.
+  const englishDigits=scoreRibbon.replace(/[\u0660-\u0669\u06f0-\u06f9]/g,d=>
+    String(d.charCodeAt(0)-(d.charCodeAt(0)<0x6f0?0x660:0x6f0)));
+  assert.ok(englishDigits.includes('600'),
+    'Live leaderboard must show the -600 server delta in either digit locale: '+scoreRibbon);
   await screenshot(page,'23-server-signed-leaderboard-penalty.png');
   // Keep original Wheel Challenge Card visual-fit evidence without an open
   // scoreboard overlay, preserving the presentation user's chosen layout.
