@@ -215,6 +215,23 @@ try{
  await qrPage.locator("input[autocomplete=name]").fill("QR Browser Participant");
  await qrPage.locator("input[autocomplete=off][maxlength='30']").fill("QA-QR-REACT-01");
  await qrPage.locator(".identity-confirmation input[type=checkbox]").check();
+ const joinViewport=await qrPage.evaluate(()=>{
+  const btn=document.querySelector('.join-page .join-card form .btn.primary');
+  const r=btn?.getBoundingClientRect();
+  return {bottom:r?.bottom,top:r?.top,height:r?.height,
+   viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,
+   width:innerWidth,loginCopy:document.querySelector('.join-page .private-note')?.textContent||''};
+ });
+ assert.ok(joinViewport.bottom<=joinViewport.viewport+8&&joinViewport.top>=0,
+  "QR join confirmation button should be visible without scrolling on 390x844: "+JSON.stringify(joinViewport));
+ assert.ok(joinViewport.scrollWidth<=joinViewport.width+2,
+  "QR mobile entry must not overflow horizontally: "+JSON.stringify(joinViewport));
+ assert.ok(joinViewport.loginCopy.includes("No trainer account"),
+  "Entry copy must clearly distinguish trainee QR joining from trainer Firebase login");
+ console.log("QR_JOIN_MOBILE_LAYOUT_PASS",JSON.stringify({
+  buttonBottom:joinViewport.bottom,viewport:joinViewport.viewport,
+  horizontalOverflow:joinViewport.scrollWidth-joinViewport.width
+ }));
  await qrPage.screenshot({path:path.join(evidence,"05-real-react-unified-qr-join.png")});
  await joinForm.locator('button[type="submit"],button.btn.primary').first().click();
  await qrPage.waitForURL(url=>url.searchParams.get("view")==="play"&&url.searchParams.get("code")===qrCode,
