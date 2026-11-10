@@ -69,6 +69,37 @@ jobs:
         run: node scripts/verify-live.mjs
       - name: Build isolated V6 API Worker bundle (never deploy)
         run: pnpm run build:github-api
+      - name: Verify the compiled staging Worker denies production Firebase and media writes
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import worker from './dist-github-api/worker.mjs';
+          const stageOrigin='https://mts-training-arena-e2-staging.pages.dev';
+          const db={prepare:()=>({first:async()=>({name:'sessions'})})};
+          const env={ARENA_DEPLOYMENT:'e2-staging',ARENA_STAGING_LOCK:'locked',
+            ARENA_PUBLIC_ORIGIN:stageOrigin,DB:db};
+          const call=async(path,method='GET',settings=env)=>{
+            const request=new Request('https://arena-e2-stage.example'+path,{method,
+              headers:{Origin:stageOrigin}});
+            const response=await worker.fetch(request,settings);
+            return {status:response.status,body:await response.json()};
+          };
+          const health=await call('/api/staging-health');
+          assert.equal(health.status,200);
+          assert.deepEqual(health.body,{stage:'e2-staging',locked:true,databaseSchemaReady:true});
+          for(const path of ['/api/me','/api/sessions','/api/media-sign','/api/auth-health']){
+            const response=await call(path);
+            assert.equal(response.status,503,path);
+            assert.equal(response.body.error,'STAGING_LOCKED',path);
+          }
+          const writes=await call('/api/sessions','POST');
+          assert.equal(writes.status,503);
+          const wrong=await worker.fetch(new Request('https://arena-e2-stage.example/api/staging-health'),
+            {...env,ARENA_PUBLIC_ORIGIN:'https://hazemshaaban77.github.io'});
+          assert.equal(wrong.status,503);
+          assert.equal((await wrong.json()).error,'STAGING_CONFIGURATION_INVALID');
+          console.log('PASS: compiled E2 Worker is isolated and locked; no network or production writes.');
+          JS
       - name: Verify frontend, API and brand preview artifacts
         run: |
           test -s dist-github/index.html
