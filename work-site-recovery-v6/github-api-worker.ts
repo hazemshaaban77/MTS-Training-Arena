@@ -12,6 +12,8 @@ type ArenaEnv = {
  LIVE?:DurableObjectNamespace;
  MEDIA?:R2Bucket;
  ARENA_PUBLIC_ORIGIN?:string;
+ ARENA_DEPLOYMENT?:string;
+ ARENA_STAGING_LOCK?:string;
  ARENA_ADMIN_UIDS?:string;
  FIREBASE_SERVICE_ACCOUNT?:string;
  CLOUDINARY_CLOUD_NAME?:string;
@@ -63,6 +65,27 @@ export default {
   if(request.method==='OPTIONS'){
    if(!origin) return Response.json({error:'ORIGIN'},{status:403});
    return new Response(null,{status:204,headers:cors});
+  }
+  // The E2 staging configuration deliberately starts locked. A separate,
+  // permission-reviewed Firebase test project is required before trainer
+  // login and ANY session mutation can be enabled. Do not use production
+  // trainer allowlists, media credentials or Firebase configuration here.
+  if(env.ARENA_DEPLOYMENT==='e2-staging'){
+   const expected='https://mts-training-arena-e2-staging.pages.dev';
+   if(allowed!==expected||env.ARENA_STAGING_LOCK!=='locked'){
+    return Response.json({error:'STAGING_CONFIGURATION_INVALID'},{status:503,headers:cors});
+   }
+   if(url.pathname==='/api/staging-health'&&request.method==='GET'){
+    let dbReady=false;
+    if(env.DB)try{
+     const row:any=await env.DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='sessions'").first();
+     dbReady=row?.name==='sessions';
+    }catch{}
+    return Response.json({stage:'e2-staging',locked:true,databaseSchemaReady:dbReady},
+     {status:dbReady?200:503,headers:cors});
+   }
+   return Response.json({error:'STAGING_LOCKED'},{status:503,headers:cors});
   }
   // Small read-only health check verifies LIVE Durable Object binding and migration.
   if(url.pathname==='/api/live-health'&&request.method==='GET'){
