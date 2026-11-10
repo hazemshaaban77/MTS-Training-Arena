@@ -463,6 +463,13 @@ try{
   assert.ok(shown.includes('AWAITING')||shown.includes('بانتظار'),'Must await trainer verification');
   const revealId=signed.game.spin.id;
   const note='Explained every compliance step with a correct example';
+  // Mount the real public live Leaderboard before official scoring so the
+  // signed score difference can be measured across consecutive snapshots.
+  hs=ok(await host(),'scoreboard host revision');
+  ok(await api('control',{code:challengeCode,revision:hs.revision,action:'projection',
+   board:true,quiet:true,intensity:'full',analytics:false},auth),'show live leaderboard');
+  await page.waitForFunction(()=>document.querySelector('.projector-leaderboard [data-server-score="0"]'),
+   null,{timeout:12000});
   hs=ok(await host(),'challenge host grade revision');
   const grade={code:challengeCode,revision:hs.revision,action:'wheelaward',
    revealId,target:signed.game.spinTarget,grade:6,direction:-1,delta:-600,
@@ -478,6 +485,17 @@ try{
    ?.textContent?.match(/GRADE CONFIRMED|تم تسجيل التقييم/),null,{timeout:15000});
   const content=await card.innerText();
   assert.ok(!content.includes(note),'Trainer private rationale must never leak to public projector');
+  await page.waitForFunction(()=>!!document.querySelector('.projector-leaderboard [data-server-score="-600"] .arena-rank-score--loss'),
+   null,{timeout:13000});
+  const scoreRibbon=await page.locator('.projector-leaderboard .arena-rank-score--loss').innerText();
+  assert.ok(scoreRibbon.includes('600'),'Real live leaderboard must display only signed -600 delta');
+  // Keep original Wheel Challenge Card visual-fit evidence without an open
+  // scoreboard overlay, preserving the presentation user's chosen layout.
+  hs=ok(await host(),'restore public stage revision');
+  ok(await api('control',{code:challengeCode,revision:hs.revision,action:'projection',
+   board:false,quiet:true,intensity:'full',analytics:false},auth),'hide live leaderboard');
+  await page.waitForFunction(()=>!document.querySelector('.projector-leaderboard'),
+   null,{timeout:12000});
   const frame=await card.evaluate(el=>{
     const r=el.getBoundingClientRect();
     const wheel=document.querySelector('.wheel-stage--challenge-revealed .arena-wheel3d--crown')
