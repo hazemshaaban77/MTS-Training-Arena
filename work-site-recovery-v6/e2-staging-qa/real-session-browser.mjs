@@ -304,6 +304,63 @@ try{
  assert.equal((await qrHost()).players.filter(p=>p.uid===qrUid).length,1,
   "A real React refresh cannot silently create a second participant");
  await qrPage.screenshot({path:path.join(evidence,"06-real-react-qr-second-activity.png")});
+
+ // A SECOND physical-like browser has no first-device localStorage.
+ // Restore the same participant from the ORIGINAL session QR, not a second QR
+ // or a privileged trainer endpoint. The recovery secret must stay private.
+ const transferCtx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,
+  reducedMotion:"reduce"});
+ userContexts.push(transferCtx);
+ await transferCtx.addInitScript(()=>{
+  localStorage.setItem("arena-language","en");
+  localStorage.setItem("arena-effects","off");
+ });
+ const transferPage=await transferCtx.newPage();
+ transferPage.on("pageerror",e=>jsErrors.push("QR transfer React: "+e.message));
+ await transferPage.goto(qrUrl.toString(),{waitUntil:"domcontentloaded"});
+ const transferForm=transferPage.locator(".join-page .join-card form");
+ await transferForm.waitFor({state:"visible",timeout:16000});
+ assert.equal(await transferPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode),null,
+  "Independent QR device must start with no participant token");
+ await transferPage.locator(".recovery-link").click();
+ await transferForm.locator('input[autocomplete="off"][maxlength="30"]').fill("QA-QR-REACT-01");
+ await transferForm.locator('input[placeholder="XXXXX-XXXXX-XXXXX-XXXXX"]').fill(shownRecovery);
+ // An incorrect recovery code must NEVER sign in or create another participant.
+ const incorrectCode=shownRecovery.slice(0,-1)+(shownRecovery.endsWith("A")?"B":"A");
+ await transferForm.locator('input[placeholder="XXXXX-XXXXX-XXXXX-XXXXX"]').fill(incorrectCode);
+ await transferForm.locator("button.btn.primary").click();
+ await transferPage.waitForFunction(()=>document.querySelector(".error-banner")!==null,
+  null,{timeout:10000});
+ assert.equal(await transferPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode),null,
+  "Incorrect recovery must not issue a participant token");
+ await transferForm.locator('input[placeholder="XXXXX-XXXXX-XXXXX-XXXXX"]').fill(shownRecovery);
+ await transferForm.locator("button.btn.primary").click();
+ await transferPage.waitForURL(url=>url.searchParams.get("view")==="play"&&
+  url.searchParams.get("code")===qrCode,{timeout:16000});
+ const transferredToken=await transferPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode);
+ assert.ok(transferredToken&&transferredToken!==qrToken,
+  "A new device gets a fresh token and invalidates the old token");
+ const restored=ok(await get("state?code="+qrCode,{token:transferredToken}),"QR real React recovery");
+ assert.equal(restored.mine?.id,qrUid,"Recovery preserves participant identity");
+ assert.equal(restored.individual.find(p=>p.uid===qrUid)?.score,
+  secondRound.individual.find(p=>p.uid===qrUid)?.score,
+  "Recovery preserves server-scored points from both previous rounds");
+ const revoked=ok(await get("state?code="+qrCode,{token:qrToken}),"Old QR device after transfer");
+ assert.equal(revoked.mine,null,"Original device token must be invalid after transfer");
+ assert.equal((await qrHost()).players.filter(p=>p.uid===qrUid).length,1,
+  "Moving devices must not duplicate a participant in the same room");
+ assert.equal((await post("control",{code:qrCode,revision:(await qrHost()).revision,
+   action:"close"},{token:transferredToken})).status,401,
+  "Transferred trainee credentials never acquire trainer privileges");
+ assert.ok(!transferPage.url().includes(transferredToken)&&
+  !transferPage.url().includes(shownRecovery),"No recovery secrets in the browser URL");
+ await transferPage.screenshot({path:path.join(evidence,"07-real-react-qr-device-transfer.png")});
+ console.log("QR_DEVICE_TRANSFER_PASS",JSON.stringify({
+  independentBrowser:true,originalJoinQR:true,invalidCodeRejected:true,
+  identityRestored:true,scorePreserved:true,oldTokenRevoked:true,
+  noDuplicateParticipant:true,trainerPermissionsStillBlocked:true,fixtureOnly:true
+ }));
+
  console.log("UNIFIED_QR_REAL_REACT_PASS",JSON.stringify({
   mobileViewport:390,oneJoinUrl:true,sameRoom:true,twoActivities:true,
   reloadKeepsIdentity:true,trainerControlsBlocked:true,crossRoomIdentityBlocked:true,
