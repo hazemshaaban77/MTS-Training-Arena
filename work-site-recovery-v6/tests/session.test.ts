@@ -71,13 +71,62 @@ test('required employee identity, confirmation, duplicates and public privacy',a
  const pub=await state(db,code);assert.equal(pub.players[0].employeeId,undefined);assert.equal(JSON.stringify(pub).includes('30000650'),false);assert.equal(JSON.stringify(pub).includes('recovery'),false);
  assert.equal((await state(db,code,p.token)).mine.employeeId,'30000650');assert.equal((await state(db,code,undefined,true)).players[0].employeeId,'30000650');db.sql.close();
 });
-test('safe device change preserves scores and invalidates the previous device token',async()=>{
- const db=database(),code=await room(db,[sample('Quiz'),sample('Quiz')]),p:any=await call(db,'join',{code,name:'Person',employeeId:'EMP-123',confirmed:true});
- await control(db,code,'start');await call(db,'answer',{code,round:0,answer:0},p.token);await control(db,code,'close');
- await assert.rejects(()=>call(db,'recover',{code,employeeId:'EMP-123',recoveryCode:'wrong'}),{message:'RECOVERY'});
- const restored:any=await call(db,'recover',{code,employeeId:'emp-123',recoveryCode:p.recoveryCode});
- assert.notEqual(restored.token,p.token);assert.equal((await state(db,code,p.token)).mine,null);assert.equal((await state(db,code,restored.token)).mine.id,p.id);assert.equal((await state(db,code,restored.token)).individual[0].score,1000);
- await control(db,code,'next');await assert.rejects(()=>call(db,'answer',{code,round:1,answer:0},p.token),{message:'PLAYER'});await call(db,'answer',{code,round:1,answer:0},restored.token);await control(db,code,'close');assert.equal((await state(db,code)).individual[0].score,2000);assert.equal((await state(db,code)).players.length,1);db.sql.close();
+test('recovery rotates codes with idempotent lost-response retry, preserving score and identity',async()=>{
+ const db=database(),code=await room(db,[sample('Quiz'),sample('Quiz')]),
+  p:any=await call(db,'join',{code,name:'Person',employeeId:'EMP-123',confirmed:true});
+ await control(db,code,'start');
+ await call(db,'answer',{code,round:0,answer:0},p.token);
+ await control(db,code,'close');
+ const firstAttempt=crypto.randomUUID();
+ await assert.rejects(()=>call(db,'recover',{code,employeeId:'EMP-123',recoveryCode:p.recoveryCode}),
+  {message:'RECOVERY_ATTEMPT'},'An omitted retry ID must not consume a code');
+ await assert.rejects(()=>call(db,'recover',{code,employeeId:'EMP-123',recoveryCode:'wrong',attemptId:firstAttempt}),
+  {message:'RECOVERY'});
+ const original={code,employeeId:'emp-123',recoveryCode:p.recoveryCode,attemptId:firstAttempt};
+ const restored:any=await call(db,'recover',original);
+ assert.notEqual(restored.token,p.token);
+ assert.match(restored.recoveryCode,/^[A-F0-9]{5}(?:-[A-F0-9]{5}){3}$/);
+ assert.notEqual(restored.recoveryCode,p.recoveryCode,'The next recovery code must be rotated');
+ assert.equal((await state(db,code,p.token)).mine,null);
+ assert.equal((await state(db,code,restored.token)).mine.id,p.id);
+ assert.equal((await state(db,code,restored.token)).individual[0].score,1000);
+ const retry:any=await call(db,'recover',original);
+ assert.deepEqual(retry,restored,'The same lost-response retry produces identical credentials');
+ await assert.rejects(()=>call(db,'recover',{...original,attemptId:crypto.randomUUID()}),
+  {message:'RECOVERY'},'A used code cannot authorize a different recovery attempt');
+ const secondAttempt=crypto.randomUUID();
+ const transferred:any=await call(db,'recover',{code,employeeId:'EMP-123',
+  recoveryCode:restored.recoveryCode,attemptId:secondAttempt});
+ assert.notEqual(transferred.token,restored.token);
+ assert.notEqual(transferred.recoveryCode,restored.recoveryCode);
+ assert.equal((await state(db,code,restored.token)).mine,null);
+ await assert.rejects(()=>call(db,'recover',original),{message:'RECOVERY'},
+  'An obsolete retry cannot re-enable a token after another successful transfer');
+ assert.equal((await state(db,code,transferred.token)).mine.id,p.id);
+ await control(db,code,'next');
+ await assert.rejects(()=>call(db,'answer',{code,round:1,answer:0},p.token),{message:'PLAYER'});
+ await assert.rejects(()=>call(db,'answer',{code,round:1,answer:0},restored.token),{message:'PLAYER'});
+ await call(db,'answer',{code,round:1,answer:0},transferred.token);
+ await control(db,code,'close');
+ assert.equal((await state(db,code)).individual[0].score,2000);
+ assert.equal((await state(db,code)).players.length,1);
+ db.sql.close();
+});
+test('two concurrent device recoveries cannot consume one code twice',async()=>{
+ const db=database(),code=await room(db,[sample('Quiz')]),
+  p:any=await call(db,'join',{code,name:'Person',employeeId:'EMP-124',confirmed:true});
+ const original={code,employeeId:'EMP-124',recoveryCode:p.recoveryCode};
+ const settled=await Promise.allSettled([
+  call(db,'recover',{...original,attemptId:crypto.randomUUID()}),
+  call(db,'recover',{...original,attemptId:crypto.randomUUID()})
+ ]);
+ assert.equal(settled.filter(x=>x.status==='fulfilled').length,1,'Exactly one device must win');
+ assert.equal(settled.filter(x=>x.status==='rejected'&&(x.reason as Error).message==='RECOVERY').length,1,
+  'The losing transfer must not take over the rotated code');
+ const winner:any=(settled.find(x=>x.status==='fulfilled') as PromiseFulfilledResult<any>).value;
+ assert.equal((await state(db,code,winner.token)).mine.id,p.id);
+ assert.equal((await state(db,code,p.token)).mine,null);
+ db.sql.close();
 });
 
 test('an existing pre-identity participant can add their ID without losing their record or points',async()=>{
