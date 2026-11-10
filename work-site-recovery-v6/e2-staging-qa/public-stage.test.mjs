@@ -125,7 +125,8 @@ test("E2 Cloudflare staging cannot point at production Worker, D1, Pages or Fire
  assert.ok(!stage.includes("FIREBASE_SERVICE_ACCOUNT"));
  assert.match(worker,/if\(env\.ARENA_DEPLOYMENT==='e2-staging'\)/);
  assert.match(worker,/STAGING_LOCKED/);
- assert.match(frontend,/STAGING_FIREBASE_NOT_CONFIGURED/);
+ assert.match(frontend,/stagingFirebaseConfig\(import.meta.env\?\.VITE_ARENA_STAGING_FIREBASE_CONFIG\)/);
+ assert.match(fs('lib/firebase-config.ts'),/STAGING_FIREBASE_NOT_CONFIGURED/);
 });
 function requireReadFile(){
  return filename=>readFileSync(new URL("../"+filename,import.meta.url),"utf8");

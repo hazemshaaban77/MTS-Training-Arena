@@ -189,6 +189,12 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
     </button>)}
    </aside>
    <div className="question-studio__form" ref={formRef}>
+    {!game&&<fieldset className="arena-learning-tools"><legend>{t('قواعد التعلم لهذا السؤال','Learning rules for this question')}</legend>
+     <label>{t('وضع اللعب','Play mode')}<select value={q.learningMode||(q.speed===false?'classic':'speed')} onChange={e=>patch({learningMode:e.target.value,speed:e.target.value==='speed',...(e.target.value==='practice'?{timer:0,powerUps:false,confidencePoints:false}:{})})}><option value="classic">{t('كلاسيكي — نقاط ثابتة','Classic — fixed points')}</option><option value="speed">{t('سباق — نقاط حسب السرعة','Speed — timed points')}</option><option value="practice">{t('تدريب — بدون نقاط أو مؤقت','Practice — no points or timer')}</option></select></label>
+     <label><input type="checkbox" disabled={q.learningMode==='practice'} checked={!!q.powerUps} onChange={e=>patch({powerUps:e.target.checked})}/>{t('مضاعفة ودرع — كل مساعدة مرة واحدة لكل متدرب في الجلسة','Double and shield — each once per trainee per session')}</label>
+     <label><input type="checkbox" disabled={q.learningMode==='practice'} checked={!!q.confidencePoints} onChange={e=>patch({confidencePoints:e.target.checked})}/>{t('نقاط الثقة: مكافأة 100/200/300 أو خصم 0/100/200 حسب المستوى','Confidence points: +100/200/300 or −0/100/200 by level')}</label>
+     {q.media?.type==='video'&&/\.(mp4|webm)(\?|$)/i.test(q.media.url||'')&&<label>{t('إيقاف الفيديو وظهور السؤال عند الثانية (فارغ = فيديو عادي)','Pause video and show question at second (blank = regular video)')}<input type="number" min={0} max={3600} value={q.videoCheckpoint??''} onChange={e=>patch({videoCheckpoint:e.target.value===''?undefined:Number(e.target.value),timer:0,speed:false,learningMode:q.learningMode==='speed'?'classic':q.learningMode})}/><small>{t('بدون مؤقت. نقطة تفاعل للمشاهدة وليست إثبات مشاهدة محميًا.','Untimed interaction; this is not protected proof of viewing.')}</small></label>}
+    </fieldset>}
     <label className="question-studio__title">{t('عنوان النشاط','Activity title')}
      <input maxLength={2000} value={title} onChange={e=>setTitle(e.target.value)}/></label>
     {game&&<div className="question-studio__rules">
@@ -240,13 +246,13 @@ export default function QuestionStudio({ar,activity,onCancel,onSave}:Props){
       value={q.prompt} onChange={e=>patch({prompt:e.target.value})}/></label>
     <QuestionMediaPicker ar={ar} value={q.media} onError={setError}
      onChange={(media:QuestionMedia|undefined)=>patch(
-      q.type==='Image Hotspot'&&media?.type==='image'?{media,image:media.url}:{media}
+      q.type==='Image Hotspot'&&media?.type==='image'?{media,image:media.url,videoCheckpoint:undefined}:{media,videoCheckpoint:media?.type==='video'?q.videoCheckpoint:undefined}
      )}/>
     <QuestionTypeFields ar={ar} q={q} onPatch={patch}/>
     <AnswerRevealSettings ar={ar} activity={q} onChange={changes=>patch(changes)}/>
     <div className="question-studio__fields">
      <label>{t('زمن الإجابة بالثواني','Time limit (seconds)')}
-      <input type="number" min={5} max={3600} value={q.timer} onChange={e=>patch({timer:Number(e.target.value)})}/></label>
+      <input type="number" min={0} max={3600} disabled={q.learningMode==='practice'||q.videoCheckpoint!=null} value={q.timer} onChange={e=>patch({timer:Number(e.target.value)})}/></label>
      <label>{game&&mode==='ladder'?t('جائزة المستوى بالنقاط','Prize for this level'):t('نقاط السؤال','Question points')}
       <input type="number" min={0} max={10000} value={q.points??1000} onChange={e=>patch({points:Number(e.target.value)})}/></label>
     </div>

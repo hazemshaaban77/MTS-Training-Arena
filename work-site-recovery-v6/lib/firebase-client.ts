@@ -1,16 +1,17 @@
 'use client';
 import {initializeApp,getApps} from 'firebase/app';
 import {initializeAuth,browserSessionPersistence,onIdTokenChanged,signInWithEmailAndPassword,signOut,type Auth,type User} from 'firebase/auth';
-import {firebaseConfig} from './firebase-config';
+import {firebaseConfig,stagingFirebaseConfig} from './firebase-config';
 let auth:Auth|undefined;
 export function getArenaAuth(){
  if(typeof window==='undefined')throw Error('Browser authentication only');
  // Strict isolation: a staging build MUST NOT contact the live Firebase
  // project through the inherited production web config. Enable login only
  // after a separate test Firebase project/config is provisioned and audited.
- if(import.meta.env?.VITE_ARENA_STAGE==='e2-staging')
-  throw Error('STAGING_FIREBASE_NOT_CONFIGURED');
- if(!auth){const app=getApps().find(a=>a.name==='MTS_ARENA')||initializeApp(firebaseConfig,'MTS_ARENA');auth=initializeAuth(app,{persistence:browserSessionPersistence});}
+ const staging=import.meta.env?.VITE_ARENA_STAGE==='e2-staging';
+ const config=staging?stagingFirebaseConfig(import.meta.env?.VITE_ARENA_STAGING_FIREBASE_CONFIG):firebaseConfig;
+ const appName=staging?'MTS_ARENA_E2_STAGING':'MTS_ARENA';
+ if(!auth){const app=getApps().find(a=>a.name===appName)||initializeApp(config,appName);auth=initializeAuth(app,{persistence:browserSessionPersistence});}
  return auth;
 }
 export function watchTrainer(listener:(user:User|null)=>void){return onIdTokenChanged(getArenaAuth(),listener);}

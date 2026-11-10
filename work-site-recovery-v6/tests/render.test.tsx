@@ -210,7 +210,8 @@ test('every Live Poll subtype charts its REAL aggregation rather than Quiz optio
  assert.ok(words.includes('feedback'));
  assert.ok(words.includes('75%'));
  assert.ok(words.includes('live-poll-chart--word'));
- assert.ok(!words.includes('word-cloud'));
+ assert.ok(words.includes('arena-word-cloud'));
+ assert.ok(words.includes('role="listitem"')); // weighted words retain exact bar-chart counts
  const ranking=renderToStaticMarkup(<LivePollChart s={{...base,activity:{...a,pollKind:'priority'},pollSummary:{ranking:[{label:'Priority A',value:9},{label:'Priority B',value:5}]}}} ar={false}/>);
  assert.ok(ranking.includes('Priority A'));
  assert.ok(ranking.includes('9'));
@@ -398,7 +399,7 @@ test('server-acknowledged participant answers never claim success on a click',()
  const client=readFileSync('lib/client.ts','utf8');
  assert.ok(client.includes("options?.publicRequest===true?null:await trainerToken()"),'Trainer-only routes still await Firebase credentials');
  assert.ok(source.includes("api('interact',{code,round:s.current,action,...extra},token,{publicRequest:true})"),'Player actions use player token, never trainer token');
- assert.ok(source.includes("const receipt=await api('answer',{code,round,answer},token,{publicRequest:true})"),'Player sends answer without waiting for trainer Firebase initialization');
+ assert.ok((/const receipt=await api\('answer',\{code,round,answer[^\n]+,token,\{publicRequest:true\}\)/.test(source)),'Player sends answer without waiting for trainer Firebase initialization');
  assert.ok(source.includes("receipt?.ok!==true"),'Receipt must come from backend');
  assert.ok(source.includes("setAnswerProgress({round,phase:'sending'})"));
  assert.ok(source.includes("setAnswerProgress({round,phase:'verifying'})"));

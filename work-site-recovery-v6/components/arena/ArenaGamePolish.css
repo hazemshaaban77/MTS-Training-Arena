@@ -490,3 +490,11 @@ html body .session-shell.trainee .trainee-score-burst{
   min-height:46px;
  }
 }
+
+/* Learning controls share the established Arena palette; no replacement branding. */
+.arena-learning-tools{display:grid;gap:12px;border:1px solid #36758c;border-radius:16px;padding:16px;margin-block:14px;background:#102638;color:#edf8ff;min-width:0}
+.arena-learning-tools label{display:grid;gap:8px;overflow-wrap:anywhere}
+.arena-learning-tools select,.arena-learning-tools input[type=number]{max-width:100%;min-width:0;padding:10px;background:#071b2b;color:#fff;border:1px solid #6fa9b8;border-radius:8px}
+.arena-learning-tools small{color:#bbd5df;line-height:1.6}
+.arena-word-cloud{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:18px;padding:24px;max-width:100%;overflow-wrap:anywhere;color:#b9ef95}
+.arena-word-cloud span{max-width:100%;line-height:1.4}.arena-word-cloud small{font-size:.75rem;color:#d9e7ed}

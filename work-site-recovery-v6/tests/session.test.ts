@@ -225,3 +225,44 @@ test('championship: expired round ends only the attempt and never double-pays',a
  await assert.rejects(()=>call(db,'interact',{code,round:0,action:'showanswer',answer:0},p.token),{message:'SHOW_CONTESTANT'});
  db.sql.close();
 });
+
+test('E2 learning points are authoritative, private until reveal, single-use and atomic',async()=>{
+ const db=database(),a:any={...sample('Quiz','en'),speed:false,powerUps:true,confidencePoints:true,wrongPenalty:200};
+ const code=await room(db,[a,a,a]),p:any=await enroll(db,{code,name:'Learning'});
+ await control(db,code,'start');
+ await assert.rejects(()=>call(db,'answer',{code,round:0,answer:a.correct,powerUp:'double',confidence:9},p.token),{message:'CONFIDENCE'});
+ await call(db,'answer',{code,round:0,answer:a.correct,powerUp:'double',confidence:3,points:99999},p.token);
+ assert.equal((await state(db,code,p.token)).mine.points,null);
+ assert.deepEqual((await state(db,code,p.token)).mine.learningUsed,['double']);
+ await assert.rejects(()=>call(db,'answer',{code,round:0,answer:a.correct,powerUp:'shield',confidence:3},p.token),{message:'ALREADY_ANSWERED'});
+ await control(db,code,'close');assert.equal((await state(db,code)).individual[0].score,2600);
+ await control(db,code,'next');
+ await assert.rejects(()=>call(db,'answer',{code,round:1,answer:a.correct,powerUp:'double',confidence:3},p.token),{message:'POWER_ALREADY_USED'});
+ assert.equal((await state(db,code,p.token)).mine.answered,false,'conflicting power-up rolls back the answer');
+ await call(db,'answer',{code,round:1,answer:(a.correct+1)%4,powerUp:'shield',confidence:3},p.token);
+ await control(db,code,'close');assert.equal((await state(db,code)).individual[0].score,2600);
+ await control(db,code,'next');await call(db,'answer',{code,round:2,answer:(a.correct+1)%4,confidence:3},p.token);
+ await control(db,code,'close');assert.equal((await state(db,code)).individual[0].score,2200);
+ const report:any=await call(db,'report?code='+code);assert.equal(report.events.filter((x:any)=>x.kind==='learning-power').length,2);
+ assert.ok(report.events.every((x:any)=>x.points===0),'learning events must not double count answer points');db.sql.close();
+});
+test('E2 review queues are server-derived, target only incorrect responders and resist duplicate creation',async()=>{
+ const db=database(),a={...sample('Quiz','en'),speed:false,revealMode:'manual'},code=await room(db,[a]),p:any=await enroll(db,{code,name:'Review'}),q:any=await enroll(db,{code,name:'Correct'});
+ await control(db,code,'start');await call(db,'answer',{code,round:0,answer:1},p.token);await call(db,'answer',{code,round:0,answer:0},q.token);await control(db,code,'close');
+ await assert.rejects(()=>control(db,code,'redemption'),{message:'REVEAL_PENDING'});
+ await control(db,code,'revealkey');await control(db,code,'redemption');
+ await assert.rejects(()=>control(db,code,'redemption'),{message:'REVIEW_ALREADY_ADDED'});
+ await control(db,code,'smartrepeat');await control(db,code,'next');
+ const review=await state(db,code,p.token);assert.equal(review.activity.reviewMode,'redemption');assert.equal(review.activity.reviewPlayers,undefined);assert.equal(review.mine.eligible,true);assert.equal((await state(db,code,q.token)).mine.eligible,false);
+ await assert.rejects(()=>call(db,'answer',{code,round:1,answer:0},q.token),{message:'REVIEW_NOT_ELIGIBLE'});
+ await call(db,'answer',{code,round:1,answer:0},p.token);await control(db,code,'close');await control(db,code,'revealkey');
+ assert.equal((await state(db,code,p.token)).mine.points,500);await control(db,code,'next');assert.equal((await state(db,code,p.token)).activity.reviewMode,'smart');db.sql.close();
+});
+test('E2 practice and poll cannot mint bonus scores; word aggregation accepts object property names',async()=>{
+ const db=database(),a={...sample('Quiz','en'),learningMode:'practice'},poll={type:'Live Poll',prompt:'One word',timer:0,pollKind:'word',liveResults:true,anonymous:true},code=await room(db,[a,poll]),p:any=await enroll(db,{code,name:'Practice'});
+ await control(db,code,'start');assert.equal((await state(db,code)).deadline,null);
+ await assert.rejects(()=>call(db,'answer',{code,round:0,answer:0,powerUp:'double'},p.token),{message:'LEARNING_DISABLED'});
+ await call(db,'answer',{code,round:0,answer:0},p.token);await control(db,code,'close');assert.equal((await state(db,code)).individual[0].score,0);
+ await control(db,code,'next');await call(db,'answer',{code,round:1,answer:'__proto__'},p.token);
+ assert.equal((await state(db,code)).pollSummary.words.__proto__,1);db.sql.close();
+});

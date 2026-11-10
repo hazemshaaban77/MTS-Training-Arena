@@ -405,6 +405,34 @@ try{
   reloadKeepsIdentity:true,trainerControlsBlocked:true,crossRoomIdentityBlocked:true,
   trainerLoginNotRequiredForTrainee:true,fixtureOnly:true
  }));
+ // Learning extensions use the same real React participant and authoritative API.
+ const learningRoom=ok(await post("sessions",{title:"E2 learning acceptance",language:"en",activities:[
+  {type:"Quiz",prompt:"Learning checkpoint",options:["Correct","Incorrect"],correct:0,timer:0,speed:false,powerUps:true,confidencePoints:true,revealMode:"manual"},
+  {type:"Live Poll",prompt:"One word",timer:0,pollKind:"word",anonymous:true,liveResults:true}
+ ]},{asTrainer:true}),"Learning room");
+ const lc=learningRoom.code;
+ const learner=ok(await post("join",{code:lc,name:"Learning QA",employeeId:"E2-LEARNING",confirmed:true}),"Learning join");
+ const lh=async()=>ok(await get("state?code="+lc+"&role=host",{asTrainer:true}),"Learning host");
+ const cmd=async(action)=>ok(await post("control",{code:lc,revision:(await lh()).revision,action},{asTrainer:true}),"Learning "+action);
+ const learningContext=await browser.newContext({viewport:{width:390,height:844},reducedMotion:"reduce"});userContexts.push(learningContext);
+ await learningContext.addInitScript(({code,token})=>{localStorage.setItem("arena-player-"+code,token);localStorage.setItem("arena-language","en");},{code:lc,token:learner.token});
+ const lp=await learningContext.newPage();lp.on("pageerror",e=>jsErrors.push(e.message));
+ await cmd("start");await lp.goto(root+"/MTS-Training-Arena/v6/?view=play&code="+lc);
+ await lp.getByLabel("Power-up",{exact:true}).selectOption("double");
+ await lp.getByLabel("Confidence level",{exact:true}).selectOption("3");
+ await lp.locator(".answer-option").first().click();
+ const receipt=lp.waitForResponse(r=>r.url().endsWith("/api/answer")&&r.request().method()==="POST");
+ await lp.locator(".submit-answer").click();assert.equal((await receipt).status(),200);
+ assert.equal(ok(await get("state?code="+lc,{token:learner.token}),"Learning answer").mine.answered,true);
+ await cmd("close");await cmd("revealkey");
+ assert.equal((await lh()).individual.find(x=>x.uid===learner.id).score,2600);
+ await lp.reload();await lp.locator(".arena-learning-tools").waitFor({state:"detached"});
+ assert.equal(await lp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await lp.screenshot({path:path.join(evidence,"24-learning-signed-result-mobile.png"),fullPage:true});
+ await cmd("next");await lp.reload();await lp.locator(".live-poll-vote__word input").fill("Confidence");await lp.locator(".live-poll-vote__submit").click();
+ await lp.locator(".arena-word-cloud").waitFor();assert.match(await lp.locator(".arena-word-cloud").innerText(),/confidence/i);
+ await lp.screenshot({path:path.join(evidence,"25-live-word-cloud-mobile.png"),fullPage:true});
+ console.log("E2_LEARNING_REACT_PASS",JSON.stringify({signedScore:2600,confidenceAndPower:true,wordCloud:true,mobileOverflow:false,fixtureOnly:true}));
  assert.deepEqual(jsErrors,[],"Browser JavaScript errors");
  completed=true;
  console.log(JSON.stringify({status:"PASS",session:"synthetic-code",rounds:2,

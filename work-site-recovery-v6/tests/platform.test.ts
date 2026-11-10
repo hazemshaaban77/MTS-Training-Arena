@@ -95,3 +95,15 @@ test('Wheel Challenge Card: verified trainer-only graded award/deduction, privat
  assert.ok(entries.every(e=>JSON.parse(e.detail).reason.length>=5));
  db.sql.close();
 });
+
+test('E2 follow-up separates original weaknesses, reviewed improvements and high-confidence errors',async()=>{
+ const {learningFollowUp}=await import('../lib/report-insights');
+ const report={players:[{id:'p',name:'Learner'},{id:'empty',name:'No answers'}],activities:[
+  {type:'Quiz',prompt:'Recovered skill'},{type:'Quiz',prompt:'Needs attention'},
+  {type:'Quiz',prompt:'Review',reviewMode:'smart',sourceRound:0},{type:'Live Poll',prompt:'Opinion'}],
+  answers:[{round:0,player:'p',correct:0},{round:1,player:'p',correct:0},{round:2,player:'p',correct:1},{round:3,player:'p',correct:null}],
+  events:[{player:'p',round:1,kind:'learning-answer',detail:JSON.stringify({confidence:3})}],anonymous:[{round:3,answer:'private opinion'}]};
+ const result=learningFollowUp(report);assert.equal(result[0].graded,2);assert.equal(result[0].improved,1);
+ assert.deepEqual(result[0].weakTopics,[{round:1,prompt:'Needs attention'}]);assert.equal(result[0].highConfidenceErrors,1);
+ assert.equal(result[1].graded,0);assert.ok(!JSON.stringify(result).includes('private opinion'));
+});

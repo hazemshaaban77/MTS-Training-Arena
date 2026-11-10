@@ -112,3 +112,19 @@ export function reportInsightsCsv(insights:ReportInsight[]){
  };
  return '\ufeff'+lines.map(row=>row.map(cell).join(',')).join('\r\n');
 }
+
+/** Trainer-only follow-up: evidence from identified graded answers, never anonymous polls. */
+export function learningFollowUp(report:any){
+ const activities=Array.isArray(report?.activities)?report.activities:[];
+ const graded=(report?.answers||[]).filter((r:any)=>r.round>=0&&isGraded(r.correct)&&activities[r.round]&&!isUnscored(activities[r.round],typename(activities[r.round])));
+ return (report?.players||[]).map((p:any)=>{
+  const rows=graded.filter((r:any)=>r.player===p.id);
+  const original=rows.filter((r:any)=>!activities[r.round].reviewMode);
+  const wrong=original.filter((r:any)=>!answeredCorrect(r.correct));
+  const improved=wrong.filter((r:any)=>rows.some((x:any)=>activities[x.round].sourceRound===r.round&&answeredCorrect(x.correct)));
+  const highConfidenceErrors=(report?.events||[]).filter((e:any)=>e.player===p.id&&e.kind==='learning-answer'&&parse(e.detail)?.confidence===3&&rows.some((r:any)=>r.round===e.round&&!answeredCorrect(r.correct))).length;
+  return {id:p.id,name:p.name,graded:original.length,correct:original.filter((r:any)=>answeredCorrect(r.correct)).length,
+   improved:improved.length,highConfidenceErrors,
+   weakTopics:wrong.filter((r:any)=>!improved.includes(r)).map((r:any)=>({round:r.round,prompt:activities[r.round].prompt}))};
+ });
+}

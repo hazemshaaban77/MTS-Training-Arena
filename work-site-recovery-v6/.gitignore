@@ -57,3 +57,8 @@ next-env.d.ts
 
 # Reproducible type-check cache.
 /tsconfig.tsbuildinfo
+
+# Reproducible deployment outputs; keep source and tests in the active branch.
+/dist-github/
+/dist-github-api/
+/dist-e2-staging/

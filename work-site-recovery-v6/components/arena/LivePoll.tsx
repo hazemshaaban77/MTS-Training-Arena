@@ -62,6 +62,7 @@ export function LivePollChart({s,ar}:{s:any;ar:boolean}){
    <span><BarChart3 size={19}/>{label}</span>
    <div className="live-poll-chart__total"><Users size={18}/><b>{count.toLocaleString(ar?'ar-EG':'en-US')}</b><small>{t('مشاركة','responses')}</small></div>
   </div>
+  {graphKind==='word'&&chartHasVotes&&<div className="arena-word-cloud" role="list" aria-label={t('سحابة الكلمات المباشرة','Live word cloud')}>{points.map(point=><span key={point.label} role="listitem" style={{fontSize:(1+1.8*point.value/Math.max(1,...points.map(p=>p.value)))+'rem'}}>{point.label}<small> ×{point.value}</small></span>)}</div>}
   {chartHasVotes&&points.length?<div className="live-poll-chart__rows" role="list" aria-label={label}>{points.map((point,i)=>{
    const ratio=Math.max(0,Math.min(100,point.value/Math.max(1,point.maximum)*100));
    const leading=graphKind==='choice'&&highest>0&&point.value===highest;

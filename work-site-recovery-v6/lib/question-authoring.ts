@@ -34,7 +34,7 @@ export function changeKnowledgeQuestionType(item:Activity,type:KnowledgeQuestion
  const next=newKnowledgeQuestion(type,ar);
  // Changing type must not silently delete the authored prompt, stage, timer or media.
  return {...next,prompt:item.prompt,timer:item.timer,points:item.points??1000,
-  weight:item.weight,section:item.section,speed:item.speed,
+  weight:item.weight,section:item.section,speed:item.speed,learningMode:item.learningMode,powerUps:item.powerUps,confidencePoints:item.confidencePoints,videoCheckpoint:item.videoCheckpoint,
   media:item.media?structuredClone(item.media):undefined};
 }
 export function normalizeKnowledgeQuestion(item:Activity,championship=false):Activity{

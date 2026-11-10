@@ -74,3 +74,10 @@ test('auth diagnostics return only the safe stage with no-store and log no crede
  assert.deepEqual(logs.map(x=>x[1]),[{stage:'google_keys_fetch',path:'/api/me'},{stage:'firebase_allowlist_fetch',path:'/api/me'}]);
  assert.ok(!JSON.stringify(logs).includes('private-token'));
 });
+
+test('staging web configuration rejects inherited production and unrelated allowlist hosts',async()=>{
+ const {stagingFirebaseConfig,firebaseConfig}=await import('../lib/firebase-config');
+ const c={projectId:'mts-arena-e2-testing',apiKey:'AIza'+'x'.repeat(35),authDomain:'mts-arena-e2-testing.firebaseapp.com',databaseURL:'https://mts-arena-e2-testing-default-rtdb.europe-west1.firebasedatabase.app'};
+ assert.deepEqual(stagingFirebaseConfig(JSON.stringify(c)),c);
+ for(const bad of [null,'{',firebaseConfig,{...c,databaseURL:firebaseConfig.databaseURL},{...c,apiKey:firebaseConfig.apiKey},{...c,authDomain:firebaseConfig.authDomain},{...c,databaseURL:c.databaseURL+'/extra'},{...c,databaseURL:'https://evil.test'}])assert.throws(()=>stagingFirebaseConfig(bad),/STAGING_FIREBASE_NOT_CONFIGURED/);
+});

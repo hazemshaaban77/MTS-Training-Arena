@@ -17,6 +17,15 @@ export function validateActivity(a,depth=0){
  if(a.revealSound!==undefined)ok(typeof a.revealSound==='boolean');
  // Optional learning media; never allow HTML/data/javascript URLs in participant views.
  if(a.media!=null){ok(a.media&&typeof a.media==='object'&&['image','video'].includes(a.media.type)&&str(a.media.url,2048)&&/^https:\/\/[^\s]+$/i.test(a.media.url)&&(!a.media.alt||typeof a.media.alt==='string'&&a.media.alt.length<=200));}
+ if(a.learningMode!==undefined)ok(['classic','speed','practice'].includes(a.learningMode));
+ for(const key of ['powerUps','confidencePoints'])if(a[key]!==undefined)ok(typeof a[key]==='boolean');
+ if(a.learningMode||a.powerUps||a.confidencePoints){
+  ok(['Quiz','True/False','Dropdown','Fill Blank','Match It','Order It','Image Hotspot'].includes(a.type));
+  if(a.learningMode==='practice'){ok(!a.powerUps&&!a.confidencePoints);a.timer=0;a.speed=false;}
+  if(a.learningMode==='classic')a.speed=false;
+  if(a.learningMode==='speed'){ok(a.timer>0);a.speed=true;}
+ }
+ if(a.videoCheckpoint!==undefined)ok(a.media?.type==='video'&&/\.(mp4|webm)(\?|$)/i.test(a.media.url)&&Number.isFinite(a.videoCheckpoint)&&a.videoCheckpoint>=0&&a.videoCheckpoint<=3600&&a.timer===0);
  const type=a.type;
  if(type==='Ultimate Game Show'&&a.showFormat==='championship'){
   if(!Array.isArray(a.questions)||a.questions.length<(a.minimumLevels===7?7:2)||a.questions.length>20)throw Error('DECK');
@@ -60,7 +69,7 @@ export function flattenDeck(activities){
 }
 export function publicActivity(a,{closed=false,reveal=null,host=false}={}){
  if(!a)return null;const r=JSON.parse(JSON.stringify(a));
- for(const k of ['correct','order','pairs','assignments','backs','accepted','regions','nodes','rooms','sectors','boxes','questions','explanation'])delete r[k];
+ for(const k of ['correct','order','pairs','assignments','backs','accepted','regions','nodes','rooms','sectors','boxes','questions','explanation','reviewPlayers'])delete r[k];
  if(a.sectors)r.sectors=a.sectors.map((s,i)=>({
   label:host?s.label:String(i+1),kind:host?s.kind:'hidden',repeatable:!!s.repeatable
  }));
@@ -89,7 +98,7 @@ export function evaluate(a,answer){
  else if(a.pairs){if(!permutation(answer,a.left.length))throw Error('ANSWER');correct=answer.every((x,i)=>x===a.pairs[i]);}
  else if(a.assignments){if(!Array.isArray(answer)||answer.length!==a.items.length||!answer.every(x=>idx(x,a.categories.length)))throw Error('ANSWER');correct=answer.every((x,i)=>x===a.assignments[i]);}
  else throw Error('ANSWER');
- return {correct:unscored(a)?null:Number(correct),evaluation:Number(correct),points:correct&&!unscored(a)?(a.points??1000):!correct&&!unscored(a)?-(a.wrongPenalty||0):0};
+ return {correct:unscored(a)?null:Number(correct),evaluation:Number(correct),points:a.learningMode==='practice'?0:correct&&!unscored(a)?(a.points??1000):!correct&&!unscored(a)?-(a.wrongPenalty||0):0};
 }
 export function grade(a,answer,{remaining=1,duration=1}={}){const g=evaluate(a,answer);return {...g,points:Math.round(g.points*(a.weight??1)*(a.speed&&g.points>0?(.5+.5*Math.max(0,Math.min(1,remaining/duration))):1))};}
 export function scoreboards(players,totals,rule='shared',metrics={},teamScoring='sum'){

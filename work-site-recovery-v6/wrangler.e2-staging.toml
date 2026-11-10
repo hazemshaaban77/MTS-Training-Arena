@@ -4,7 +4,7 @@
 # and credential/allowlist isolation are configured and reviewed.
 name = "mts-training-arena-e2-staging-api"
 main = "github-api-worker.ts"
-compatibility_date = "2026-05-15"
+compatibility_date = "2026-11-10"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
@@ -30,3 +30,10 @@ new_sqlite_classes = ["ArenaLiveRoom"]
 
 # Intentionally NO media credentials, Firebase secrets, admin IDs, or R2.
 # No deployment automation. The staging gate must be reviewed before release.
+
+[observability]
+enabled = true
+head_sampling_rate = 0.1
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.01

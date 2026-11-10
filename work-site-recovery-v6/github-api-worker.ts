@@ -3,7 +3,7 @@
 import {handleArenaRequest} from './lib/api-handler';
 import {createProvisioner} from './lib/firebase-admin';
 import {authorizeFirebaseTrainer} from './lib/firebase-verifier.mjs';
-import {firebaseConfig} from './lib/firebase-config';
+import {firebaseConfig,stagingFirebaseConfig,type ArenaFirebaseConfig} from './lib/firebase-config';
 import {checkRate} from './lib/request-security';
 export {ArenaLiveRoom} from './lib/arena-live-room';
 
@@ -14,6 +14,7 @@ type ArenaEnv = {
  ARENA_PUBLIC_ORIGIN?:string;
  ARENA_DEPLOYMENT?:string;
  ARENA_STAGING_LOCK?:string;
+ ARENA_STAGING_FIREBASE_CONFIG?:string;
  ARENA_ADMIN_UIDS?:string;
  FIREBASE_SERVICE_ACCOUNT?:string;
  CLOUDINARY_CLOUD_NAME?:string;
@@ -24,10 +25,10 @@ const defaultOrigin='https://hazemshaaban77.github.io';
 const allowedMethods='GET, POST, OPTIONS';
 const allowedHeaders='Content-Type, X-Firebase-Token, X-Player-Token';
 let authHealthCache:{until:number;result:{googleKeys:'reachable'|'unavailable';firebaseDatabase:'reachable'|'unavailable';appDatabase:'ready'|'unavailable'}}|undefined;
-async function authHealth(db:D1Database|undefined){
- if(authHealthCache&&authHealthCache.until>Date.now())return authHealthCache.result;
+async function authHealth(db:D1Database|undefined,config:ArenaFirebaseConfig=firebaseConfig){
+ if(config.projectId===firebaseConfig.projectId&&authHealthCache&&authHealthCache.until>Date.now())return authHealthCache.result;
  const keys='https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
- const url=new URL(firebaseConfig.databaseURL);
+ const url=new URL(config.databaseURL);
  url.pathname='/arenaV1/trainerAllowlist.json';
  url.searchParams.set('shallow','true');
  const statuses=await Promise.allSettled([
@@ -43,12 +44,13 @@ async function authHealth(db:D1Database|undefined){
   firebaseDatabase:statuses[1].status==='fulfilled'&&[200,401,403].includes(statuses[1].value.status)?'reachable':'unavailable',
   appDatabase:ready?'ready':'unavailable'
  } as const;
- authHealthCache={until:Date.now()+60000,result};
+ if(config.projectId===firebaseConfig.projectId)authHealthCache={until:Date.now()+60000,result};
  return result;
 }
 export default {
  async fetch(request:Request,env:ArenaEnv):Promise<Response>{
   const url=new URL(request.url);
+  let authConfig:ArenaFirebaseConfig=firebaseConfig;
   const origin=request.headers.get('Origin');
   // Must be an origin (no path) and match the exact configured trusted Pages site.
   const allowed=(env.ARENA_PUBLIC_ORIGIN||defaultOrigin).replace(/\/$/,'');
@@ -72,8 +74,11 @@ export default {
   // trainer allowlists, media credentials or Firebase configuration here.
   if(env.ARENA_DEPLOYMENT==='e2-staging'){
    const expected='https://mts-training-arena-e2-staging.pages.dev';
-   if(allowed!==expected||env.ARENA_STAGING_LOCK!=='locked'){
+   if(allowed!==expected||!['locked','ready'].includes(env.ARENA_STAGING_LOCK||'')){
     return Response.json({error:'STAGING_CONFIGURATION_INVALID'},{status:503,headers:cors});
+   }
+   if(env.ARENA_STAGING_LOCK==='ready'){
+    try{authConfig=stagingFirebaseConfig(env.ARENA_STAGING_FIREBASE_CONFIG);}catch{return Response.json({error:'STAGING_FIREBASE_NOT_CONFIGURED'},{status:503,headers:cors});}
    }
    if(url.pathname==='/api/staging-health'&&request.method==='GET'){
     let dbReady=false;
@@ -82,10 +87,11 @@ export default {
       "SELECT name FROM sqlite_master WHERE type='table' AND name='sessions'").first();
      dbReady=row?.name==='sessions';
     }catch{}
-    return Response.json({stage:'e2-staging',locked:true,databaseSchemaReady:dbReady},
+    return Response.json({stage:'e2-staging',locked:env.ARENA_STAGING_LOCK==='locked',databaseSchemaReady:dbReady},
      {status:dbReady?200:503,headers:cors});
    }
-   return Response.json({error:'STAGING_LOCKED'},{status:503,headers:cors});
+   if(env.ARENA_STAGING_LOCK==='locked')return Response.json({error:'STAGING_LOCKED'},{status:503,headers:cors});
+   if(url.pathname.startsWith('/media/')||['/api/media-sign','/api/media-upload','/api/admin'].includes(url.pathname))return Response.json({error:'STAGING_MEDIA_DISABLED'},{status:403,headers:cors});
   }
   // Small read-only health check verifies LIVE Durable Object binding and migration.
   if(url.pathname==='/api/live-health'&&request.method==='GET'){
@@ -112,7 +118,7 @@ export default {
   // Public, bounded diagnostic for upstream availability only; no identities or tokens.
   if(url.pathname==='/api/auth-health'){
    if(request.method!=='GET')return Response.json({error:'METHOD'},{status:405,headers:cors});
-   const result=await authHealth(env.DB);
+   const result=await authHealth(env.DB,authConfig);
    return Response.json(result,{status:200,headers:{...Object.fromEntries(cors),'Cache-Control':'public, max-age=60'}});
   }
   // Cloudinary Free: request a short-lived SIGNED direct browser upload.
@@ -127,7 +133,7 @@ export default {
     if(!/^[a-z0-9_-]{2,64}$/i.test(env.CLOUDINARY_CLOUD_NAME)||!/^[0-9]{5,32}$/.test(env.CLOUDINARY_API_KEY)){
       return Response.json({error:'CLOUDINARY_NOT_CONFIGURED'},{status:503,headers:cors});
     }
-    try{await authorizeFirebaseTrainer(request,{projectId:firebaseConfig.projectId,databaseURL:firebaseConfig.databaseURL});}
+    try{await authorizeFirebaseTrainer(request,{projectId:authConfig.projectId,databaseURL:authConfig.databaseURL});}
     catch{return Response.json({error:'SIGN_IN'},{status:401,headers:cors});}
     try{await checkRate(env.DB,request);}catch{return Response.json({error:'RATE_LIMIT'},{status:429,headers:cors});}
     let details:any;
@@ -160,7 +166,7 @@ export default {
     if(!env.MEDIA)return Response.json({error:'MEDIA_UNAVAILABLE'},{status:503,headers:cors});
     if(!env.DB)return Response.json({error:'DATABASE'},{status:503,headers:cors});
     let trainer:any;
-    try{trainer=await authorizeFirebaseTrainer(request,{projectId:firebaseConfig.projectId,databaseURL:firebaseConfig.databaseURL});}
+    try{trainer=await authorizeFirebaseTrainer(request,{projectId:authConfig.projectId,databaseURL:authConfig.databaseURL});}
     catch{return Response.json({error:'SIGN_IN'},{status:401,headers:cors});}
     try{await checkRate(env.DB,request);}catch{return Response.json({error:'RATE_LIMIT'},{status:429,headers:cors});}
     const mime=(request.headers.get('Content-Type')||'').split(';')[0].toLowerCase();
@@ -203,8 +209,9 @@ export default {
   }
   const response=await handleArenaRequest(request,env.DB,undefined,{
    allowedOrigin:allowed,
+   firebase:authConfig,
    adminUids:env.ARENA_ADMIN_UIDS?.split(',').map(x=>x.trim()).filter(Boolean)||[],
-   provision:createProvisioner(env.FIREBASE_SERVICE_ACCOUNT)
+   provision:env.ARENA_DEPLOYMENT==='e2-staging'?undefined:createProvisioner(env.FIREBASE_SERVICE_ACCOUNT)
   });
   // The persisted D1 response is authoritative. Publish an invalidation only
   // after a successful mutation, without delaying the response if live fails.

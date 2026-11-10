@@ -1,6 +1,6 @@
 'use client';
 import {BarChart3,BookOpen,CheckCircle2,FileBarChart2,ShieldCheck,Users} from 'lucide-react';
-import {analyzeReportActivities,type ReportInsight} from '../../lib/report-insights';
+import {analyzeReportActivities,learningFollowUp,type ReportInsight} from '../../lib/report-insights';
 
 const labelFor=(insight:ReportInsight,ar:boolean)=>{
  if(insight.kind==='poll')return ar?'توزيع آراء المشاركين':'Participant opinions';
@@ -11,7 +11,7 @@ const labelFor=(insight:ReportInsight,ar:boolean)=>{
 };
 export default function ReportActivityInsights({report,ar}:{report:any;ar:boolean}){
  const t=(arabic:string,english:string)=>ar?arabic:english;
- const insights=analyzeReportActivities(report);
+ const insights=analyzeReportActivities(report),followUp=learningFollowUp(report);
  return <section className="report-insights" aria-label={t('التحليل التدريبي للأنشطة','Activity learning insights')}>
   <header className="report-insights__heading"><BarChart3 size={23}/>
    <div><h3>{t('التحليل التدريبي لكل نشاط','Learning insights by activity')}</h3>
@@ -58,6 +58,10 @@ export default function ReportActivityInsights({report,ar}:{report:any;ar:boolea
       {t('أحداث اللعبة والنقاط الموثقة ما ينفعش تتحسب كنسبة إجابات صحيحة.',
          'Documented game events or score rewards are not equivalent to an answer accuracy rate.')}</p>}
    </article>)}</div>}
+  <div className="report-insights__list"><h3>{t('متابعة نقاط الضعف والتحسن','Weak topics and improvement')}</h3>{followUp.map((p:any)=><article className="report-insights__activity" key={p.id}>
+   <h4>{p.name}</h4><p>{p.correct}/{p.graded} {t('إجابة أصلية صحيحة','original answers correct')} · {p.improved} {t('سؤال اتحسن في المراجعة','questions improved in review')} · {p.highConfidenceErrors} {t('خطأ مع ثقة عالية','high-confidence errors')}</p>
+   {p.weakTopics.length?<ul>{p.weakTopics.map((q:any)=><li key={q.round}>{q.prompt}</li>)}</ul>:<p>{p.graded?t('لا توجد أخطاء مسجلة لم تُصحّح في المراجعة.','No recorded errors remain uncorrected in review.'):t('لا توجد إجابات مقيمة كافية للحكم.','No graded evidence to assess yet.')}</p>}
+  </article>)}</div>
   <p className="report-insights__privacy"><FileBarChart2 size={15}/>{t('الردود المجهولة ما بتتربطش بأسماء المتدربين، ومفيش استنتاج لعدد المؤهلين لكل مرحلة.',
     'Anonymous responses are not linked to trainees; eligible participants per round are not inferred.')}</p>
  </section>;
