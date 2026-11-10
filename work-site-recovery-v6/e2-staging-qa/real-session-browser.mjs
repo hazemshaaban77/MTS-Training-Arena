@@ -183,6 +183,104 @@ try{
  const textContent=await projector.locator("body").innerText();
  for(const secret of ["QA-ONLY-","local-fixture-trainer",p1.token,p2.token,p3.token])
   assert.ok(!textContent.includes(secret),"Projection leaked a private item");
+
+ // The unified QR must work through the REAL React trainee page, not just a
+ // direct /api/join shortcut. Run an isolated second room so the existing
+ // five-client ranking fixture and its expected results remain unchanged.
+ const qrCreated=ok(await post("sessions",{
+  title:"ONE QR · Real React Trainee · QA ONLY",teams:false,language:"en",
+  settings:{reveal:"manual",progression:"manual"},
+  activities:[quiz(1),quiz(2)]
+ },{asTrainer:true}),"Create isolated QR journey");
+ const qrCode=qrCreated.code;
+ const qrUrl=new URL(joinHref);
+ qrUrl.searchParams.set("code",qrCode);
+ assert.equal(qrUrl.origin,root,"QR must open the site origin, not API credentials or an external login");
+ assert.equal(qrUrl.searchParams.get("view"),"join");
+ assert.equal(qrUrl.searchParams.get("code"),qrCode);
+ const qrCtx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,
+  reducedMotion:"reduce"});
+ userContexts.push(qrCtx);
+ await qrCtx.addInitScript(()=>{
+  localStorage.setItem("arena-language","en");
+  localStorage.setItem("arena-effects","off");
+ });
+ const qrPage=await qrCtx.newPage();
+ qrPage.on("pageerror",e=>jsErrors.push("QR React: "+e.message));
+ await qrPage.goto(qrUrl.toString(),{waitUntil:"domcontentloaded"});
+ const joinForm=qrPage.locator(".join-page .join-card form");
+ await joinForm.waitFor({state:"visible",timeout:18000});
+ assert.ok((await joinForm.innerText()).includes("Employee ID"),
+  "Real QR entry must use the trainee registration screen without trainer Firebase login");
+ await qrPage.locator("input[autocomplete=name]").fill("QR Browser Participant");
+ await qrPage.locator("input[autocomplete=off][maxlength='30']").fill("QA-QR-REACT-01");
+ await qrPage.locator(".identity-confirmation input[type=checkbox]").check();
+ await qrPage.screenshot({path:path.join(evidence,"05-real-react-unified-qr-join.png")});
+ await joinForm.locator('button[type="submit"],button.btn.primary').first().click();
+ await qrPage.waitForURL(url=>url.searchParams.get("view")==="play"&&url.searchParams.get("code")===qrCode,
+  {timeout:20000});
+ const qrToken=await qrPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode);
+ assert.ok(typeof qrToken==="string"&&qrToken.length>=30,"Real React registration persists one private token");
+ assert.ok(!qrPage.url().includes(qrToken),"The private player token must never appear in a QR or address bar");
+ const qrProfile=ok(await get("state?code="+qrCode,{token:qrToken}),"QR token identity");
+ assert.equal(qrProfile.mine?.name,"QR Browser Participant");
+ const qrUid=qrProfile.mine?.id;
+ const qrHost=async()=>ok(await get("state?code="+qrCode+"&role=host",{asTrainer:true}),"QR host state");
+ const qrControl=async action=>{
+  const h=await qrHost();
+  return post("control",{code:qrCode,revision:h.revision,action},{asTrainer:true});
+ };
+ // A learner can never turn their player token into trainer controls, host
+ // state, or someone else's room identity.
+ assert.equal((await post("control",{code:qrCode,revision:(await qrHost()).revision,
+  action:"start"},{token:qrToken})).status,401,"QR participant cannot start the session");
+ assert.equal((await get("state?code="+qrCode+"&role=host",{token:qrToken})).status,401,
+  "QR participant token cannot read trainer-only session details");
+ const crossRoom=ok(await get("state?code="+code,{token:qrToken}),"cross-room public snapshot");
+ assert.equal(crossRoom.mine,null,"One room token cannot impersonate a player in another room");
+ ok(await qrControl("start"),"QR trainer begins activity one");
+ await qrPage.waitForFunction(()=>document.querySelector(".session-progress")?.textContent?.includes("1 / 2")
+   &&document.querySelectorAll(".answer-option:not(:disabled)").length>0,null,{timeout:16000});
+ await qrPage.locator(".answer-option").first().click({timeout:10000});
+ await qrPage.locator(".submit-answer").click({timeout:10000});
+ const firstRound=await (async()=>{
+  for(let tries=0;tries<24;tries++){
+   const r=ok(await get("state?code="+qrCode,{token:qrToken}),"QR round one state");
+   if(r.mine?.answered)return r;
+   await sleep(400);
+  }
+  throw Error("QR round one answer was not confirmed by server");
+ })();
+ assert.equal(firstRound.current,0);
+ assert.equal(firstRound.mine?.id,qrUid,"QR identity persists into the first activity");
+ ok(await qrControl("close"),"QR trainer closes activity one");
+ ok(await qrControl("revealkey"),"QR trainer reveals first result");
+ ok(await qrControl("next"),"QR trainer begins second activity without new QR");
+ await qrPage.reload({waitUntil:"domcontentloaded"});
+ assert.equal(await qrPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode),
+  qrToken,"One participant token must survive an actual React page reload");
+ assert.ok(!qrPage.url().includes("view=join"),"Second activity must NOT require another QR");
+ await qrPage.waitForFunction(()=>document.querySelector(".session-progress")?.textContent?.includes("2 / 2")
+   &&document.querySelectorAll(".answer-option:not(:disabled)").length>0,null,{timeout:18000});
+ await qrPage.locator(".answer-option").first().click({timeout:10000});
+ await qrPage.locator(".submit-answer").click({timeout:10000});
+ let secondRound;
+ for(let tries=0;tries<24;tries++){
+  const r=ok(await get("state?code="+qrCode,{token:qrToken}),"QR round two state");
+  if(r.current===1&&r.mine?.answered){secondRound=r;break;}
+  await sleep(400);
+ }
+ assert.ok(secondRound,"Second answer was confirmed by server using the SAME QR identity");
+ assert.equal(secondRound.mine.id,qrUid);
+ assert.equal(secondRound.code,qrCode);
+ assert.equal((await qrHost()).players.filter(p=>p.uid===qrUid).length,1,
+  "A real React refresh cannot silently create a second participant");
+ await qrPage.screenshot({path:path.join(evidence,"06-real-react-qr-second-activity.png")});
+ console.log("UNIFIED_QR_REAL_REACT_PASS",JSON.stringify({
+  mobileViewport:390,oneJoinUrl:true,sameRoom:true,twoActivities:true,
+  reloadKeepsIdentity:true,trainerControlsBlocked:true,crossRoomIdentityBlocked:true,
+  trainerLoginNotRequiredForTrainee:true,fixtureOnly:true
+ }));
  assert.deepEqual(jsErrors,[],"Browser JavaScript errors");
  completed=true;
  console.log(JSON.stringify({status:"PASS",session:"synthetic-code",rounds:2,
