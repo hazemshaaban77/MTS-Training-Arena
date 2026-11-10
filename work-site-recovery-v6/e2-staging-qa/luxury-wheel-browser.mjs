@@ -407,10 +407,18 @@ try{
   assert.ok(!content.includes(note),'Trainer private rationale must never leak to public projector');
   const frame=await card.evaluate(el=>{
     const r=el.getBoundingClientRect();
-    return {width:r.width,top:r.top,bottom:r.bottom,screen:innerHeight,scroll:document.documentElement.scrollWidth,viewport:innerWidth};
+    const wheel=document.querySelector('.wheel-stage--challenge-revealed .arena-wheel3d--crown')
+      ?.getBoundingClientRect();
+    return {width:r.width,top:r.top,bottom:r.bottom,screen:innerHeight,
+      scroll:document.documentElement.scrollWidth,viewport:innerWidth,
+      wheelLeft:wheel?.left,wheelRight:wheel?.right,cardLeft:r.left,cardRight:r.right};
   });
   assert.ok(frame.width>380&&frame.scroll<=frame.viewport+2,
    'Signed Wheel Challenge Card fits projector width: '+JSON.stringify(frame));
+  assert.ok(frame.top>=0&&frame.bottom<=frame.screen-12,
+   'Complete challenge task and signed grade MUST fit visible 16:9 projector: '+JSON.stringify(frame));
+  assert.ok(frame.wheelRight!==undefined&&(frame.wheelRight<=frame.cardLeft+5||frame.cardRight<=frame.wheelLeft+5),
+   'Wheel and challenge task must be visible side by side (LTR or RTL): '+JSON.stringify(frame));
   await screenshot(page,'22-wheel-challenge-card-projector.png');
   console.log('WHEEL_CHALLENGE_CARD_PASS',JSON.stringify({
    signedRevealId:revealId,grade:6,points:-600,duplicateRejected:true,reasonPrivate:true
