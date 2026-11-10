@@ -11,7 +11,7 @@ const normalized=(type:string)=>type==='Spin Wheel'?'Wheel of Fortune':type==='C
 export default function StageSplash({type,label,ar,onComplete,durationMs=4600,preview=false}:{
  type:string;label:string;ar:boolean;onComplete:()=>void;durationMs?:number;preview?:boolean}){
  const finishRef=useRef(onComplete);finishRef.current=onComplete;
- useEffect(()=>{const id=window.setTimeout(()=>finishRef.current(),durationMs);return()=>window.clearTimeout(id);},[type,durationMs]);
+ useEffect(()=>{const duration=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?Math.min(durationMs,650):durationMs;const id=window.setTimeout(()=>finishRef.current(),duration);return()=>window.clearTimeout(id);},[type,durationMs]);
  const base=normalized(type),theme=stageAtmosphere(base),identity=introIdentity(base);
  const beats=gameIntroBeats[identity.key];
  return <div className={'stage-splash arena-cinematic-intro cinematic-composed arena-intro-real3d stage-splash-'+base.toLowerCase().replace(/[^a-z0-9]+/g,'-')+' cinematic-'+theme+' intro-kind-'+identity.key}
