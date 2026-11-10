@@ -29,3 +29,69 @@ test('standalone needs survey uses session QR and closes without scoring',async(
 test('started v3 legacy sessions preserve original categorization points through additive migrations',async()=>{const db=database(),a:any={...sample('Categorize','en'),timer:45},code=await room(db,[a]),p=await join(db,code);db.sql.prepare('UPDATE sessions SET settings=NULL,blueprint=NULL,runtime=NULL,activities=? WHERE code=?').run(JSON.stringify([a]),code);await control(db,code,'start');await call(db,'answer',{code,round:0,answer:a.assignments},p.token);assert.equal(db.sql.prepare('SELECT points FROM answers WHERE session=?').get(code).points,1000);db.sql.close();});
 
 test('bounded request parsing and recovery rate limits reject oversized bodies and token-based evasion',async()=>{await assert.rejects(()=>readJson(new Request('https://arena.test/api/join',{method:'POST',body:JSON.stringify({data:'x'.repeat(1000001)})})),{message:'TOO_LARGE'});const db=database();for(let i=0;i<10;i++)await checkRate(db,new Request('https://arena.test/api/recover',{method:'POST',headers:{'X-Player-Token':'random-'+i},body:'{}'}));await assert.rejects(()=>checkRate(db,new Request('https://arena.test/api/recover',{method:'POST',headers:{'X-Player-Token':'yet-another-token'},body:'{}'})),{message:'RATE_LIMIT'});const data=JSON.stringify(db.sql.prepare('SELECT * FROM rate_buckets').all());assert.ok(!data.includes('random-'));db.sql.close();});
+
+
+test('Wheel Challenge Card: verified trainer-only graded award/deduction, private reason and exactly-once ledger',async()=>{
+ const db=database();
+ const a={...sample('Wheel of Fortune','en'),rounds:3,points:1000,
+  sectors:[
+   {label:'Explain ACI',kind:'challenge',detail:'Describe how the ACID request works',repeatable:true},
+   {label:'Customs scenario',kind:'penalty',detail:'Resolve a missing document',repeatable:true}
+  ]};
+ const code=await room(db,[a]),p=await join(db,code);
+ await control(db,code,'start');
+ const settle=async()=>{
+  await control(db,code,'spin');
+  const current=db.sql.prepare('SELECT runtime FROM sessions WHERE code=?').get(code) as any;
+  const rt=JSON.parse(current.runtime);
+  rt.spin.startsAt=Date.now()-15000;rt.spin.stopsAt=Date.now()-4000;rt.spin.revealAt=Date.now()-1000;
+  setRuntime(db,code,rt);
+  const host=await state(db,code,undefined,true);
+  assert.equal(host.game.spin.revealed,true);
+  assert.equal(host.game.spinTarget,p.id);
+  assert.ok(['challenge','penalty'].includes(host.game.outcome.kind));
+  return host;
+ };
+ const first=await settle();
+ const receipt={grade:8,direction:1,delta:800,reason:'Completed each step with a practical explanation',
+  revealId:first.game.spin.id,target:p.id,adjustmentId:'11111111-1111-4111-8111-111111111111'};
+ const submit=async(payload:any,owner:string|null='trainer')=>{
+  const host=await state(db,code,undefined,true);
+  return call(db,'control',{code,revision:host.revision,action:'wheelaward',...payload},undefined,owner);
+ };
+ await assert.rejects(()=>submit({...receipt,revealId:'old-spin'}),{message:'STALE'});
+ await assert.rejects(()=>submit({...receipt,target:'different-player'}),{message:'STALE'});
+ await assert.rejects(()=>submit({...receipt,reason:''}),{message:'AWARD'});
+ await assert.rejects(()=>submit({...receipt,delta:900}),{message:'AWARD'});
+ await assert.rejects(()=>submit(receipt,null),{message:'FORBIDDEN'});
+ const initial=await state(db,code);
+ assert.equal(initial.game.manualJudgement,null);
+ assert.equal(initial.individual[0].score,0);
+ await submit(receipt);
+ await assert.rejects(()=>submit(receipt),{message:'ALREADY_GRADED'});
+ const hostGrade=await state(db,code,undefined,true);
+ const publicGrade=await state(db,code,p.token);
+ assert.equal(hostGrade.game.manualJudgement.reason,receipt.reason);
+ assert.equal(publicGrade.game.manualJudgement.delta,800);
+ assert.equal(publicGrade.game.manualJudgement.reason,undefined,
+  'Trainer-only comments must never be shown to participant/projector');
+ assert.equal(publicGrade.individual[0].score,800);
+ const second=await settle();
+ await assert.rejects(()=>submit({...receipt,adjustmentId:'22222222-2222-4222-8222-222222222222'}),
+  {message:'STALE'},'Old wheel turn cannot be graded after next spin');
+ const deduction={...receipt,grade:4,direction:-1,delta:-400,
+  reason:'Missed several required steps in the practical scenario',
+  revealId:second.game.spin.id,target:p.id,adjustmentId:'22222222-2222-4222-8222-222222222222'};
+ await submit(deduction);
+ await assert.rejects(()=>submit(deduction),{message:'ALREADY_GRADED'});
+ const after=await state(db,code,p.token);
+ assert.equal(after.individual[0].score,400);
+ assert.equal(after.game.manualJudgement.delta,-400);
+ assert.equal(after.game.manualJudgement.reason,undefined);
+ const entries=db.sql.prepare("SELECT id,player,points,detail FROM events WHERE session=? AND kind='wheel-judge' ORDER BY created_at").all(code) as any[];
+ assert.equal(entries.length,2,'One authoritative score event per reveal, even with retries');
+ assert.equal(entries.reduce((sum,e)=>sum+e.points,0),400);
+ assert.ok(entries.every(e=>e.player===p.id));
+ assert.ok(entries.every(e=>JSON.parse(e.detail).reason.length>=5));
+ db.sql.close();
+});
