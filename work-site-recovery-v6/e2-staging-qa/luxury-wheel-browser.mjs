@@ -205,6 +205,60 @@ try{
  await screenshot(trainee,'18-luxury-wheel-mobile-result.png',true);
  const mobile=await trainee.evaluate(()=>({viewport:innerWidth,content:document.documentElement.scrollWidth}));
  assert.ok(mobile.content<=mobile.viewport+2,'Responsive wheel causes horizontal overflow '+JSON.stringify(mobile));
+
+ // Wheel Challenge Card: a second isolated room exercises manual scoring.
+ // No real account, production DB, or browser-calculated points are trusted.
+ const challengeSectors=[
+  {kind:'challenge',label:'Explain the ACI flow',detail:'Demonstrate each step',points:0,repeatable:true},
+  {kind:'penalty',label:'Safety recovery drill',detail:'Correct the scenario',points:0,repeatable:true}
+ ];
+ const challengeRoom=ok(await api('sessions',{
+  title:'Wheel Challenge Card · Synthetic QA',language:'en',
+  activities:[{type:'Wheel of Fortune',prompt:'Demonstrate the challenge',
+   timer:0,rounds:2,spinDuration:4,points:1000,weight:1,sectors:challengeSectors}],
+  settings:{reveal:'manual',progression:'manual'}
+ },auth),'create graded challenge');
+ const challengeCode=challengeRoom.code;
+ const contender=ok(await api('join',{code:challengeCode,name:'Practical Challenger',employeeId:'QA-WHEEL-CHALLENGE',
+  confirmed:true,language:'en'}),'join challenge');
+ const chHost=()=>api('state?code='+challengeCode+'&role=host',null,auth);
+ const chPublic=()=>api('state?code='+challengeCode);
+ const chControl=async(action,extra={})=>{
+  const snapshot=ok(await chHost(),'challenge host revision');
+  return api('control',{code:challengeCode,revision:snapshot.revision,action,...extra},auth);
+ };
+ ok(await chControl('start'),'start challenge');
+ ok(await chControl('spin'),'spin challenge');
+ const gradedReveal=await until(async()=>{
+  const x=await chPublic();return x.json?.game?.spin?.revealed?x.json:null;
+ },14000);
+ const challengeSpin=gradedReveal.game.spin;
+ assert.ok(['challenge','penalty'].includes(gradedReveal.game.outcome.kind),
+  'Mission is chosen by authoritative wheel outcome');
+ const locked=await chControl('spin');
+ assert.equal(locked.status,409,'Cannot skip ungraded practical challenge');
+ const switchPlayer=await chControl('selectturn',{mode:'random'});
+ assert.equal(switchPlayer.status,409,'Cannot replace challenger before grading');
+ const canonical={revealId:challengeSpin.id,target:gradedReveal.game.spinTarget,grade:8,
+  direction:1,delta:800,reason:'Completed practical challenge with verified steps',
+  adjustmentId:crypto.randomUUID()};
+ const tampered=await chControl('wheelaward',{...canonical,delta:810});
+ assert.equal(tampered.status,400,'Server rejects client-tampered reward');
+ ok(await chControl('wheelaward',canonical),'trainer grades and awards exactly once');
+ const duplicateGrade=await chControl('wheelaward',canonical);
+ assert.equal(duplicateGrade.status,409,'Duplicate grading rejected');
+ const staleGrade=await chControl('wheelaward',{...canonical,revealId:crypto.randomUUID()});
+ assert.equal(staleGrade.status,409,'Old or forged reveal identifier rejected');
+ const afterGrade=ok(await chPublic(),'public grade receipt');
+ const hostGrade=ok(await chHost(),'host grade receipt');
+ assert.equal(afterGrade.game.manualJudgement.delta,800);
+ assert.equal(afterGrade.game.manualJudgement.reason,undefined,'Private trainer note not leaked to public');
+ assert.equal(hostGrade.game.manualJudgement.reason,canonical.reason,'Host can audit justification');
+ assert.equal(afterGrade.individual.find(p=>p.uid===contender.id)?.score,800,
+  'Server ledger yields precisely one practical reward');
+ ok(await chControl('spin'),'Next turn unlocked by official grade');
+ console.log('WHEEL_CHALLENGE_CARD_PASS',JSON.stringify({oneSignedGrade:true,
+  tamperRejected:true,duplicateRejected:true,nextSpinUnlocked:true,privateReason:true}));
  console.log('WHEEL_FIXTURE_PASS',JSON.stringify({signedResult:true,oneServerLedger:true,duplicateSpinRejected:true,countdownMs:before}));
  await projectorCtx.close();
  await traineeCtx.close();
