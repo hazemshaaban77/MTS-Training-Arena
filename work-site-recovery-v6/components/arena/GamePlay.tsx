@@ -37,7 +37,7 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
   const sectors=Array.isArray(a.sectors)?a.sectors:Array.isArray(a.items)?a.items.map((label:string)=>({label})):[];
   const spin=g.spin,now=s.clockNow||s.serverNow;
   const count=spin?Math.max(0,Math.ceil((spin.startsAt-now)/1000)):0;
-  const turnPlayer=(s.players||[]).find((p:any)=>p.uid===(spin&&!spin.revealed||g.mini?.question?g.spinTarget:g.target));
+  const turnPlayer=(s.players||[]).find((p:any)=>p.uid===(spin?g.spinTarget:g.target));
   const selected=g.target===mine?.id;
   const canRequestSpin=!!g.target&&(host||selected)&&!busy&&!s.paused&&!closed&&(!spin||spin.revealed)&&g.turn<g.rounds&&!g.mini?.question;
 
@@ -53,8 +53,26 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
    {host&&<div className="hero-actions"><select aria-label={t('اختيار المتدرب','Select player')} value={g.target||''} onChange={e=>onControl('selectturn',undefined,{player:e.target.value})}>{(s.players||[]).map((p:any)=><option key={p.uid} value={p.uid}>{p.name}</option>)}</select>
     <button className="btn secondary" onClick={()=>onControl('selectturn',undefined,{mode:'random'})}>{t('اختيار عشوائي','Random player')}</button>
     {spin&&!spin.revealed&&<button className="text-button" onClick={()=>{const reason=prompt(t('سبب إعادة اللف','Reason for re-spin'));if(reason)onControl('respin',undefined,{reason});}}>{t('إعادة لف موثقة','Audited re-spin')}</button>}</div>}
+   {g.outcome&&spin?.revealed&&(
+    ['challenge','penalty'].includes(g.outcome.kind)?
+    <article role="status" aria-live="polite" className={'wheel-challenge-card wheel-challenge-card--'+g.outcome.kind} key={spin.id} data-testid="wheel-challenge-card" data-reveal-id={spin.id}>
+     <div className="wheel-challenge-card__eyebrow"><Flag size={19}/><span>{t('بطاقة التحدي الرسمية','OFFICIAL CHALLENGE CARD')}</span><b>#{String(spin.index+1).padStart(2,'0')}</b></div>
+     <div className="wheel-challenge-card__body">
+      <div className="wheel-challenge-card__copy"><small>{g.outcome.kind==='penalty'?t('تحدّي التقييم','ASSESSMENT CHALLENGE'):t('مهمة جديدة','NEW MISSION')}</small>
+       <h3>{g.outcome.label}</h3>
+       <p>{g.outcome.detail||a.prompt||t('نفّذ المهمة أمام الفريق','Complete the mission for your team')}</p>
+      </div>
+      <div className="wheel-challenge-card__spotlight"><span>{t('صاحب التحدي','CHALLENGER')}</span><strong>{turnPlayer?.name||t('المشارك صاحب الدور','Current player')}</strong><small>{t('التقييم من المدرب بعد التنفيذ','Trainer evaluates after completion')}</small></div>
+     </div>
+     <footer className="wheel-challenge-card__footer">
+      {g.manualJudgement?<><CheckCircle2 size={19}/><span>{t('تم تسجيل التقييم على السيرفر','GRADE CONFIRMED BY SERVER')}</span><b>{g.manualJudgement.delta>0?'+':''}{g.manualJudgement.delta} {t('نقطة','PTS')}</b></>:
+       <><Clock size={18}/><span>{t('بانتظار تنفيذ التحدي وتقييم المدرب','AWAITING PRACTICAL PERFORMANCE & TRAINER REVIEW')}</span></>}
+     </footer>
+    </article>:
+    <div role="status" aria-live="polite" className={'reveal-result wheel-outcome-grand outcome-'+g.outcome.kind} key={spin.id}><span>✦ {g.outcome.kind||t('النتيجة','OUTCOME')}</span><h3>{g.outcome.label||g.outcome}</h3><p>{g.outcome.detail}</p>{!!g.outcome.points&&g.outcome.kind!=='penalty'&&<strong>{g.outcome.points>0?'+':''}{g.outcome.points}</strong>}</div>
+   )}
    {host&&<WheelJudge ar={ar} game={g} session={s} activity={a} busy={busy} onControl={onControl}/>}
-   {g.outcome&&spin?.revealed&&<div role="status" aria-live="polite" className={'reveal-result wheel-outcome-grand outcome-'+g.outcome.kind} key={spin.id}><span>✦ {g.outcome.kind||t('النتيجة','OUTCOME')}</span><h3>{g.outcome.label||g.outcome}</h3><p>{g.outcome.detail}</p>{!!g.outcome.points&&g.outcome.kind!=='penalty'&&<strong>{g.outcome.points>0?'+':''}{g.outcome.points}</strong>}</div>}
+
    {g.mini?.question&&<div className="mini-quiz"><span className="eyebrow">MINI QUIZ {g.mini.step+1}/{g.mini.total}</span><p className="mini-clock">{Math.max(0,Math.ceil((g.mini.deadline-now)/1000))}s</p>
     {g.mini.deadline<=now&&usable&&mine?.id===g.spinTarget?<button className="btn secondary" onClick={()=>send('miniquiz',{answer:null})}>{t('انتهى الوقت · متابعة','Time is up · Continue')}</button>:<Question key={`${spin?.id}:${g.mini.step}`} a={g.mini.question} ar={ar} disabled={!usable||mine?.id!==g.spinTarget} onSubmit={(answer:any)=>send('miniquiz',{answer})}/>}</div>}
    {g.mini&&!g.mini.question&&<p className="answer-sent">{t('اكتمل التحدي المصغر','Mini quiz complete')}</p>}
