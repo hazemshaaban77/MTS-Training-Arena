@@ -39,7 +39,9 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
   const count=spin?Math.max(0,Math.ceil((spin.startsAt-now)/1000)):0;
   const turnPlayer=(s.players||[]).find((p:any)=>p.uid===(spin?g.spinTarget:g.target));
   const selected=g.target===mine?.id;
-  const canRequestSpin=!!g.target&&(host||selected)&&!busy&&!s.paused&&!closed&&(!spin||spin.revealed)&&g.turn<g.rounds&&!g.mini?.question;
+  const pendingGrade=!!spin?.revealed&&['challenge','penalty'].includes(g.outcome?.kind)&&!g.manualJudgement;
+  const canRequestSpin=!!g.target&&(host||selected)&&!busy&&!s.paused&&!closed&&(!spin||spin.revealed)&&
+   !pendingGrade&&g.turn<g.rounds&&!g.mini?.question;
 
   return <div className={'presentation-play wheel-stage wheel-stage--crown-real3d'+
    (spin?.revealed&&['challenge','penalty'].includes(g.outcome?.kind)?' wheel-stage--challenge-revealed':'')}>
@@ -51,8 +53,8 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
      <p>{t('الجهاز مش قادر يعرض المسرح الثلاثي الأبعاد حاليًا. تقدر تكمل النشاط بنفس النتيجة الرسمية من غير العجلة القديمة.','This device cannot render the 3D stage. You can continue with the official server outcome without the old wheel.')}</p>
      <button className="btn primary large" type="button" disabled={!canRequestSpin} onClick={()=>host?onControl('spin'):send('spin')}>{t('ابدأ التحدي','Start the challenge')}</button></div>}
    {host&&<div className="sector-legend sector-legend--grand" aria-label={t('قطاعات العجلة','Wheel sectors')}>{sectors.map((v:any,i:number)=><span key={i} className={(g.used?.includes(i)?'used ':'')+(spin?.revealed&&spin.index===i?'wheel-legend-winner':'')} aria-current={spin?.revealed&&spin.index===i?'true':undefined}><b>{String(i+1).padStart(2,'0')}</b><span>{v.label}</span></span>)}</div>}
-   {host&&<div className="hero-actions"><select aria-label={t('اختيار المتدرب','Select player')} value={g.target||''} onChange={e=>onControl('selectturn',undefined,{player:e.target.value})}>{(s.players||[]).map((p:any)=><option key={p.uid} value={p.uid}>{p.name}</option>)}</select>
-    <button className="btn secondary" onClick={()=>onControl('selectturn',undefined,{mode:'random'})}>{t('اختيار عشوائي','Random player')}</button>
+   {host&&<div className="hero-actions"><select aria-label={t('اختيار المتدرب','Select player')} disabled={busy||pendingGrade} value={g.target||''} onChange={e=>onControl('selectturn',undefined,{player:e.target.value})}>{(s.players||[]).map((p:any)=><option key={p.uid} value={p.uid}>{p.name}</option>)}</select>
+    <button className="btn secondary" disabled={busy||pendingGrade} onClick={()=>onControl('selectturn',undefined,{mode:'random'})}>{t('اختيار عشوائي','Random player')}</button>
     {spin&&!spin.revealed&&<button className="text-button" onClick={()=>{const reason=prompt(t('سبب إعادة اللف','Reason for re-spin'));if(reason)onControl('respin',undefined,{reason});}}>{t('إعادة لف موثقة','Audited re-spin')}</button>}</div>}
    {g.outcome&&spin?.revealed&&(
     ['challenge','penalty'].includes(g.outcome.kind)?
@@ -72,6 +74,9 @@ export default function GamePlay({s,ar,host,display,canAnswer,busy,onSubmit,onIn
     </article>:
     <div role="status" aria-live="polite" className={'reveal-result wheel-outcome-grand outcome-'+g.outcome.kind} key={spin.id}><span>✦ {g.outcome.kind||t('النتيجة','OUTCOME')}</span><h3>{g.outcome.label||g.outcome}</h3><p>{g.outcome.detail}</p>{!!g.outcome.points&&g.outcome.kind!=='penalty'&&<strong>{g.outcome.points>0?'+':''}{g.outcome.points}</strong>}</div>
    )}
+   {pendingGrade&&<p className="wheel-grade-required" role="status">
+    <ShieldCheck size={18}/>{t('العجلة متوقفة لحين اعتماد تقييم التحدّي من المدرب. النتيجة هتتسجل على السيرفر قبل الدور الجاي.','The next spin is locked until the trainer commits the practical challenge grade to the server.')}
+   </p>}
    {host&&<WheelJudge ar={ar} game={g} session={s} activity={a} busy={busy} onControl={onControl}/>}
 
    {g.mini?.question&&<div className="mini-quiz"><span className="eyebrow">MINI QUIZ {g.mini.step+1}/{g.mini.total}</span><p className="mini-clock">{Math.max(0,Math.ceil((g.mini.deadline-now)/1000))}s</p>
