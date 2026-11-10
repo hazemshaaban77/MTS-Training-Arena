@@ -53,13 +53,13 @@ const until=async(predicate,timeout=10000)=>{
 };
 // Two independent CLI scenarios share this source but run in separate Node processes.
 // This prevents a prior SwiftShader wheel render from starving the crate GPU.
-const scenario=process.argv.includes('--wheel')?'wheel':process.argv.includes('--crate')?'crate':'both';
+const scenario=process.argv.includes('--challenge')?'challenge':process.argv.includes('--wheel')?'wheel':process.argv.includes('--crate')?'crate':'both';
 let browser;
 const contexts=[];
 const problems=[];
 try{
  await checkReady();
- if(scenario!=='crate'){
+ if(scenario==='wheel'||scenario==='both'){
  const sectors=[
   {kind:'prize',label:'Recognition Star',points:250,detail:'Knowledge participation star',repeatable:true},
   {kind:'prize',label:'Teamwork Reward',points:400,detail:'Outstanding teamwork',repeatable:true},
@@ -211,7 +211,7 @@ try{
  await browser.close();
  browser=undefined;
  }
- if(scenario!=='wheel'){
+ if(scenario==='crate'||scenario==='both'){
  browser=await chromium.launch({
   headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']
  });
@@ -342,6 +342,79 @@ try{
  await screenshot(cratePage,'21-licensed-crate-narrow-layout.png',true);
 
  console.log('CRATE_FIXTURE_PASS',JSON.stringify({serverOwnedOpen:true,duplicateLock:true,webglModel:true,projectorFit:true,narrowFit:true}));
+ }
+
+ if(scenario==='challenge'){
+  const challengeSectors=[
+   {label:'Import challenge',kind:'challenge',detail:'Explain the ACID import request process step by step',repeatable:true},
+   {label:'Customs scenario',kind:'penalty',detail:'Describe how to correct a missing invoice',repeatable:true}
+  ];
+  const created=ok(await api('sessions',{
+   title:'Wheel Challenge Card · Synthetic Session',language:'en',
+   activities:[{type:'Wheel of Fortune',prompt:'Demonstrate your skills',
+    timer:0,rounds:2,spinDuration:4,points:1000,sectors:challengeSectors}],
+   settings:{reveal:'manual',progression:'manual'}
+  },auth),'create challenge fixture');
+  const challengeCode=created.code;
+  const member=ok(await api('join',{code:challengeCode,name:'Challenge QA Learner',
+   employeeId:'QA-WHEEL-CARD',confirmed:true,language:'en'}),'join challenge fixture');
+  const host=()=>api('state?code='+challengeCode+'&role=host',null,auth);
+  let hs=ok(await host(),'challenge host ready');
+  ok(await api('control',{code:challengeCode,revision:hs.revision,action:'start'},auth),'challenge session start');
+  hs=ok(await host(),'challenge host started');
+  ok(await api('control',{code:challengeCode,revision:hs.revision,action:'spin'},auth),'challenge signed spin');
+  const before=ok(await api('state?code='+challengeCode),'challenge public pre-reveal');
+  assert.ok(before.game.spin&&!before.game.spin.revealed,'Challenge stays hidden while spinning');
+  assert.equal(before.game.outcome,undefined,'Unrevealed mission must not leak to projector');
+  const signed=await until(async()=>{
+   const res=await api('state?code='+challengeCode);
+   return res.json?.game?.spin?.revealed?res.json:null;
+  },17000);
+  assert.ok(['challenge','penalty'].includes(signed.game.outcome.kind));
+  assert.equal(signed.game.spinTarget,member.uid||signed.game.spinTarget);
+  const ctx=await (browser=await chromium.launch({
+   headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']
+  })).newContext({viewport:{width:1920,height:1080},deviceScaleFactor:1});
+  contexts.push(ctx);
+  const page=await ctx.newPage();
+  page.on('pageerror',e=>problems.push('wheel-card: '+e.message));
+  await page.goto(root+'/MTS-Training-Arena/v6/?view=display&code='+challengeCode,
+   {waitUntil:'domcontentloaded'});
+  const card=page.locator('[data-testid="wheel-challenge-card"]');
+  await card.waitFor({state:'attached',timeout:30000});
+  const intro=page.locator('.stage-splash .splash-skip');
+  if(await intro.count())await page.evaluate(()=>document.querySelector('.stage-splash .splash-skip')?.click());
+  const shown=await card.innerText();
+  assert.ok(shown.includes(signed.game.outcome.label),'Signed challenge title visible to audience');
+  assert.ok(shown.includes('Challenge QA Learner'),'Server-selected trainee visible on challenge card');
+  assert.ok(shown.includes('AWAITING')||shown.includes('بانتظار'),'Must await trainer verification');
+  const revealId=signed.game.spin.id;
+  const note='Explained every compliance step with a correct example';
+  hs=ok(await host(),'challenge host grade revision');
+  const grade={code:challengeCode,revision:hs.revision,action:'wheelaward',
+   revealId,target:signed.game.spinTarget,grade:6,direction:-1,delta:-600,
+   reason:note,adjustmentId:crypto.randomUUID()};
+  ok(await api('control',grade,auth),'signed challenge grade');
+  const duplicate=await api('control',{...grade,revision:(await host()).json.revision},auth);
+  assert.equal(duplicate.status,409,'Duplicate grading rejected');
+  const final=ok(await api('state?code='+challengeCode),'public signed challenge grade');
+  assert.equal(final.game.manualJudgement.delta,-600);
+  assert.equal(final.game.manualJudgement.reason,undefined);
+  assert.equal(final.individual.find(p=>p.uid===signed.game.spinTarget)?.score,-600);
+  await page.waitForFunction(()=>document.querySelector('[data-testid="wheel-challenge-card"]')
+   ?.textContent?.match(/GRADE CONFIRMED|تم تسجيل التقييم/),null,{timeout:15000});
+  const content=await card.innerText();
+  assert.ok(!content.includes(note),'Trainer private rationale must never leak to public projector');
+  const frame=await card.evaluate(el=>{
+    const r=el.getBoundingClientRect();
+    return {width:r.width,top:r.top,bottom:r.bottom,screen:innerHeight,scroll:document.documentElement.scrollWidth,viewport:innerWidth};
+  });
+  assert.ok(frame.width>380&&frame.scroll<=frame.viewport+2,
+   'Signed Wheel Challenge Card fits projector width: '+JSON.stringify(frame));
+  await screenshot(page,'22-wheel-challenge-card-projector.png');
+  console.log('WHEEL_CHALLENGE_CARD_PASS',JSON.stringify({
+   signedRevealId:revealId,grade:6,points:-600,duplicateRejected:true,reasonPrivate:true
+  }));
  }
  assert.deepEqual(problems,[], 'No React browser errors in '+scenario+' scenario');
  console.log('ARENA_E2_3D_PASS',JSON.stringify({scenario,isolatedFixture:true,noLiveWrites:true}));
