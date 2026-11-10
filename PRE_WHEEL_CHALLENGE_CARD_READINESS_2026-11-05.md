@@ -100,3 +100,12 @@ No merge, deploy, production Firebase/Cloudflare/D1 writes, paid integrations, r
 - A separate reliability improvement: `StageSplash.tsx` respects `prefers-reduced-motion: reduce` with a short intro; existing 3D crate QA uses reduced motion in its isolated Chromium context. Regular user intro duration is unchanged.
 - **Non-release gates remain:** actual guest QR and Firebase login, real phones and projector hardware, production source provenance, low-power GPU performance, user visual signoff and explicit deployment approval.
 - All implementation work is on the single branch `work/arena-e2-integration-audit-20261105`; no merges, deployments, production database writes or original logo changes.
+
+
+### 2026-11-10 follow-up: lock pending grades and verify signed +/- scoring
+- Tested code SHA: `9aee625b222bc240edbdfefa884110774ee92dc8`; **GitHub Actions SUCCESS** https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/42809850616
+- Added server-side `GRADE_REQUIRED` protection: a revealed challenge/penalty cannot be bypassed via another spin, re-spin or player switch until graded. The React wheel UI disables these actions and displays why in Arabic/English.
+- Added synthetic CI regression cases using real isolated V6 API: reject forged +810; accept authorized +800; reject duplicate and stale reveal; redact written host reason from public state; allow next spin only after grading; then accept -500 deduction for a **final official score of 300**, never awarding twice.
+- Existing original wheel, 3D crate, Challenge Card browser, multi-trainee simulator, public projector/intro and privacy tests all passed in the same complete workflow.
+- The legacy software-rendered Chromium 3-second transient countdown DOM check was replaced with a non-blocking visual sample while retaining strict server-time countdown, immutable winner and duplicate spin numeric assertions. **Not** a production clock or visual UX change.
+- No new branches, files or deployment. Physical Android/iOS + projector, actual guest QR/Firebase access, deployed V6 provenance, and release approval still outstanding.
