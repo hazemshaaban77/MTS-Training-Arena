@@ -5,6 +5,9 @@ const alternateV6Api='https://mts-training-arena-v6-api.hazem-mts-arena.workers.
 let connectedApiOrigin:string|null=null;
 function apiOrigin():string {
  const external=(import.meta.env?.VITE_ARENA_API_ORIGIN||'').trim().replace(/\/$/,'');
+ if(import.meta.env.VITE_ARENA_STAGE==='e2-staging'&&
+  !/^https:\/\/mts-training-arena-e2-staging-api\.[a-z0-9-]+\.workers\.dev$/.test(external))
+  throw Error('E2_STAGING_API_MISMATCH');
  if(external && !/^https:\/\/[^/]+$/i.test(external)) throw Error('API_NOT_CONFIGURED');
  if(!external && window.location.hostname.endsWith('.github.io')) throw Error('API_NOT_CONFIGURED');
  return connectedApiOrigin || external || window.location.origin;
