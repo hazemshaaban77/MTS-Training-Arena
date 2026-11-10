@@ -1,6 +1,6 @@
 'use client';
 import {useState,useRef} from 'react';
-import {Send,Check,CheckCircle2,ArrowUp,ArrowDown,RotateCw,Gift,Zap,Lightbulb,DoorOpen,Flag,Users,Clock,Star} from 'lucide-react';
+import {Send,Check,CheckCircle2,ArrowUp,ArrowDown,RotateCw,Gift,Zap,Lightbulb,DoorOpen,Flag,Users,Clock,Star,ShieldCheck} from 'lucide-react';
 import LivePoll from './LivePoll';
 import ArenaQuizExperience from './ArenaQuizExperience';
 import ArenaGameShow from './ArenaGameShow';
