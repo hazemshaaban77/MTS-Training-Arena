@@ -3,6 +3,13 @@ Date: 2026-11-05
 
 ## Current status — 2026-11-10 (supersedes historical checkpoint decisions below)
 
+### Shared V6 Firebase login path (user-selected; source change only)
+- Instead of provisioning another Firebase project, E2 can explicitly use the EXISTING V6 trainer Email/Password project and existing read-only trainer allowlist. The E2 Worker has no Firebase account provisioning, no media writes, and keeps its separate E2 D1 and LIVE room namespace.
+- Client build flag: `VITE_ARENA_STAGING_AUTH_MODE=existing-v6`; isolated Worker config: `ARENA_STAGING_AUTH_MODE=existing-v6`. Both select this reuse intentionally; neither bypasses Firebase signature/allowlist validation.
+- The deployed E2 Worker remains `ARENA_STAGING_LOCK=locked` until the NEW frontend and Worker bundles have been verified and explicitly deployed. Source changes alone do NOT make the existing public staging URL functional. Do not assume CI proves live signed-in login.
+- No V6 production Pages, Worker, Firebase data/rules or D1 sessions are changed by this change.
+
+
 **Implemented and green in isolated tests; locked staging deployed; NOT released to real trainees.**
 
 - Latest tested application code: `1732f46997be8bc896a2f4852172de85dca52d90`.

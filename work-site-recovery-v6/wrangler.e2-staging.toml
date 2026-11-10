@@ -1,7 +1,7 @@
 # EXCLUSIVELY for the isolated E2 staging environment.
 # Not a production replacement. DO NOT use wrangler.github.toml for E2.
-# This staging Worker stays LOCKED until a separate Firebase testing project
-# and credential/allowlist isolation are configured and reviewed.
+# This staging Worker stays LOCKED until same-V6-auth build and its
+# isolated D1/permissions are verified. No new Firebase project is required.
 name = "mts-training-arena-e2-staging-api"
 main = "github-api-worker.ts"
 compatibility_date = "2026-11-10"
@@ -12,6 +12,9 @@ workers_dev = true
 ARENA_PUBLIC_ORIGIN = "https://mts-training-arena-e2-staging.pages.dev"
 ARENA_DEPLOYMENT = "e2-staging"
 ARENA_STAGING_LOCK = "locked"
+# Reuse the existing V6 Firebase trainer identity/allowlist (READ ONLY).
+# Session answers, scores, and reports are written ONLY to the isolated E2 D1.
+ARENA_STAGING_AUTH_MODE = "existing-v6"
 
 [[d1_databases]]
 binding = "DB"

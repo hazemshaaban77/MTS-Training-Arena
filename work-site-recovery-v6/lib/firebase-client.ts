@@ -5,11 +5,13 @@ import {firebaseConfig,stagingFirebaseConfig} from './firebase-config';
 let auth:Auth|undefined;
 export function getArenaAuth(){
  if(typeof window==='undefined')throw Error('Browser authentication only');
- // Strict isolation: a staging build MUST NOT contact the live Firebase
- // project through the inherited production web config. Enable login only
- // after a separate test Firebase project/config is provisioned and audited.
+ // The E2 frontend may reuse V6 trainer AUTH only when this build explicitly
+ // selects existing-v6. No Firebase database writes are performed by this client.
+ // Live sessions/points remain in the separate Cloudflare D1 bound to E2 Worker.
  const staging=import.meta.env?.VITE_ARENA_STAGE==='e2-staging';
- const config=staging?stagingFirebaseConfig(import.meta.env?.VITE_ARENA_STAGING_FIREBASE_CONFIG):firebaseConfig;
+ const mode=import.meta.env?.VITE_ARENA_STAGING_AUTH_MODE;
+ if(staging&&!['existing-v6','isolated'].includes(mode))throw Error('STAGING_FIREBASE_NOT_CONFIGURED');
+ const config=staging?(mode==='existing-v6'?firebaseConfig:stagingFirebaseConfig(import.meta.env?.VITE_ARENA_STAGING_FIREBASE_CONFIG)):firebaseConfig;
  const appName=staging?'MTS_ARENA_E2_STAGING':'MTS_ARENA';
  if(!auth){const app=getApps().find(a=>a.name===appName)||initializeApp(config,appName);auth=initializeAuth(app,{persistence:browserSessionPersistence});}
  return auth;

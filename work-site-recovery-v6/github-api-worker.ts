@@ -14,6 +14,7 @@ type ArenaEnv = {
  ARENA_PUBLIC_ORIGIN?:string;
  ARENA_DEPLOYMENT?:string;
  ARENA_STAGING_LOCK?:string;
+ ARENA_STAGING_AUTH_MODE?:string;
  ARENA_STAGING_FIREBASE_CONFIG?:string;
  ARENA_ADMIN_UIDS?:string;
  FIREBASE_SERVICE_ACCOUNT?:string;
@@ -68,17 +69,22 @@ export default {
    if(!origin) return Response.json({error:'ORIGIN'},{status:403});
    return new Response(null,{status:204,headers:cors});
   }
-  // The E2 staging configuration deliberately starts locked. A separate,
-  // permission-reviewed Firebase test project is required before trainer
-  // login and ANY session mutation can be enabled. Do not use production
-  // trainer allowlists, media credentials or Firebase configuration here.
+  // E2 stays locked until explicitly enabled. A reviewed existing-v6 mode
+  // reuses ONLY the signed V6 Firebase trainer identity + read-only allowlist.
+  // Session writes use the isolated E2 D1 binding; production media and
+  // Firebase account provisioning remain disabled in this Worker.
   if(env.ARENA_DEPLOYMENT==='e2-staging'){
    const expected='https://mts-training-arena-e2-staging.pages.dev';
    if(allowed!==expected||!['locked','ready'].includes(env.ARENA_STAGING_LOCK||'')){
     return Response.json({error:'STAGING_CONFIGURATION_INVALID'},{status:503,headers:cors});
    }
    if(env.ARENA_STAGING_LOCK==='ready'){
-    try{authConfig=stagingFirebaseConfig(env.ARENA_STAGING_FIREBASE_CONFIG);}catch{return Response.json({error:'STAGING_FIREBASE_NOT_CONFIGURED'},{status:503,headers:cors});}
+    // Explicit opt-in: shared existing V6 Firebase login, but NOT shared D1,
+    // admin provisioning, media uploads or any production session writes.
+    if(env.ARENA_STAGING_AUTH_MODE==='existing-v6')authConfig=firebaseConfig;
+    else if(env.ARENA_STAGING_AUTH_MODE==='isolated'){
+     try{authConfig=stagingFirebaseConfig(env.ARENA_STAGING_FIREBASE_CONFIG);}catch{return Response.json({error:'STAGING_FIREBASE_NOT_CONFIGURED'},{status:503,headers:cors});}
+    }else return Response.json({error:'STAGING_AUTH_MODE_REQUIRED'},{status:503,headers:cors});
    }
    if(url.pathname==='/api/staging-health'&&request.method==='GET'){
     let dbReady=false;

@@ -57,6 +57,7 @@ jobs:
         env:
           ARENA_E2_STAGING_BUILD: "1"
           VITE_ARENA_STAGE: "e2-staging"
+          VITE_ARENA_STAGING_AUTH_MODE: "existing-v6"
           VITE_ARENA_API_ORIGIN: "https://mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev"
       - name: Verify staging and production frontend outputs remain separate
         run: |
@@ -98,15 +99,25 @@ jobs:
             {...env,ARENA_PUBLIC_ORIGIN:'https://hazemshaaban77.github.io'});
           assert.equal(wrong.status,503);
           assert.equal((await wrong.json()).error,'STAGING_CONFIGURATION_INVALID');
-          const ready={...env,ARENA_STAGING_LOCK:'ready'};
-          const missing=await call('/api/me','GET',ready);
+          const ready={...env,ARENA_STAGING_LOCK:'ready',ARENA_STAGING_AUTH_MODE:'existing-v6'};
+          const prepared=await call('/api/staging-health','GET',ready);
+          assert.equal(prepared.status,200);
+          assert.equal(prepared.body.locked,false);
+          // Shared production login does NOT grant a role without a signed
+          // Firebase token and membership in the existing trainer allowlist.
+          const noTrainer=await call('/api/me','GET',ready);
+          assert.equal(noTrainer.status,200);
+          assert.equal(noTrainer.body.authenticated,false);
+          for(const path of ['/api/media-sign','/api/media-upload','/api/admin'])assert.equal((await call(path,'POST',ready)).status,403);
+          const isolatedMode={...ready,ARENA_STAGING_AUTH_MODE:'isolated'};
+          const missing=await call('/api/me','GET',isolatedMode);
           assert.equal(missing.status,503);
           assert.equal(missing.body.error,'STAGING_FIREBASE_NOT_CONFIGURED');
           const isolated={projectId:'mts-arena-e2-testing',apiKey:'AIza'+'x'.repeat(35),authDomain:'mts-arena-e2-testing.firebaseapp.com',databaseURL:'https://mts-arena-e2-testing-default-rtdb.europe-west1.firebasedatabase.app'};
-          ready.ARENA_STAGING_FIREBASE_CONFIG=JSON.stringify(isolated);
-          const prepared=await call('/api/staging-health','GET',ready);
-          assert.equal(prepared.body.locked,false);
-          for(const path of ['/api/media-sign','/api/media-upload','/api/admin'])assert.equal((await call(path,'POST',ready)).status,403);
+          isolatedMode.ARENA_STAGING_FIREBASE_CONFIG=JSON.stringify(isolated);
+          const isolatedReady=await call('/api/staging-health','GET',isolatedMode);
+          assert.equal(isolatedReady.status,200);
+          assert.equal(isolatedReady.body.locked,false);
           console.log('PASS: compiled E2 Worker is isolated and locked; no network or production writes.');
           JS
       - name: Verify frontend, API and brand preview artifacts
