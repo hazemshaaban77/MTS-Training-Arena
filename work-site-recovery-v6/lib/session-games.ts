@@ -83,10 +83,13 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
    fail('FORBIDDEN',403);
   if(!item||(!isBox&&!item.revealed)||!['challenge','penalty'].includes(challenge?.kind)||!item.target)
    fail('STATE',409);
+  // A delayed client must not grade a new turn with the previous turn's form.
+  // Neither the target player nor the reveal identity can be changed by UI payloads.
+  if(b.revealId!==item.id||b.target!==item.target)fail('STALE',409);
   if(rt.judgements?.[item.id])fail('ALREADY_GRADED',409);
-  const reason=String(b.reason||'').trim()||'Trainer performance grade / 10',awardId=b.adjustmentId;
-  if(reason.length>280||typeof awardId!=='string'||
-    !/^[0-9a-fA-F-]{36}$/.test(awardId))fail('AWARD');
+  const reason=typeof b.reason==='string'?b.reason.trim():'',awardId=b.adjustmentId;
+  if(reason.length<5||reason.length>280||typeof awardId!=='string'||
+    !/^[0-9a-fA-F-]{36}$/.test(awardId))fail('AWARD',400);
   const grade=b.grade===undefined?null:b.grade; // permit legacy wheel clients
   if(isBox&&grade===null)fail('AWARD');
   if(grade!==null&&(!Number.isInteger(grade)||grade<0||grade>10||
@@ -100,10 +103,10 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
    .bind(s.code,item.target).first();
   if(!target)fail('PLAYER');
   const kind=isBox?'box-judge':'wheel-judge',eventId=kind+':'+item.id;
-  const judgement={grade,delta,direction:delta<0?-1:1,reason};
+  const judgement={grade,delta,direction:delta<0?-1:1,reason,revealId:item.id,target:item.target,adjustmentId:awardId};
   const next={...rt,judgements:{...(rt.judgements||{}),[item.id]:judgement}};
   const details=JSON.stringify({source:isBox?'box':'wheel',reveal:item.id,index:item.index,
-   grade,delta,reason,actor:s.owner});
+   grade,delta,reason,adjustmentId:awardId,actor:s.owner});
   const changes=await batch(db,[
    db.prepare("INSERT OR IGNORE INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND revision=? AND status='question')")
     .bind(s.code,eventId,item.target,s.current,kind,delta,details,now,s.code,s.revision),
@@ -174,7 +177,12 @@ export async function gameSnapshot(db:D1Database,s:any,a:any,rt:any,p:any,host:b
   game.target=rt.target||players[(rt.turn||0)%Math.max(1,players.length)]?.uid;game.turn=rt.turn||0;game.rounds=a.rounds??a.items?.length??1;game.used=rt.used||[];
   if(rt.spin){game.spinTarget=rt.spin.target;game.spin={id:rt.spin.id,startsAt:rt.spin.startsAt,stopsAt:rt.spin.stopsAt,revealAt:rt.spin.revealAt,revealed:!!rt.spin.revealed,index:now>=rt.spin.stopsAt?rt.spin.index:null};if(rt.spin.revealed){const sector=a.sectors?.[rt.spin.index];game.outcome=sector?{label:sector.label,kind:sector.kind,detail:sector.detail,points:sector.points||0}:a.items[rt.spin.index];if(sector?.kind==='question'){const md=await read(db,s,`wheel:${rt.spin.id}:${rt.spin.target}`),q=sector.questions[md.data.step||0];game.mini={version:md.version,step:md.data.step||0,total:sector.questions.length,question:q?publicActivity(q):null,deadline:q?(md.data.clock||rt.spin.revealAt-(rt.pausedTotal||0))+q.timer*1000+(rt.pausedTotal||0):null,lastCorrect:md.data.lastCorrect};}}}
   if(rt.box){const box=a.boxes?.[rt.box.index];game.box={id:rt.box.id,target:rt.box.target,index:rt.box.index,label:a.items[rt.box.index],kind:box?.kind||(!a.boxes?'challenge':undefined),detail:box?.detail,question:box?.question?publicActivity(box.question):null,answered:!!d.boxes?.includes(rt.box.id)};}
-  game.manualJudgement=rt.judgements?.[(a.type==='Open the Box'?rt.box?.id:rt.spin?.id)||'']||null;
+  // Public projector/trainee view receives the official signed number only;
+  // written trainer performance notes stay available exclusively in host state.
+  const signed=rt.judgements?.[(a.type==='Open the Box'?rt.box?.id:rt.spin?.id)||'']||null;
+  game.manualJudgement=host?signed:signed?{
+   grade:signed.grade,delta:signed.delta,direction:signed.direction
+  }:null;
  }
  if(a.type==='Flashcards'&&a.trainingMode==='challenge'){
   game.flashTarget=rt.flashTarget||null;
