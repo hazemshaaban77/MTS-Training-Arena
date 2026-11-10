@@ -478,9 +478,59 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
 }
 function Leaderboard({s,ar,podium=false}:{s:any;ar:boolean;podium?:boolean}){
  const [teamView,setTeamView]=useState(!!s.teamMode),t=(a:string,e:string)=>ar?a:e;
- const teamRows=Array.isArray(s.teams)?s.teams:[];
- const actual=teamView?teamRows:s.individual;
- return <div className={'leaderboard '+(podium?'with-podium':'')}>{teamRows.length>0&&<div className="segment"><button className={!teamView?'selected':''} onClick={()=>setTeamView(false)}>{t('الأفراد','Players')}</button><button className={teamView?'selected':''} onClick={()=>setTeamView(true)}>{t('الفرق','Teams')}</button></div>}{!actual.length?<div className="leaderboard-empty"><Trophy size={25}/><p>{t('الصدارة مستنية أصحابها.','The top spot is waiting.')}</p></div>:<>{podium&&<div className="podium">{actual.slice(0,3).map((p:any,i:number)=><div key={p.uid||p.team} className={'podium-player podium-'+i}><span className="podium-medal">{i===0?<Trophy size={29}/>:<b>#{p.rank}</b>}</span><b>{p.name||teamName(p.team,ar)}</b><strong>{p.score.toLocaleString()}</strong><span className="podium-block">{String(p.rank).padStart(2,'0')}</span></div>)}</div>}<div className="rank-list">{actual.slice(podium?3:0,podium?80:8).map((p:any)=><div className={'rank-row arena-rank-live '+(p.uid===s.mine?.id?'me':'')} key={(p.uid||p.team)+':'+p.rank}><b className="rank">{p.rank===1?<Trophy size={15}/>:String(p.rank).padStart(2,'0')}</b><span className="rank-avatar">{(p.name||p.team).charAt(0)}</span><span className="rank-name">{p.name||teamName(p.team,ar)}{p.uid===s.mine?.id&&<small>{t('أنت','YOU')}</small>}</span><strong>{p.score.toLocaleString()}</strong></div>)}</div></>}</div>;
+ const teamRows=Array.isArray(s.teams)?s.teams:[],playerRows=Array.isArray(s.individual)?s.individual:[];
+ const actual=teamView?teamRows:playerRows;
+ const rowKey=(p:any)=>teamView?'team:'+p.team:'player:'+p.uid;
+ const signature=JSON.stringify(actual.map((p:any)=>[rowKey(p),p.rank,p.score]));
+ const previous=useRef<Record<string,Record<string,{rank:number;score:number}>>>({});
+ const [recent,setRecent]=useState<Record<string,{scoreDelta:number;places:number}>>({});
+ // Compare only consecutive server-confirmed leaderboard snapshots. This is a
+ // visual delta, never an alternate points balance or optimistic client award.
+ useEffect(()=>{
+  const scope=teamView?'teams':'players';
+  const prior=previous.current[scope];
+  const next:Record<string,{rank:number;score:number}>={};
+  const changes:Record<string,{scoreDelta:number;places:number}>={};
+  for(const p of actual){
+   const key=rowKey(p);
+   if(!Number.isFinite(p.score)||!Number.isInteger(p.rank))continue;
+   next[key]={rank:p.rank,score:p.score};
+   const before=prior?.[key];
+   if(before&&(before.score!==p.score||before.rank!==p.rank)){
+    changes[key]={scoreDelta:p.score-before.score,places:before.rank-p.rank};
+   }
+  }
+  previous.current[scope]=next;
+  setRecent(changes);
+  if(Object.keys(changes).length){
+   const expiry=window.setTimeout(()=>setRecent({}),3400);
+   return ()=>window.clearTimeout(expiry);
+  }
+ },[signature,teamView]);
+ const score=(n:number)=>n.toLocaleString(ar?'ar-EG':'en-US');
+ const changeHint=(value:number)=>value>0?t('صعود','Moved up'):t('تراجع','Moved down');
+ return <div className={'leaderboard arena-leaderboard-live '+(podium?'with-podium':'')} data-board-type={teamView?'teams':'players'}>
+  {teamRows.length>0&&<div className="segment"><button className={!teamView?'selected':''} onClick={()=>setTeamView(false)}>{t('الأفراد','Players')}</button><button className={teamView?'selected':''} onClick={()=>setTeamView(true)}>{t('الفرق','Teams')}</button></div>}
+  {!actual.length?<div className="leaderboard-empty"><Trophy size={25}/><p>{t('الصدارة مستنية أصحابها.','The top spot is waiting.')}</p></div>:<>
+   {podium&&<div className="podium">{actual.slice(0,3).map((p:any,i:number)=><div key={rowKey(p)} className={'podium-player podium-'+i}><span className="podium-medal">{i===0?<Trophy size={29}/>:<b>#{p.rank}</b>}</span><b>{p.name||teamName(p.team,ar)}</b><strong>{score(p.score)}</strong><span className="podium-block">{String(p.rank).padStart(2,'0')}</span></div>)}</div>}
+   <div className="rank-list">{actual.slice(podium?3:0,podium?80:8).map((p:any)=>{
+    const movement=recent[rowKey(p)],up=(movement?.places||0)>0,down=(movement?.places||0)<0;
+    return <div className={'rank-row arena-rank-live '+(p.uid===s.mine?.id?'me ':'')+(movement?'arena-rank-live--updated':'')}
+     key={rowKey(p)} data-rank-id={rowKey(p)} data-server-score={p.score}>
+     <b className="rank">{p.rank===1?<Trophy size={15}/>:String(p.rank).padStart(2,'0')}</b>
+     {up||down?<span className={'arena-rank-movement '+(up?'arena-rank-movement--up':'arena-rank-movement--down')}
+      aria-label={changeHint(movement!.places)+' '+Math.abs(movement!.places)}>
+      {up?<ArrowUp size={13}/>:<ArrowDown size={13}/>}<b>{Math.abs(movement!.places)}</b></span>:null}
+     <span className="rank-avatar">{(p.name||p.team).charAt(0)}</span>
+     <span className="rank-name">{p.name||teamName(p.team,ar)}{p.uid===s.mine?.id&&<small>{t('أنت','YOU')}</small>}</span>
+     <span className="arena-rank-score"><strong>{score(p.score)}</strong>
+      {movement&&movement.scoreDelta!==0?<small role="status" className={movement.scoreDelta>0?'arena-rank-score--gain':'arena-rank-score--loss'}>
+       {movement.scoreDelta>0?'+':''}{score(movement.scoreDelta)} {t('نقطة','pts')}</small>:null}
+     </span>
+    </div>;
+   })}</div>
+  </>}
+ </div>;
 }
 function teamName(team:string,ar:boolean){return ar?(team==='Lightning'?'فريق البرق':'فريق الموج'):team;}
 function Confetti(){return <div className="confetti" aria-hidden="true">{Array.from({length:24},(_,i)=><i key={i} style={{left:`${i*4.3}%`,animationDelay:`${i%6*.11}s`,background:['#67c59c','#176aa4','#218e5b','#8799a6'][i%4],transform:`rotate(${i*31}deg)`}}/>)}</div>;}
