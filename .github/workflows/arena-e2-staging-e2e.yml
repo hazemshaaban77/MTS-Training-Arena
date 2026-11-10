@@ -90,12 +90,12 @@ jobs:
         run: node e2-staging-qa/real-session-browser.mjs
       - name: Verify manual and automatic cinematic reveal in original V6 React projector
         run: node e2-staging-qa/reveal-ui-browser.mjs
+      - name: Test Wheel Challenge Card signed grade and projector privacy on real V6
+        run: node e2-staging-qa/luxury-wheel-browser.mjs --challenge
       - name: Test licensed Sci-Fi Crate in fresh Chromium GPU and disposable API
         run: node e2-staging-qa/luxury-wheel-browser.mjs --crate
       - name: Test premium 3D wheel with isolated disposable API and Chromium
         run: node e2-staging-qa/luxury-wheel-browser.mjs --wheel
-      - name: Test Wheel Challenge Card signed grade and projector privacy on real V6
-        run: node e2-staging-qa/luxury-wheel-browser.mjs --challenge
       - name: Archive only screenshot evidence (no database, secrets or participant tokens)
         if: always()
         uses: actions/upload-artifact@v4
