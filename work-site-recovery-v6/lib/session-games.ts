@@ -28,6 +28,15 @@ export async function gameInteract(db:D1Database,s:any,a:any,rt:any,p:any,b:any,
   if(!['Wheel of Fortune','Spin Wheel','Open the Box'].includes(a.type))fail('STATE',409);
   const players:any[]=(await db.prepare("SELECT id,name,team FROM players WHERE session=? AND approval='approved' AND eligible_from<=? ORDER BY joined_at").bind(s.code,s.current).all()).results;if(!players.length)fail('PLAYER');
   let target=rt.target||players[(rt.turn||0)%players.length].id;
+  // Keep the official Wheel Challenge Card attached to its signed spin until
+  // the authorized trainer files exactly one audited practical assessment.
+  // Otherwise a second spin could silently erase an ungraded mission.
+  const previousSpin=rt.spin;
+  const pendingManualWheelGrade=['Wheel of Fortune','Spin Wheel'].includes(a.type)&&
+   previousSpin?.revealed&&['challenge','penalty'].includes(a.sectors?.[previousSpin.index]?.kind)&&
+   !rt.judgements?.[previousSpin.id];
+  if(pendingManualWheelGrade&&['spin','respin','selectturn'].includes(b.action))
+   fail('GRADE_REQUIRED',409);
   if(b.action==='selectturn'){if(!host)fail('FORBIDDEN',403);if(b.mode==='random')target=players[fairIndex(players.length)].id;else if(b.player){if(!players.some(x=>x.id===b.player))fail('PLAYER');target=b.player;}rt={...rt,target};}
   else {
    if(!host&&b.turn!==rt.turn&&b.turn!==(rt.turn||0))fail('STALE',409);
