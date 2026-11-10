@@ -88,7 +88,15 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   }
  }
  refreshLatest.current=refresh;
- useEffect(()=>{setS(null);setError('');lastRefreshError.current=null;setAnswerProgress(null);answerSendLock.current=false;setToken(localStorage.getItem('arena-player-'+code)||undefined);setJoinCode(code);},[code,view]);
+ useEffect(()=>{
+  setS(null);setError('');lastRefreshError.current=null;setAnswerProgress(null);answerSendLock.current=false;
+  const storedToken=localStorage.getItem('arena-player-'+code);
+  setToken(storedToken||undefined);setJoinCode(code);
+  // Keep the newly rotated recovery code visible until it is acknowledged.
+  // This survives a tab reload immediately after a successful transfer.
+  if(storedToken){const pending=sessionStorage.getItem('arena-recovery-welcome-'+code);
+   if(pending)setRecoveryNote(pending);}
+ },[code,view]);
  useEffect(()=>{setAnswerProgress(null);},[s?.current]);
  // Event-driven invalidation: host + projector react to EVERY submitted answer
  // immediately; guest devices refresh for stage changes but don't repeatedly
@@ -301,7 +309,43 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
   if(ready===0&&!window.confirm(t('لسه مفيش متدربين معتمدين. متأكد إنك عايز تبدأ أول نشاط دلوقتي؟','No approved participants yet. Start the first activity anyway?')))return;
   command(s.settings?.surveyOnly?'survey':'start');
  }
- async function join(e:React.FormEvent){e.preventDefault();if(!code){navigate('join',joinCode);return;}setBusy(true);setError('');try{const data=await api(recovering?'recover':'join',recovering?{code,employeeId,recoveryCode:recoveryInput}:{code,name,employeeId,confirmed,team,language:ar?'ar':'en'},token,{publicRequest:true});localStorage.setItem('arena-player-'+code,data.token);setToken(data.token);setRecoveryNote(data.recoveryCode||'');setCopied(false);navigate('play',code);}catch(e:any){setError(e.message);if(e.message==='ALREADY_REGISTERED')setRecovering(true);}finally{setBusy(false);}}
+ async function join(e:React.FormEvent){
+  e.preventDefault();if(!code){navigate('join',joinCode);return;}
+  if(busy)return;
+  setBusy(true);setError('');
+  try{
+   let attemptStorageKey:string|undefined;
+   let attemptId:string|undefined;
+   if(recovering){
+    // Store ONLY a random attempt ID + hashed input fingerprint in tab
+    // session storage. On network loss/reload, retry the SAME attempt: the
+    // server returns the exact original result, not another token rotation.
+    const identity=employeeId.trim().toUpperCase();
+    const recovery=recoveryInput.replace(/[\\s-]/g,'').toUpperCase();
+    const fingerprintBuffer=await crypto.subtle.digest('SHA-256',
+     new TextEncoder().encode(code+':'+identity+':'+recovery));
+    const fingerprint=Array.from(new Uint8Array(fingerprintBuffer))
+     .map(b=>b.toString(16).padStart(2,'0')).join('');
+    attemptStorageKey='arena-recovery-intent-'+code+'-'+fingerprint;
+    const saved=sessionStorage.getItem(attemptStorageKey);
+    attemptId=saved&&/^[0-9a-f-]{36}$/i.test(saved)?saved:crypto.randomUUID();
+    sessionStorage.setItem(attemptStorageKey,attemptId);
+   }
+   const payload=recovering?
+    {code,employeeId,recoveryCode:recoveryInput,attemptId}:
+    {code,name,employeeId,confirmed,team,language:ar?'ar':'en'};
+   const data=await api(recovering?'recover':'join',payload,token,{publicRequest:true});
+   if(!data?.token||!data?.recoveryCode)throw Error('RECOVERY_RECEIPT');
+   // Retain the one-time displayed code until participant confirms saving it.
+   // Never put recovery credentials in a URL or persistent localStorage.
+   sessionStorage.setItem('arena-recovery-welcome-'+code,data.recoveryCode);
+   localStorage.setItem('arena-player-'+code,data.token);
+   if(attemptStorageKey)sessionStorage.removeItem(attemptStorageKey);
+   setToken(data.token);setRecoveryNote(data.recoveryCode);setCopied(false);
+   navigate('play',code);
+  }catch(e:any){setError(e.message);if(e.message==='ALREADY_REGISTERED')setRecovering(true);}
+  finally{setBusy(false);}
+ }
  // A failed POST response is NOT proof an answer was rejected: the request
  // might have reached the authoritative Worker while the response was lost.
  // Always reconcile an uncertain write with a READ before enabling re-submit.
@@ -444,7 +488,7 @@ export default function Session({ar,view,code,navigate,toggleLanguage}:Props){
    </section>{!display&&<aside className="live-rail">{s.status!=='completed'&&!meta&&s.activity?.type!=='Live Poll'&&(host||s.runtime.board)&&<div className="rail-card"><div className="section-heading"><h3><Trophy size={18}/>{t('الصدارة','Leaderboard')}</h3><span className="live-mini">LIVE</span></div><Leaderboard s={s} ar={ar}/></div>}<div className="rail-card queue-card"><div className="section-heading"><h3><Zap size={17}/>{t('مسار الجلسة','The journey')}</h3><b>{s.queue.length}</b></div>{s.queue.map((a:any,i:number)=>{const idx=types.indexOf(mainType(a)),Icon=activityIcons[idx]||Zap;return <div className={'queue-item '+(i===s.current?'selected':'')+(i<s.current||s.status==='completed'?' finished':'')} key={i}><span>{i<s.current||s.status==='completed'?<Check size={14}/>:String(i+1).padStart(2,'0')}</span><ActivityArt activity={a} label={activityLabel(a,ar)} className="queue-cover"/><div><b>{activityLabel(a,ar)}</b><small>{a.timer}s</small></div>{i===s.current&&<i className="live-dot"/>}</div>;})}</div>{host&&s.status!=='lobby'&&s.status!=='completed'&&<button className="btn secondary wide" onClick={()=>setShowQR(true)}><ScanLine size={17}/>{t('QR الجلسة','Session QR')}</button>}{host&&<p className="rail-note"><ShieldCheck size={15}/>{t('النقاط من الخادم. نفس الجلسة على كل الأجهزة.','Server-scored. The same session across devices.')}</p>}</aside>}</div>
    {display&&s.status!=='lobby'&&s.status!=='completed'&&<div className="display-bottom"><div><Trophy size={22}/><b>{t('في الصدارة','LEADING THE ARENA')}</b></div>{s.individual.slice(0,3).map((p:any)=><span key={p.uid}><b>#{p.rank}</b>{p.name}<strong>{p.score.toLocaleString()}</strong></span>)}</div>}
   </main>}
-  {recoveryNote&&<div className="modal-backdrop"><section className="small-modal modal recovery-welcome" role="dialog" aria-modal="true"><CheckCircle2 size={37}/><h2>{t('تم تأكيد مشاركتك','Your place is confirmed')}</h2><p className="muted">{t('احتفظ بالكود ده. هتحتاجه لو عايز تكمل مشاركتك ونقاطك من جهاز تاني.','Keep this code. Use it to continue your participation and scores on another device.')}</p><code className="recovery-code" dir="ltr">{recoveryNote}</code><button type="button" className="btn secondary wide recovery-copy-button" onClick={async()=>{try{await navigator.clipboard.writeText(recoveryNote);setCopied(true);}catch{setCopied(false);}}}>{copied?<Check size={17}/>:<Copy size={17}/>} {copied?t('تم نسخ الكود','Recovery code copied'):t('نسخ كود استرجاع المشاركة','Copy recovery code')}</button><p className="small muted">{t('هيظهر دلوقتي بس. ما تشاركوش مع حد.','Shown only now. Keep it private.')}</p><button className="btn primary wide" onClick={()=>setRecoveryNote('')}>{t('احتفظت بالكود — دخول الساحة','I saved my code — enter the arena')}</button></section></div>}
+  {recoveryNote&&<div className="modal-backdrop"><section className="small-modal modal recovery-welcome" role="dialog" aria-modal="true"><CheckCircle2 size={37}/><h2>{t('تم تأكيد مشاركتك','Your place is confirmed')}</h2><p className="muted">{t('احتفظ بالكود ده. هتحتاجه لو عايز تكمل مشاركتك ونقاطك من جهاز تاني.','Keep this code. Use it to continue your participation and scores on another device.')}</p><code className="recovery-code" dir="ltr">{recoveryNote}</code><button type="button" className="btn secondary wide recovery-copy-button" onClick={async()=>{try{await navigator.clipboard.writeText(recoveryNote);setCopied(true);}catch{setCopied(false);}}}>{copied?<Check size={17}/>:<Copy size={17}/>} {copied?t('تم نسخ الكود','Recovery code copied'):t('نسخ كود استرجاع المشاركة','Copy recovery code')}</button><p className="small muted">{t('هيظهر دلوقتي بس. ما تشاركوش مع حد.','Shown only now. Keep it private.')}</p><button className="btn primary wide" onClick={()=>{sessionStorage.removeItem('arena-recovery-welcome-'+code);setRecoveryNote('');}}>{t('احتفظت بالكود — دخول الساحة','I saved my code — enter the arena')}</button></section></div>}
   {(showQR||endConfirm)&&<div className="modal-backdrop"><section className="small-modal modal" role="dialog" aria-modal="true"><h2>{endConfirm?t('ننهي المنافسة هنا؟','End the session here?'):t('دخول واحد لكل التحدّيات','One entry. Every challenge.')}</h2>{endConfirm?<><p className="muted">{t('النتائج الحالية هتتحفظ، والأنشطة المتبقية مش هتبدأ.','Current results will be saved. Remaining activities will not run.')}</p><div className="hero-actions"><button className="btn secondary" onClick={()=>setEndConfirm(false)}>{t('كمّل الجلسة','Keep playing')}</button><button className="btn primary" onClick={()=>command('finish')}>{t('اعرض النتائج النهائية','Show final results')}</button></div></>:<>{qr&&<img className="modal-qr" src={qr} alt="Session QR"/>}<b className="large-code" dir="ltr">{code}</b><input readOnly dir="ltr" value={typeof window!=='undefined'?siteUrl('join',code):''}/><button className="btn secondary wide" onClick={copy}>{copied?<Check size={17}/>:<Copy size={17}/>} {t('نسخ الرابط','Copy link')}</button><button className="text-button" onClick={()=>setShowQR(false)}>{t('رجوع للساحة','Back to the arena')}</button></>}</section></div>}
   <div className="local-effects-controls">
    <button className="text-button" onClick={()=>{localStorage.setItem('arena-quiet',String(!quiet));setQuiet(!quiet);}}>{quiet?'Quiet ✓':'Quiet'}</button>
