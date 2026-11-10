@@ -163,6 +163,14 @@ jobs:
         run: node e2-staging-qa/luxury-wheel-browser.mjs --crate
       - name: Test premium 3D wheel with isolated disposable API and Chromium
         run: node e2-staging-qa/luxury-wheel-browser.mjs --wheel
+      - name: Package reviewed E2 staging frontend for direct Cloudflare Pages upload
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mts-arena-e2-staging-pages-ready
+          path: work-site-recovery-v6/dist-e2-staging/
+          retention-days: 3
+          if-no-files-found: error
       - name: Archive only screenshot evidence (no database, secrets or participant tokens)
         if: always()
         uses: actions/upload-artifact@v4
