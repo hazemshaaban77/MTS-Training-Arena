@@ -441,7 +441,9 @@ html body .session-shell.trainee .trainee-score-burst{
   min-height:calc(100dvh - 110px);
   padding:12px 12px 22px;
   align-items:flex-start;
-  overflow:visible;
+  /* Clip the 680px decorative orbit; it must never widen a 390px mobile page.
+     The form remains in normal flow so the document still scrolls vertically. */
+  overflow:clip;
  }
  .session-shell:not(.host):not(.projector) .join-page .join-card{
   width:100%;
