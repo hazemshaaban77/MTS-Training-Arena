@@ -431,3 +431,60 @@ html body .session-shell.trainee .trainee-score-burst{
  .arena-leaderboard-live .arena-rank-movement{min-width:21px;padding:2px}
  .arena-leaderboard-live .arena-rank-score>small{font-size:9px}
 }
+
+
+/* Unified QR trainee entry — compact thumb-friendly form on small screens.
+   Preserve the official branding and the mandatory recovery-code modal.
+   The entire form still scrolls naturally on small phones and with large text. */
+@media(max-width:600px){
+ .session-shell:not(.host):not(.projector) .join-page{
+  min-height:calc(100dvh - 110px);
+  padding:12px 12px 22px;
+  align-items:flex-start;
+  overflow:visible;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .join-card{
+  width:100%;
+  max-width:450px;
+  padding:19px 16px 21px;
+  border-radius:20px;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .join-brandline{
+  margin:5px 0!important;
+  line-height:1.35!important;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .join-card h1{
+  font-size:clamp(21px,5.7vw,25px);
+  line-height:1.18;
+  margin:8px 0;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .join-card>p{
+  font-size:12px;
+  line-height:1.45;
+  margin-block:7px;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .join-card form{
+  margin-top:13px;
+  gap:10px;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .join-card :is(input:not([type=checkbox]),select){
+  min-height:45px;
+  padding:10px 12px;
+  font-size:16px;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .identity-confirmation{
+  padding:10px;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .identity-confirmation>p{
+  margin:5px 0 7px;
+  gap:9px;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .private-note{
+  margin-top:12px;
+  font-size:10px!important;
+  line-height:1.45;
+ }
+ .session-shell:not(.host):not(.projector) .join-page .join-card .btn.primary{
+  min-height:46px;
+ }
+}
