@@ -1,0 +1,32 @@
+# EXCLUSIVELY for the isolated E2 staging environment.
+# Not a production replacement. DO NOT use wrangler.github.toml for E2.
+# This staging Worker stays LOCKED until a separate Firebase testing project
+# and credential/allowlist isolation are configured and reviewed.
+name = "mts-training-arena-e2-staging-api"
+main = "github-api-worker.ts"
+compatibility_date = "2026-05-15"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ARENA_PUBLIC_ORIGIN = "https://mts-training-arena-e2-staging.pages.dev"
+ARENA_DEPLOYMENT = "e2-staging"
+ARENA_STAGING_LOCK = "locked"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mts-training-arena-e2-staging"
+database_id = "becba428-cc2d-45c3-9930-438726906d79"
+
+# A separate Worker script has its OWN Durable Object class namespace.
+# Live room events cannot reach the production script.
+[[durable_objects.bindings]]
+name = "LIVE"
+class_name = "ArenaLiveRoom"
+
+[[migrations]]
+tag = "arena-e2-staging-live-v1"
+new_sqlite_classes = ["ArenaLiveRoom"]
+
+# Intentionally NO media credentials, Firebase secrets, admin IDs, or R2.
+# No deployment automation. The staging gate must be reviewed before release.
