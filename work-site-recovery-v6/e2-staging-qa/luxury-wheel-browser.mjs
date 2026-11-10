@@ -489,6 +489,7 @@ try{
    null,{timeout:13000});
   const scoreRibbon=await page.locator('.projector-leaderboard .arena-rank-score--loss').innerText();
   assert.ok(scoreRibbon.includes('600'),'Real live leaderboard must display only signed -600 delta');
+  await screenshot(page,'23-server-signed-leaderboard-penalty.png');
   // Keep original Wheel Challenge Card visual-fit evidence without an open
   // scoreboard overlay, preserving the presentation user's chosen layout.
   hs=ok(await host(),'restore public stage revision');
