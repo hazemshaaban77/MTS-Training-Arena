@@ -257,8 +257,23 @@ try{
  assert.equal(afterGrade.individual.find(p=>p.uid===contender.id)?.score,800,
   'Server ledger yields precisely one practical reward');
  ok(await chControl('spin'),'Next turn unlocked by official grade');
+ const secondChallenge=await until(async()=>{
+  const x=await chPublic();return x.json?.game?.spin?.revealed&&
+   x.json.game.spin.id!==challengeSpin.id?x.json:null;
+ },14000);
+ const deduction={revealId:secondChallenge.game.spin.id,target:secondChallenge.game.spinTarget,
+  grade:5,direction:-1,delta:-500,reason:'Missed five mandatory safety verification steps',
+  adjustmentId:crypto.randomUUID()};
+ ok(await chControl('wheelaward',deduction),'Trainer records negative assessment');
+ const afterDeduction=ok(await chPublic(),'official scoreboard after deduction');
+ assert.equal(afterDeduction.game.manualJudgement.delta,-500,'Official penalty is signed');
+ assert.equal(afterDeduction.individual.find(p=>p.uid===contender.id)?.score,300,
+  'Reward and penalty both settle exactly once in official leaderboard');
+ assert.equal((await chControl('wheelaward',deduction)).status,409,
+  'Penalty cannot be entered a second time');
  console.log('WHEEL_CHALLENGE_CARD_PASS',JSON.stringify({oneSignedGrade:true,
-  tamperRejected:true,duplicateRejected:true,nextSpinUnlocked:true,privateReason:true}));
+  tamperRejected:true,duplicateRejected:true,nextSpinUnlocked:true,privateReason:true,
+  signedAward:800,signedDeduction:-500,finalServerScore:300}));
  console.log('WHEEL_FIXTURE_PASS',JSON.stringify({signedResult:true,oneServerLedger:true,duplicateSpinRejected:true,countdownMs:before}));
  await projectorCtx.close();
  await traineeCtx.close();
