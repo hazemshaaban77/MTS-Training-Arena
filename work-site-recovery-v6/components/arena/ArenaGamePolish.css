@@ -325,3 +325,57 @@ html body .session-shell.trainee .trainee-score-burst{
  .session-shell.projector .wheel-challenge-card__copy h3{font-size:clamp(24px,2.2vw,33px)}
  .session-shell.projector .wheel-challenge-card__copy p{font-size:clamp(15px,1.1vw,19px)}
 }
+
+
+/* Once the result is signed, switch the PROJECTOR from a spinning-wheel show
+   to a broadcast mission layout. The entire mission must be visible at 1080p. */
+@media(min-width:1100px) and (min-height:700px){
+ html body .session-shell.projector .round-stage .wheel-stage--crown-real3d.wheel-stage--challenge-revealed{
+  display:grid!important;
+  grid-template-columns:minmax(340px,.75fr) minmax(400px,1fr);
+  grid-template-rows:auto auto minmax(0,1fr);
+  align-content:start!important;align-items:center!important;
+  gap:9px 18px!important;
+  padding:4px 10px!important;
+  margin:0 auto!important;
+  width:100%!important;max-width:1480px!important;
+  min-height:0!important;height:auto!important;
+  overflow:visible!important;
+ }
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .turn-entrance,
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .wheel-arena-banner{
+  grid-column:1/-1!important;width:min(100%,850px)!important;
+  margin:0 auto!important;
+ }
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .turn-entrance{grid-row:1}
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .wheel-arena-banner{grid-row:2}
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .arena-wheel3d--crown,
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .arena-wheel-webgl-unavailable{
+  grid-column:1!important;grid-row:3!important;
+  width:100%!important;
+  height:min(43vh,430px)!important;
+  max-height:min(43vh,430px)!important;
+  min-height:0!important;align-self:center!important;
+  margin:0!important;
+ }
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .wheel-challenge-card{
+  grid-column:2!important;grid-row:3!important;
+  display:block!important;
+  min-width:0!important;max-width:none!important;width:100%!important;
+  margin:0!important;align-self:center!important;
+  max-height:min(44vh,440px)!important;overflow-y:auto!important;
+ }
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .wheel-challenge-card__body{
+  grid-template-columns:1fr!important;gap:12px!important;
+ }
+ html body .session-shell.projector .round-stage .wheel-stage--challenge-revealed .wheel-challenge-card__spotlight{
+  padding:12px!important;
+ }
+}
+/* Medium projectors: compact wheel above card without losing the card.
+   Never apply desktop grid to phone/trainee layout. */
+@media(min-width:701px) and (max-width:1099px){
+ .session-shell.projector .wheel-stage--challenge-revealed .arena-wheel3d--crown{
+  height:min(30vh,300px)!important;min-height:0!important;
+ }
+}
