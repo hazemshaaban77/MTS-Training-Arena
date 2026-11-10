@@ -83,3 +83,20 @@ No merge, deploy, production Firebase/Cloudflare/D1 writes, paid integrations, r
 - QA verified a server-issued box opening (second crate), official used-state/disabled duplicate selection, authorized read-only projector, 3D mesh fit, prize card fit, RTL two-column view, narrow-view overflow and original CC BY attribution. The 3D wheel also passed independently.
 - Source/server/scoring **not redeployed or merged**. Existing real-device, live Firebase guest QR access, low-power GPU and production-source provenance gates remain unverified.
 - Follow-on scope: Wheel Challenge Card trainer-controlled evaluation and idempotent scoring with audit logs; must not bypass backend authority.
+
+
+## 2026-11-10 — Wheel Challenge Card v1 complete in isolated E2 branch
+**Decision: PASS on isolated V6 development branch; NOT production signoff.**
+
+- Tested code checkpoint: `6d4bf6e6bca41ce9ab226b4128406f0a07e4897c`
+- Full GitHub CI green: https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/42807164046
+- All steps passed: baseline TypeScript, authorization, server scoring, public stage, frontend/API builds, live contract, two/five Chromium clients, cinematic answer reveal, **Wheel Challenge Card**, licensed Sci-Fi Crate and 3D wheel, each isolated.
+- A real browser screenshot (1920x1080): `22-wheel-challenge-card-projector.png` in screenshot artifact `13761190291`; visual verified for a side-by-side wheel+mission layout with no mission card cropping.
+- Implemented **signed Wheel Challenge Card** in original `GamePlay.tsx` with server-selected challenge/penalty, reveal number, immutable trainee spotlight, detailed task, waiting/confirmed grade status, official point delta.
+- Implemented instructor 0–10 grading with add/deduct and required 5–280 character rationale in existing `WheelJudge.tsx`; input disabled during pending request. The confirmed private rationale stays in the **host** receipt, absent from all public/projector/trainee snapshots.
+- Tightened existing server `gameInteract` to reject grades for wrong reveal ID, wrong target, missing rationale and tampered points, and to log adjustment ID in existing event details and trainer audit. Score is authoritative and keyed to the revealed turn; replay is rejected.
+- New regression test appended to `tests/platform.test.ts`: +800 grant, -400 deduction, no duplicate ledger payments, no stale-turn reassignment, hidden private notes and unauthorized control denial.
+- Existing `e2-staging-qa/luxury-wheel-browser.mjs` gained `--challenge` mode and strict 1920x1080 in-viewport assertions (complete grade card visible BESIDE wheel, no horizontal overflow); no new file, folder or branch.
+- A separate reliability improvement: `StageSplash.tsx` respects `prefers-reduced-motion: reduce` with a short intro; existing 3D crate QA uses reduced motion in its isolated Chromium context. Regular user intro duration is unchanged.
+- **Non-release gates remain:** actual guest QR and Firebase login, real phones and projector hardware, production source provenance, low-power GPU performance, user visual signoff and explicit deployment approval.
+- All implementation work is on the single branch `work/arena-e2-integration-audit-20261105`; no merges, deployments, production database writes or original logo changes.
