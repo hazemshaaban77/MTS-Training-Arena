@@ -5,6 +5,11 @@ import {firebaseConfig} from './firebase-config';
 let auth:Auth|undefined;
 export function getArenaAuth(){
  if(typeof window==='undefined')throw Error('Browser authentication only');
+ // Strict isolation: a staging build MUST NOT contact the live Firebase
+ // project through the inherited production web config. Enable login only
+ // after a separate test Firebase project/config is provisioned and audited.
+ if(import.meta.env.VITE_ARENA_STAGE==='e2-staging')
+  throw Error('STAGING_FIREBASE_NOT_CONFIGURED');
  if(!auth){const app=getApps().find(a=>a.name==='MTS_ARENA')||initializeApp(firebaseConfig,'MTS_ARENA');auth=initializeAuth(app,{persistence:browserSessionPersistence});}
  return auth;
 }
