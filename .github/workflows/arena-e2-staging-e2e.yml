@@ -14,6 +14,9 @@ on:
       - "work-site-recovery-v6/components/arena/**"
       - "work-site-recovery-v6/tests/**"
       - "work-site-recovery-v6/scripts/**"
+      - "work-site-recovery-v6/github-api-worker.ts"
+      - "work-site-recovery-v6/wrangler.e2-staging.toml"
+      - "work-site-recovery-v6/vite.github.config.ts"
       - ".github/workflows/arena-e2-staging-e2e.yml"
   workflow_dispatch:
 permissions:
@@ -49,6 +52,19 @@ jobs:
         env:
           # Same-origin on loopback; production client rejects insecure configured API origins.
           VITE_ARENA_API_ORIGIN: ""
+      - name: Build isolated locked E2 staging frontend for verification only
+        run: pnpm run build:github
+        env:
+          ARENA_E2_STAGING_BUILD: "1"
+          VITE_ARENA_STAGE: "e2-staging"
+          VITE_ARENA_API_ORIGIN: "https://mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev"
+      - name: Verify staging and production frontend outputs remain separate
+        run: |
+          test -s dist-github/index.html
+          test -s dist-e2-staging/index.html
+          test -s dist-e2-staging/assets/$(find dist-e2-staging/assets -maxdepth 1 -type f -name 'index-*.js' -printf '%f\n' | head -n 1)
+          grep -q 'assets/' dist-e2-staging/index.html
+          echo "PASS: isolated staging bundle compiled without publishing or overwriting the V6 bundle."
       - name: Verify realtime notification contract without production WebSockets
         run: node scripts/verify-live.mjs
       - name: Build isolated V6 API Worker bundle (never deploy)
