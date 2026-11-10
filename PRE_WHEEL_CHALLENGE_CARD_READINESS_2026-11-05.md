@@ -3,6 +3,15 @@ Date: 2026-11-05
 
 ## Current status — 2026-11-10 (supersedes historical checkpoint decisions below)
 
+### Deployment checkpoint — 2026-11-10 (E2 staging only)
+- Source branch `work/arena-e2-integration-audit-20261105`; frontend packaging commit `f0d4bf63797cd563619fb45fdbcb6a5de8d0fa5e`.
+- Full CI succeeded: https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/42854832184 .
+- Reviewed frontend output: 49 files; exact ready-to-upload artifact `mts-arena-e2-staging-pages-ready` (GitHub Actions artifact `13782641379`); downloadable ZIP SHA-256 `beeca4d6de195b48820e9198ce2f8c0d25ef162b2a03e1fc22f0c5c2d416a99b`. The ZIP contains the root `index.html`, JS/CSS and assets.
+- E2 Worker uploaded and deployed version `64ece478-170b-4abb-975b-6cbaf6fb5d35` (deployment `6c82091e-2854-4392-a817-8964c349402f`), binding `ARENA_STAGING_AUTH_MODE=existing-v6`, `ARENA_STAGING_LOCK=locked`; staging-only D1 `becba428-cc2d-45c3-9930-438726906d79`. Rollback Worker version `33dbf992-c114-4ed8-b040-261828e04ce0`.
+- Pages remains the OLD deployed version `083f3f56-679e-4f17-9ff5-5693ccb62c30`, commit `1732f46997be8bc896a2f4852172de85dca52d90`. **Do not unlock yet.**
+- Cloudflare Pages Git source connection returned HTTP 401 / `8000011` internal Pages Git installation error, and Pages Assets upload/check-missing endpoint returned 403 `8000013` even with the project's upload JWT. Native direct upload via these connected API routes could not be completed.
+- Required action to make site usable: upload reviewed ZIP to **existing** direct-upload Cloudflare Pages project `mts-training-arena-e2-staging` (not V6 production). Then verify latest deployment's files and auth config, and *only then* switch existing staging Worker lock to `ready` and validate a real Firebase trainer login. No production Firebase rules, production D1, or main branch were altered.
+
 ### Shared V6 Firebase login path (user-selected; source change only)
 - Instead of provisioning another Firebase project, E2 can explicitly use the EXISTING V6 trainer Email/Password project and existing read-only trainer allowlist. The E2 Worker has no Firebase account provisioning, no media writes, and keeps its separate E2 D1 and LIVE room namespace.
 - Client build flag: `VITE_ARENA_STAGING_AUTH_MODE=existing-v6`; isolated Worker config: `ARENA_STAGING_AUTH_MODE=existing-v6`. Both select this reuse intentionally; neither bypasses Firebase signature/allowlist validation.
