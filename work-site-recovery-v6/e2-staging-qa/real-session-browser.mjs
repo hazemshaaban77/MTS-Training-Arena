@@ -408,7 +408,8 @@ try{
  // Learning extensions use the same real React participant and authoritative API.
  const learningRoom=ok(await post("sessions",{title:"E2 learning acceptance",language:"en",activities:[
   {type:"Quiz",prompt:"Learning checkpoint",options:["Correct","Incorrect"],correct:0,timer:0,speed:false,powerUps:true,confidencePoints:true,revealMode:"manual"},
-  {type:"Live Poll",prompt:"One word",timer:0,pollKind:"word",anonymous:true,liveResults:true}
+  {type:"Live Poll",prompt:"One word",timer:0,pollKind:"word",anonymous:true,liveResults:true},
+  {type:"Quiz",prompt:"Video checkpoint question",timer:0,options:["Correct","Incorrect"],correct:0,speed:false,media:{type:"video",url:"https://training-video.example/clip.webm"},videoCheckpoint:1}
  ]},{asTrainer:true}),"Learning room");
  const lc=learningRoom.code;
  const learner=ok(await post("join",{code:lc,name:"Learning QA",employeeId:"E2-LEARNING",confirmed:true}),"Learning join");
@@ -432,6 +433,16 @@ try{
  await cmd("next");await lp.reload();await lp.locator(".live-poll-vote__word input").fill("Confidence");await lp.locator(".live-poll-vote__submit").click();
  await lp.locator(".arena-word-cloud").waitFor();assert.match(await lp.locator(".arena-word-cloud").innerText(),/confidence/i);
  await lp.screenshot({path:path.join(evidence,"25-live-word-cloud-mobile.png"),fullPage:true});
+ await cmd("close");await cmd("next");
+ // Synthetic two-second VP8 video, fulfilled locally: exercises actual playback,
+ // not a production media provider or a forged DOM timeupdate event.
+ await lp.route("https://training-video.example/clip.webm",route=>route.fulfill({status:200,contentType:"video/webm",body:Buffer.from("GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAALQEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEjTbuMU6uEHFO7a1OsggK67AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjEuNy4xMDNXQYxMYXZmNjEuNy4xMDNEiYhAn0AAAAAAABZUrmvIrgEAAAAAAAA/14EBc8WImLiUM4MMDfKcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4QL68IA4JCwgSC6gSCagQJVsIRVuYEBElTDZ/tzc59jwIBnyJlFo4dFTkNPREVSRIeMTGF2ZjYxLjcuMTAzc3PWY8CLY8WImLiUM4MMDfJnyKFFo4dFTkNPREVSRIeUTGF2YzYxLjE5LjEwMSBsaWJ2cHhnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjAyLjAwMDAwMDAwMAAfQ7Z1QRHngQCjvYEAAIDQAgCdASogACAAAEcIhYWIhYSIAgICdaoD+AIIIQg9AP7/TRL//FhX8WFfxYV/8WFf/PzO7cX85gCjlYEAyACxAQAFEKwAGAAYWC/0AAhwAKOVgQGQALEBAAUQrAAYABhYL/QACHAAo5WBAlgAsQEABRCsABgAGFgv9AAIcACjlYEDIACxAQAFEKwAGAAYWC/0AAhwAKOVgQPoALEBAAUQrAAYABhYL/QACHAAo5WBBLAAsQEABRCsABgAGFgv9AAIcACjlYEFeACxAQAFEBAUYABhYL/QACHAAKOVgQZAALEBAAUQrAAYABhYL/QACHAAo5WBBwgAsQEABRCsABgAGFgv9AAIcAAcU7trkbuPs4EAt4r3gQHxggGj8IED","base64")}));
+ await lp.reload();await lp.locator("video").waitFor();
+ assert.equal(await lp.locator(".answer-option").count(),0,"Question stays hidden before checkpoint");
+ await lp.locator("video").evaluate(v=>v.play());await lp.locator(".answer-option").first().waitFor();
+ assert.equal(await lp.locator("video").evaluate(v=>v.paused&&v.currentTime>=1),true,"Actual video pauses at question checkpoint");
+ await lp.screenshot({path:path.join(evidence,"26-interactive-video-checkpoint.png"),fullPage:true});
+ console.log("E2_VIDEO_CHECKPOINT_PASS",JSON.stringify({actualSyntheticPlayback:true,pausedAtCheckpoint:true,questionRevealed:true,notProofOfViewing:true}));
  console.log("E2_LEARNING_REACT_PASS",JSON.stringify({signedScore:2600,confidenceAndPower:true,wordCloud:true,mobileOverflow:false,fixtureOnly:true}));
  assert.deepEqual(jsErrors,[],"Browser JavaScript errors");
  completed=true;

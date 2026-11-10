@@ -62,3 +62,5 @@ next-env.d.ts
 /dist-github/
 /dist-github-api/
 /dist-e2-staging/
+
+/e2-staging-qa/ci-screenshots/
