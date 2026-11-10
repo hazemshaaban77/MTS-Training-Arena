@@ -334,9 +334,48 @@ try{
  assert.equal(await transferPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode),null,
   "Incorrect recovery must not issue a participant token");
  await transferForm.locator('input[placeholder="XXXXX-XXXXX-XXXXX-XXXXX"]').fill(shownRecovery);
+ // Simulate the most dangerous network failure: the Worker commits recovery,
+ // but the 200 response is lost. The real form must RETRY the SAME attempt,
+ // not issue a new one that would consume and strand the recovery code.
+ let droppedRecoveryResponse=false,committedAttemptId=null;
+ await transferPage.route("**/api/recover",async route=>{
+  const payload=route.request().postDataJSON();
+  if(!droppedRecoveryResponse&&payload.recoveryCode===shownRecovery){
+   const result=await route.fetch();
+   if(result.status()!==200)throw Error("Expected first real recovery response before simulated loss");
+   droppedRecoveryResponse=true;committedAttemptId=payload.attemptId;
+   await route.abort("failed");return;
+  }
+  await route.continue();
+ });
+ await transferForm.locator("button.btn.primary").click();
+ await transferPage.waitForFunction(()=>!!document.querySelector(".error-banner")&&
+  !document.querySelector(".join-card form button.btn.primary")?.disabled,null,{timeout:12000});
+ assert.equal(droppedRecoveryResponse,true,"Test dropped one already-committed server response");
+ assert.equal(await transferPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode),null,
+  "A lost response does not fabricate a participant token");
+ const pendingIntent=await transferPage.evaluate(()=>Object.entries(sessionStorage)
+  .filter(([k])=>k.startsWith("arena-recovery-intent-")).map(([,v])=>v));
+ assert.ok(pendingIntent.includes(committedAttemptId),
+  "The real browser retains the original idempotency attempt across network failure");
  await transferForm.locator("button.btn.primary").click();
  await transferPage.waitForURL(url=>url.searchParams.get("view")==="play"&&
   url.searchParams.get("code")===qrCode,{timeout:16000});
+ await transferPage.unroute("**/api/recover");
+ const renewedModal=transferPage.locator(".recovery-welcome[role=dialog]");
+ await renewedModal.waitFor({state:"visible",timeout:12000});
+ const nextRecovery=await renewedModal.locator(".recovery-code").innerText();
+ assert.match(nextRecovery,/^[A-F0-9]{5}(?:-[A-F0-9]{5}){3}$/);
+ assert.notEqual(nextRecovery,shownRecovery,"Successful device transfer must rotate the recovery code");
+ const rejectedOld=await post("recover",{code:qrCode,employeeId:"QA-QR-REACT-01",
+  recoveryCode:shownRecovery,attemptId:crypto.randomUUID()});
+ assert.equal(rejectedOld.status,401,"Already consumed recovery code cannot authorize a fresh transfer");
+ await transferPage.reload({waitUntil:"domcontentloaded"});
+ await transferPage.locator(".recovery-welcome .recovery-code").waitFor({state:"visible",timeout:10000});
+ assert.equal(await transferPage.locator(".recovery-welcome .recovery-code").innerText(),
+  nextRecovery,"New code stays visible after reload until the trainee acknowledges saving it");
+ await transferPage.locator(".recovery-welcome button.btn.primary").click();
+ await transferPage.locator(".recovery-welcome").waitFor({state:"detached",timeout:10000});
  const transferredToken=await transferPage.evaluate(c=>localStorage.getItem("arena-player-"+c),qrCode);
  assert.ok(transferredToken&&transferredToken!==qrToken,
   "A new device gets a fresh token and invalidates the old token");
