@@ -3,6 +3,15 @@ Date: 2026-11-05
 
 ## Current status — 2026-11-10 (supersedes historical checkpoint decisions below)
 
+### Active E2 staging release — 2026-11-11 (live infrastructure, limited smoke tests)
+- User uploaded verified `mts-arena-e2-staging` frontend on Cloudflare Pages: new successful deployment ID `2b618313-fee2-4df4-9c36-fded5e658877`, 49 files, root `index.html`, JS `/assets/index-DEAvHJL2.js`. The deployment itself has an empty commit metadata field because it was drag-and-drop; the identical asset filenames match the reviewed build ZIP.
+- API Worker switched from locked checkpoint version `64ece478-170b-4abb-975b-6cbaf6fb5d35` to active version `0eeb9566-e00a-4e09-8f6b-58b8d7c35d26`, deployment `b1c102dd-dcf3-44ce-a5d2-aacb455741fe`, at 100%. Same code; only the `ARENA_STAGING_LOCK` binding changed from `locked` to `ready`.
+- Active settings confirmed: `ARENA_STAGING_AUTH_MODE=existing-v6`; Pages origin `https://mts-training-arena-e2-staging.pages.dev`; separate E2 D1 ID `becba428-cc2d-45c3-9930-438726906d79`; separate E2 LIVE Durable Object namespace `d238556e80924365b4e3cd87c8c70854`.
+- Cloudflare Browser Rendering served the actual staging Pages app and its branding at 390px viewport. The live Worker health endpoint returned `{"stage":"e2-staging","locked":false,"databaseSchemaReady":true}`, unauthenticated `/api/me` returned `{"authenticated":false,"provider":"firebase"}`, and `/api/live-health` returned `{"ready":true,"transport":"websocket"}`. A separate unauthenticated `/api/sessions` check could not be completed because Browser Rendering hit its 429 rate limit; the CI authorization checks passed.
+- **Not yet tested:** owner-signed-in Firebase trainer account and allowlist, successful hosted session creation, QR from a physical mobile phone, multi-device answers, projector hardware, real hosted scoring/recovery and full WebSocket client fanout. No credentials requested or entered by the assistant.
+- **Rollback references:** prior Worker version `64ece478-170b-4abb-975b-6cbaf6fb5d35` is the immediately prior locked version; prior Pages deployment `083f3f56-679e-4f17-9ff5-5693ccb62c30`. Revert E2 only if needed; do not change V6 production.
+- Next acceptance action: the trainer opens the staging Pages URL, signs in with their existing V6 Firebase trainer account on their device, creates a disposable `E2 QA` session with dummy participants, and validates QR, answer, leaderboard, 3D wheel/crate, projector and reconnect; capture actual outcomes before release signoff.
+
 ### Deployment checkpoint — 2026-11-10 (E2 staging only)
 - Source branch `work/arena-e2-integration-audit-20261105`; frontend packaging commit `f0d4bf63797cd563619fb45fdbcb6a5de8d0fa5e`.
 - Full CI succeeded: https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/42854832184 .
