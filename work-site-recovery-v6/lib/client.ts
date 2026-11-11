@@ -5,8 +5,11 @@ const alternateV6Api='https://mts-training-arena-v6-api.hazem-mts-arena.workers.
 let connectedApiOrigin:string|null=null;
 function apiOrigin():string {
  const external=(import.meta.env?.VITE_ARENA_API_ORIGIN||'').trim().replace(/\/$/,'');
+ // The E2 Pages project now proxies /api/* to the isolated E2 Worker via
+ // a Pages service binding. Browser requests stay same-origin, avoiding
+ // network blocks on *.workers.dev without touching V6 production.
  if(import.meta.env?.VITE_ARENA_STAGE==='e2-staging'&&
-  !/^https:\/\/mts-training-arena-e2-staging-api\.[a-z0-9-]+\.workers\.dev$/.test(external))
+   external!=='https://mts-training-arena-e2-staging.pages.dev')
   throw Error('E2_STAGING_API_MISMATCH');
  if(external && !/^https:\/\/[^/]+$/i.test(external)) throw Error('API_NOT_CONFIGURED');
  if(!external && window.location.hostname.endsWith('.github.io')) throw Error('API_NOT_CONFIGURED');

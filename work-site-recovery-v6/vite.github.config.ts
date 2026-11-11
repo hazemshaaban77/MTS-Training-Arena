@@ -8,7 +8,7 @@ const staging=process.env.ARENA_E2_STAGING_BUILD==='1';
 if(staging){
  const api=process.env.VITE_ARENA_API_ORIGIN||'';
  if(process.env.VITE_ARENA_STAGE!=='e2-staging'||
-   !/^https:\/\/mts-training-arena-e2-staging-api\.[a-z0-9-]+\.workers\.dev$/.test(api)){
+   api!=='https://mts-training-arena-e2-staging.pages.dev'){
   throw new Error('E2_STAGING_CONFIG_REQUIRED');
  }
 }

@@ -58,13 +58,19 @@ jobs:
           ARENA_E2_STAGING_BUILD: "1"
           VITE_ARENA_STAGE: "e2-staging"
           VITE_ARENA_STAGING_AUTH_MODE: "existing-v6"
-          VITE_ARENA_API_ORIGIN: "https://mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev"
+          VITE_ARENA_API_ORIGIN: "https://mts-training-arena-e2-staging.pages.dev"
+      - name: Verify E2 Pages gateway routes and pinned emergency asset rewrite
+        run: node --test e2-staging-qa/pages-gateway.test.mjs
       - name: Verify staging and production frontend outputs remain separate
         run: |
           test -s dist-github/index.html
           test -s dist-e2-staging/index.html
           test -s dist-e2-staging/assets/$(find dist-e2-staging/assets -maxdepth 1 -type f -name 'index-*.js' -printf '%f\n' | head -n 1)
           grep -q 'assets/' dist-e2-staging/index.html
+          grep -q 'mts-training-arena-e2-staging.pages.dev' dist-e2-staging/assets/index-*.js
+          if grep -q 'mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev' dist-e2-staging/assets/index-*.js; then
+            echo "FAIL: E2 production JS still points to workers.dev"; exit 1
+          fi
           echo "PASS: isolated staging bundle compiled without publishing or overwriting the V6 bundle."
       - name: Verify realtime notification contract without production WebSockets
         run: node scripts/verify-live.mjs
