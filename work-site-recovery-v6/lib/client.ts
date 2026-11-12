@@ -8,9 +8,15 @@ function apiOrigin():string {
  // The E2 Pages project now proxies /api/* to the isolated E2 Worker via
  // a Pages service binding. Browser requests stay same-origin, avoiding
  // network blocks on *.workers.dev without touching V6 production.
- if(import.meta.env?.VITE_ARENA_STAGE==='e2-staging'&&
-   external!=='https://mts-training-arena-e2-staging.pages.dev')
-  throw Error('E2_STAGING_API_MISMATCH');
+ if(import.meta.env?.VITE_ARENA_STAGE==='e2-staging'){
+  const project='mts-training-arena-e2-staging.pages.dev';
+  if(external!=='https://'+project)throw Error('E2_STAGING_API_MISMATCH');
+  // Pages Preview is a subdomain of this exact project, never another
+  // arbitrary *.pages.dev host. Keep /api and WebSocket same-origin.
+  const host=window.location.hostname.toLowerCase();
+  if(window.location.protocol==='https:'&&(host===project||host.endsWith('.'+project)))
+   return window.location.origin;
+ }
  if(external && !/^https:\/\/[^/]+$/i.test(external)) throw Error('API_NOT_CONFIGURED');
  if(!external && window.location.hostname.endsWith('.github.io')) throw Error('API_NOT_CONFIGURED');
  return connectedApiOrigin || external || window.location.origin;
