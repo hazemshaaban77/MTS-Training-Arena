@@ -56,3 +56,49 @@
 @keyframes e2-suspense-pulse{from{opacity:.35;transform:scale(.78)}to{opacity:1;transform:scale(1.12)}}
 @keyframes e2-level-pop{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){.championship-stage__suspense-light span,.championship-stage__level-up{animation:none}}
+ 
+/* E2 visual reset: the login keeps its ambient scene, but the dashboard
+   no longer renders primitive torus and icosahedron placeholders.
+   This uses the existing reviewed arena photograph, never generated logos. */
+.workspace .dashboard .hero:has(.arena-hero-photo){
+ isolation:isolate;background:#071b32;border:1px solid #345875;
+ box-shadow:0 20px 48px #03244429,inset 0 1px #ffffff1a;
+ min-height:395px
+}
+.workspace .dashboard .hero .arena-hero-photo{
+ position:absolute!important;inset:0!important;width:100%!important;
+ height:100%!important;z-index:0!important;opacity:1!important;
+ overflow:hidden;pointer-events:none!important;transform:none!important;
+ border-radius:inherit
+}
+.workspace .dashboard .hero .arena-hero-photographic-stage{
+ display:block;position:absolute;inset:0;height:100%;width:100%;
+ object-fit:cover;object-position:center 48%;filter:saturate(.96)contrast(1.08)brightness(.85);
+ transform:scale(1.015)
+}
+.workspace .dashboard .hero .arena-hero-photo:after{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ background:linear-gradient(270deg,rgba(3,18,38,.95) 0%,rgba(3,22,45,.82) 37%,rgba(4,22,45,.30) 69%,rgba(2,16,34,.20) 100%),linear-gradient(0deg,rgba(1,15,31,.30),transparent 42%)
+}
+.arena-app.english .dashboard .hero .arena-hero-photo:after{
+ background:linear-gradient(90deg,rgba(3,18,38,.96),rgba(3,22,45,.77) 37%,rgba(4,22,45,.26) 70%,rgba(2,16,34,.20)),linear-gradient(0deg,rgba(1,15,31,.25),transparent 42%)
+}
+.workspace .dashboard .hero:has(.arena-hero-photo) .hero-copy{
+ position:relative!important;z-index:2!important;max-width:min(580px,65%);
+ text-shadow:0 2px 12px #031c35cc
+}
+.workspace .dashboard .hero:has(.arena-hero-photo) .hero-copy>p{color:#edfaff!important;line-height:1.8}
+.workspace .dashboard .hero:has(.arena-hero-photo) .hero h2{color:#fff!important}
+.arena-hero-photo__tag{position:absolute;top:18px;left:22px;z-index:1;
+ color:#d7f9f5;background:#062b3cb8;border:1px solid #5be6cf7d;
+ border-radius:100px;padding:8px 13px;font-size:10px;font-weight:800;letter-spacing:.14em;
+ display:flex;align-items:center;gap:8px;backdrop-filter:blur(10px)}
+.arena-hero-photo__tag>span{width:7px;height:7px;background:#5deab7;border-radius:100%;box-shadow:0 0 10px #6ce6cd}
+@media(max-width:760px){
+ .workspace .dashboard .hero:has(.arena-hero-photo){min-height:470px}
+ .workspace .dashboard .hero:has(.arena-hero-photo) .hero-copy{max-width:100%}
+ .workspace .dashboard .hero .arena-hero-photographic-stage{object-position:38% center}
+ .workspace .dashboard .hero .arena-hero-photo:after{background:linear-gradient(0deg,#06182af2,#061d34ab 65%,#05233a4d)}
+ .arena-hero-photo__tag{top:12px;left:14px}
+}
+@media(prefers-reduced-motion:reduce){.arena-hero-photographic-stage{animation:none!important;transform:none!important}}

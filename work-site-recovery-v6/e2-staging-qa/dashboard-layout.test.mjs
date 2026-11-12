@@ -13,5 +13,5 @@ test('trainer navigation clears inherited login scroll position',()=>{
  assert.match(app,/window\.scrollTo\(\{top:0,left:0,behavior:'instant'\}\)/);
 });
 test('hero 3D remains scoped to dashboard hero, not full screen',()=>{
- assert.match(app,/className="arena-art dashboard-hero-art arena-hero-world"/);
+ assert.match(app,/className="arena-art dashboard-hero-art arena-hero-photo"/);
 });
