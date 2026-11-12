@@ -4,7 +4,7 @@ import gateway from '../pages-e2-gateway/_worker.js';
 const site='https://mts-training-arena-e2-staging.pages.dev';
 function make({script='const api="https://mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev";const guard="mts-training-arena-e2-staging-api\\.[a-z0-9-]+\\.workers\\.dev";',assets=[]}={}){
  const calls=[];
- return {calls,env:{API:{fetch:async req=>{calls.push({url:req.url,method:req.method,origin:req.headers.get('Origin'),header:req.headers.get('X-Firebase-Token'),upgrade:req.headers.get('Upgrade')});return Response.json({ok:true});}},ASSETS:{fetch:async req=>{assets.push(req.url);return new Response(req.url.includes('/assets/index-DEAvHJL2.js')?script:'<html><script src="/assets/index-DEAvHJL2.js"></script></html>',{status:200,headers:{'content-type':'text/plain','etag':'old'}});}}}};
+ return {calls,env:{API:{fetch:async req=>{calls.push({url:req.url,method:req.method,origin:req.headers.get('Origin'),header:req.headers.get('X-Firebase-Token'),upgrade:req.headers.get('Upgrade')});return Response.json({ok:true});}},ASSETS:{fetch:async req=>{assets.push(req.url);return new Response(req.url.includes('/assets/index-DEAvHJL2.js')?script:'<html><head></head><body><script src="/assets/index-DEAvHJL2.js"></script></body></html>',{status:200,headers:{'content-type':'text/plain','etag':'old'}});}}}};
 }
 test('gateway keeps API auth headers and request method, proxy goes ONLY to E2 worker',async()=>{
  const x=make();
