@@ -27,15 +27,15 @@ export default function ArenaChampionshipPractice({a,ar,mode}:{a:Activity;ar:boo
   return()=>window.clearInterval(id);
  },[]);
  useEffect(()=>{
-  if(finished||show.phase!=='answering'||!deadline||clock<deadline)return;
-  try{const r=showCommand(a,show,'timeout',{},clock,deadline);
+  if(finished||!['answering','suspense'].includes(show.phase)||!deadline||clock<deadline)return;
+  try{const r=showCommand(a,show,show.phase==='suspense'?'resolve':'timeout',{},clock,deadline);
    setShow(r.show);setDeadline(r.deadline??null);}
   catch{}
  },[clock,deadline,show,finished,a]);
  function apply(action:string,extra:any={},who=roleId){
   try{
    if(finished)return;
-   if(action==='showfinish'){if(show.phase==='answering')throw Error('SHOW_STATE');setFinished(true);return;}
+   if(action==='showfinish'){if(!['casting','completed'].includes(show.phase))throw Error('SHOW_STATE');setFinished(true);return;}
    const dict:Record<string,string>={showcast:'cast',showanswer:'answer',showwithdraw:'withdraw',
     showlifeline:'lifeline',showaudience:'audience'};
    const mapped=dict[action];if(!mapped)throw Error('SHOW_ACTION');

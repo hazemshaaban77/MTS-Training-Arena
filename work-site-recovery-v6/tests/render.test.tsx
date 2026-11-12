@@ -1263,9 +1263,14 @@ test('championship rehearsal uses pure Worker transitions in all three views wit
  assert.deepEqual(spectator.lifelines,[]);
  assert.ok(pub.question.options.length===4);
  const answer=showCommand(stage,cast.show,'answer',{player:'test-player',answer:0},1001,cast.deadline);
- assert.equal(answer.show.current.level,1);
- assert.equal(answer.show.attempts.length,0,'Do not award before attempt finishes');
- const winner:any=showCommand(stage,answer.show,'answer',{player:'test-player',answer:0},1002,answer.deadline);
+ assert.equal(answer.show.phase,'suspense');
+ assert.equal(showPublic(stage,answer.show,'test-player').lastReveal,null);
+ const advanced=showCommand(stage,answer.show,'resolve',{},3001,answer.deadline);
+ assert.equal(advanced.show.current.level,1);
+ assert.equal(advanced.show.attempts.length,0,'Do not award before attempt finishes');
+ const last=showCommand(stage,advanced.show,'answer',{player:'test-player',answer:0},3002,advanced.deadline);
+ assert.equal(last.show.phase,'suspense');
+ const winner:any=showCommand(stage,last.show,'resolve',{},5002,last.deadline);
  assert.equal(winner.show.phase,'completed');
  assert.equal(winner.payout.points,250);
  assert.equal(winner.show.attempts.length,1);

@@ -160,7 +160,7 @@ test('championship: independent attempts, lifelines, audience, safe prizes and s
   await call(db,'interact',{code,round:0,action:'showanswer',answer:value},token);
   const suspense=await state(db,code,token);
   assert.equal(suspense.show.phase,'suspense');
-  assert.equal(suspense.show.lastReveal,null,'No early answer reveal');
+  assert.notEqual(suspense.show.lastReveal?.level,suspense.show.level,'The current level answer stays hidden');
   db.sql.prepare('UPDATE sessions SET deadline=? WHERE code=?').run(Date.now()-100,code);
   await state(db,code,token);
  };
