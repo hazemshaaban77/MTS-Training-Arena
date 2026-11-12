@@ -3,6 +3,15 @@ Date: 2026-11-05
 
 ## Current status — 2026-11-10 (supersedes historical checkpoint decisions below)
 
+### Trainer Home layout regression — 2026-11-12
+- User successfully signed in to E2 and supplied screenshot of `?view=home` showing giant ambient 3D stage, full-height sidebar participating in normal document flow, and header pushed below fold. **Root cause**: `ArenaWorld3D.css` selector `.arena-app:has(.arena-home-world)>aside` overrode `.sidebar { position:fixed }` with `position:relative`. App also mounted an unnecessary full-screen `arena-home-world` on `home` in addition to the scoped hero 3D. This was a CSS layout issue, not an authentication error.
+- Source change commit `1b92ee0b1fac99ecb8b43ca9e2727500b3e09ef7`: scope ambient background to login only; remove inappropriate aside rule; explicitly preserve fixed sidebar; reset browser scroll on route navigation. Keep the `ArenaWorld3D` inside the hero.
+- Test harness correction commit `67d7a6d864451db127d4dd65ca94fbdbbf705064`: HTML mock now includes a `head`, as Vite's real `index.html` does. Targeted dashboard and gateway tests passed; overall CI run: https://github.com/hazemshaaban77/MTS-Training-Arena/actions/runs/43174347594 .
+- A reviewed minimal **edge-only** compatibility hotfix adds `#e2-dashboard-layout-fix` to legacy index HTML to hide the extra home-wide background and keep `aside.sidebar` fixed. New builds use corrected source. The Pages proxy continues the same-origin API gateway and does not alter authentication or data.
+- Staging-only preview deployment `1835028e-d866-41a5-ac58-bf2d64236fb1` succeeded and Browser Rendering verified the actual injected style in its HTML. Staging production deployment `8fc89f18-5188-4528-890a-65693423272c` succeeded with 49 existing files and `uses_functions=true`. Previous production rollback deployment `5314bc57-a63f-4198-81b4-f9d22e864c3b` remains available.
+- The authenticated user's post-fix dashboard screenshot has **not** yet been received. Cloudflare Browser Rendering on the live URL had intermittent 422 upstream network errors, so deployment success is not claimed as end-user visual signoff.
+- No original V6 production Pages/Worker, Firebase configuration, or V6 D1 was mutated.
+
 ### Network-blocked `workers.dev` remediation — 2026-11-11
 - Actual user desktop screenshot showed login failure `API_UNREACHABLE` from `mts-training-arena-e2-staging.pages.dev`. The published Vite JS pointed directly to the `mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev` host. The previous V6 Pages gateway source explicitly documents blocked `*.workers.dev` networks.
 - Fixed in source commit `35cd2e34467e22b95feb06ff2f21023a460ba415`: E2 frontend calls `https://mts-training-arena-e2-staging.pages.dev/api/*` (same-origin); dedicated advanced-mode Pages gateway `work-site-recovery-v6/pages-e2-gateway/_worker.js` forwards via `API` service binding **only to E2 Worker**. V6 frontend/backend code paths are preserved.
