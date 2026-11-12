@@ -34,13 +34,13 @@ export async function mutateChampionship(db:D1Database,s:any,activity:any,rt:any
  return {ok:true};
 }
 export async function settleChampionshipTimeout(db:D1Database,s:any,activity:any,rt:any,now:number){
- if(!isChampionship(activity)||s.status!=='question'||s.paused||!s.deadline||s.deadline>now||rt.show?.phase!=='answering')return false;
- const result:any=showCommand(activity,rt.show,'timeout',{},now,s.deadline),event=result.payout;
+ if(!isChampionship(activity)||s.status!=='question'||s.paused||!s.deadline||s.deadline>now||!['answering','suspense'].includes(rt.show?.phase))return false;
+ const result:any=showCommand(activity,rt.show,rt.show.phase==='suspense'?'resolve':'timeout',{},now,s.deadline),event=result.payout;
  const runtime=JSON.stringify({...rt,show:result.show,phase:result.show.phase,targets:[]});
  const statements=[
-  db.prepare("UPDATE sessions SET runtime=?,deadline=NULL,revision=revision+1 WHERE code=? AND revision=? AND current=? AND status='question' AND paused=0 AND deadline<=?").bind(runtime,s.code,s.revision,s.current,now),
-  db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND current=? AND revision=? AND json_extract(runtime,'$.show.lastCompleted.id')=?)").bind(s.code,'championship:'+s.current+':'+event.id,event.player,s.current,event.kind,event.points,JSON.stringify(event.detail),now,s.code,s.current,s.revision+1,event.id)
+  db.prepare("UPDATE sessions SET runtime=?,deadline=?,revision=revision+1 WHERE code=? AND revision=? AND current=? AND status='question' AND paused=0 AND deadline<=?").bind(runtime,result.deadline??null,s.code,s.revision,s.current,now)
  ];
+ if(event)statements.push(db.prepare("INSERT INTO events(session,id,player,round,kind,points,detail,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE code=? AND current=? AND revision=? AND json_extract(runtime,'$.show.lastCompleted.id')=?)").bind(s.code,'championship:'+s.current+':'+event.id,event.player,s.current,event.kind,event.points,JSON.stringify(event.detail),now,s.code,s.current,s.revision+1,event.id));
  try{const result=await db.batch(statements);return !!result[0]?.meta.changes;}
  catch{return false;}
 }

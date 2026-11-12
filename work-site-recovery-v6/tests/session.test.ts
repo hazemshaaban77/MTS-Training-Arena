@@ -156,7 +156,14 @@ test('championship: independent attempts, lifelines, audience, safe prizes and s
  assert.equal(current.activity.questions,undefined,'No answer key leaks');
  async function cast(id:string){const s=await state(db,code,undefined,true);
   return call(db,'control',{code,revision:s.revision,action:'showcast',player:id});}
- const answer=(token:string,value:number)=>call(db,'interact',{code,round:0,action:'showanswer',answer:value},token);
+ const answer=async(token:string,value:number)=>{
+  await call(db,'interact',{code,round:0,action:'showanswer',answer:value},token);
+  const suspense=await state(db,code,token);
+  assert.equal(suspense.show.phase,'suspense');
+  assert.equal(suspense.show.lastReveal,null,'No early answer reveal');
+  db.sql.prepare('UPDATE sessions SET deadline=? WHERE code=?').run(Date.now()-100,code);
+  await state(db,code,token);
+ };
  const interact=(token:string,action:string,extra:any={})=>call(db,'interact',{code,round:0,action,...extra},token);
  await cast(p.id);
  await assert.rejects(()=>control(db,code,'close'),{message:'SHOW_STATE'});
@@ -213,6 +220,13 @@ test('championship: expired round ends only the attempt and never double-pays',a
  const before=await state(db,code,undefined,true);
  await call(db,'control',{code,revision:before.revision,action:'showcast',player:p.id});
  await call(db,'interact',{code,round:0,action:'showanswer',answer:0},p.token);
+ const suspense=await state(db,code,p.token);
+ assert.equal(suspense.show.phase,'suspense');
+ await assert.rejects(()=>call(db,'interact',{code,round:0,action:'showanswer',answer:0},p.token),{message:'SHOW_STATE'});
+ db.sql.prepare('UPDATE sessions SET deadline=? WHERE code=?').run(Date.now()-150,code);
+ const revealed=await state(db,code,p.token);
+ assert.equal(revealed.show.level,1);
+ assert.equal(revealed.show.phase,'answering');
  db.sql.prepare('UPDATE sessions SET deadline=? WHERE code=?').run(Date.now()-150,code);
  const settled=await state(db,code);
  assert.equal(settled.status,'question','Timeout must not close the whole event');

@@ -128,7 +128,7 @@ export async function service(db:D1Database,req:Request,owner:string|null,ctx:Tr
   requireHost();if(b.revision!==s.revision)fail('STALE',409);
   if(['showcast','showfinish','showlifeline'].includes(b.action)&&isChampionship(active())){
    if(b.action==='showfinish'){
-    if(s.status!=='question'||rt.show?.phase==='answering')fail('SHOW_STATE',409);
+    if(s.status!=='question'||!['casting','completed'].includes(rt.show?.phase))fail('SHOW_STATE',409);
     const n=nextState(s,'close',now);n.deadline=null;
     const written=await writeSession(db,s,{...n,runtime:JSON.stringify(rt)});
     if(!written.meta.changes)fail('STALE',409);

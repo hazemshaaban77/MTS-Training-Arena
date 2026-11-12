@@ -26,6 +26,7 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
      'Real show rules. Every contestant gets an independent run.')}</p>
    </div><span className="championship-stage__phase">{show.phase==='casting'?t('اختيار المتسابق','SELECT CONTESTANT'):
     show.phase==='completed'?t('لدينا بطل!','WE HAVE A CHAMPION!'):
+    show.phase==='suspense'?t('الإجابة النهائية اتثبتت','FINAL ANSWER LOCKED'):
     t('مواجهة مباشرة','ON THE HOT SEAT')}</span>
   </header>
   <div className="championship-stage__layout">
@@ -64,7 +65,7 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
        show.lastCompleted.status==='withdrawn'?t('انسحب بالجائزة','Walked away'):t('انتهى الوقت','Timed out')}</span></div>}
      {host&&s.status==='question'&&<button className="btn secondary" disabled={busy} onClick={()=>onControl('showfinish')}>
       <Trophy size={16}/>{t('إنهاء البرنامج وإعلان الترتيب','Finish show & reveal standings')}</button>}
-    </div>:show.phase==='completed'?<div className="championship-stage__winner">
+    </div>:show.phase==='suspense'?<div className="championship-stage__suspense" role="status" aria-live="polite"><span className="championship-stage__suspense-eyebrow">FINAL ANSWER LOCKED</span><div className="championship-stage__suspense-light" aria-hidden="true"><span/><span/><span/></div><h3>{t('الإجابة اتثبتت… لحظة الكشف قربت','Answer locked… awaiting the official reveal')}</h3><p>{t('القرار اتسجل. السيرفر هيكشف النتيجة تلقائيًا بعد ثانيتين.','The decision is recorded. The server reveals the result after two seconds.')}</p><strong>{Math.max(0,Math.ceil((Number(show.revealAt||s.deadline)-(s.clockNow||s.serverNow))/1000))}</strong></div>:show.phase==='completed'?<div className="championship-stage__winner">
      <Trophy size={56}/><h3>{t('عندنا بطل!','We have a champion!')}</h3>
      <strong>{(s.players||[]).find((p:any)=>p.uid===show.winner)?.name||t('المتسابق الفائز','Winning contestant')}</strong>
      <p>{show.lastCompleted?.earned?.toLocaleString()||0} {t('نقطة','points')}</p>
@@ -76,6 +77,7 @@ export default function ArenaChampionship({s,ar,host,display,busy,onControl,onIn
       <span>{t('المستوى','Level')} {show.level+1}/{show.total}</span>
       <span className="championship-stage__clock"><Clock3 size={17}/>{seconds}s</span>
      </div>
+     {show.lastReveal?.correct&&Number.isFinite(show.lastReveal.resolvedAt)&&(s.clockNow||s.serverNow)-show.lastReveal.resolvedAt<4200&&<div className="championship-stage__level-up" role="status"><Zap size={20}/>{t('إجابة صحيحة! المستوى التالي اتفتح','Correct! The next level is unlocked')}</div>}
      <section className="championship-stage__lifelines">
       <h4>{t('وسائل المساعدة · مرة لكل محاولة · المدرب أو المتسابق يقدر يفعّلها','Lifelines · once per run · contestant or trainer may activate')}</h4>
       <div>{[['fifty','50:50'],['audience',t('الجمهور','Audience')],['time','+30s']].map(([kind,label])=>{
