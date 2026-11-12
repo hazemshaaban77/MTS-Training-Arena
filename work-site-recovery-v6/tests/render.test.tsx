@@ -1864,7 +1864,7 @@ test('all ten 3D cinematic scene identities replace 2D picture splash, with skip
 test('3D stage ambient scene mounts for trainer and projector, native QR and player forms unchanged',()=>{
  const app=readFileSync('components/arena/App.tsx','utf8');
  const session=readFileSync('components/arena/Session.tsx','utf8');
- assert.match(app,/arena-home-world/);assert.match(app,/arena-hero-world/);
+ assert.match(app,/arena-home-world/);assert.match(app,/arena-hero-photo/);assert.doesNotMatch(app,/dashboard-hero-art arena-hero-world/);
  assert.match(session,/arena-live-world/);
  assert.match(session,/mode="ambient" light/);
  assert.match(session,/employeeId/);assert.match(session,/identity-confirmation/);
