@@ -12,6 +12,18 @@ test('gateway keeps API auth headers and request method, proxy goes ONLY to E2 w
  assert.equal(r.status,200);
  assert.deepEqual(x.calls,[{url:'https://mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev/api/me',method:'GET',origin:site,header:'test-token',upgrade:null}]);
 });
+test('preview URLs of the same E2 Pages project can reach E2 API only',async()=>{
+ const preview='https://e2-qa.mts-training-arena-e2-staging.pages.dev';
+ const x=make();
+ const r=await gateway.fetch(new Request(preview+'/api/me',{headers:{Origin:preview,'X-Firebase-Token':'preview-token'}}),x.env);
+ assert.equal(r.status,200);
+ assert.equal(x.calls.length,1);
+ assert.equal(x.calls[0].origin,site,'Verified preview is normalized to canonical E2 origin');
+ assert.equal(x.calls[0].header,'preview-token');
+ const evil='https://e2-qa.mts-training-arena-e2-staging.pages.dev.evil.example';
+ const blocked=await gateway.fetch(new Request(evil+'/api/me',{headers:{Origin:evil}}),x.env);
+ assert.equal(blocked.status,403);
+});
 test('gateway proxies upgraded live stream and rejects cross-site origins',async()=>{
  const x=make();
  await gateway.fetch(new Request(site+'/api/live?code=123456',{headers:{Origin:site,Upgrade:'websocket'}}),x.env);

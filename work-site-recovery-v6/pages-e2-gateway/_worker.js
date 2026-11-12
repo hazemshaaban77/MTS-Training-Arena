@@ -3,6 +3,7 @@
 // The pinned bundle rewrite is a one-release compatibility bridge for the Nov 11
 // frontend uploaded before same-origin gateway support. New builds use same-origin.
 const PUBLIC_ORIGIN='https://mts-training-arena-e2-staging.pages.dev';
+const PAGES_HOST='mts-training-arena-e2-staging.pages.dev';
 const UPSTREAM='https://mts-training-arena-e2-staging-api.hazem-mts-arena.workers.dev';
 const LEGACY_BUNDLE='/assets/index-DEAvHJL2.js';
 const LEGACY_ORIGIN=UPSTREAM;
@@ -24,12 +25,22 @@ export default {
   const url=new URL(request.url);
   if(url.pathname.startsWith('/api/')){
    const origin=request.headers.get('Origin');
-   if(origin&&origin!==PUBLIC_ORIGIN)return Response.json({error:'ORIGIN'},{status:403,headers:{'cache-control':'no-store'}});
+   // Permit only our canonical Pages site and preview subdomains of this exact
+   // project. Never whitelist arbitrary Cloudflare Pages or workers.dev domains.
+   const sameProject=(url.hostname===PAGES_HOST||url.hostname.endsWith('.'+PAGES_HOST))&&url.protocol==='https:';
+   const verifiedPreview=!!origin&&sameProject&&origin===url.origin;
+   if(origin&&origin!==PUBLIC_ORIGIN&&!verifiedPreview)return Response.json({error:'ORIGIN'},{status:403,headers:{'cache-control':'no-store'}});
    if(!env.API)return Response.json({error:'E2_GATEWAY_NOT_CONFIGURED'},{status:503});
    const upstream=new URL(UPSTREAM);
    upstream.pathname=url.pathname;
    upstream.search=url.search;
-   try{return await env.API.fetch(new Request(upstream.toString(),request));}
+   try{
+    const forwarded=new Request(upstream.toString(),request);
+    // E2 API's trusted Origin is the canonical Pages URL; a verified preview
+    // only changes the upstream Origin header, never Firebase authorization.
+    if(verifiedPreview&&origin!==PUBLIC_ORIGIN)forwarded.headers.set('Origin',PUBLIC_ORIGIN);
+    return await env.API.fetch(forwarded);
+   }
    catch{return Response.json({error:'API_UNREACHABLE'},{status:503,headers:{'cache-control':'no-store'}});}
   }
   if(!env.ASSETS)return unavailable();
