@@ -8,6 +8,9 @@ const LEGACY_BUNDLE='/assets/index-DEAvHJL2.js';
 const LEGACY_ORIGIN=UPSTREAM;
 const LEGACY_GUARD='mts-training-arena-e2-staging-api\\.[a-z0-9-]+\\.workers\\.dev';
 const FIXED_GUARD='mts-training-arena-e2-staging\\.pages\\.dev';
+// Temporary deployment safeguard for the already-uploaded 2026-11-11 bundle.
+// Source itself removes the dashboard-wide 3D canvas and fixes sidebar stacking.
+const DASHBOARD_LAYOUT_FIX='<style id="e2-dashboard-layout-fix">.arena-app:has(.workspace)>.arena-home-world{display:none!important}.arena-app:has(.workspace)>aside.sidebar{position:fixed!important;z-index:30!important}</style>';
 function unavailable(){return Response.json({error:'E2_GATEWAY_ASSETS_MISMATCH'},{status:503,headers:{'cache-control':'no-store'}})}
 function transformed(response,body,kind){
  const headers=new Headers(response.headers);
@@ -45,7 +48,9 @@ export default {
    const tag='src="'+LEGACY_BUNDLE+'"';
    if(!html.includes(tag))return response;
    if(html.split(tag).length!==2)return unavailable();
-   return transformed(response,html.replace(tag,'src="'+LEGACY_BUNDLE+'?e2gw=20261111"'),'text/html; charset=utf-8');
+   if(!html.includes('</head>')||html.split('</head>').length!==2)return unavailable();
+   const withAssetVersion=html.replace(tag,'src="'+LEGACY_BUNDLE+'?e2gw=20261111"');
+   return transformed(response,withAssetVersion.replace('</head>',DASHBOARD_LAYOUT_FIX+'</head>'),'text/html; charset=utf-8');
   }
   return env.ASSETS.fetch(request);
  }

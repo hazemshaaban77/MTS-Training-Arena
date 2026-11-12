@@ -30,7 +30,7 @@ test('original published JS gets exactly two pinned replacements, and no-store',
 test('the HTML cache-busts the original JS and future assets remain intact',async()=>{
  const x=make();
  const r=await gateway.fetch(new Request(site+'/'),x.env);
- assert.match(await r.text(),/\?e2gw=20261111/);assert.equal(r.headers.get('etag'),null);
+ const html=await r.text();assert.match(html,/\?e2gw=20261111/);assert.match(html,/e2-dashboard-layout-fix/);assert.match(html,/aside\.sidebar\{position:fixed!important/);assert.equal(r.headers.get('etag'),null);
  const c=await gateway.fetch(new Request(site+'/favicon.svg'),x.env);
  assert.equal(c.status,200);
 });

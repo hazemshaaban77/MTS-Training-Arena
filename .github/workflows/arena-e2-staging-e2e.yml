@@ -60,7 +60,7 @@ jobs:
           VITE_ARENA_STAGING_AUTH_MODE: "existing-v6"
           VITE_ARENA_API_ORIGIN: "https://mts-training-arena-e2-staging.pages.dev"
       - name: Verify E2 Pages gateway routes and pinned emergency asset rewrite
-        run: node --test e2-staging-qa/pages-gateway.test.mjs
+        run: node --test e2-staging-qa/pages-gateway.test.mjs e2-staging-qa/dashboard-layout.test.mjs
       - name: Verify staging and production frontend outputs remain separate
         run: |
           test -s dist-github/index.html

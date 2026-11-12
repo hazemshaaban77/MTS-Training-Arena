@@ -23,7 +23,9 @@
 .arena-cinematic-intro.arena-intro-real3d .cinematic-start-label{background:linear-gradient(100deg,#463516,#173553)!important;border:1px solid #d6a05773!important}
 .arena-app:has(.arena-home-world){position:relative;isolation:isolate}
 .arena-home-world{position:absolute;inset:0;height:100vh;min-height:530px;pointer-events:none;z-index:0;opacity:.35}
-.arena-app:has(.arena-home-world)>.workspace,.arena-app:has(.arena-home-world)>aside,.arena-app:has(.arena-home-world)>.login-page{position:relative;z-index:1}
+.arena-app:has(.arena-home-world)>.workspace,.arena-app:has(.arena-home-world)>.login-page{position:relative;z-index:1}
+/* A trainer sidebar must never become position:relative: that pushes all dashboard content below its full height. */
+.arena-app:has(.arena-home-world)>aside.sidebar{position:fixed;z-index:30}
 .arena-hero-world{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none}
 .arena-hero-world .arena-world3d{height:100%}
 .arena-app .dashboard .hero:has(.arena-hero-world){overflow:hidden;isolation:isolate}
